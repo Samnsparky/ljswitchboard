@@ -4,12 +4,19 @@ var module_manager = require('./module_manager');
 var MODULE_TAB_CONTAINER = '#module-list';
 var MODULE_TAB_CLASS = 'module-tab';
 var MODULE_TAB_ID_POSTFIX = '-module-tab';
+var MODULE_LOADING_IMAGE_NAME = 'progress-indeterminate-ring-light.gif';
+var MODULE_LOADING_IMAGE_DIR = 'static/img/'
+var MODULE_LOADING_IMAGE_SRC = MODULE_LOADING_IMAGE_DIR +
+    MODULE_LOADING_IMAGE_NAME;
 
 
 function selectModule(name)
 {
     $('.' + MODULE_TAB_CLASS).removeClass('selected');
     $('#' + name + MODULE_TAB_ID_POSTFIX).addClass('selected');
+    $(MODULE_CONTENTS_ELEMENT).empty().append(
+        $('<img>').attr('src', MODULE_LOADING_IMAGE_SRC)
+    );
 }
 
 

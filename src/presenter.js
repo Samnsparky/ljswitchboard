@@ -15,7 +15,7 @@ var device_controller = require('./test_device_controller');
 var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit-TL': 'tall'};
 var CHROME_TEMPLATE_NAME = 'module_chrome.html';
 var CONTENTS_ELEMENT = '#content-holder';
-var MODULE_CONTENTS_ELEMENT = '#module-content-holder';
+var MODULE_CONTENTS_ELEMENT = '#module-chrome-contents';
 
 var LATE_LOADED_JS_TEMPLATE_STR = '<script src="{{ href }}"' +
     'type="text/javascript" class="late-js">';
