@@ -9,9 +9,7 @@ function addModuleTab(targetElement, module)
     var linkID = module.name + '-module-tab';
     $(targetElement).append(
         $('<li>').append(
-            $('<a>').attr('href','#').attr('id', linkID).append(
-                $('<span>').attr('class', 'tab').append(module.humanName)
-            )
+            $('<span>').attr('class', 'tab').append(module.humanName)
         )
     );
 }

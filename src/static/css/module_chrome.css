@@ -17,6 +17,21 @@ body,html
 {
     min-height: 90%;
     height: 90%;
+    list-style-type: none;
+}
+
+#module-list li
+{
+    background-color: #E0E0E0;
+    color: black;
+    padding: 10px;
+    margin-bottom: 2px;
+}
+
+#module-list li:hover
+{
+    background-color: #999999;
+    color: white;
 }
 
 #device-display

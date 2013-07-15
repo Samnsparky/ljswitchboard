@@ -10,5 +10,11 @@
         "humanName": "Device Info Inspector",
         "version": "0.0.1",
         "active": true
+    },
+    {
+        "name": "logging_and_dashboard",
+        "humanName": "Logging / Dashboard",
+        "version": "0.0.1",
+        "active": true
     }
 ]

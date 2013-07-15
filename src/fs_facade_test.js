@@ -22,7 +22,7 @@ exports.testRenderTemplate = function(test){
 };
 
 
-exports.testGetLoadedModulesInfo = function(test){
+/*exports.testGetLoadedModulesInfo = function(test){
     fs_facade.getLoadedModulesInfo(throwOnError, function(info){
         var found = false;
         for(var i in info)
@@ -33,4 +33,4 @@ exports.testGetLoadedModulesInfo = function(test){
         test.ok(found);
         test.done();
     });
-};
+};*/
