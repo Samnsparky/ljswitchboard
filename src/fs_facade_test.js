@@ -1,9 +1,11 @@
 var fs_facade = require('./fs_facade');
 
-var throwOnError = function(err)
+
+function throwOnError(err)
 {
     throw err;
-};
+}
+
 
 exports.testRenderTemplate = function(test){
     var context = {'testVal': 5};
@@ -17,4 +19,18 @@ exports.testRenderTemplate = function(test){
             test.done();
         }
     );
+};
+
+
+exports.testGetLoadedModulesInfo = function(test){
+    fs_facade.getLoadedModulesInfo(throwOnError, function(info){
+        var found = false;
+        for(var i in info)
+        {
+            if(info[i].name === 'test_module')
+                found = true;
+        }
+        test.ok(found);
+        test.done();
+    });
 };
