@@ -9,7 +9,6 @@ var MODULE_TAB_ID_POSTFIX = '-module-tab';
 function selectModule(name)
 {
     $('.' + MODULE_TAB_CLASS).removeClass('selected');
-    console.log('#' + name + MODULE_TAB_ID_POSTFIX);
     $('#' + name + MODULE_TAB_ID_POSTFIX).addClass('selected');
 }
 
@@ -29,7 +28,6 @@ function displayActiveModules(activeModules)
 {
     activeModules.forEach(function(e){addModuleTab(MODULE_TAB_CONTAINER, e);});
     $('.' + MODULE_TAB_CLASS).click(function(event){
-        console.log(event.target.id);
         selectModule(event.target.id.replace(MODULE_TAB_ID_POSTFIX, ''));
     });
 }
