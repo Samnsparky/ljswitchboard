@@ -1,0 +1,129 @@
+.device-selector-holder
+{
+    margin-top: 45px;
+    margin-left: 100px;
+    height: 685px;
+}
+
+.header
+{
+    margin-bottom: 10px;
+}
+
+.device-pane
+{
+    background-color: white;
+
+    padding: 20px;
+
+    -moz-box-shadow: 0 0 10px #000000;
+    -webkit-box-shadow: 0 0 10px #000000;
+    box-shadow: 0 0 10px #000000;
+    height: 580px;
+}
+
+.device-type
+{
+    height: 175px;
+}
+
+.device
+{
+    height: 205px;
+    width: 270px;
+    display: inline-block;
+    padding-right: 30px;
+}
+
+.devices-enumeration
+{
+    overflow: auto;
+    width: 650px;
+    border-color: #E3E3E3;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.devices-enumeration.tall
+{
+    height: 210px;
+}
+
+.devices-enumeration.short
+{
+    height: 100px;
+}
+
+.device-pane-popover
+{
+    text-align: right;
+    width: 100px;
+    height: 10px;
+    z-index: 99;
+    position: relative;
+    top: 50px;
+    left: -130px;
+}
+
+.device-pane-popover .arrow
+{
+    width: 0; 
+    margin-top: 4px;
+    height: 0; 
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid #999999;
+    float: right;
+}
+
+.device-pane-popover .label
+{
+    float: right;
+}
+
+.device #image
+{
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.device #image img
+{
+    width: 100px;
+}
+
+.device #info-holder
+{
+    display: inline-block;
+}
+
+#connect-buttons
+{
+    display: none;
+}
+
+#finish-button
+{
+    display: none;
+}
+
+#alert-message
+{
+    display: none;
+}
+
+.connect-button
+{
+    margin-bottom: 3px;
+}
+
+.progress
+{
+    display: none;
+}
+
+#disconnect-button-holder
+{
+    display: none;
+}

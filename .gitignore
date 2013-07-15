@@ -14,3 +14,8 @@ results
 node_modules
 npm-debug.log
 node-webkit/.*
+node-webkit\.app/.*
+
+build/.*
+
+.DS_Store

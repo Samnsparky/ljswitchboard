@@ -1,0 +1,19 @@
+<div class="module-chrome" class="container-fluid">
+    <div class="no-space row-fluid">
+        <div id="system-navigation" class="span3">
+            <ul id="module-list">
+                {{#module}}
+                <li><a id="{{name}}" href="#">{{humanName}}</a></li>
+                {{/module}}
+            </ul>
+            <div id="device-display">
+                <div>
+                    <span id="device-count-display"></span> devices connected.
+                </div>
+                <div><a href="#" id="manage-link">manage</a></div>
+            </div>
+        </div>
+        <div id="module-chrome-contents" class="span9NoGutter">
+        </div>
+    </div>
+</div>
