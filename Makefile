@@ -3,7 +3,7 @@ all: lint test
 	mkdir -p build
 	cd src; zip -r ../build/app.zip ./*
 	mv ./build/app.zip ./build/app.nw
-	cp -r ./switchboard_modules ./build/switchboard_modules
+	cp -r ./switchboard_modules ./build
 
 lint:
 	jshint ./src/*.js;
