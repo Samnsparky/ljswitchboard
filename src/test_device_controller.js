@@ -7,6 +7,8 @@
  * @author A. Samuel Pottinger (LabJack, 2013)
 **/
 
+var dict = require('dict');
+
 
 /**
  * Object with information about a device.
@@ -81,8 +83,7 @@ var Device = function(serial, connectionType, deviceType)
 **/
 function DeviceKeeper()
 {
-    var devices = {};
-    var numDevices = 0;
+    var devices = dict();
 
     /**
      * Add a new device to this keeper.
@@ -91,8 +92,7 @@ function DeviceKeeper()
     **/
     this.addDevice = function(device)
     {
-        numDevices++;
-        devices[device.getSerial()] = device;
+        devices.set(device.getSerial(), device);
     };
 
     /**
@@ -102,7 +102,7 @@ function DeviceKeeper()
     **/
     this.getNumDevices = function()
     {
-        return numDevices;
+        return devices.size;
     };
 
     /**
@@ -114,11 +114,8 @@ function DeviceKeeper()
     **/
     this.removeDevice = function(device)
     {
-        if(device.getSerial() in devices)
-        {
-            delete devices[device.getSerial()];
-            numDevices--;
-        }
+        if(devices.has(device.getSerial()))
+            devices.delete(device.getSerial());
     };
 
     /**
@@ -132,8 +129,8 @@ function DeviceKeeper()
     **/
     this.getDevice = function(serial)
     {
-        if(serial in devices)
-            return devices[serial];
+        if(devices.get(serial))
+            devices.get(serial);
         else
             return null;
     };
