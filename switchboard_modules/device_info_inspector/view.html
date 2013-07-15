@@ -1,0 +1,24 @@
+<div id="device-info-inspector">
+    {{#has_multiple_devices}}
+    <div id="device-selection-controls">
+        <select>
+            {{#devices}}
+            <option value="{{serial}}">{{serial}}</option>
+            {{/devices}}
+        </select>
+    </div>
+    {{/has_multiple_devices}}
+    <div id="device-info-display">
+        <div id="serial-number-display" class="header"></div>
+        <div id="type-display" class="device-detail"></div>
+        <div id="firmware-display-holder" class="device-detail">
+            Firmware version <span id="firmware-display"></span>.
+        </div>
+        <div id="bootloeader-display-holder" class="device-detail">
+            Bootloader version <span id="bootloader-display"></span>.
+        </div>
+        <div id="name-display-holder" class="device-detail">
+            Name: <span id="name-display"></span>.
+        </div>
+    </div>
+</div>

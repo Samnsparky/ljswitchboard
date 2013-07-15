@@ -30,6 +30,12 @@ body,html
 
 #module-list li:hover
 {
+    background-color: #888888;
+    color: white;
+}
+
+#module-list .selected
+{
     background-color: #999999;
     color: white;
 }
