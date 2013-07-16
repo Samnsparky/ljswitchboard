@@ -148,7 +148,7 @@ function DeviceKeeper()
     this.getDevice = function(serial)
     {
         if(devices.has(serial))
-            devices.get(serial);
+            return devices.get(serial);
         else
             return null;
     };

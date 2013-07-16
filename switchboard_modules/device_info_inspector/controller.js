@@ -3,7 +3,6 @@ var device_controller = require('./test_device_controller');
 
 function showDevice(serial)
 {
-    alert(serial);
     var device = device_controller.getDeviceKeeper().getDevice(serial);
     if(device === null)
     {
