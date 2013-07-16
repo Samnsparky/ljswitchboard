@@ -18,9 +18,9 @@ var CONTENTS_ELEMENT = '#content-holder';
 var MODULE_CONTENTS_ELEMENT = '#module-chrome-contents';
 
 var LATE_LOADED_JS_TEMPLATE_STR = '<script src="{{ href }}"' +
-    'type="text/javascript" class="late-js">';
+    'type="text/javascript" class="late-js-{{ type }}">';
 var LATE_LOADED_CSS_TEMPLATE_STR = '<link href="{{ href }}" rel="stylesheet" ' +
-    'class="late-css">';
+    'class="late-css-{{ type }}">';
 
 var LATE_LOADED_CSS_TEMPLATE = handlebars.compile(LATE_LOADED_CSS_TEMPLATE_STR);
 var LATE_LOADED_JS_TEMPLATE = handlebars.compile(LATE_LOADED_JS_TEMPLATE_STR);
@@ -45,6 +45,10 @@ var genericErrorHandler = function(error)
  * @param {Object} context The key / values to use to render the template.
  * @param {String} dest The jQuery descriptor of the element whose inner HTML
  *      should be set to the rendered template.
+ * @param {Boolean} internal If true, the tremplate will be loaded from the
+ *      bundled program resources. If false, will be read from the file system
+ *      outside of the program's bundled resources (ex. late downloaded
+ *      resources installed along with a module).
  * @param {Array} cssFiles An array of strings with names of (interally located)
  *      css files to apply to the new template.
  * @param {Array} jsFiles An array of strings with the names of (internally
@@ -52,35 +56,70 @@ var genericErrorHandler = function(error)
  * @param {Function} onError The function to call if rendring the template was
  *      unsuccessful.
 **/
-function renderTemplate(name, context, dest, cssFiles, jsFiles, onErr)
+function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
 {
-    var onTemplateRendered = function(renderedHTML)
+    var onRender = function (renderedHTML)
     {
         var cssHTML;
         var jsHTML;
 
-        $('.late-css').remove();
-        $('.late-js').remove();
+        // TODO: These should be in constants with Mustache
+        $('.late-css-' + dest).remove();
+        $('.late-js-' + dest).remove();
 
         $(dest).hide();
         $(dest).html(renderedHTML);
 
-        $.each(cssFiles, function(index, fileLoc)
+        $.each(cssFiles, function (index, fileLoc)
         {
-            cssHTML = LATE_LOADED_CSS_TEMPLATE({'href': fileLoc}); 
+            if(internal)
+                fileLoc = fs_facade.getInternalURI(fileLoc);
+            else
+                fileLoc = fs_facade.getExternalURI(name);
+
+            if(fileLoc === null)
+            {
+                onErr(new Error('Could not find ' + fileLoc + ' .'));
+                return;
+            }
+
+            cssHTML = LATE_LOADED_CSS_TEMPLATE({'href': fileLoc, 'type': dest}); 
             $('head').append(cssHTML);
         });
 
-        $.each(jsFiles, function(index, fileLoc)
+        $.each(jsFiles, function (index, fileLoc)
         {
-            jsHTML = LATE_LOADED_JS_TEMPLATE({'href': fileLoc});
+            if(internal)
+                fileLoc = fs_facade.getInternalURI(fileLoc);
+            else
+                fileLoc = fs_facade.getExternalURI(fileLoc);
+
+            if(fileLoc === null)
+            {
+                onErr(new Error('Could not find ' + fileLoc + ' .'));
+                return;
+            }
+
+            jsHTML = LATE_LOADED_JS_TEMPLATE({'href': fileLoc, 'type': dest});
             $('head').append(jsHTML);
         });
 
         $(dest).fadeIn();
     };
 
-    fs_facade.renderTemplate(name, context, onErr, onTemplateRendered);
+    var fileLoc;
+    if(internal)
+        fileLoc = fs_facade.getInternalURI(name);
+    else
+        fileLoc = fs_facade.getExternalURI(name);
+
+    if(fileLoc === null)
+    {
+        onErr(new Error('Could not find ' + fileLoc + ' .'));
+        return;
+    }
+    
+    fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
 }
 
 
@@ -115,8 +154,9 @@ function renderDeviceSelector()
             'device_selector.html',
             context,
             CONTENTS_ELEMENT,
-            ['static/css/device_selector.css'],
-            ['static/js/device_selector.js'],
+            true,
+            ['device_selector.css'],
+            ['device_selector.js'],
             genericErrorHandler
         ); 
     };
@@ -126,8 +166,3 @@ function renderDeviceSelector()
         onDevicesLoaded
     );
 }
-
-
-$(document).ready(function() {
-    renderDeviceSelector();
-});

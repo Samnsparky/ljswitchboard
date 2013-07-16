@@ -168,8 +168,9 @@ function moveToModules()
         'module_chrome.html',
         {},
         CONTENTS_ELEMENT,
-        ['static/css/module_chrome.css'],
-        ['static/js/module_chrome.js'],
+        true,
+        ['module_chrome.css'],
+        ['module_chrome.js'],
         genericErrorHandler
     );
 }

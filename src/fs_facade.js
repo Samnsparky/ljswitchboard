@@ -5,9 +5,49 @@ var path = require('path');
 
 var handlebars = require('handlebars');
 
-var TEMPLATES_DIR = 'templates';
 var MODULES_DIR = 'switchboard_modules';
 var MODULES_DESC_FILENAME = 'modules.json';
+
+var INTERNAL_TEMPLATES_DIR = 'templates';
+var INTERNAL_STATIC_DIR = 'static';
+var INTERNAL_JS_DIR = path.join(INTERNAL_STATIC_DIR, 'js');
+var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
+
+var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
+
+
+exports.getInternalURI = function(resourceName)
+{
+    var extension = path.extname(resourceName);
+
+    if(extension === '.html')
+    {
+        return path.join(__dirname, INTERNAL_TEMPLATES_DIR, resourceName);
+    }
+    else if(extension === '.js')
+    {
+        return path.join(__dirname, INTERNAL_JS_DIR, resourceName);
+    }
+    else if(extension === '.css')
+    {
+        return path.join(__dirname, INTERNAL_CSS_DIR, resourceName);
+    }
+    else
+    {
+        return null;
+    }
+};
+
+
+exports.getExternalURI = function(fullResourceName)
+{
+    var resourceNamePieces = fullResourceName.split('/');
+    var moduleName = resourceNamePieces[0];
+    var resourceName = resourceNamePieces[1];
+    var parentDir = exports.getParentDir();
+    return path.join(parentDir, EXTERNAL_RESOURCES_DIR, moduleName,
+        resourceName);
+};
 
 
 // TODO: This is not yet cross platform
@@ -27,9 +67,8 @@ exports.getParentDir = function()
 };
 
 
-exports.renderTemplate = function(templateName, context, onError, onSuccess)
+exports.renderTemplate = function(fileName, context, onError, onSuccess)
 {
-    var fileName = path.join(__dirname, TEMPLATES_DIR, templateName);
     fs.exists(fileName, function(exists)
     {
         if(exists)

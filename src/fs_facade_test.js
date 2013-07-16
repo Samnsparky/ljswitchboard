@@ -7,10 +7,10 @@ function throwOnError(err)
 }
 
 
-exports.testRenderTemplate = function(test){
+/*exports.testRenderTemplate = function(test){
     var context = {'testVal': 5};
     fs_facade.renderTemplate(
-        'test_template.html',
+        'templates/test_template.html',
         context,
         throwOnError,
         function(renderedHTML)
@@ -19,7 +19,7 @@ exports.testRenderTemplate = function(test){
             test.done();
         }
     );
-};
+};*/
 
 
 /*exports.testGetLoadedModulesInfo = function(test){

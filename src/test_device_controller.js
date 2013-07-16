@@ -70,6 +70,24 @@ var Device = function(serial, connectionType, deviceType)
     {
         return name;
     };
+
+    // TODO
+    this.getFirmwareVersion = function()
+    {
+        return '1.23';
+    };
+
+    // TODO
+    this.getBootloaderVersion = function()
+    {
+        return '4.56';
+    };
+
+    // TODO
+    this.getName = function()
+    {
+        return 'test device';
+    };
 };
 
 
@@ -129,10 +147,17 @@ function DeviceKeeper()
     **/
     this.getDevice = function(serial)
     {
-        if(devices.get(serial))
+        if(devices.has(serial))
             devices.get(serial);
         else
             return null;
+    };
+
+    this.getDevices = function()
+    {
+        var retList = [];
+        devices.forEach(function(value, key) {retList.push(value);});
+        return retList;
     };
 }
 

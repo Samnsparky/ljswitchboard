@@ -1,24 +1,40 @@
 <div id="device-info-inspector">
-    {{#has_multiple_devices}}
+    {{#hasMultipleDevices}}
     <div id="device-selection-controls">
-        <select>
+        <select id="device-select">
+    {{/hasMultipleDevices}}
             {{#devices}}
-            <option value="{{serial}}">{{serial}}</option>
+            <option value="{{getSerial}}">{{getSerial}}</option>
             {{/devices}}
+    {{#hasMultipleDevices}}
         </select>
     </div>
-    {{/has_multiple_devices}}
+    {{/hasMultipleDevices}}
     <div id="device-info-display">
-        <div id="serial-number-display" class="header"></div>
-        <div id="type-display" class="device-detail"></div>
+        {{#currentDevice}}
+        <h1 class="header">
+            serial
+            <span id="serial-number-display">{{getSerial}}</span>
+        </h1>
+        <div id="type-display" class="device-detail">{{getDeviceType}}</div>
         <div id="firmware-display-holder" class="device-detail">
-            Firmware version <span id="firmware-display"></span>.
+            Firmware version
+            <span id="firmware-display">
+                {{getFirmwareVersion}}
+            </span>
         </div>
-        <div id="bootloeader-display-holder" class="device-detail">
-            Bootloader version <span id="bootloader-display"></span>.
+        <div id="bootloader-display-holder" class="device-detail">
+            Bootloader version
+            <span id="bootloader-display">
+                {{getBootloaderVersion}}
+            </span>
         </div>
         <div id="name-display-holder" class="device-detail">
-            Name: <span id="name-display"></span>.
+            Name:
+            <span id="name-display">
+                {{getName}}
+            </span>
         </div>
+        {{/currentDevice}}
     </div>
 </div>

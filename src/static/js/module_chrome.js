@@ -1,4 +1,5 @@
 var device_controller = require('./test_device_controller');
+var presenter = require('./presenter')
 var module_manager = require('./module_manager');
 
 var MODULE_TAB_CONTAINER = '#module-list';
@@ -17,6 +18,19 @@ function selectModule(name)
     $(MODULE_CONTENTS_ELEMENT).empty().append(
         $('<img>').attr('src', MODULE_LOADING_IMAGE_SRC)
     );
+
+    var src = name + '/view.html';
+    var cssFile = name + '/style.css';
+    var jsFile = name + '/controller.js';
+    var keeper = device_controller.getDeviceKeeper()
+    var devices = keeper.getDevices();
+    var standardContext = {
+        'devices': devices,
+        'hasMultipleDevices': keeper.getNumDevices() > 1,
+        'currentDevice': devices[0]
+    };
+    renderTemplate(src, standardContext, MODULE_CONTENTS_ELEMENT, false,
+        [cssFile], [jsFile], genericErrorHandler);
 }
 
 
