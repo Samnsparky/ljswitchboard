@@ -15,6 +15,12 @@
         "name": "logging_and_dashboard",
         "humanName": "Logging / Dashboard",
         "version": "0.0.1",
+        "active": false
+    },
+    {
+        "name": "digital_io_config",
+        "humanName": "Digital I/O",
+        "version": "0.0.1",
         "active": true
     }
 ]

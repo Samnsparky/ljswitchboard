@@ -16,6 +16,16 @@ var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
 var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
 
 
+/**
+ * Get the full location (URI) for a resource bundled with the application.
+ *
+ * Get the the full URI or location for a resource that comes bundled with the
+ * application executable. This cannot be used for late loaded modules.
+ *
+ * @param {String} resourceName The name of the resource to resolve the full URI
+ *      for.
+ * @return (String) The fully resolved URI or null if it could not be resolved.
+**/
 exports.getInternalURI = function(resourceName)
 {
     var extension = path.extname(resourceName);
@@ -39,6 +49,15 @@ exports.getInternalURI = function(resourceName)
 };
 
 
+/**
+ * Get the full location (URI) for a resource not bundled with the application.
+ *
+ * Get the full URI or location for a resource that is not bundled with the
+ * application executable. This should be used for late loaded modules.
+ *
+ * @param {String} fullResourceName The name of the resource to resolve.
+ * @return {String} The fully resolved URI or null if it could not be resolved.
+**/
 exports.getExternalURI = function(fullResourceName)
 {
     var resourceNamePieces = fullResourceName.split('/');
@@ -67,6 +86,18 @@ exports.getParentDir = function()
 };
 
 
+/**
+ * Render a Handlebars template.
+ *
+ * @param {String} fileName The location of the template to render.
+ * @param {Object} context The context to render the template with.
+ * @param {function} onError The function to call if an error is encountered
+ *      while rendering the template. Should take a single argument which
+ *      would be the error.
+ * @param {function} onSuccess The function to call after the template is
+ *      successfully rendered. Should take a single argument which would
+ *      be the String rendred html.
+**/
 exports.renderTemplate = function(fileName, context, onError, onSuccess)
 {
     fs.exists(fileName, function(exists)
@@ -95,6 +126,15 @@ exports.renderTemplate = function(fileName, context, onError, onSuccess)
 };
 
 
+/**
+ * Get information about the modules the user has installed for Switchboard.
+ *
+ * @param {function} onError The function to call if an error is encountered
+ *      while reading module information.
+ * @param {function} onSuccess The function to call after the module information
+ *      is loaded. Should take one argument: an Array of Object with module
+ *      information.
+**/
 exports.getLoadedModulesInfo = function(onError, onSuccess)
 {
     var moduleDir = path.join(exports.getParentDir(), MODULES_DIR);

@@ -11,6 +11,11 @@ var MODULE_LOADING_IMAGE_SRC = MODULE_LOADING_IMAGE_DIR +
     MODULE_LOADING_IMAGE_NAME;
 
 
+/**
+ * Switch the view to the given module.
+ *
+ * @param {String} name The name of the module to switch the user view to.
+**/
 function selectModule(name)
 {
     $('.' + MODULE_TAB_CLASS).removeClass('selected');
@@ -34,6 +39,13 @@ function selectModule(name)
 }
 
 
+/**
+ * Add a new tab for a module to the GUI list of available modules.
+ *
+ * @param {String} targetElement The jQuery compatible selector for the
+ *      element or elements that the tab should be added to.
+ * @param {Object} module The information for the module to add a tab for.
+**/
 function addModuleTab(targetElement, module)
 {
     var tabID = module.name + MODULE_TAB_ID_POSTFIX;
@@ -45,6 +57,15 @@ function addModuleTab(targetElement, module)
 }
 
 
+/**
+ * Display a collection of modules to the user as a list of selectable tabs.
+ *
+ * Display a collection of available modules to the user as a list of selectable
+ * tabs.
+ *
+ * @param {Array} activeModules An Array of Object each containing information
+ *      about a module to display as active.
+**/
 function displayActiveModules(activeModules)
 {
     activeModules.forEach(function(e){addModuleTab(MODULE_TAB_CONTAINER, e);});

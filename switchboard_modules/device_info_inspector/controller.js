@@ -1,6 +1,12 @@
 var device_controller = require('./test_device_controller');
 
 
+/**
+ * Show the information about a given device.
+ *
+ * @param {String} serial The serial number of the device to display information
+ *      for.
+**/
 function showDevice(serial)
 {
     var device = device_controller.getDeviceKeeper().getDevice(serial);
