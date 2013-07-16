@@ -10,31 +10,38 @@
         </select>
     </div>
     {{/hasMultipleDevices}}
-    <div id="device-info-display">
-        {{#currentDevice}}
-        <h1 class="header">
-            serial
-            <span id="serial-number-display">{{getSerial}}</span>
-        </h1>
-        <div id="type-display" class="device-detail">{{getDeviceType}}</div>
-        <div id="firmware-display-holder" class="device-detail">
-            Firmware version
-            <span id="firmware-display">
-                {{getFirmwareVersion}}
-            </span>
+    <div class="container-fluid" id="device-info-display">
+        <div class="row-fluid">
+            {{#currentDevice}}
+            <div class="span6">
+                <h1 class="header">
+                    serial
+                    <span id="serial-number-display">{{getSerial}}</span>
+                </h1>
+                <div id="type-display" class="device-detail">{{getDeviceType}}</div>
+                <div id="firmware-display-holder" class="device-detail">
+                    Firmware version
+                    <span id="firmware-display">
+                        {{getFirmwareVersion}}
+                    </span>
+                </div>
+                <div id="bootloader-display-holder" class="device-detail">
+                    Bootloader version
+                    <span id="bootloader-display">
+                        {{getBootloaderVersion}}
+                    </span>
+                </div>
+                <div id="name-display-holder" class="device-detail">
+                    Name:
+                    <span id="name-display">
+                        {{getName}}
+                    </span>
+                </div>
+            </div>
+            <div class="span6">
+                <img id="device-image" src="static/img/devices/{{getDeviceType}}.png">
+            </div>
+            {{/currentDevice}}
         </div>
-        <div id="bootloader-display-holder" class="device-detail">
-            Bootloader version
-            <span id="bootloader-display">
-                {{getBootloaderVersion}}
-            </span>
-        </div>
-        <div id="name-display-holder" class="device-detail">
-            Name:
-            <span id="name-display">
-                {{getName}}
-            </span>
-        </div>
-        {{/currentDevice}}
     </div>
 </div>

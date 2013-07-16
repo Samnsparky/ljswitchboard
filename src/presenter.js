@@ -75,7 +75,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
             if(internal)
                 fileLoc = fs_facade.getInternalURI(fileLoc);
             else
-                fileLoc = fs_facade.getExternalURI(name);
+                fileLoc = fs_facade.getExternalURI(fileLoc);
 
             if(fileLoc === null)
             {
