@@ -1,3 +1,13 @@
+/**
+ * Logic for the module framework.
+ *
+ * Logic for the framework and related GUI elements that bootstrap Switchboard
+ * modules and allow the user to move between them.
+ *
+ * @author Sam Pottinger (LabJack Corp, 2013)
+**/
+
+
 var device_controller = require('./test_device_controller');
 var presenter = require('./presenter')
 var module_manager = require('./module_manager');

@@ -1,3 +1,12 @@
+/**
+ * Controller for the device info inspector.
+ *
+ * Logic / controller for the device info inspector, a module that allows the
+ * user to see basic device information.
+ *
+ * @author A. Samuel Pottinger (LabJack Corp, 2013)
+**/
+
 var device_controller = require('./test_device_controller');
 
 

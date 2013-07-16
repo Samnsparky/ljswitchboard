@@ -1,3 +1,12 @@
+/**
+ * Convienence functions for managing Switchboard modules.
+ *
+ * Convienence functions that allow for the management of late loaded modules
+ * not bundled in the main executable.
+ *
+ * @author A. Samuel Pottinger (LabJack Corp, 2013)
+**/
+
 var fs_facade = require('./fs_facade');
 
 

@@ -1,3 +1,9 @@
+/**
+ * Convienece wrapper around file system and path manipulation operations.
+ *
+ * @author A. Samuel Pottinger (LabJack Corp, 2013)
+**/
+
 /*jslint node: true */
 
 var fs = require('fs');
