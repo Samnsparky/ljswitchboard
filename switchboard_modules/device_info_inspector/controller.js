@@ -31,13 +31,15 @@ function showDevice(serial)
     $('#firmware-display').html(device.getFirmwareVersion());
     $('#bootloader-display').html(device.getBootloaderVersion());
     $('#name-display').html(device.getName());
+    $('#selected-device-display').html(device.getSerial());
     $('#device-info-display').fadeIn();
 }
 
 
 $('#device-info-inspector').ready(function(){
     // Attach event listener
-    $('#device-select').change(function(){
-        showDevice($('#device-select').val());
+    $('.device-selection-link').click(function(event){
+        var serial = event.target.id.replace('-selector', '');
+        showDevice(serial);
     });
 });

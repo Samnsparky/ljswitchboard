@@ -1,0 +1,12 @@
+<div id="digital-io-configuration">
+    <div id="device-selector">
+        {{#devices}}
+        <div class="selector-holder">
+            <label class="checkbox">
+            <input class="device-selection-checkbox" type="checkbox" value="{{getSerial}}">
+                <span class="metro-checkbox">{{getSerial}}</span>
+            </label>
+        </div>
+        {{/devices}}
+    </div>
+</div>
