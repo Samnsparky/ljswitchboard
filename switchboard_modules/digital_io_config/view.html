@@ -3,10 +3,13 @@
         {{#devices}}
         <div class="selector-holder">
             <label class="checkbox">
-            <input class="device-selection-checkbox" type="checkbox" value="{{getSerial}}">
+            <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
                 <span class="metro-checkbox">{{getSerial}}</span>
             </label>
         </div>
         {{/devices}}
+    </div>
+    <div id="io-config-pane">
+        <img src="static/img/progress-indeterminate-ring-light.gif">
     </div>
 </div>

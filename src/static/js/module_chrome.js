@@ -19,6 +19,7 @@ var MODULE_LOADING_IMAGE_NAME = 'progress-indeterminate-ring-light.gif';
 var MODULE_LOADING_IMAGE_DIR = 'static/img/'
 var MODULE_LOADING_IMAGE_SRC = MODULE_LOADING_IMAGE_DIR +
     MODULE_LOADING_IMAGE_NAME;
+var CURRENT_DEVICE_INDEX = 0; // Device to start off as being selected
 
 
 /**
@@ -42,7 +43,7 @@ function selectModule(name)
     var standardContext = {
         'devices': devices,
         'hasMultipleDevices': keeper.getNumDevices() > 1,
-        'currentDevice': devices[0]
+        'currentDevice': devices[CURRENT_DEVICE_INDEX]
     };
     renderTemplate(src, standardContext, MODULE_CONTENTS_ELEMENT, false,
         [cssFile], [jsFile], genericErrorHandler);
