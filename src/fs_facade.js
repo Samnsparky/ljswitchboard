@@ -95,7 +95,7 @@ exports.getParentDir = function()
 /**
  * Render a Handlebars template.
  *
- * @param {String} fileName The location of the template to render.
+ * @param {String} location The location of the template to render.
  * @param {Object} context The context to render the template with.
  * @param {function} onError The function to call if an error is encountered
  *      while rendering the template. Should take a single argument which
@@ -104,13 +104,13 @@ exports.getParentDir = function()
  *      successfully rendered. Should take a single argument which would
  *      be the String rendred html.
 **/
-exports.renderTemplate = function(fileName, context, onError, onSuccess)
+exports.renderTemplate = function(location, context, onError, onSuccess)
 {
-    fs.exists(fileName, function(exists)
+    fs.exists(location, function(exists)
     {
         if(exists)
         {
-            fs.readFile(fileName, 'utf8',
+            fs.readFile(location, 'utf8',
                 function (error, template)
                 {
                     if (error)
@@ -126,7 +126,7 @@ exports.renderTemplate = function(fileName, context, onError, onSuccess)
         }
         else
         {
-            onError(new Error('Template ' + fileName + ' could not be found.'));
+            onError(new Error('Template ' + location + ' could not be found.'));
         }
     });
 };
@@ -167,7 +167,38 @@ exports.getLoadedModulesInfo = function(onError, onSuccess)
         else
         {
             var error = new Error(
-                'Could not load modules info at ' + modulesDescriptorSrc + '.'
+                'Could not find modules info at ' + modulesDescriptorSrc + '.'
+            );
+            onError(error);
+        }
+    });
+};
+
+
+exports.getJSON = function(location, onError, onSuccess)
+{
+    fs.exists(location, function(exists)
+    {
+        if(exists)
+        {
+            fs.readFile(location, 'utf8',
+                function (error, contents)
+                {
+                    if (error)
+                    {
+                        onError(error);
+                    }
+                    else
+                    {
+                        onSuccess(JSON.parse(contents));
+                    }
+                }
+            );
+        }
+        else
+        {
+            var error = new Error(
+                'Could not find JSON at ' + location + '.'
             );
             onError(error);
         }
