@@ -69,19 +69,59 @@ function addModuleTab(targetElement, module)
 
 
 /**
- * Display a collection of modules to the user as a list of selectable tabs.
+ * Display a collection of modules to the user as a list of tabs.
  *
- * Display a collection of available modules to the user as a list of selectable
+ * Display a collection of available modules to the user as a list of sidebar
  * tabs.
  *
  * @param {Array} activeModules An Array of Object each containing information
- *      about a module to display as active.
+ *      about a module to display.
+ * @param {function} onError The callback to call if an error is encountered
+ *      while creating the display.
+ * @param {function} onSuccess The callback to call after the modules display
+ *      has been rendered.
 **/
-function displayActiveModules(activeModules)
+function displayActiveModules(activeModules, onError, onSuccess)
 {
-    activeModules.forEach(function(e){addModuleTab(MODULE_TAB_CONTAINER, e);});
-    $('.' + MODULE_TAB_CLASS).click(function(event){
-        selectModule(event.target.id.replace(MODULE_TAB_ID_POSTFIX, ''));
+    if(activeModules.length == 0)
+    {
+        onSuccess();
+        return;
+    }
+
+    fs_facade.getModuleInfo(activeModules.shift().name, onError,
+        function(info)
+        {
+            addModuleTab(MODULE_TAB_CONTAINER, info);
+            displayActiveModules(activeModules, onError, onSuccess);
+        }
+    );
+}
+
+
+/**
+ * Display a collection of modules to the user as a list of selectable tabs.
+ *
+ * Display a collection of available modules to the user as a list of selectable
+ * sidebar tabs, adding click event listeners where necessary.
+ *
+ * @param {Array} activeModules An Array of Object each containing information
+ *      about a module to display.
+ * @param {function} onError The callback to call if an error is encountered
+ *      while creating the display.
+ * @param {function} onSuccess The callback to call after the display is
+ *      rendered with event listeners. This is optional.
+**/
+function displayActiveModulesWithEvents(activeModules, onError, onSuccess)
+{
+    displayActiveModules(activeModules, onError, function()
+    {
+        $('.' + MODULE_TAB_CLASS).click(function(event){
+            selectModule(event.target.id.replace(MODULE_TAB_ID_POSTFIX, ''));
+        });
+
+        if(onSuccess !== undefined)
+            onSuccess();
     });
 }
 
@@ -89,5 +129,11 @@ function displayActiveModules(activeModules)
 $('#module-chrome').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     $('#device-count-display').html(keeper.getNumDevices());
-    module_manager.getActiveModules(genericErrorHandler, displayActiveModules);
+    
+    module_manager.getActiveModules(
+        genericErrorHandler,
+        function (modules) {
+            displayActiveModulesWithEvents(modules, genericErrorHandler);
+        }
+    );
 });

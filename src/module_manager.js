@@ -30,3 +30,8 @@ exports.getActiveModules = function(onError, onSuccess)
         onSuccess(activeModules);
     });
 };
+
+exports.getModuleInfo = function(onError, onSuccess)
+{
+    fs_facade.getModuleInfo(onError, onSuccess);
+};
