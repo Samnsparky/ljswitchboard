@@ -53,7 +53,7 @@ var genericErrorHandler = function(error)
  *      css files to apply to the new template.
  * @param {Array} jsFiles An array of strings with the names of (internally
  *      located) JavaScript files to load.
- * @param {Function} onError The function to call if rendring the template was
+ * @param {function} onError The function to call if rendring the template was
  *      unsuccessful.
 **/
 function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)

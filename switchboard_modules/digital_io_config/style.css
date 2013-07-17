@@ -11,3 +11,44 @@
 {
     margin-bottom: 15px;
 }
+
+.io-row
+{
+    margin-top: 9px;
+    padding: 3px 0 9px 3px;
+}
+
+.io-row:nth-child(odd)
+{
+    background-color: #F0F0F0;
+}
+
+.name-span
+{
+    padding-top: 3px;
+}
+
+.state-indicator-holder
+{
+    padding-top: 3px;
+}
+
+.state-indicator
+{
+    padding: 5px;
+    min-width: 20px;
+    font-size: 10px;
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, Sans-Serif;
+}
+
+.state-indicator.active
+{
+    background-color: #5BB75B;
+    color: white;
+}
+
+.state-indicator.inactive
+{
+    color: black;
+    background-color: #C0C0C0;
+}

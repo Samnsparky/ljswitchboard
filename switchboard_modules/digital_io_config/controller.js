@@ -25,6 +25,7 @@ function renderIndividualDeviceControls(registers)
         function(renderedHTML)
         {
             $('#io-config-pane').html(renderedHTML);
+            $('.direction-switch').bootstrapSwitch();
         }
     );
 }
