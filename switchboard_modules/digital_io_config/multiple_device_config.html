@@ -1,0 +1,15 @@
+{{#registers}}
+<div class="row-fluid io-row">
+    <div class="span3 name-span">{{name}}</div>
+    <div class="span3">
+        <div class="direction-switch switch" data-on-label="output" data-off-label="input">
+            <input type="checkbox">
+        </div>
+    </div>
+    <div class="span6 state-indicator-holder">
+    {{# ../devices }}
+        <span class="state-indicator inactive">{{getSerial}}</span>
+    {{/ ../devices }}
+    </div>
+</div>
+{{/registers}}

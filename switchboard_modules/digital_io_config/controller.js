@@ -5,7 +5,8 @@ var fs_facade = require('./fs_facade');
 var IO_CONFIG_PANE_SELECTOR = '#io-config-pane';
 
 var REGISTERS_DATA_SRC = 'digital_io_config/registers.json';
-var INDIVIDUAL_TEMPLATE = 'digital_io_config/individual_device_config.html';
+var INDIVIDUAL_TEMPLATE_SRC = 'digital_io_config/individual_device_config.html';
+var MULTIPLE_TEMPLATE_SRC = 'digital_io_config/multiple_device_config.html';
 var LOADING_IMAGE_SRC = 'static/img/progress-indeterminate-ring-light.gif';
 
 var DEVICE_SELECT_ID_TEMPLATE_STR = '#{{serial}}-selector';
@@ -15,12 +16,28 @@ var DEVICE_SELECT_ID_TEMPLATE = handlebars.compile(
 var selectedDevices = [];
 
 
-function renderIndividualDeviceControls(registers)
+function renderIndividualDeviceControls(registers, devices)
 {
-    var location = fs_facade.getExternalURI(INDIVIDUAL_TEMPLATE);
+    var location = fs_facade.getExternalURI(INDIVIDUAL_TEMPLATE_SRC);
     fs_facade.renderTemplate(
         location,
         {'registers': registers},
+        genericErrorHandler,
+        function(renderedHTML)
+        {
+            $('#io-config-pane').html(renderedHTML);
+            $('.direction-switch').bootstrapSwitch();
+        }
+    );
+}
+
+
+function renderManyDeviceControls(registers, devices)
+{
+    var location = fs_facade.getExternalURI(MULTIPLE_TEMPLATE_SRC);
+    fs_facade.renderTemplate(
+        location,
+        {'registers': registers, 'devices': devices},
         genericErrorHandler,
         function(renderedHTML)
         {
@@ -48,6 +65,6 @@ $('#digital-io-configuration').ready(function(){
 
     var registersSrc = fs_facade.getExternalURI(REGISTERS_DATA_SRC);
     fs_facade.getJSON(registersSrc, genericErrorHandler, function(registerData){
-        renderIndividualDeviceControls(registerData);
+        renderManyDeviceControls(registerData, devices);
     });
 });
