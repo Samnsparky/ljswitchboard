@@ -14,13 +14,6 @@ var DEVICE_SELECT_ID_TEMPLATE = handlebars.compile(
     DEVICE_SELECT_ID_TEMPLATE_STR);
 
 
-$.fn.redraw = function(){
-  $(this).each(function(){
-    var redraw = this.offsetHeight;
-  });
-};
-
-
 function renderIndividualDeviceControls(registers, devices, onSuccess)
 {
     var location = fs_facade.getExternalURI(INDIVIDUAL_TEMPLATE_SRC);
