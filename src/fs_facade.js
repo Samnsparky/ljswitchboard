@@ -76,7 +76,12 @@ exports.getExternalURI = function(fullResourceName)
 };
 
 
-// TODO: This is not yet cross platform
+/**
+ * Get the directory that the executable is being run out of.
+ *
+ * @return {string} The full path to the directory that this executable is being
+ *      run out of.
+**/
 exports.getParentDir = function()
 {
     var pathPieces = path.dirname(process.execPath).split(path.sep);
@@ -132,7 +137,19 @@ exports.renderTemplate = function(location, context, onError, onSuccess)
     });
 };
 
-
+// TODO: Move to module manager
+/**
+ * Get information about a specific module.
+ *
+ * Get the standard information about a specific module that the user has
+ * already downloaded. Does not query any remote repositories.
+ *
+ * @param {String} name The name of the module to query.
+ * @param {function} onError The function to call if the module is not found
+ *      or could not otherwise be quieried.
+ * @param {function} onSuccess The function to call with the module information
+ *      after it is loaded.
+**/
 exports.getModuleInfo = function(name, onError, onSuccess)
 {
     var moduleDir = path.join(exports.getParentDir(), MODULES_DIR);
@@ -167,7 +184,7 @@ exports.getModuleInfo = function(name, onError, onSuccess)
     });
 };
 
-
+// TODO: Move to module manager
 /**
  * Get information about the modules the user has installed for Switchboard.
  *
@@ -211,6 +228,16 @@ exports.getLoadedModulesInfo = function(onError, onSuccess)
 };
 
 
+/**
+ * Convienence function to get and decode a JSON file.
+ *
+ * @param {String} location The full path of the JSON file to load.
+ * @param {function} onError The function to call if an error is encountered
+ *      while reading this JSON file.
+ * @param {function} onSuccess The funciton to call after the JSON has been
+ *      successfully loaded. The only function parameter should be for the Array
+ *      or Object loaded.
+**/
 exports.getJSON = function(location, onError, onSuccess)
 {
     fs.exists(location, function(exists)
