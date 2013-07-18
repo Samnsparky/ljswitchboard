@@ -63,7 +63,7 @@ function connectNewDevice(event)
     var connectionType = deviceInfo[2];
 
     var info = $(jqueryID).parents('#info-holder').children('#info');
-    info.children('.progress').show();
+    info.children('.device-load-progress').show();
     info.children('#show-connect-button-holder').hide();
 
     hideConnectButtons(event);

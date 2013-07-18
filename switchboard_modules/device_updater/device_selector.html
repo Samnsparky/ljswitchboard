@@ -1,0 +1,25 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Update</th>
+            <th>Serial Number</th>
+            <th>Name</th>
+            <th>Firmware Version</th>
+            <th>Bootloader Version</th>
+        </tr>
+    </thead>
+    {{#devices}}
+    <tr>
+        <td>
+            <label class="checkbox">
+            <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}" checked>
+                <span class="metro-checkbox"></span>
+            </label>
+        </td>
+        <td>{{getSerial}}</td>
+        <td>{{getName}}</td>
+        <td>{{getFirmwareVersion}}</td>
+        <td>{{getBootloaderVersion}}</td>
+    </tr>
+    {{/devices}}
+</table>
