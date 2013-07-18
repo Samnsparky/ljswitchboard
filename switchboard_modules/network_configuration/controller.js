@@ -101,7 +101,7 @@ function prepareMultipleDeviceConfiguration(decoratedDevices)
 function prepareIndividualDeviceConfiguration(decoratedDevice)
 {
     showCurrentDeviceSettings(decoratedDevice, genericErrorHandler, function(){
-        $('#device-configuration-pane').show();
+        $('#device-configuration-pane').css('display', 'inline');
     });
 }
 
