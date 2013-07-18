@@ -33,6 +33,7 @@
     width: 270px;
     display: inline-block;
     padding-right: 30px;
+    vertical-align: top;
 }
 
 .devices-enumeration
@@ -85,7 +86,7 @@
 {
     display: inline-block;
     height: 100%;
-    vertical-align: middle;
+    vertical-align: top;
 }
 
 .device #image img
