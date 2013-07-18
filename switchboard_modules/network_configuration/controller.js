@@ -1,7 +1,24 @@
+/**
+ * Logic for a LabJack Switchboard module to update device network config.
+ *
+ * Logic for a LabJack Switchboard module to update device network configuration
+ * settings.
+ *
+ * @author A. Samuel Pottinger (LabJack Corp, 2013)
+**/
+
 var DEVICE_SELECTOR_SRC = 'network_configuration/device_selector.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 
 
+/**
+ * Wrapper around a device that makes reading and changing network config easy.
+ *
+ * Wrapper around a device that makes reading and changing network configuration
+ * settings easier.
+ *
+ * @param {Object} device The device to decorate / adapt.
+**/
 function DeviceNetworkAdapter(device)
 {
     this.getSerial = function()
@@ -51,6 +68,18 @@ function DeviceNetworkAdapter(device)
 }
 
 
+/**
+ * Populate the network configuration controls with a device's current values.
+ *
+ * Populate the network configuration GUI controls with the corresponding values
+ * that a given device currently has for its network configuration settings.
+ *
+ * @param {Object} device The DeviceNetworkAdapater to get the values from.
+ * @param {function} onError The function to call if an error is encountered
+ *      during population.
+ * @param {function} onSuccess The function to call after the fields are
+ *      popualted.
+**/
 function showCurrentDeviceSettings(device, onError, onSuccess)
 {
     $('#network-name-input').val(device.getNetwork());
@@ -64,6 +93,9 @@ function showCurrentDeviceSettings(device, onError, onSuccess)
 }
 
 
+/**
+ * Handler for when a device is select / unselected for configuration.
+**/
 function onChangeSelectedDevices()
 {
     $('#device-configuration-pane').hide();
@@ -82,6 +114,15 @@ function onChangeSelectedDevices()
 }
 
 
+/**
+ * Prepare the UI and event listeners for managing multiple devices.
+ *
+ * Prepare and show the more complex UI necessary for managing / configuring
+ * multiple devices.
+ *
+ * @param {Array} decoratedDevices Array of DeviceNetworkAdapters for the
+ *      devices that this module should configure.
+**/
 function prepareMultipleDeviceConfiguration(decoratedDevices)
 {
     var location = fs_facade.getExternalURI(DEVICE_SELECTOR_SRC);
@@ -98,6 +139,15 @@ function prepareMultipleDeviceConfiguration(decoratedDevices)
 }
 
 
+/**
+ * Prepare the UI and event listeners for managing a single device.
+ *
+ * Prepare and show a simplier UI with controls needed for managing /
+ * configuring a single device.
+ *
+ * @param {Object} decoratedDevice The DeviceNetworkAdapater for the device this
+ *      module will be responsible for managing / configuring.
+**/
 function prepareIndividualDeviceConfiguration(decoratedDevice)
 {
     showCurrentDeviceSettings(decoratedDevice, genericErrorHandler, function(){
