@@ -1,12 +1,14 @@
 <table class="table table-striped">
-    <th>
-        <td>Configure</td>
-        <td>Serial Number</td>
-        <td>Name</td>
-        <td>Network</td>
-        <td>IP Address</td>
-        <td>Status</td>
-    </th>
+    <thead>
+        <tr>
+            <th>Configure</th>
+            <th>Serial Number</th>
+            <th>Name</th>
+            <th>Network</th>
+            <th>IP Address</th>
+            <th>Status</th>
+        </tr>
+    </thead>
     {{#devices}}
     <tr>
         <td>
@@ -19,7 +21,14 @@
         <td>{{getName}}</td>
         <td>{{getNetwork}}</td>
         <td>{{getIPAddress}}</td>
-        <td>{{getConnectionStatus}}</td>
+        <td>
+            {{#getConnectionStatus}}
+            connected
+            {{/getConnectionStatus}}
+            {{^getConnectionStatus}}
+            not connected
+            {{/getConnectionStatus}}
+        </td>
     </tr>
     {{/devices}}
 </table>
