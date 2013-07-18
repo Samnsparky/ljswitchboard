@@ -1,9 +1,25 @@
 <div id="network-configuration">
     <div id="device-overview"></div>
     <div id="device-configuration-pane">
-        <div class="progress progress-indeterminate">
+        <div id="web-load-waiting-indicator" class="progress progress-indeterminate">
             <div>checking for new firmware release</div>
             <div><img src="static/img/progress-indeterminate.gif"></div>
+        </div>
+        <div id="firmware-select">
+            <div>Change firmware to</div>
+            <div class="btn-toolbar">
+            <div class="btn-group" id="device-selection-controls">
+                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <span id="selected-firmware"></span>
+                    <span class="caret"></span>
+                </a>
+                <ul id="firmware-list" class="dropdown-menu">
+                </ul>
+            </div>
+            </div>
+            <div>
+                <button class="btn">Update</button>
+            </div>
         </div>
     </div>
 </div>
