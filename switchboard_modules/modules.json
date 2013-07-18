@@ -14,5 +14,9 @@
     {
         "name": "digital_io_config",
         "active": true
+    },
+    {
+        "name": "network_configuration",
+        "active": true
     }
 ]
