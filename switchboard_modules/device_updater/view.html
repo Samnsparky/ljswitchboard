@@ -1,5 +1,6 @@
 <div id="network-configuration">
     <div id="device-overview"></div>
+    
     <div id="device-configuration-pane">
         <div id="web-load-waiting-indicator" class="progress progress-indeterminate">
             <div>checking for new firmware release</div>
@@ -18,8 +19,21 @@
             </div>
             </div>
             <div>
-                <button class="btn">Update</button>
+                <button class="btn">update</button>
+            </div>
+        </div>
+        <div id="working-status-pane">
+            <div id="web-load-waiting-indicator" class="progress progress-indeterminate">
+                <div><img src="static/img/progress-indeterminate-ring-light.gif"></div>
+                <div>
+                    upgrading devices
+                    (<span id="complete-devices-display"></span> of <span id="total-devices-display"></span>)
+                </div>
+                <div>
+                    <button class="btn">cancel</button>
+                </div>
             </div>
         </div>
     </div>
+
 </div>
