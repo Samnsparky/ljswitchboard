@@ -22,5 +22,9 @@
     {
         "name": "network_configuration",
         "active": true
+    },
+    {
+        "name": "power_up_defaults",
+        "active": true
     }
 ]

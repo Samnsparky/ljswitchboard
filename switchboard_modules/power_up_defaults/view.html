@@ -1,0 +1,20 @@
+<div id="power-up-defaults-configuration">
+    <div id="device-selector">
+        {{#devices}}
+        <div class="selector-holder">
+            <label class="checkbox">
+            <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
+                <span class="metro-checkbox">{{getSerial}}</span>
+            </label>
+        </div>
+        {{/devices}}
+    </div>
+    <div class="well" id="update-button-holder">
+        <div>
+            Device configuration settings reset on a power cycle. This saves the
+            device's current ethernet configuration, WiFi settings, and name as
+            the defaults the device resets to.
+        </div>
+        <button class="btn" type="button">save defaults</button>
+    </div>
+</div>
