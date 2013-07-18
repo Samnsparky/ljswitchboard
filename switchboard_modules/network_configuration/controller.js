@@ -51,6 +51,19 @@ function DeviceNetworkAdapter(device)
 }
 
 
+function showCurrentDeviceSettings(device, onError, onSuccess)
+{
+    $('#network-name-input').val(device.getNetwork());
+    $('#network-password-input').val(device.getNetworkPassword());
+    $('#default-ip-input').val(device.getIPAddress());
+    $('#default-subnet-input').val(device.getSubnet());
+    $('#default-dns-input').val(device.getDefaultDNS());
+    $('#alt-dns-input').val(device.getAltDNS());
+
+    onSuccess();
+}
+
+
 function onChangeSelectedDevices()
 {
     $('#device-configuration-pane').hide();
@@ -63,25 +76,14 @@ function onChangeSelectedDevices()
     var deviceSerial = selectedCheckboxes[0].id.replace('-selector', '');
     var device = new DeviceNetworkAdapter(keeper.getDevice(deviceSerial));
 
-    $('#network-name-input').val(device.getNetwork());
-    $('#network-password-input').val(device.getNetworkPassword());
-    $('#default-ip-input').val(device.getIPAddress());
-    $('#default-subnet-input').val(device.getSubnet());
-    $('#default-dns-input').val(device.getDefaultDNS());
-    $('#alt-dns-input').val(device.getAltDNS());
-
-    $('#device-configuration-pane').fadeIn();
+    showCurrentDeviceSettings(device, genericErrorHandler, function(){
+        $('#device-configuration-pane').fadeIn();
+    });
 }
 
 
-$('#network-configuration').ready(function(){
-    var keeper = device_controller.getDeviceKeeper();
-    var devices = keeper.getDevices();
-
-    var decoratedDevices = devices.map(function(device) {
-        return new DeviceNetworkAdapter(device);
-    });
-
+function prepareMultipleDeviceConfiguration(decoratedDevices)
+{
     var location = fs_facade.getExternalURI(DEVICE_SELECTOR_SRC);
     fs_facade.renderTemplate(
         location,
@@ -93,4 +95,27 @@ $('#network-configuration').ready(function(){
             $('.device-selection-checkbox').click(onChangeSelectedDevices);
         }
     );
+}
+
+
+function prepareIndividualDeviceConfiguration(decoratedDevice)
+{
+    showCurrentDeviceSettings(decoratedDevice, genericErrorHandler, function(){
+        $('#device-configuration-pane').fadeIn();
+    });
+}
+
+
+$('#network-configuration').ready(function(){
+    var keeper = device_controller.getDeviceKeeper();
+    var devices = keeper.getDevices();
+
+    var decoratedDevices = devices.map(function(device) {
+        return new DeviceNetworkAdapter(device);
+    });
+
+    if(decoratedDevices.length == 1)
+        prepareIndividualDeviceConfiguration(decoratedDevices[0]);
+    else
+        prepareMultipleDeviceConfiguration(decoratedDevices);
 });

@@ -16,6 +16,10 @@
         "active": true
     },
     {
+        "name": "device_updater",
+        "active": true
+    },
+    {
         "name": "network_configuration",
         "active": true
     }
