@@ -1,0 +1,43 @@
+<div id="analog-inputs-configuration">
+    <div id="device-selector">
+        {{#devices}}
+        <div class="selector-holder">
+            <label class="checkbox">
+            <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
+                <span class="metro-checkbox">{{getSerial}}</span>
+            </label>
+        </div>
+        {{/devices}}
+    </div>
+    <div id="configuration-pane">
+        <div id="loading-ranges-display" class="progress progress-indeterminate">
+            <div>loading ranges</div>
+            <div><img src="static/img/progress-indeterminate.gif"></div>
+        </div>
+        <div class="subsection" id="all-device-configuration-controls">
+            <h3>configure all inputs</h3>
+            <div>
+                <div class="btn-toolbar" id="range-dropdown-holder">
+                <div class="btn-group">
+                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                        <span class="selected-all-range-display">select range</span>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="range-list dropdown-menu">
+                    </ul>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="subsection" id="individual-device-configuration-controls">
+            <h3>individual input configuration</h3>
+            <div id="controls-matrix">
+                <div id="loading-inputs-display" class="progress progress-indeterminate">
+                    <div>loading inputs</div>
+                    <div><img src="static/img/progress-indeterminate.gif"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
