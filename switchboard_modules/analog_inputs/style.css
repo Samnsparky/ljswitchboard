@@ -16,3 +16,14 @@
 {
     margin-top: 10px;
 }
+
+.centered-right
+{
+    padding: 15px 10px 0 0;
+    text-align: right;
+}
+
+.input-row:nth-child(odd)
+{
+    background: #F0F0F0;
+}
