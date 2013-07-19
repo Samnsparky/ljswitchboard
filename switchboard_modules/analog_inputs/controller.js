@@ -52,7 +52,7 @@ function loadInputs()
             genericErrorHandler,
             function(renderedHTML)
             {
-                $(CONTROLS_MATRIX_SELECTOR).fadeOut(function(){
+                $(CONTROLS_MATRIX_SELECTOR).hide(function(){
                     $(CONTROLS_MATRIX_SELECTOR).html(renderedHTML);
                     $(CONTROLS_MATRIX_SELECTOR).fadeIn();
 
