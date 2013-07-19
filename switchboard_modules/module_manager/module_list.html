@@ -1,7 +1,7 @@
 {{#modules}}
 <div class="selector-holder">
     <label class="checkbox">
-    <input class="module-selection-checkbox" id="{{name}}-selector" type="checkbox" value="{{name}}">
+    <input class="module-selection-checkbox" id="{{name}}-selector" type="checkbox" value="{{name}}" {{#loaded}}checked{{/loaded}}>
         <span class="metro-checkbox">{{humanName}}</span>
     </label>
 </div>

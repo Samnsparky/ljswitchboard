@@ -1,4 +1,6 @@
-var q = require('q');  
+var q = require('q');
+
+var module_manager = require('./module_manager');
 
 var MODULE_TEMPLATE_SRC = 'module_manager/module_list.html';
 
@@ -21,6 +23,29 @@ function renderModuleList(moduleInfo)
             });
         }
     );
+
+    return deferred.promise;
+}
+
+
+function decorateLoadedModules(allModules)
+{
+    var deferred = q.defer();
+
+    var onGetActiveModules = function(activeModules)
+    {
+        var activeNames = activeModules.map(function(m){return m.name;});
+
+        var decoratedModules = allModules.map(function(module){
+            var decoratedEntry = jQuery.extend({}, module);
+            decoratedEntry['loaded'] = activeNames.indexOf(module.name) != -1;
+            return decoratedEntry;
+        });
+        
+        deferred.resolve(decoratedModules);
+    }
+
+    module_manager.getActiveModules(genericErrorHandler, onGetActiveModules);
 
     return deferred.promise;
 }
@@ -92,5 +117,5 @@ function getModuleList()
 
 
 $('#module-manager').ready(function(){
-    getModuleList().then(renderModuleList).done();
+    getModuleList().then(decorateLoadedModules).then(renderModuleList).done();
 });
