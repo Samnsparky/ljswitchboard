@@ -5,3 +5,4 @@
 * Configure device name and AIN defaults
 * Prevent default on a href in ul for dropdown
 * Network configuration needs help text to explain IP enumeration
+* Hide non-compatible registers by firmware

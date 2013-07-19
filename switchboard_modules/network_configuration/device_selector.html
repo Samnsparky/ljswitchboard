@@ -9,26 +9,28 @@
             <th>Status</th>
         </tr>
     </thead>
-    {{#devices}}
-    <tr>
-        <td>
-            <label class="checkbox">
-            <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
-                <span class="metro-checkbox"></span>
-            </label>
-        </td>
-        <td>{{getSerial}}</td>
-        <td>{{getName}}</td>
-        <td>{{getNetwork}}</td>
-        <td>{{getIPAddress}}</td>
-        <td>
-            {{#getConnectionStatus}}
-            connected
-            {{/getConnectionStatus}}
-            {{^getConnectionStatus}}
-            not connected
-            {{/getConnectionStatus}}
-        </td>
-    </tr>
-    {{/devices}}
+    <tbody>
+        {{#devices}}
+        <tr>
+            <td>
+                <label class="checkbox">
+                <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
+                    <span class="metro-checkbox"></span>
+                </label>
+            </td>
+            <td>{{getSerial}}</td>
+            <td>{{getName}}</td>
+            <td>{{getNetwork}}</td>
+            <td>{{getIPAddress}}</td>
+            <td>
+                {{#getConnectionStatus}}
+                connected
+                {{/getConnectionStatus}}
+                {{^getConnectionStatus}}
+                not connected
+                {{/getConnectionStatus}}
+            </td>
+        </tr>
+        {{/devices}}
+    </tbody>
 </table>

@@ -1,0 +1,21 @@
+<div id="register-matrix-holder">
+    <div id="device-selector">
+        <div class="btn-toolbar">
+        <div class="btn-group" id="device-selection-controls">
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                <span id="selected-device-display">{{ currentDevice.getSerial }}</span>
+                <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                {{# devices }}
+                <li><a class="device-selection-link" id="{{getSerial}}-selector" href="#">{{getSerial}}</a></li>
+                {{/ devices }}
+            </ul>
+        </div>
+        </div>
+    </div>
+    <div id="register-matrix">
+        <div>loading registers list</div>
+        <div><img src="static/img/progress-indeterminate.gif"></div>
+    </div>
+</div>

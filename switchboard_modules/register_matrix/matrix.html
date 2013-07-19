@@ -1,0 +1,24 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Address</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Fwmin</th>
+            <th>Access</th>
+            <th>Tags</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#registers}}
+        <tr>
+            <td>{{address}}</td>
+            <td>{{name}}</td>
+            <td>{{type}}</td>
+            <td>{{relevantFwmin}}</td>
+            <td>+</td>
+        </tr>
+        {{/registers}}
+    </tbody>
+</table>

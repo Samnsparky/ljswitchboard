@@ -32,6 +32,10 @@
         "active": true
     },
     {
+        "name": "register_matrix",
+        "active": true
+    },
+    {
         "name": "module_manager",
         "active": true
     }

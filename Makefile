@@ -6,7 +6,7 @@ all: lint test
 	cp -r ./switchboard_modules ./build
 
 lint:
-	jshint ./src/*.js;
+	cd src; jshint ./
 
 test:
 	nodeunit ./src/*_test.js
