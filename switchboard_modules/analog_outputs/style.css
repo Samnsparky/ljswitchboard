@@ -12,7 +12,7 @@
     margin: 50px 0 50px 0;
 }
 
-.slider
+#analog-output-config .row-fluid
 {
-    width: 300px !important;
+    margin: 30px 0 30px 0;
 }
