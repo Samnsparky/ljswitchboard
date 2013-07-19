@@ -34,5 +34,9 @@
     {
         "name": "power_up_defaults",
         "active": true
+    },
+    {
+        "name": "module_manager",
+        "active": true
     }
 ]
