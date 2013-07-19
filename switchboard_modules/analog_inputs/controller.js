@@ -1,27 +1,71 @@
+var q = require('q');
+
+var fs_facade = require('./fs_facade');
+
+var INPUTS_DATA_SRC = 'analog_inputs/inputs.json';
 var RANGES_DATA_SRC = 'analog_inputs/ranges.json';
 var RANGES_TEMPLATE_SRC = 'analog_inputs/range_options.html';
+var INPUTS_TEMPLATE_SRC = 'analog_inputs/input_config.html';
+
+var CONTROLS_MATRIX_SELECTOR = '#controls-matrix';
+var RANGE_LISTS_SELECTOR = '.range-list';
+var RANGE_LOADING_INDICATOR_SELECTOR = '#loading-ranges-display';
 
 
-function displayRangeOptions(rangeInfo)
+function loadRangeOptions()
 {
-    var location = fs_facade.getExternalURI(INDIVIDUAL_TEMPLATE_SRC);
-    fs_facade.renderTemplate(
-        location,
-        {'registers': registers},
-        genericErrorHandler,
-        function(renderedHTML)
-        {
-            $(IO_CONFIG_PANE_SELECTOR).html(renderedHTML);
-            $('.direction-switch').bootstrapSwitch();
+    var deferred = q.defer();
+    var templateLocation = fs_facade.getExternalURI(RANGES_TEMPLATE_SRC);
+    var rangesSrc = fs_facade.getExternalURI(RANGES_DATA_SRC);
 
-            if(onSuccess !== undefined)
-                onSuccess();
-        }
-    );
+    fs_facade.getJSON(rangesSrc, genericErrorHandler, function(rangeInfo){
+
+        fs_facade.renderTemplate(
+            templateLocation,
+            {'ranges': rangeInfo},
+            genericErrorHandler,
+            function(renderedHTML)
+            {
+                $(RANGE_LISTS_SELECTOR).html(renderedHTML);
+                $(RANGE_LOADING_INDICATOR_SELECTOR).fadeOut();
+
+                deferred.resolve();
+            }
+        );
+
+    });
+
+    return deferred.promise;
+}
+
+
+function loadInputs()
+{
+    var deferred = q.defer();
+    var templateLocation = fs_facade.getExternalURI(INPUTS_TEMPLATE_SRC);
+    var inputsSrc = fs_facade.getExternalURI(INPUTS_DATA_SRC);
+
+    fs_facade.getJSON(inputsSrc, genericErrorHandler, function(inputsInfo){
+        fs_facade.renderTemplate(
+            templateLocation,
+            {'inputs': inputsInfo},
+            genericErrorHandler,
+            function(renderedHTML)
+            {
+                $(CONTROLS_MATRIX_SELECTOR).fadeOut(function(){
+                    $(CONTROLS_MATRIX_SELECTOR).html(renderedHTML);
+                    $(CONTROLS_MATRIX_SELECTOR).fadeIn();
+
+                    deferred.resolve();
+                });
+            }
+        );
+    });
+
+    return deferred.promise;
 }
 
 
 $('#analog-inputs-configuration').ready(function(){
-    var rangesSrc = fs_facade.getExternalURI(RANGES_DATA_SRC);
-    fs_facade.getJSON(rangesSrc, genericErrorHandler, displayRangeOptions);
+    loadInputs().then(loadRangeOptions).done();
 });
