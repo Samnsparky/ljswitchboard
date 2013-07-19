@@ -66,6 +66,17 @@ function loadInputs()
 }
 
 
+function changeSelectedDevices(event)
+{
+    var selectedCheckboxes = $('.device-selection-checkbox:checked');
+    $('#configuration-pane').hide();
+    
+    if(selectedCheckboxes.length > 0)
+        $('#configuration-pane').fadeIn();
+}
+
+
 $('#analog-inputs-configuration').ready(function(){
     loadInputs().then(loadRangeOptions).done();
+    $('.device-selection-checkbox').click(changeSelectedDevices);
 });

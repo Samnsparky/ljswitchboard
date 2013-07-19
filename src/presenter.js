@@ -64,8 +64,9 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
         var jsHTML;
 
         // TODO: These should be in constants with Mustache
-        $('.late-css-' + dest).remove();
-        $('.late-js-' + dest).remove();
+        var safeDest = dest.replace('#', '');
+        $('.late-css-' + safeDest).remove();
+        $('.late-js-' + safeDest).remove();
 
         $(dest).hide();
         $(dest).html(renderedHTML);
@@ -83,7 +84,10 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                 return;
             }
 
-            cssHTML = LATE_LOADED_CSS_TEMPLATE({'href': fileLoc, 'type': dest}); 
+            cssHTML = LATE_LOADED_CSS_TEMPLATE({
+                'href': fileLoc,
+                'type': safeDest
+            }); 
             $('head').append(cssHTML);
         });
 
@@ -100,7 +104,10 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                 return;
             }
 
-            jsHTML = LATE_LOADED_JS_TEMPLATE({'href': fileLoc, 'type': dest});
+            jsHTML = LATE_LOADED_JS_TEMPLATE({
+                'href': fileLoc,
+                'type': safeDest
+            });
             $('head').append(jsHTML);
         });
 

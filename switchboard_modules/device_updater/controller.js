@@ -59,7 +59,7 @@ function getAvailableFirmwareListing(onError, onSuccess)
     ];
 
     window.setTimeout(function(){
-        displayFirmwareListing(firmwareListing);
+        onSuccess(firmwareListing);
     }, 2000);
 }
 

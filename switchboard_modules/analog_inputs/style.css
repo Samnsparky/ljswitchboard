@@ -7,6 +7,12 @@
     padding: 20px;
 }
 
+
+#configuration-pane
+{
+    display: none;
+}
+
 .subsection
 {
     margin: 50px 0 50px 0;
