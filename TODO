@@ -4,3 +4,6 @@
 * Reorganize the fs_facade
 * Configure device name and AIN defaults
 * Prevent default on a href in ul for dropdown
+* Analog inputs hide and flash
+* Device updater not showing controls even though it is checked
+* Network configuration needs help text to explain IP enumeration
