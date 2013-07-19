@@ -20,6 +20,10 @@
         "active": true
     },
     {
+        "name": "analog_outputs",
+        "active": true
+    },
+    {
         "name": "device_updater",
         "active": true
     },

@@ -1,0 +1,18 @@
+#device-selector
+{
+    background-color: #E0E0E0;
+    height: 150px;
+    overflow: auto;
+    font-size: 16px;
+    padding: 20px;
+}
+
+.subsection
+{
+    margin: 50px 0 50px 0;
+}
+
+.slider
+{
+    width: 300px !important;
+}
