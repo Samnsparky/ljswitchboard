@@ -1,0 +1,29 @@
+.toggle-info-button:hover
+{
+    color: #888;
+}
+
+.register-description
+{
+    display: none;
+}
+
+.register-row
+{
+    background-color: white;
+}
+
+.register-row:nth-child(4n-1)
+{
+    background-color: #F9F9F9;
+}
+
+.description-section
+{
+    margin-bottom: 5px;
+}
+
+.description-header
+{
+    font-weight: bold;
+}

@@ -1,4 +1,4 @@
-<table class="table table-striped">
+<table class="table">
     <thead>
         <tr>
             <th>Address</th>
@@ -6,18 +6,29 @@
             <th>Type</th>
             <th>Fwmin</th>
             <th>Access</th>
-            <th>Tags</th>
-            <th>Details</th>
+            <th>More</th>
         </tr>
     </thead>
     <tbody>
         {{#registers}}
-        <tr>
+        <tr class="register-row register-overview-row">
             <td>{{address}}</td>
             <td>{{name}}</td>
             <td>{{type}}</td>
             <td>{{relevantFwmin}}</td>
-            <td>+</td>
+            <td>{{readwrite}}</td>
+            <td id="{{address}}-toggle-button" class="icon-plus-2 toggle-info-button expand"></td>
+        </tr>
+        <tr id="{{address}}-description-display" class="register-row register-description">
+            <td colspan="7">
+                <div class="description-section">
+                    <span class="description-header">Tags:</span> {{flatTagStr}}
+                </div>
+                <div class="description-section">
+                    <span class="description-header">Description:</span>
+                    {{description}}
+                </div>
+            </td>
         </tr>
         {{/registers}}
     </tbody>
