@@ -9,10 +9,14 @@ var REGISTERS_TABLE_TEMPLATE_SRC = 'register_matrix/matrix.html';
 
 var REGISTER_MATRIX_SELECTOR = '#register-matrix';
 
-var DESCRIPTION_DISPLAY_TEMPLATE_STR = '#{{address}}-description-display';
+var DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR =
+    '#{{address}}-description-display';
+var ADD_TO_LIST_DESCRIPTOR_TEMPLATE_STR = '#{{address}}-add-to-list-button';
 
-var DESCRIPTION_DISPLAY_TEMPLATE = handlebars.compile(
-    DESCRIPTION_DISPLAY_TEMPLATE_STR);
+var DESCRIPTION_DISPLAY_SELECTOR_TEMPLATE = handlebars.compile(
+    DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR);
+var ADD_TO_LIST_DESCRIPTOR_TEMPLATE = handlebars.compile(
+    ADD_TO_LIST_DESCRIPTOR_TEMPLATE_STR);
 
 var DATA_TYPE_SIZES = {
     UINT64: 4,
@@ -192,7 +196,8 @@ function toggleRegisterInfo(event)
     var address = toggleButtonID.replace('-toggle-button', '');
     var expand = event.target.className.indexOf('expand') != -1;
 
-    var descriptionSelector = DESCRIPTION_DISPLAY_TEMPLATE({address: address});
+    var descriptionSelector = DESCRIPTION_DISPLAY_SELECTOR_TEMPLATE(
+        {address: address});
 
     if(expand)
     {
@@ -208,6 +213,15 @@ function toggleRegisterInfo(event)
         $(jqueryToggleButtonID).addClass('icon-plus').removeClass(
             'icon-minus');
     }
+}
+
+
+function addRegisterToWatchList(event)
+{
+    var buttonID = event.target.id;
+    var address = buttonID.replace('-add-to-list-button', '');
+    var descriptor = ADD_TO_LIST_DESCRIPTOR_TEMPLATE({address: address});
+    $(descriptor).fadeOut();
 }
 
 
@@ -227,6 +241,7 @@ function renderRegistersTable(entries)
             $(REGISTER_MATRIX_SELECTOR).fadeIn();
 
             $('.toggle-info-button').click(toggleRegisterInfo);
+            $('.add-to-list-button').click(addRegisterToWatchList);
 
             deferred.resolve();
         }
