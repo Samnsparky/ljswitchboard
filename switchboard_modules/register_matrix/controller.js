@@ -198,15 +198,15 @@ function toggleRegisterInfo(event)
     {
         $(descriptionSelector).fadeIn();
         $(jqueryToggleButtonID).addClass('collapse').removeClass('expand');
-        $(jqueryToggleButtonID).addClass('icon-minus-2').removeClass(
-            'icon-plus-2');
+        $(jqueryToggleButtonID).addClass('icon-minus').removeClass(
+            'icon-plus');
     }
     else
     {
         $(descriptionSelector).fadeOut();
         $(jqueryToggleButtonID).addClass('expand').removeClass('collapse');
-        $(jqueryToggleButtonID).addClass('icon-plus-2').removeClass(
-            'icon-minus-2');
+        $(jqueryToggleButtonID).addClass('icon-plus').removeClass(
+            'icon-minus');
     }
 }
 

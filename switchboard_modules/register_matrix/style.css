@@ -3,6 +3,11 @@
     color: #888;
 }
 
+.add-to-list-button:hover
+{
+    color: #888;
+}
+
 .register-description
 {
     display: none;
@@ -11,6 +16,7 @@
 .register-row
 {
     background-color: white;
+    font-size: 14px;
 }
 
 .register-row:nth-child(4n-1)
