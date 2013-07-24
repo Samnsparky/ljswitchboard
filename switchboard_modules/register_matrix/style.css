@@ -8,6 +8,11 @@
     color: #888;
 }
 
+.remove-from-list-button:hover
+{
+    color: #888;
+}
+
 .register-description
 {
     display: none;
@@ -37,4 +42,9 @@
 .description-header
 {
     font-weight: bold;
+}
+
+#register-matrix-search
+{
+    margin-top: 50px;
 }

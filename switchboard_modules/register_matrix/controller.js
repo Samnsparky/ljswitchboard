@@ -9,6 +9,7 @@
 
 var async = require('async');
 var handlebars = require('handlebars');
+var simplesets = require('simplesets');
 var sprintf = require('sprintf-js');
 var lazy = require('lazy');
 var q = require('q');
@@ -357,6 +358,21 @@ function organizeRegistersByAddress(registers)
 }
 
 
+function getTagSet(entries)
+{
+    var tagsHierarchical = entries.map(function(e) {return e.tags;});
+    var tags = [];
+
+    for(var i in tagsHierarchical)
+    {
+        tags.push.apply(tags, tagsHierarchical[i]);
+    }
+
+    var tagSet = new simplesets.Set(tags);
+    return tagSet.array();
+}
+
+
 /**
  * Render a table with information about registers.
  *
@@ -366,25 +382,61 @@ function organizeRegistersByAddress(registers)
  * @param {Array} entries An Array of Object with information about registers.
  * @return {q.defer.promise} A Q promise that resolves to null.
 **/
-function renderRegistersTable(entries)
+function renderRegistersTable(entries, tags, filteredEntries, currentTag,
+    currentSearchTerm)
 {
     var deferred = q.defer();
 
     var location = fs_facade.getExternalURI(REGISTERS_TABLE_TEMPLATE_SRC);
     var entriesByAddress = organizeRegistersByAddress(entries);
+
+    if(tags == undefined)
+        tags = getTagSet(entries);
+    if(currentTag === undefined)
+        currentTag = 'all';
+    if(currentSearchTerm === undefined)
+        currentSearchTerm = '';
+    if(filteredEntries === undefined)
+        filteredEntries = entries;
+
+    var templateVals = {
+        'registers': filteredEntries,
+        'tags': tags,
+        'currentTag': currentTag,
+        'currentSearchTerm': currentSearchTerm
+    };
+
     fs_facade.renderTemplate(
         location,
-        {'registers': entries},
+        templateVals,
         genericErrorHandler,
         function(renderedHTML)
         {
-            $(REGISTER_MATRIX_SELECTOR).hide();
             $(REGISTER_MATRIX_SELECTOR).html(renderedHTML);
-            $(REGISTER_MATRIX_SELECTOR).fadeIn();
+            $(REGISTER_MATRIX_SELECTOR).show();
 
             $('.toggle-info-button').click(toggleRegisterInfo);
+            
             $('.add-to-list-button').click(function(event){
                 addToWatchList(event, entriesByAddress);
+            });
+            
+            $('.tag-selection-link').click(function(event){
+                var tag = event.target.id.replace('-tag-selector', '');
+                searchRegisters(entries, tags, tag, currentSearchTerm);
+            });
+            
+            $('#search-button').click(function(event){
+                var term = $('#search-box').val();
+                searchRegisters(entries, tags, currentTag, term);
+            });
+
+            $('#search-box').keypress(function (e) {
+                if (e.which != 13)
+                    return;
+
+                var term = $('#search-box').val();
+                searchRegisters(entries, tags, currentTag, term);
             });
 
             deferred.resolve();
@@ -392,6 +444,33 @@ function renderRegistersTable(entries)
     );
 
     return deferred.promise;
+}
+
+
+function searchRegisters(entries, allTags, tag, searchTerm)
+{
+    var filteredEntries = entries;
+
+    if(tag !== 'all')
+    {
+        filteredEntries = filteredEntries.filter(function(e){
+            return e.tags.indexOf(tag) != -1;
+        });
+    }
+
+    var termLow = searchTerm.toLowerCase();
+    if(termLow !== '')
+    {
+        filteredEntries = filteredEntries.filter(function(e){
+            var inName = e.name.toLowerCase().indexOf(termLow) != -1;
+            var inTag = e.flatTagStr.toLowerCase().indexOf(termLow) != -1;
+            var inDesc = e.description.toLowerCase().indexOf(termLow) != -1;
+
+            return inName || inTag || inDesc;
+        });
+    }
+
+    renderRegistersTable(entries, allTags, filteredEntries, tag, searchTerm);
 }
 
 

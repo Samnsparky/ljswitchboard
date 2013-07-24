@@ -1,39 +1,63 @@
-<table class="table">
-    <thead>
-        <tr>
-            <th>Address</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Fwmin</th>
-            <th>Access</th>
-            <th>Details</th>
-            <th>Watch/ Config</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{#registers}}
-        <tr class="register-row big-table-row register-overview-row">
-            <td>{{address}}</td>
-            <td>{{name}}</td>
-            <td>{{type}}</td>
-            <td>{{relevantFwmin}}</td>
-            <td>{{readwrite}}</td>
-            <td id="{{address}}-toggle-button" class="icon-plus toggle-info-button expand"></td>
-            <td>
-                <div id="{{address}}-add-to-list-button" class="add-to-list-button icon-add-to-list"></div>
-            </td>
-        </tr>
-        <tr id="{{address}}-description-display" class="register-row big-table-row register-description">
-            <td colspan="7">
-                <div class="description-section">
-                    <span class="description-header">Tags:</span> {{flatTagStr}}
-                </div>
-                <div class="description-section">
-                    <span class="description-header">Description:</span>
-                    {{description}}
-                </div>
-            </td>
-        </tr>
-        {{/registers}}
-    </tbody>
-</table>
+<div class="row-fluid" id="register-matrix-search">
+    <div class="span5" id="search-holder">
+        <div><input id="search-box" type="text" value="{{currentSearchTerm}}" placeholder="search term"></div>
+        <div><button id="search-button" class="btn">search</button></div>
+    </div>
+    <div class="span5" id="tag-dropdown-holder">
+        Tag: <div class="btn-toolbar">
+        <div class="btn-group" id="device-selection-controls">
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                <span id="selected-device-display">{{currentTag}}</span>
+                <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                {{# tags }}
+                <li><a class="tag-selection-link" id="{{.}}-tag-selector" href="#">{{.}}</a></li>
+                {{/ tags }}
+                <li><a class="tag-selection-link" id="all-tag-selector" href="#">ALL</a></li>
+            </ul>
+        </div>
+        </div>
+    </div>
+</div>
+<div id="register-matrix-body">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Fwmin</th>
+                <th>Access</th>
+                <th>Details</th>
+                <th>Watch/ Config</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#registers}}
+            <tr class="register-row big-table-row register-overview-row">
+                <td>{{address}}</td>
+                <td>{{name}}</td>
+                <td>{{type}}</td>
+                <td>{{relevantFwmin}}</td>
+                <td>{{readwrite}}</td>
+                <td id="{{address}}-toggle-button" class="icon-plus toggle-info-button expand"></td>
+                <td>
+                    <div id="{{address}}-add-to-list-button" class="add-to-list-button icon-add-to-list"></div>
+                </td>
+            </tr>
+            <tr id="{{address}}-description-display" class="register-row big-table-row register-description">
+                <td colspan="7">
+                    <div class="description-section">
+                        <span class="description-header">Tags:</span> {{flatTagStr}}
+                    </div>
+                    <div class="description-section">
+                        <span class="description-header">Description:</span>
+                        {{description}}
+                    </div>
+                </td>
+            </tr>
+            {{/registers}}
+        </tbody>
+    </table>
+</div>
