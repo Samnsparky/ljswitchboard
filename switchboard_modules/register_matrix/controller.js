@@ -413,7 +413,6 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
         function(renderedHTML)
         {
             $(REGISTER_MATRIX_SELECTOR).html(renderedHTML);
-            $(REGISTER_MATRIX_SELECTOR).show();
 
             $('.toggle-info-button').click(toggleRegisterInfo);
             
@@ -438,6 +437,10 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
                 var term = $('#search-box').val();
                 searchRegisters(entries, tags, currentTag, term);
             });
+
+            document.body.style.display='none';
+            document.body.offsetHeight; // no need to store this anywhere, the reference is enough
+            document.body.style.display='block';
 
             deferred.resolve();
         }
