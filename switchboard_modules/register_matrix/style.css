@@ -19,7 +19,12 @@
     font-size: 14px;
 }
 
-.register-row:nth-child(4n-1)
+.small-table-row:nth-child(odd)
+{
+    background-color: #F9F9F9;
+}
+
+.big-table-row:nth-child(4n-1)
 {
     background-color: #F9F9F9;
 }

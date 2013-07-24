@@ -12,7 +12,7 @@
     </thead>
     <tbody>
         {{#registers}}
-        <tr class="register-row register-overview-row">
+        <tr class="register-row big-table-row register-overview-row">
             <td>{{address}}</td>
             <td>{{name}}</td>
             <td>{{type}}</td>
@@ -23,7 +23,7 @@
                 <div id="{{address}}-add-to-list-button" class="add-to-list-button icon-add-to-list"></div>
             </td>
         </tr>
-        <tr id="{{address}}-description-display" class="register-row register-description">
+        <tr id="{{address}}-description-display" class="register-row big-table-row register-description">
             <td colspan="7">
                 <div class="description-section">
                     <span class="description-header">Tags:</span> {{flatTagStr}}

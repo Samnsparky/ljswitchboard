@@ -15,8 +15,10 @@ var q = require('q');
 
 var REGISTERS_DATA_SRC = 'register_matrix/ljm_constants.json';
 var REGISTERS_TABLE_TEMPLATE_SRC = 'register_matrix/matrix.html';
+var REGISTER_WATCH_LIST_TEMPLATE_SRC = 'register_matrix/watchlist.html';
 
 var REGISTER_MATRIX_SELECTOR = '#register-matrix';
+var REGISTER_WATCHLIST_SELECTOR = '#register-watchlist'
 
 var DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR =
     '#{{address}}-description-display';
@@ -35,6 +37,8 @@ var DATA_TYPE_SIZES = {
     UINT32: 2,
     FLOAT32: 2
 };
+
+var registerWatchList = [];
 
 
 // TODO: This is implementing a subset of LJMMM
@@ -330,20 +334,26 @@ function toggleRegisterInfo(event)
 }
 
 
-/**
- * jQuery event listener to add a register to the list of registers to watch.
- *
- * jQuery event listener to add a register to the list of registers to watch or
- * manipulate.
- *
- * @param {Event} event Standard jQuery event information Object.
-**/
-function addRegisterToWatchList(event)
+function zip(data)
 {
-    var buttonID = event.target.id;
-    var address = buttonID.replace('-add-to-list-button', '');
-    var descriptor = ADD_TO_LIST_DESCRIPTOR_TEMPLATE({address: address});
-    $(descriptor).fadeOut();
+    var retVal = {};
+
+    for(var i in data)
+    {
+        retVal[data[i][0]] = data[i][1];
+    }
+
+    return retVal;
+}
+
+
+function organizeRegistersByAddress(registers)
+{
+    var pairs = registers.map(function(e){
+        return [e.address, e];
+    });
+
+    return zip(pairs);
 }
 
 
@@ -361,6 +371,7 @@ function renderRegistersTable(entries)
     var deferred = q.defer();
 
     var location = fs_facade.getExternalURI(REGISTERS_TABLE_TEMPLATE_SRC);
+    var entriesByAddress = organizeRegistersByAddress(entries);
     fs_facade.renderTemplate(
         location,
         {'registers': entries},
@@ -372,7 +383,9 @@ function renderRegistersTable(entries)
             $(REGISTER_MATRIX_SELECTOR).fadeIn();
 
             $('.toggle-info-button').click(toggleRegisterInfo);
-            $('.add-to-list-button').click(addRegisterToWatchList);
+            $('.add-to-list-button').click(function(event){
+                addToWatchList(event, entriesByAddress);
+            });
 
             deferred.resolve();
         }
@@ -445,6 +458,70 @@ function flattenTags(registers)
     );
 
     return deferred.promise;
+}
+
+
+function refreshWatchList()
+{
+    var location = fs_facade.getExternalURI(REGISTER_WATCH_LIST_TEMPLATE_SRC);
+    if(registerWatchList.length > 0)
+    {
+        fs_facade.renderTemplate(
+            location,
+            {'registers': registerWatchList},
+            genericErrorHandler,
+            function(renderedHTML)
+            {
+                $(REGISTER_WATCHLIST_SELECTOR).html(renderedHTML);
+                $(REGISTER_WATCHLIST_SELECTOR).show();
+
+                $('.remove-from-list-button').click(removeFromWatchList);
+            }
+        );
+    }
+    else
+    {
+        $(REGISTER_WATCHLIST_SELECTOR).hide();
+    }
+}
+
+
+function addToWatchList(event, registerInfoByAddress)
+{
+    var buttonID = event.target.id;
+    var address = Number(buttonID.replace('-add-to-list-button', ''));
+    var descriptor = ADD_TO_LIST_DESCRIPTOR_TEMPLATE({address: address});
+    $(descriptor).hide();
+
+    var targetRegister = registerInfoByAddress[address];
+    registerWatchList.push(targetRegister);
+    refreshWatchList();
+}
+
+
+function removeFromWatchList(event)
+{
+    var buttonID = event.target.id;
+    var address = buttonID.replace('-remove-from-list-button', '');
+
+    console.log(registerWatchList);
+
+    var registersToRemove = registerWatchList.filter(
+        function(e){ return e.address == address; }
+    );
+    registerWatchList = registerWatchList.filter(
+        function(e){ return e.address != address; }
+    );
+    refreshWatchList();
+
+    for(var i in registersToRemove)
+    {
+        var registerToRemove = registersToRemove[i];
+        var descriptor = ADD_TO_LIST_DESCRIPTOR_TEMPLATE(
+            {address: registerToRemove.address}
+        );
+        $(descriptor).show();
+    }
 }
 
 

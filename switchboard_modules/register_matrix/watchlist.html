@@ -1,0 +1,26 @@
+<table class="table">
+    <thead>
+        <tr>
+            <th>Address</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Current value</th>
+            <th>Write value</th>
+            <th>Remove</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#registers}}
+        <tr class="register-row small-table-row register-overview-row">
+            <td>{{address}}</td>
+            <td>{{name}}</td>
+            <td>{{type}}</td>
+            <td></td>
+            <td></td>
+            <td>
+                <div id="{{address}}-remove-from-list-button" class="remove-from-list-button icon-minus"></div>
+            </td>
+        </tr>
+        {{/registers}}
+    </tbody>
+</table>
