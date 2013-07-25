@@ -8,6 +8,10 @@
         "active": true
     },
     {
+        "name": "dashboard_logger",
+        "active": true
+    },
+    {
         "name": "digital_io_config",
         "active": true
     },
