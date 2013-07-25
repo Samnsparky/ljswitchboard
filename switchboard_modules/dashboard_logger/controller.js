@@ -60,15 +60,22 @@ function decorateSelectedRegisters(registers)
 function refreshWatchList()
 {
     var location = fs_facade.getExternalURI(WATCHLIST_TEMPLATE_SRC);
-    fs_facade.renderTemplate(
-        location,
-        {'channels': selectedRegisters},
-        genericErrorHandler,
-        function(renderedHTML)
-        {
-            $('#register-watch-table').html(renderedHTML);
-        }
-    );
+    if(selectedRegisters.length > 0)
+    {
+        fs_facade.renderTemplate(
+            location,
+            {'channels': selectedRegisters},
+            genericErrorHandler,
+            function(renderedHTML)
+            {
+                $('#register-watch-table').html(renderedHTML);
+            }
+        );
+    }
+    else
+    {
+        $('#register-watch-table').hide();
+    }
 }
 
 
@@ -104,8 +111,6 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
 
                 var jquerySelector = '#' + checkboxID;
                 var selected = $(jquerySelector).prop('checked');
-
-                debugger;
                 
                 if(selected)
                 {
@@ -124,9 +129,13 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
                 else
                 {
                     selectedRegisters = selectedRegisters.filter(function(e){
-                        return e.register.address == regAddress;
+                        return e.register.address != regAddress;
                     });
                 }
+
+                selectedRegisters.sort(function(a, b){
+                    return a.register.address - b.register.address;
+                });
 
                 refreshWatchList();
             });
