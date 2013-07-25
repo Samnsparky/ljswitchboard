@@ -77,7 +77,10 @@ function refreshWatchList()
             function(renderedHTML)
             {
                 $('#register-watch-table').html(renderedHTML);
-                $('#register-watch-table').show();
+
+                if(selectedRegisters.length == 1)
+                    $('#register-watch-table').slideDown();
+
                 $('.remove-from-watchlist-link').click(function(event){
                     var linkID = event.target.id;
                     var infoStr = linkID.replace('-remove-reg-watch-list', '');
@@ -101,7 +104,7 @@ function refreshWatchList()
     }
     else
     {
-        $('#register-watch-table').hide();
+        $('#register-watch-table').slideUp();
     }
 }
 
@@ -112,7 +115,6 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
     $('#category-selector').slideUp();
     $('#selected-category-display').html(selectedCategory);
     $('#selected-category-display-holder').show();
-    $('#register-selector').slideDown();
 
     var registers = registersByTag.get(selectedCategory);
     var decoratedRegisters = decorateSelectedRegisters(registers);
@@ -121,6 +123,40 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
 
     var templateVals = {'registers': decoratedRegisters};
 
+    var onCheckboxChanged = function(event)
+    {
+        var checkboxID = event.target.id;
+        var regInfo = checkboxID.replace('-reg-selector','').split('-');
+        var regName = regInfo[0];
+        var regAddress = Number(regInfo[1]);
+
+        var jquerySelector = '#' + checkboxID;
+        var selected = $(jquerySelector).prop('checked');
+        
+        if(selected)
+        {
+            var register = registers.filter(function(e){
+                return e.address == regAddress
+            })[0];
+
+            var device = devices.filter(function(e){
+                return e.getSerial() === selectedSerial
+            })[0];
+
+            selectedRegisters.push(
+                {'register': register, 'device': device}
+            );
+        }
+        else
+        {
+            selectedRegisters = selectedRegisters.filter(function(e){
+                return e.register.address != regAddress;
+            });
+        }
+
+        refreshWatchList();
+    };
+
     var location = fs_facade.getExternalURI(CHANNEL_LIST_TEMPLATE_SRC);
     fs_facade.renderTemplate(
         location,
@@ -128,39 +164,10 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
         genericErrorHandler,
         function(renderedHTML)
         {
-            $('#channel-select-menu').html(renderedHTML);
-            
-            $('.reg-checkbox').change(function(event){
-                var checkboxID = event.target.id;
-                var regInfo = checkboxID.replace('-reg-selector','').split('-');
-                var regName = regInfo[0];
-                var regAddress = Number(regInfo[1]);
-
-                var jquerySelector = '#' + checkboxID;
-                var selected = $(jquerySelector).prop('checked');
-                
-                if(selected)
-                {
-                    var register = registers.filter(function(e){
-                        return e.address == regAddress
-                    })[0];
-
-                    var device = devices.filter(function(e){
-                        return e.getSerial() === selectedSerial
-                    })[0];
-
-                    selectedRegisters.push(
-                        {'register': register, 'device': device}
-                    );
-                }
-                else
-                {
-                    selectedRegisters = selectedRegisters.filter(function(e){
-                        return e.register.address != regAddress;
-                    });
-                }
-
-                refreshWatchList();
+            $('#channel-select-menu').html('');
+            $('#register-selector').slideDown(function(){
+                $('#channel-select-menu').html(renderedHTML);
+                $('.reg-checkbox').change(onCheckboxChanged);
             });
         }
     );
@@ -197,6 +204,8 @@ function renderChannelSelectControls(registersByTag)
                 selectDevice(event, registersByTag)
             });
 
+            $('#choose-different-category-link').click(chooseDifferentCategory);
+
             deferred.resolve();
         }
     );
@@ -204,6 +213,13 @@ function renderChannelSelectControls(registersByTag)
     return deferred.promise;
 }
 
+
+function chooseDifferentCategory()
+{
+    $('#category-selector').slideDown();
+    $('#selected-category-display-holder').hide();
+    $('#register-selector').slideUp();
+}
 
 
 function getRegistersByTag(registers)
