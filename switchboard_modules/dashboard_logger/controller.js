@@ -1,5 +1,6 @@
 var async = require('async');
 var dict = require('dict');
+var handlebars = require('handlebars')
 var extend = require('node.extend');
 var q = require('q');
 
@@ -9,6 +10,9 @@ var REGISTERS_DATA_SRC = 'dashboard_logger/ljm_constants.json';
 var DEVICE_CATEG_SELECT_TEMPLATE_SRC = 'dashboard_logger/device_category_selector.html';
 var CHANNEL_LIST_TEMPLATE_SRC = 'dashboard_logger/channel_list.html';
 var WATCHLIST_TEMPLATE_SRC = 'dashboard_logger/watchlist.html'
+
+var REG_CHECKBOX_ID_TEMPLATE_STR = '#{{name}}-{{address}}-reg-selector';
+var REG_CHECKBOX_ID_TEMPLATE = handlebars.compile(REG_CHECKBOX_ID_TEMPLATE_STR);
 
 var CHANNEL_SELECTOR_HOLDER_SELECTOR = '#channel-selector-holder';
 
@@ -59,6 +63,10 @@ function decorateSelectedRegisters(registers)
 
 function refreshWatchList()
 {
+    selectedRegisters.sort(function(a, b){
+        return a.register.address - b.register.address;
+    });
+
     var location = fs_facade.getExternalURI(WATCHLIST_TEMPLATE_SRC);
     if(selectedRegisters.length > 0)
     {
@@ -69,6 +77,25 @@ function refreshWatchList()
             function(renderedHTML)
             {
                 $('#register-watch-table').html(renderedHTML);
+                $('#register-watch-table').show();
+                $('.remove-from-watchlist-link').click(function(event){
+                    var linkID = event.target.id;
+                    var infoStr = linkID.replace('-remove-reg-watch-list', '');
+                    var regInfo = infoStr.split('-');
+                    var regName = regInfo[0];
+                    var regAddress = regInfo[1];
+
+                    var checkboxID = REG_CHECKBOX_ID_TEMPLATE(
+                        {name: regName, address: regAddress}
+                    );
+                    $(checkboxID).prop('checked', false);
+                    
+                    selectedRegisters = selectedRegisters.filter(function(e){
+                        return e.register.address != regAddress;
+                    });
+
+                    refreshWatchList();
+                });
             }
         );
     }
@@ -132,10 +159,6 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
                         return e.register.address != regAddress;
                     });
                 }
-
-                selectedRegisters.sort(function(a, b){
-                    return a.register.address - b.register.address;
-                });
 
                 refreshWatchList();
             });

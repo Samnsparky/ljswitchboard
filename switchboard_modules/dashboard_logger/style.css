@@ -48,6 +48,11 @@
     overflow: auto;
 }
 
+.remove-from-watchlist-link:hover
+{
+    color: #888;
+}
+
 #name-input
 {
     width: 100%;
