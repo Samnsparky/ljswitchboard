@@ -1,16 +1,87 @@
 .toggle-info-button:hover
 {
-    color: #888;
+    color: #888888;
+    cursor: pointer;
 }
 
 .add-to-list-button:hover
 {
-    color: #888;
+    color: #888888;
+    cursor: pointer;
 }
 
 .remove-from-list-button:hover
 {
-    color: #888;
+    color: #888888;
+    cursor: pointer;
+}
+
+.edit-register-button:hover
+{
+    color: #888888;
+    cursor: pointer;
+}
+
+.close-value-editor-button
+{
+    margin-bottom: 1px;
+}
+
+.write-value-editor-button
+{
+    margin-top: 1px;
+}
+
+.value-editor-button
+{
+    color: black;
+    background-color: #CCCCCC;
+    padding: 3px;
+    font-size: 11px;
+}
+
+.value-editor-button:hover
+{
+    background-color: #AAAAAA;
+    cursor: pointer;
+}
+
+.write-controls-holder
+{
+    height: 11px;
+    width: 90px;
+    font-size: 12px;
+}
+
+.write-controls-holder .write-confirm-msg
+{
+    float: left;
+}
+
+.write-controls-holder .write-value-editor-button
+{
+    float: right;
+}
+
+.value-edit-controls
+{
+    display: none;
+}
+
+.value-edit-controls .icon
+{
+    width: 10px;
+    height: 10px;
+}
+
+.write-reg-value-input
+{
+    margin-bottom: 0px !important;
+}
+
+.write-confirm-msg
+{
+    margin-top: 4px;
 }
 
 .register-description
@@ -42,6 +113,11 @@
 .description-header
 {
     font-weight: bold;
+}
+
+.write-confirm-msg
+{
+    display:none;
 }
 
 #register-matrix-search

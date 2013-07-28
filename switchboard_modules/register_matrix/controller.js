@@ -24,11 +24,14 @@ var REGISTER_WATCHLIST_SELECTOR = '#register-watchlist'
 var DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR =
     '#{{address}}-description-display';
 var ADD_TO_LIST_DESCRIPTOR_TEMPLATE_STR = '#{{address}}-add-to-list-button';
+var WATCH_ROW_SELECTOR_TEMPLATE_STR = '#{{address}}-watch-row';
 
 var DESCRIPTION_DISPLAY_SELECTOR_TEMPLATE = handlebars.compile(
     DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR);
 var ADD_TO_LIST_DESCRIPTOR_TEMPLATE = handlebars.compile(
     ADD_TO_LIST_DESCRIPTOR_TEMPLATE_STR);
+var WATCH_ROW_SELECTOR_TEMPLATE = handlebars.compile(
+    WATCH_ROW_SELECTOR_TEMPLATE_STR);
 
 var registerWatchList = [];
 
@@ -448,6 +451,10 @@ function flattenTags(registers)
 function refreshWatchList()
 {
     var location = fs_facade.getExternalURI(REGISTER_WATCH_LIST_TEMPLATE_SRC);
+    registerWatchList.sort(function(a, b){
+        return a.address - b.address;
+    });
+
     if(registerWatchList.length > 0)
     {
         fs_facade.renderTemplate(
@@ -459,7 +466,54 @@ function refreshWatchList()
                 $(REGISTER_WATCHLIST_SELECTOR).html(renderedHTML);
                 $(REGISTER_WATCHLIST_SELECTOR).show();
 
+                var showRegiserEditControls = function(event){
+                    var address = event.target.id.replace('edit-reg-', '');
+                    var rowSelector = WATCH_ROW_SELECTOR_TEMPLATE({
+                        'address': address
+                    });
+
+                    $(rowSelector).find('.value-display').slideUp();
+                    $(rowSelector).find('.value-edit-controls').slideDown();
+                };
+
+                var hideRegisterEditControls = function(event){
+                    var address = event.target.id;
+                    address = address.replace('close-edit-reg-', '');
+                    address = address.replace('icon-', '');
+                    var rowSelector = WATCH_ROW_SELECTOR_TEMPLATE({
+                        'address': address
+                    });
+
+                    $(rowSelector).find('.value-edit-controls').slideUp();
+                    $(rowSelector).find('.value-display').slideDown();
+                };
+
+                var writeRegister = function(event){
+                    var address = event.target.id;
+                    address = address.replace('write-reg-', '');
+                    address = address.replace('icon-', '');
+                    var rowSelector = WATCH_ROW_SELECTOR_TEMPLATE({
+                        'address': address
+                    });
+
+                    $(rowSelector).find('.write-confirm-msg').slideDown(
+                        function(){
+                            window.setTimeout(function(){
+                                $(rowSelector).find(
+                                    '.write-confirm-msg'
+                                ).slideUp();
+                            }, 250);
+                        }
+                    );
+                };
+
                 $('.remove-from-list-button').click(removeFromWatchList);
+
+                $('.edit-register-button').click(showRegiserEditControls);
+
+                $('.close-value-editor-button').click(hideRegisterEditControls);
+
+                $('.write-value-editor-button').click(writeRegister);
             }
         );
     }

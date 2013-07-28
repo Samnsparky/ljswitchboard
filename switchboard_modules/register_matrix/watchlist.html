@@ -4,19 +4,39 @@
             <th>Address</th>
             <th>Name</th>
             <th>Type</th>
-            <th>Current value</th>
-            <th>Write value</th>
+            <th>Value</th>
             <th>Remove</th>
         </tr>
     </thead>
     <tbody>
         {{#registers}}
-        <tr class="register-row small-table-row register-overview-row">
+        <tr id="{{address}}-watch-row" class="register-row small-table-row register-overview-row">
             <td>{{address}}</td>
             <td>{{name}}</td>
             <td>{{type}}</td>
-            <td></td>
-            <td></td>
+            <td>
+                <div class="value-display">
+                    1.0000 <span id="edit-reg-{{address}}" class="icon-pencil edit-register-button"></span>
+                </div>
+                <div class="value-edit-controls">
+                    <div class="close-value-editor-button">
+                        <span id="close-edit-reg-{{address}}" class="value-editor-button">
+                            <span id="close-edit-reg-icon-{{address}}" class="icon icon-close close-value-editor-button-icon"></span>
+                            close
+                        </span>
+                    </div>
+                    <div>
+                        <input class="input-small write-reg-value-input" type="text">
+                    </div>
+                    <div class="write-controls-holder">
+                        <span class="write-confirm-msg" id="write-confirm-msg-{{address}}">writing</span>
+                        <span id="write-reg-{{address}}" class="write-value-editor-button value-editor-button">
+                            write
+                            <span id="write-reg-icon-{{address}}" class="icon icon-arrow-right-12"></span>
+                        </span>
+                    </div>
+                </div>
+            </td>
             <td>
                 <div id="{{address}}-remove-from-list-button" class="remove-from-list-button icon-trash"></div>
             </td>

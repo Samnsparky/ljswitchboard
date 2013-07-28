@@ -42,4 +42,7 @@ $('#device-info-inspector').ready(function(){
         var serial = event.target.id.replace('-selector', '');
         showDevice(serial);
     });
+    $('#change-name-link').click(function(){
+        $('#change-name-controls').slideDown();
+    });
 });

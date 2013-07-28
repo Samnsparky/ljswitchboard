@@ -38,7 +38,11 @@
                 <div id="name-display-holder" class="device-detail">
                     Name:
                     <span id="name-display">
-                        {{getName}}
+                        {{getName}} - <a href="#" id="change-name-link">change name</a>
+                        <div id="change-name-controls">
+                            <div><input type="text" id="new-name-input" placeholder="new name"></div>
+                            <div><button class="btn">change name</button></div>
+                        </div>
                     </span>
                 </div>
             </div>
