@@ -66,7 +66,7 @@ function loadInputs()
 }
 
 
-function changeSelectedDevices(event)
+function changeSelectedDevices()
 {
     var selectedCheckboxes = $('.device-selection-checkbox:checked');
     $('#configuration-pane').hide();
@@ -79,4 +79,6 @@ function changeSelectedDevices(event)
 $('#analog-inputs-configuration').ready(function(){
     loadInputs().then(loadRangeOptions).done();
     $('.device-selection-checkbox').click(changeSelectedDevices);
+    $('.device-selection-checkbox').first().prop('checked', true);
+    changeSelectedDevices();
 });

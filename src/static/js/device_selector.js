@@ -200,4 +200,9 @@ $('#device-selector-holder').ready(function(){
     $('.close-alert-button').click(closeAlert);
     $('.disconnect-button').click(disconnectDevice);
     $('#finish-button').click(moveToModules);
+
+    var deviceKeeper = device_controller.getDeviceKeeper();
+
+    if(deviceKeeper.getNumDevices() > 0)
+        $('#finish-button').show();
 });

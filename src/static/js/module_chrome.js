@@ -129,6 +129,10 @@ function displayActiveModulesWithEvents(activeModules, onError, onSuccess)
 $('#module-chrome').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     $('#device-count-display').html(keeper.getNumDevices());
+
+    $('#manage-link').click(function(){
+        renderDeviceSelector();
+    });
     
     module_manager.getActiveModules(
         genericErrorHandler,

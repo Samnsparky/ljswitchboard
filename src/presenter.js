@@ -155,8 +155,8 @@ function includeDeviceDisplaySizes(deviceTypes)
 **/
 function renderDeviceSelector()
 {
-    var onDevicesLoaded = function(data) {
-        var context = {'connection_types': includeDeviceDisplaySizes(data)};
+    var onDevicesLoaded = function(devices) {
+        var context = {'connection_types': includeDeviceDisplaySizes(devices)};
         renderTemplate(
             'device_selector.html',
             context,
@@ -165,7 +165,7 @@ function renderDeviceSelector()
             ['device_selector.css'],
             ['device_selector.js'],
             genericErrorHandler
-        ); 
+        );
     };
 
     var devices = device_controller.getDevices(
