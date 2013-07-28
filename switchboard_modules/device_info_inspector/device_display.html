@@ -1,0 +1,36 @@
+<div class="row-fluid">
+    {{#device}}
+    <div class="span6">
+        <h1 class="header">
+            serial
+            <span id="serial-number-display">{{getSerial}}</span>
+        </h1>
+        <div id="type-display" class="device-detail">{{getDeviceType}}</div>
+        <div id="firmware-display-holder" class="device-detail">
+            Firmware version
+            <span id="firmware-display">
+                {{getFirmwareVersion}}
+            </span>
+        </div>
+        <div id="bootloader-display-holder" class="device-detail">
+            Bootloader version
+            <span id="bootloader-display">
+                {{getBootloaderVersion}}
+            </span>
+        </div>
+        <div id="name-display-holder" class="device-detail">
+            Name:
+            <span id="name-display">
+                {{getName}} - <a href="#" id="change-name-link">change name</a>
+                <div id="change-name-controls">
+                    <div><input type="text" id="new-name-input" placeholder="new name"></div>
+                    <div><button class="btn">change name</button></div>
+                </div>
+            </span>
+        </div>
+    </div>
+    <div class="span6">
+        <img id="device-image" src="static/img/devices/{{getDeviceType}}.png">
+    </div>
+    {{/device}}
+</div>

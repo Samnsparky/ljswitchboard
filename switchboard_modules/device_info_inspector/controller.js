@@ -9,14 +9,38 @@
 
 var device_controller = require('./test_device_controller');
 
+var DEVICE_DISPLAY_SRC = 'device_info_inspector/device_display.html';
+
+
+function showDevice(device, onSuccess)
+{
+    var location = fs_facade.getExternalURI(DEVICE_DISPLAY_SRC);
+    fs_facade.renderTemplate(
+        location,
+        {'device': device},
+        genericErrorHandler,
+        function(renderedHTML)
+        {
+            $('#device-info-display').html(renderedHTML);
+            $('#change-name-link').click(function(){
+                $('#change-name-controls').slideDown();
+            });
+
+            $('#selected-device-display').html(device.getSerial());
+
+            onSuccess();
+        }
+    );
+}
+
 
 /**
- * Show the information about a given device.
+ * Show the information about a device given its serial number.
  *
  * @param {String} serial The serial number of the device to display information
  *      for.
 **/
-function showDevice(serial)
+function showDeviceSerial(serial)
 {
     var device = device_controller.getDeviceKeeper().getDevice(serial);
     if(device === null)
@@ -26,13 +50,7 @@ function showDevice(serial)
     }
 
     $('#device-info-display').hide();
-    $('#serial-number-display').html(device.getSerial());
-    $('#type-display').html(device.getDeviceType());
-    $('#firmware-display').html(device.getFirmwareVersion());
-    $('#bootloader-display').html(device.getBootloaderVersion());
-    $('#name-display').html(device.getName());
-    $('#selected-device-display').html(device.getSerial());
-    $('#device-info-display').fadeIn();
+    showDevice(device, function(){$('#device-info-display').fadeIn();});
 }
 
 
@@ -40,9 +58,10 @@ $('#device-info-inspector').ready(function(){
     // Attach event listener
     $('.device-selection-link').click(function(event){
         var serial = event.target.id.replace('-selector', '');
-        showDevice(serial);
+        showDeviceSerial(serial);
     });
-    $('#change-name-link').click(function(){
-        $('#change-name-controls').slideDown();
-    });
+
+    var devices = device_controller.getDeviceKeeper().getDevices();
+    var device = devices[0];
+    showDevice(device, function(){$('#device-info-display').fadeIn();});
 });
