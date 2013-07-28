@@ -1,14 +1,31 @@
 <div id="analog-inputs-configuration">
-    <div id="device-selector">
-        {{#devices}}
-        <div class="selector-holder">
-            <label class="checkbox">
-            <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
-                <span class="metro-checkbox">{{getSerial}}</span>
-            </label>
-        </div>
-        {{/devices}}
-    </div>
+    <table class="table table-striped" id="device-selector">
+        <thead>
+            <tr>
+                <th>select</th>
+                <th>serial number</th>
+                <th>name</th>
+            <tr>
+        </thead>
+        <tbody>
+            {{#devices}}
+            <tr>
+                <td>
+                    <label class="checkbox">
+                        <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
+                        <span class="metro-checkbox"></span>
+                    </label>
+                </td>
+                <td>
+                    {{getSerial}}
+                </td>
+                <td>
+                    {{getName}}
+                </td>
+            </tr>
+            {{/devices}}
+        </tbody>
+    </table>
     <div id="configuration-pane">
         <div id="loading-ranges-display" class="progress progress-indeterminate">
             <div>loading ranges</div>

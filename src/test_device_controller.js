@@ -159,6 +159,13 @@ function DeviceKeeper()
         devices.forEach(function(value, key) {retList.push(value);});
         return retList;
     };
+
+    this.getDeviceSerials = function()
+    {
+        var retList = [];
+        devices.forEach(function(value, key) {retList.push(key);});
+        return retList;
+    };
 }
 
 
@@ -176,6 +183,26 @@ exports.getDeviceKeeper = function()
         deviceKeeperInstance = new DeviceKeeper();
     return deviceKeeperInstance;
 };
+
+
+function markConnectedDevices(devices)
+{
+    var devicesOfType;
+    var device;
+
+    var connectedSerials = exports.getDeviceKeeper().getDeviceSerials();
+
+    for(var i in devices)
+    {
+        devicesOfType = devices[i].devices;
+        for(var j in devicesOfType)
+        {
+            device = devicesOfType[j];
+            device.connected = connectedSerials.indexOf(device.serial) != -1;
+        }
+    }
+    return devices;
+}
 
 
 /**
@@ -246,6 +273,7 @@ exports.getDevices = function(onError, onSuccess)
         }
     ];
 
+    data = markConnectedDevices(data);
     onSuccess(data);
 };
 

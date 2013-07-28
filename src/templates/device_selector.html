@@ -21,7 +21,12 @@
                             <div id="connection-types">{{#connectionTypes}}{{ . }} {{/connectionTypes}}</div>
                             <div id="type">{{type}}</div>
                             <div id="name">{{name}}</div>
-                            <div id="show-connect-button-holder">
+                            <div id="disconnect-button-holder" class="{{^connected}}hidden-button-holder{{/connected}}">
+                                <button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
+                                    disconnect
+                                </button>
+                            </div>
+                            <div id="show-connect-button-holder" class="{{#connected}}hidden-button-holder{{/connected}}">
                                 <button class="btn show-connect-button" id="{{type}}-{{serial}}-show">
                                     connect
                                 </button>
@@ -29,11 +34,6 @@
                             <div class="device-load-progress progress progress-indeterminate">
                                 <div>loading</div>
                                 <div><img src="static/img/progress-indeterminate.gif"></div>
-                            </div>
-                            <div id="disconnect-button-holder">
-                                <button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
-                                    disconnect
-                                </button>
                             </div>
                         </div>
                         <div id="connect-buttons">

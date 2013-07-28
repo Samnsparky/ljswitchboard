@@ -124,7 +124,7 @@
     display: none;
 }
 
-#disconnect-button-holder
+.hidden-button-holder
 {
     display: none;
 }
