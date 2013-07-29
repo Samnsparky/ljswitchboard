@@ -1,19 +1,31 @@
 <div id="register-matrix-holder">
-    <div id="device-selector">
-        <div class="btn-toolbar">
-        <div class="btn-group" id="device-selection-controls">
-            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                <span id="selected-device-display">{{ currentDevice.getSerial }}</span>
-                <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu">
-                {{# devices }}
-                <li><a class="device-selection-link" id="{{getSerial}}-selector" href="#">{{getSerial}}</a></li>
-                {{/ devices }}
-            </ul>
-        </div>
-        </div>
-    </div>
+    <table class="table table-striped" id="device-selector">
+        <thead>
+            <tr>
+                <th>select</th>
+                <th>serial number</th>
+                <th>name</th>
+            <tr>
+        </thead>
+        <tbody>
+            {{#devices}}
+            <tr>
+                <td>
+                    <label class="radio">
+                        <input name="deviceSelectionRadios" class="device-selection-radio" id="{{getSerial}}-selector" type="radio" value="{{getSerial}}">
+                        <span class="metro-radio"></span>
+                    </label>
+                </td>
+                <td>
+                    {{getSerial}}
+                </td>
+                <td>
+                    {{getName}}
+                </td>
+            </tr>
+            {{/devices}}
+        </tbody>
+    </table>
     <div id="register-watchlist">
     </div>
     <div id="register-matrix">

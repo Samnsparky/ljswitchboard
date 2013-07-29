@@ -563,9 +563,16 @@ function removeFromWatchList(event)
 }
 
 
+// TODO: Need to select device filter based on selected device
 $('#register-matrix-holder').ready(function(){
     var filterByDevice = createDeviceFilter('T7');
     var selectFwmin = createFwminSelector('T7');
+
+    $('.device-selection-radio').first().prop('checked', true);
+    $('.device-selection-radio').change(function(){
+        $('#device-selector').hide();
+        $('#device-selector').fadeIn();
+    });
 
     getRegisterInfo()
     .then(filterByDevice)

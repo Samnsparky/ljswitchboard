@@ -134,6 +134,8 @@ function prepareMultipleDeviceConfiguration(decoratedDevices)
         {
             $(DEVICE_SELECTOR_PANE_SELECTOR).html(renderedHTML);
             $('.device-selection-checkbox').click(onChangeSelectedDevices);
+            $('.device-selection-checkbox').first().prop('checked', true);
+            onChangeSelectedDevices();
         }
     );
 }
