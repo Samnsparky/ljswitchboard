@@ -65,6 +65,11 @@ function DeviceNetworkAdapter(device)
     {
         return '8.8.4.4';
     };
+
+    this.getDeviceType = function()
+    {
+        return device.getDeviceType();
+    }
 }
 
 

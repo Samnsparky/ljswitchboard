@@ -1,7 +1,7 @@
 <div id="device-selector">
     <select class="channel-select-control" size="5" id="device-select-menu">
         {{#devices}}
-        <option value="{{getSerial}}-{{getName}}">{{getSerial}} ({{getName}})</option>
+        <option value="{{getSerial}}-{{getName}}">{{getSerial}} ( {{getDeviceType}} - {{getName}} )</option>
         {{/devices}}
     </select>
 </div>

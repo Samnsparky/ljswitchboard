@@ -1,11 +1,12 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Update</th>
-            <th>Serial Number</th>
-            <th>Name</th>
-            <th>Firmware Version</th>
-            <th>Bootloader Version</th>
+            <th>update</th>
+            <th>device type</th>
+            <th>serial number</th>
+            <th>name</th>
+            <th>firmware version</th>
+            <th>bootloader version</th>
         </tr>
     </thead>
     {{#devices}}
@@ -16,6 +17,7 @@
                 <span class="metro-checkbox"></span>
             </label>
         </td>
+        <td>{{getDeviceType}}</td>
         <td>{{getSerial}}</td>
         <td>{{getName}}</td>
         <td>{{getFirmwareVersion}}</td>

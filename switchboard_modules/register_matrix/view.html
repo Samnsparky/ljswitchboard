@@ -3,6 +3,7 @@
         <thead>
             <tr>
                 <th>select</th>
+                <th>device type</th>
                 <th>serial number</th>
                 <th>name</th>
             <tr>
@@ -15,6 +16,9 @@
                         <input name="deviceSelectionRadios" class="device-selection-radio" id="{{getSerial}}-selector" type="radio" value="{{getSerial}}">
                         <span class="metro-radio"></span>
                     </label>
+                </td>
+                <td>
+                    {{getDeviceType}}
                 </td>
                 <td>
                     {{getSerial}}

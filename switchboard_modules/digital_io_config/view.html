@@ -3,6 +3,7 @@
         <thead>
             <tr>
                 <th>select</th>
+                <th>device type</th>
                 <th>serial number</th>
                 <th>name</th>
             <tr>
@@ -15,6 +16,9 @@
                         <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
                         <span class="metro-checkbox"></span>
                     </label>
+                </td>
+                <td>
+                    {{getDeviceType}}
                 </td>
                 <td>
                     {{getSerial}}

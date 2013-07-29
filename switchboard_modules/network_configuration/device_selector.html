@@ -1,12 +1,13 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Configure</th>
-            <th>Serial Number</th>
-            <th>Name</th>
-            <th>Network</th>
-            <th>IP Address</th>
-            <th>Status</th>
+            <th>configure</th>
+            <th>device type</th>
+            <th>serial number</th>
+            <th>name</th>
+            <th>network</th>
+            <th>ip address</th>
+            <th>status</th>
         </tr>
     </thead>
     <tbody>
@@ -18,6 +19,7 @@
                     <span class="metro-checkbox"></span>
                 </label>
             </td>
+            <td>{{getDeviceType}}</td>
             <td>{{getSerial}}</td>
             <td>{{getName}}</td>
             <td>{{getNetwork}}</td>
