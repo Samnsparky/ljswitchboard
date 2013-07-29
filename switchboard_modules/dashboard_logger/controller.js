@@ -33,9 +33,9 @@ var selectedRegisters = [];
  * event listeners that allow the user to select one of those categories to see
  * the registers with that tag.
  *
- * @param {Event} jQuery event information.
- * @param {dict} Dictionary with register tags as keys and Arrays of register
- *      information objects as values.
+ * @param {Event} event jQuery event information.
+ * @param {dict} registersByTag Dictionary with register tags as keys and Arrays
+ *       of register information objects as values.
 **/
 function selectDevice(event, registersByTag)
 {
@@ -164,6 +164,10 @@ function refreshWatchList()
  * that registers list, associating the appropriate event listeners.
  *
  * @param {Event} event jQuery event information.
+ * @param {dict} registersByTag An indexed layer for register information. A
+ *      dict that acts as an index for register information. Keys should be
+ *      String tags and values should be Array of Objects with register info
+ *      for registers with that tag.
  * @param {String} selectedSerial The serial number of the device that registers
  *      are being displayed for.
  * @param {String} selectedName The name of the device that registers are being
@@ -246,6 +250,7 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
  * @param {dict} registersByTag Dictionary with information about available
  *      registers organized by tag. The key is the String tag and the value is
  *      an Array of Object with register information.
+ * @return {q.promise} A promise that resovles to undefined.
 **/
 function renderChannelSelectControls(registersByTag)
 {
@@ -427,6 +432,9 @@ function expandLJMMMEntries(entries)
  * Convert an Array of Array of Object with register info to a single Array of
  * Array of Object with the same register info, effectively removing that
  * hierarchical information.
+ *
+ * @param {Array} registers Array of Array of Object to flatten.
+ * @return {q.promise} A promise that resolves to the flattened Array.
 **/
 function flattenRegisters(registers)
 {

@@ -313,6 +313,7 @@ function getTagSet(entries)
 }
 
 
+// TODO: LJMMM allows for 'all' to be a valid register name.
 /**
  * Render a table with information about registers.
  *
@@ -320,6 +321,13 @@ function getTagSet(entries)
  * registers.
  *
  * @param {Array} entries An Array of Object with information about registers.
+ * @param {Array} tags An Array of String, each String being unique in the Array
+ *      and the name of a tag in the corpus of provided registers. All tags
+ *      across all of the registers available in the selected device should be
+ *      included.
+ * @param {String} currentTag The tag that the user is currently filtereing
+ *      on. Can be 'all' if no registers should be filtered out by tags.
+ * @param {String} currentSearchTerm The term the user is searching for.
  * @return {q.defer.promise} A Q promise that resolves to null.
 **/
 function renderRegistersTable(entries, tags, filteredEntries, currentTag,
