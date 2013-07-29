@@ -124,3 +124,30 @@
 {
     margin-top: 50px;
 }
+
+
+#watch-config-tooltip
+{
+    position: relative;
+    width: 45px;
+    height: 43px;
+    line-height: 12px;
+    padding: 10px;
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+    background: rgb(0, 0, 0);
+    top: -14px;
+    text-transform: lowercase;
+}
+
+#watch-config-tooltip:after
+{
+    content: "";
+    position: relative;
+    width: 0;
+    height: 0;
+    border-width: 10px;
+    border-style: solid;
+    border-color: black transparent transparent transparent;
+    top: 18px;
+}

@@ -28,6 +28,11 @@ function UpgradeableDeviceAdapter(device)
         return device.getName();
     };
 
+    this.getDeviceType = function()
+    {
+        return device.getDeviceType();
+    }
+
     this.getFirmwareVersion = function()
     {
         return '1.23';

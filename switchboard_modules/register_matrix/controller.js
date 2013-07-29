@@ -554,6 +554,7 @@ function refreshWatchList()
 
     if(registerWatchList.length > 0)
     {
+        $('#watch-config-tooltip').hide();
         fs_facade.renderTemplate(
             location,
             {'registers': registerWatchList},
@@ -617,6 +618,7 @@ function refreshWatchList()
     else
     {
         $(REGISTER_WATCHLIST_SELECTOR).hide();
+        $('#watch-config-tooltip').fadeIn();
     }
 }
 

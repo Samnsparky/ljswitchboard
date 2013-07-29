@@ -9,7 +9,7 @@
 
 var device_controller = require('./test_device_controller');
 
-var DEVICE_DISPLAY_SRC = 'device_info_inspector/device_display.html';
+var DEVICE_DISPLAY_SRC = 'device_info/device_display.html';
 
 
 /**
