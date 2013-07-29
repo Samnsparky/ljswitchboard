@@ -1,3 +1,10 @@
+/**
+ * Logic for a module that manages the installation / removal of other modules.
+ *
+ * @author A. Samuel Pottinger (LabJack Corp, 2013)
+**/
+
+
 var q = require('q');
 
 var module_manager = require('./module_manager');
@@ -5,6 +12,13 @@ var module_manager = require('./module_manager');
 var MODULE_TEMPLATE_SRC = 'module_manager/module_list.html';
 
 
+/**
+ * Render the list of available modules (both installed and not).
+ *
+ * @param {Array} moduleInfo Array of Object with information about available
+ *      modules.
+ * @return {q.promise} Promise that resolves to undefined.
+**/
 function renderModuleList(moduleInfo)
 {
     var deferred = q.defer();
@@ -28,6 +42,14 @@ function renderModuleList(moduleInfo)
 }
 
 
+/**
+ * Add information about whether or not modules are installed / loaded.
+ *
+ * @param {Array} allModules An Array of Object with module information.
+ * @return {q.promise} A promise that resovles to an Array of Object with the
+ *      same module information plus a Boolean loaded field indicating if the
+ *      module is installed.
+**/
 function decorateLoadedModules(allModules)
 {
     var deferred = q.defer();
@@ -38,7 +60,7 @@ function decorateLoadedModules(allModules)
 
         var decoratedModules = allModules.map(function(module){
             var decoratedEntry = jQuery.extend({}, module);
-            decoratedEntry['loaded'] = activeNames.indexOf(module.name) != -1;
+            decoratedEntry.loaded = activeNames.indexOf(module.name) != -1;
             return decoratedEntry;
         });
         
@@ -51,6 +73,12 @@ function decorateLoadedModules(allModules)
 }
 
 
+/**
+ * Get a list of available modules.
+ *
+ * @return {q.promise} A promise that resovles to an Array of Object with module
+ *      information.
+**/
 function getModuleList()
 {
     var deferred = q.defer();
