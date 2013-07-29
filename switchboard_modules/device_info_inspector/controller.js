@@ -12,6 +12,13 @@ var device_controller = require('./test_device_controller');
 var DEVICE_DISPLAY_SRC = 'device_info_inspector/device_display.html';
 
 
+/**
+ * Show the information for a device.
+ *
+ * @param {Object} device Object with device information.
+ * @parma {function} onSuccess The function to call after the device info is
+ *      being displayed.
+**/
 function showDevice(device, onSuccess)
 {
     var location = fs_facade.getExternalURI(DEVICE_DISPLAY_SRC);
