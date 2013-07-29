@@ -239,12 +239,30 @@ function toggleRegisterInfo(event)
 }
 
 
+/**
+ * Convert an Array of two Arrays to an Object.
+ *
+ * Convert an Array of Arrays with two elements to a dict such that each
+ * Array's first element acts as a key to the second.
+ *
+ * @param {Array} data An Array of two Arrays to zip together into a dict.
+ * @return {Object} Object created by combining the two arrays.
+ * @throws Error thrown if one of data's Arrays does not contain exactly two
+ *      elements.
+**/
 function zip(data)
 {
+
     var retVal = {};
 
     for(var i in data)
     {
+        if(data[i].length != 2)
+        {
+            throw new Error(
+                'The collection to be zipped must have two elements.'
+            );
+        }
         retVal[data[i][0]] = data[i][1];
     }
 
@@ -252,6 +270,16 @@ function zip(data)
 }
 
 
+/**
+ * Index a collection of registers by their addresses.
+ *
+ * Create an Object with address numbers for attributes and Objects describing
+ * the corresponding register as values.
+ *
+ * @param {Array} registers An Array of Object with register information.
+ * @return {Object} An Object acting as an index or mapping between address and
+ *      register info Object.
+**/
 function organizeRegistersByAddress(registers)
 {
     var pairs = registers.map(function(e){
@@ -262,6 +290,14 @@ function organizeRegistersByAddress(registers)
 }
 
 
+/**
+ * Get a list of unique tags represented across all of the provided registers.
+ *
+ * @param {Array} entries Array of Object with register information.
+ * @return {Array} An Array of String, each element a unique tag found in the
+ *      provided corpus of registers. This represents the set of all unique tags
+ *      across all of the provided entries.
+**/
 function getTagSet(entries)
 {
     var tagsHierarchical = entries.map(function(e) {return e.tags;});
@@ -355,6 +391,21 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
 }
 
 
+// TODO: By LJMMM, 'all' is a valid tag.
+/**
+ * Filter / search registers by tag and search term.
+ *
+ * Filter / search registers by tag and search term, rendering a registers table
+ * with the listing after filtering.
+ *
+ * @param {Array} entires An Array of Object with information about the corpus
+ *      of registers to search through.
+ * @param {Array} allTags An Array of String with the names of all tags in the
+ *      provided corpus of registers.
+ * @param {String} tag The tag to filter by. Can be 'all' to avoid filtering.
+ * @param {String} searchTerm The term to search the description, name, and
+ *      tags for. If the term cannot be found, the register will be filered out.
+**/
 function searchRegisters(entries, allTags, tag, searchTerm)
 {
     var filteredEntries = entries;
@@ -448,6 +499,18 @@ function flattenTags(registers)
 }
 
 
+/**
+ * Add information to register info Objects about register access restrictions.
+ *
+ * Parse the readwrite field of register information Objects, adding the Boolean
+ * fields of readAccess and writeAccess indicating if the register can be read
+ * and written to respectively.
+ *
+ * @param {Array} registers An Array of Object with register inforamtion to
+ *      decorate.
+ * @return {q.promise} A promise that resovles to the decorated / updated
+ *      register information objects.
+**/
 function addRWInfo(registers)
 {
     var deferred = q.defer();
@@ -471,6 +534,9 @@ function addRWInfo(registers)
 }
 
 
+/**
+ * Refresh / re-render the list of registers being watchted by this module.
+**/
 function refreshWatchList()
 {
     var location = fs_facade.getExternalURI(REGISTER_WATCH_LIST_TEMPLATE_SRC);
@@ -547,6 +613,18 @@ function refreshWatchList()
 }
 
 
+/**
+ * Event listener to add a new register to the watch list for this module.
+ *
+ * Event listener that will add a new register entry to the watch list for this
+ * module, refresing the watch list in the process.
+ *
+ * @param {Event} event jQuery event information.
+ * @param {Object} registerInfoByAddress Object acting as an address indexed
+ *      access layer for register information. Attributes should be addresses
+ *      of registers and values should be Objects with information about the
+ *      corresponding register.
+**/
 function addToWatchList(event, registerInfoByAddress)
 {
     var buttonID = event.target.id;
@@ -560,6 +638,11 @@ function addToWatchList(event, registerInfoByAddress)
 }
 
 
+/**
+ * Event listener to remove a register from the watch list for this module.
+ *
+ * @param {Event} event jQuery event information.
+**/
 function removeFromWatchList(event)
 {
     var buttonID = event.target.id;
