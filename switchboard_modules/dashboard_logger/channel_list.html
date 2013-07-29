@@ -1,6 +1,6 @@
 {{#registers}}
 <label class="checkbox">
-    <input type="checkbox" class="reg-checkbox" id="{{name}}-{{address}}-reg-selector" value="{{address}}" {{#selected}}checked{{/selected}}>
+    <input type="checkbox" class="reg-checkbox" id="{{name}}-{{address}}-{{../device.getSerial}}-reg-selector" value="{{address}}" {{#selected}}checked{{/selected}}>
     <span class="metro-checkbox">{{name}}</span>
 </label>
 {{/registers}}

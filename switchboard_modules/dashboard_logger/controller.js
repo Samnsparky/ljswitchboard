@@ -18,7 +18,7 @@ var DEVICE_CATEG_SELECT_TEMPLATE_SRC = 'dashboard_logger/device_category_selecto
 var CHANNEL_LIST_TEMPLATE_SRC = 'dashboard_logger/channel_list.html';
 var WATCHLIST_TEMPLATE_SRC = 'dashboard_logger/watchlist.html'
 
-var REG_CHECKBOX_ID_TEMPLATE_STR = '#{{name}}-{{address}}-reg-selector';
+var REG_CHECKBOX_ID_TEMPLATE_STR = '#{{name}}-{{address}}-{{serial}}-reg-selector';
 var REG_CHECKBOX_ID_TEMPLATE = handlebars.compile(REG_CHECKBOX_ID_TEMPLATE_STR);
 
 var CHANNEL_SELECTOR_HOLDER_SELECTOR = '#channel-selector-holder';
@@ -68,14 +68,18 @@ function selectDevice(event, registersByTag)
  * in are not modified.
  *
  * @param {Array} registers An Array of Object with reigster information.
+ * @param {Object} device The device that selected registers should be flagged
+ *      for. The same register selected on other devices will be ignored.
  * @return {Array} An Array of Object with register information, including the
  *      newly added "selected" attribute.
 **/
-function addRegisterSelectedInfo(registers)
+function addRegisterSelectedInfo(registers, device)
 {
-    // TODO: selected addresses should only include those for the current
-    //       device.
-    var selectedAddresses = selectedRegisters.map(function(e){
+    var targetSerial = device.getSerial();
+    var relevantSelectedRegisters = selectedRegisters.filter(function(e){
+        return e.device.getSerial() == targetSerial;
+    });
+    var selectedAddresses = relevantSelectedRegisters.map(function(e){
         return e.register.address;
     });
 
@@ -127,14 +131,18 @@ function refreshWatchList()
                     var regInfo = infoStr.split('-');
                     var regName = regInfo[0];
                     var regAddress = regInfo[1];
+                    var serial = regInfo[2];
 
                     var checkboxID = REG_CHECKBOX_ID_TEMPLATE(
-                        {name: regName, address: regAddress}
+                        {name: regName, address: regAddress, serial: serial}
                     );
                     $(checkboxID).prop('checked', false);
                     
                     selectedRegisters = selectedRegisters.filter(function(e){
-                        return e.register.address != regAddress;
+                        var deviceSerial = e.device.getSerial();
+                        var different = e.register.address != regAddress;
+                        different = different || deviceSerial !== serial;
+                        return different;
                     });
 
                     refreshWatchList();
@@ -168,12 +176,15 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
     $('#selected-category-display').html(selectedCategory);
     $('#selected-category-display-holder').show();
 
-    var registers = registersByTag.get(selectedCategory);
-    var decoratedRegisters = addRegisterSelectedInfo(registers);
-
     var devices = device_controller.getDeviceKeeper().getDevices();
+    var device = devices.filter(function(e){
+        return e.getSerial() === selectedSerial
+    })[0];
 
-    var templateVals = {'registers': decoratedRegisters};
+    var registers = registersByTag.get(selectedCategory);
+    var decoratedRegisters = addRegisterSelectedInfo(registers, device);
+
+    var templateVals = {'registers': decoratedRegisters, 'device': device};
 
     var onCheckboxChanged = function(event)
     {
@@ -191,18 +202,18 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
                 return e.address == regAddress
             })[0];
 
-            var device = devices.filter(function(e){
-                return e.getSerial() === selectedSerial
-            })[0];
-
             selectedRegisters.push(
                 {'register': register, 'device': device}
             );
         }
         else
         {
+            var targetSerial = device.getSerial();
             selectedRegisters = selectedRegisters.filter(function(e){
-                return e.register.address != regAddress;
+                var regSerial = e.device.getSerial();
+                var different =  e.register.address != regAddress;
+                different = different || targetSerial != regSerial;
+                return different;
             });
         }
 
