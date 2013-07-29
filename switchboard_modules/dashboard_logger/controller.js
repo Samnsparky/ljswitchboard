@@ -266,6 +266,7 @@ function renderChannelSelectControls(registersByTag)
                 selectDevice(event, registersByTag)
             });
 
+            $('#choose-different-device-link').click(chooseDifferentDevice);
             $('#choose-different-category-link').click(chooseDifferentCategory);
 
             deferred.resolve();
@@ -273,6 +274,21 @@ function renderChannelSelectControls(registersByTag)
     );
 
     return deferred.promise;
+}
+
+/**
+ * Event listener for when the user goes to select a different device.
+ *
+ * Event listener to show the device selection controls, UI allowing the user
+ * to select a different device to filter available registers and tags by.
+**/
+function chooseDifferentDevice()
+{
+    $('#category-selector').slideUp();
+    $('#selected-category-display-holder').hide();
+    $('#register-selector').slideUp();
+    $('#selected-device-display-holder').hide();
+    $('#device-selector').slideDown();
 }
 
 
