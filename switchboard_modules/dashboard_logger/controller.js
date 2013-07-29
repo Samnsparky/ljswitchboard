@@ -1,3 +1,10 @@
+/**
+ * Logic for a channel dashboard / logging module.
+ *
+ * @author A. Samuel Pottinger (LabJack Corp, 2013)
+**/
+
+
 var async = require('async');
 var dict = require('dict');
 var handlebars = require('handlebars')
@@ -19,6 +26,17 @@ var CHANNEL_SELECTOR_HOLDER_SELECTOR = '#channel-selector-holder';
 var selectedRegisters = [];
 
 
+/**
+ * Event handler for when the user selects a device to add a channel from.
+ *
+ * Show the available register tags for a given device, creating the appropriate
+ * event listeners that allow the user to select one of those categories to see
+ * the registers with that tag.
+ *
+ * @param {Event} jQuery event information.
+ * @param {dict} Dictionary with register tags as keys and Arrays of register
+ *      information objects as values.
+**/
 function selectDevice(event, registersByTag)
 {
     var selectedDeviceInfo = $('#device-select-menu').val().split('-');
@@ -26,9 +44,11 @@ function selectDevice(event, registersByTag)
     var selectedName = selectedDeviceInfo[1];
 
     var displayName = selectedSerial + ' (' + selectedName + ')';
+    $('#selected-device-display').html(displayName);
+
+    // TODO: Filter registers by tag to only include those from this device.
 
     $('#device-selector').slideUp();
-    $('#selected-device-display').html(displayName);
     $('#selected-device-display-holder').show();
     $('#category-selector').slideDown();
 
@@ -39,8 +59,22 @@ function selectDevice(event, registersByTag)
 }
 
 
-function decorateSelectedRegisters(registers)
+/**
+ * Add information about whether or not the register is selected.
+ *
+ * Decorate register information objects with a "selected" field indicating
+ * if the user has selected the given register for logging. Registers
+ * information objects are duplicated and the original register entries passed
+ * in are not modified.
+ *
+ * @param {Array} registers An Array of Object with reigster information.
+ * @return {Array} An Array of Object with register information, including the
+ *      newly added "selected" attribute.
+**/
+function addRegisterSelectedInfo(registers)
 {
+    // TODO: selected addresses should only include those for the current
+    //       device.
     var selectedAddresses = selectedRegisters.map(function(e){
         return e.register.address;
     });
@@ -61,6 +95,12 @@ function decorateSelectedRegisters(registers)
 }
 
 
+/**
+ * Render the list of registers the dashboard / logger is currently watching.
+ *
+ * Render the list of registers the dashboard / logger is currently watching,
+ * adding the appropriate event listeners during renderings.
+**/
 function refreshWatchList()
 {
     selectedRegisters.sort(function(a, b){
@@ -109,6 +149,18 @@ function refreshWatchList()
 }
 
 
+/**
+ * Select the category to filter the available list of registers by.
+ *
+ * Select the category to filter the available list of registers by and update
+ * that registers list, associating the appropriate event listeners.
+ *
+ * @param {Event} event jQuery event information.
+ * @param {String} selectedSerial The serial number of the device that registers
+ *      are being displayed for.
+ * @param {String} selectedName The name of the device that registers are being
+ *      added for.
+**/
 function selectCategory(event, registersByTag, selectedSerial, selectedName)
 {
     var selectedCategory = $('#category-select-menu').val();
@@ -117,7 +169,7 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
     $('#selected-category-display-holder').show();
 
     var registers = registersByTag.get(selectedCategory);
-    var decoratedRegisters = decorateSelectedRegisters(registers);
+    var decoratedRegisters = addRegisterSelectedInfo(registers);
 
     var devices = device_controller.getDeviceKeeper().getDevices();
 
@@ -174,6 +226,16 @@ function selectCategory(event, registersByTag, selectedSerial, selectedName)
 }
 
 
+/**
+ * Render the controls for selecting a channel to watch.
+ *
+ * Render the controls that allow for the selection of a channel to display
+ * and / or log. Creates appropriate event listeners for those controls.
+ *
+ * @param {dict} registersByTag Dictionary with information about available
+ *      registers organized by tag. The key is the String tag and the value is
+ *      an Array of Object with register information.
+**/
 function renderChannelSelectControls(registersByTag)
 {
     var deferred = q.defer();
@@ -214,6 +276,13 @@ function renderChannelSelectControls(registersByTag)
 }
 
 
+/**
+ * Event listener for when the user goes to select a different register tag.
+ *
+ * Event listener to show the category selection controls, UI allowing the user
+ * to select a different tag to filter available registers by. The same device
+ * selection will be used.
+**/
 function chooseDifferentCategory()
 {
     $('#category-selector').slideDown();
@@ -222,6 +291,16 @@ function chooseDifferentCategory()
 }
 
 
+/**
+ * Organize available registers by tag.
+ *
+ * Index the list of available registers by their tag, returning the result as
+ * a dictionary with tags as keys and Arrays of Object with register information
+ * as values.
+ *
+ * @param {Array} registers An Array of Object with reigster information.
+ * @return {q.promise} A promise that resolves to a dict indexed by tag.
+**/
 function getRegistersByTag(registers)
 {
     var deferred = q.defer();
@@ -259,6 +338,15 @@ function getRegistersByTag(registers)
 }
 
 
+/**
+ * Get information about the registers that can be logged / watched.
+ *
+ * Load register information for all devices, a complete record of registers
+ * that can be logged or watched.
+ *
+ * @return {q.promise} A promise that resolves to an Object with register
+ *      information. See the registers section of the ljm_constants JSON file.
+**/
 function getRegisters()
 {
     var deferred = q.defer();
@@ -306,6 +394,13 @@ function expandLJMMMEntries(entries)
 }
 
 
+/**
+ * Convert a Array of Arrays with register information to a single Array.
+ *
+ * Convert an Array of Array of Object with register info to a single Array of
+ * Array of Object with the same register info, effectively removing that
+ * hierarchical information.
+**/
 function flattenRegisters(registers)
 {
     var deferred = q.defer();
