@@ -448,6 +448,29 @@ function flattenTags(registers)
 }
 
 
+function addRWInfo(registers)
+{
+    var deferred = q.defer();
+
+    async.map(
+        registers,
+        function(register, callback){
+            var newRegister = $.extend({}, register);
+            newRegister.readAccess = newRegister.readwrite.indexOf('R') != -1
+            newRegister.writeAccess = newRegister.readwrite.indexOf('W') != -1
+            callback(null, newRegister);
+        },
+        function(error, registers){
+            if(error !== null)
+                genericErrorHandler(error);
+            deferred.resolve(registers);
+        }
+    );
+
+    return deferred.promise;
+}
+
+
 function refreshWatchList()
 {
     var location = fs_facade.getExternalURI(REGISTER_WATCH_LIST_TEMPLATE_SRC);
@@ -578,6 +601,7 @@ $('#register-matrix-holder').ready(function(){
     .then(filterByDevice)
     .then(selectFwmin)
     .then(flattenTags)
+    .then(addRWInfo)
     .then(expandLJMMMEntries)
     .then(flattenEntries)
     .then(renderRegistersTable)

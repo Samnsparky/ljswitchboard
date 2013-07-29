@@ -16,7 +16,10 @@
             <td>{{type}}</td>
             <td>
                 <div class="value-display">
-                    1.0000 <span id="edit-reg-{{address}}" class="icon-pencil edit-register-button"></span>
+                    1.0000
+                    {{#writeAccess}}
+                    <span id="edit-reg-{{address}}" class="icon-pencil edit-register-button"></span>
+                    {{/writeAccess}}
                 </div>
                 <div class="value-edit-controls">
                     <div class="close-value-editor-button">
