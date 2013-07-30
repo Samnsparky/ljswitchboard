@@ -18,26 +18,54 @@ var FIRMWARE_LIST_SELECTOR = '#firmware-list';
 **/
 function UpgradeableDeviceAdapter(device)
 {
+    /**
+     * Get the serial number of the device that is this decorator encapsulates.
+     *
+     * @return {Number} The serial number of the inner device.
+    **/
     this.getSerial = function()
     {
         return device.getSerial();
     };
 
+    /**
+     * Get the name of the device that this decorator encapsulates.
+     *
+     * @return {String} The name of the inner device.
+    **/
     this.getName = function()
     {
         return device.getName();
     };
 
+    /**
+     * Get the type of device that this decorator encapsulates.
+     *
+     * @return {String} The string description of the model of the device that
+     *      this decorator encapsulates.
+    **/
     this.getDeviceType = function()
     {
         return device.getDeviceType();
     }
 
+    /**
+     * Get the version of the firmware currently loaded on the given device.
+     *
+     * @return {Number} The version of the firmware on this decorator's
+     *      encapsulated device.
+    **/
     this.getFirmwareVersion = function()
     {
         return '1.23';
     };
 
+    /**
+     * Get the version of the bootloader currently loaded on the given device.
+     *
+     * @return {Number} The version of the bootloader on this decorator's
+     *      encapsulated device.
+    **/
     this.getBootloaderVersion = function()
     {
         return '2.34';

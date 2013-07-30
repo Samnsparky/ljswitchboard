@@ -21,51 +21,113 @@ var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 **/
 function DeviceNetworkAdapter(device)
 {
+    /**
+     * Get the serial number of the device encapsulated by this decorator.
+     *
+     * @return {String} The serial number of the encapsulated device.
+    **/
     this.getSerial = function()
     {
         return device.getSerial();
     };
 
+    /**
+     * Get the name of the device encapsulated by this decorator.
+     *
+     * @return {String} The name of the encapsulated device.
+    **/
     this.getName = function()
     {
         return device.getName();
     };
 
+    /**
+     * Get the IP address of the device encapsulated by this decorator.
+     *
+     * @return {String} The IP address of the encapsulated device.
+    **/
     this.getIPAddress = function()
     {
         return '192.168.0.1';
     };
 
+    /**
+     * Determine if this device is currently connected.
+     *
+     * @return {Boolean} true if the device encapsulated by this decorator is
+     *      currently connected. Returns false otherwise.
+    **/
     this.getConnectionStatus = function()
     {
         return true;
     };
 
+    /**
+     * Get the name of the WiFi network this device is set to connect to.
+     *
+     * @return {String} Get the name of the WiFi network this device is
+     *      set to connect to. This does not necessarily mean that this device
+     *      is connected to that network. Will return null if this device
+     *      does not support WiFi connection.
+    **/
     this.getNetwork = function()
     {
         return 'testnetwork';
     };
 
+    /**
+     * Get the password this device is set to use to connect to a WiFi network.
+     *
+     * @return {String} Get the password the device is set to use to connect
+     *      to its preset network. Does not indicate if the device is actually
+     *      connected to a WiFi network. Returns null if this device does not
+     *      support WiFi connection.
+    **/
     this.getNetworkPassword = function()
     {
         return 'testnetworkpassword';
     };
 
+    /**
+     * Get the subnet this device is set to use.
+     *
+     * @return {String} IP address of subnet this device is set to connect to.
+     *      Returns null if the device does not support network connection.
+    **/
     this.getSubnet = function()
     {
         return '255.255.255.0';
     };
 
+    /**
+     * Get the first default DNS server this device is set to use.
+     *
+     * @return {String} The IP address of first default DNS sever this device
+     *      is set to use. Return null if the device does not support network
+     *      connection.
+    **/
     this.getDefaultDNS = function()
     {
         return '8.8.8.8';
     };
 
+    /**
+     * Get the backup / alternative DNS server this device is set to use.
+     *
+     * @return {String} The IP address of the DNS server this device is set to
+     *      connect to if the first DNS server is unreachable. Returns null
+     *      if the device does not support network connection.
+    **/
     this.getAltDNS = function()
     {
         return '8.8.4.4';
     };
 
+    /**
+     * Get the string description of this device's model type.
+     *
+     * @return {String} Description of the type of model this device is.
+    **/
     this.getDeviceType = function()
     {
         return device.getDeviceType();
