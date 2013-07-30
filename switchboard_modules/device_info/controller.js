@@ -63,7 +63,8 @@ function showDeviceSerial(serial)
 
 $('#device-info-inspector').ready(function(){
     // Attach event listener
-    $('.device-selection-link').click(function(event){
+    $('.device-selection-radio').first().prop('checked', true);
+    $('.device-selection-radio').change(function(event){
         var serial = event.target.id.replace('-selector', '');
         showDeviceSerial(serial);
     });
