@@ -255,7 +255,8 @@ function zip(data)
 
     var retVal = {};
 
-    for(var i in data)
+    var dataLen = data.length;
+    for(var i=0; i<dataLen; i++)
     {
         if(data[i].length != 2)
         {
@@ -303,7 +304,8 @@ function getTagSet(entries)
     var tagsHierarchical = entries.map(function(e) {return e.tags;});
     var tags = [];
 
-    for(var i in tagsHierarchical)
+    var tagsHierarchicalLen = tagsHierarchical.length;
+    for(var i=0; i<tagsHierarchicalLen; i++)
     {
         tags.push.apply(tags, tagsHierarchical[i]);
     }
@@ -459,7 +461,8 @@ function flattenEntries(entries)
     async.each(
         entries,
         function(itemSet, callback){
-            for(i in itemSet)
+            var itemSetLen = itemSet.length;
+            for(var i=0; i<itemSetLen; i++)
                 retList.push(itemSet[i]);
             callback();
         },
@@ -668,7 +671,8 @@ function removeFromWatchList(event)
     );
     refreshWatchList();
 
-    for(var i in registersToRemove)
+    var registersToRemoveLen = registersToRemove.length;
+    for(var i=0; i<registersToRemoveLen; i++)
     {
         var registerToRemove = registersToRemove[i];
         var descriptor = ADD_TO_LIST_DESCRIPTOR_TEMPLATE(

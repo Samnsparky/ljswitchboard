@@ -192,10 +192,12 @@ function markConnectedDevices(devices)
 
     var connectedSerials = exports.getDeviceKeeper().getDeviceSerials();
 
-    for(var i in devices)
+    var devicesLen = devices.length;
+    for(var i=0; i<devicesLen; i++)
     {
         devicesOfType = devices[i].devices;
-        for(var j in devicesOfType)
+        var devicesOfTypeLen = devicesOfType.length;
+        for(var j=0; j<devicesOfTypeLen; j++)
         {
             device = devicesOfType[j];
             device.connected = connectedSerials.indexOf(device.serial) != -1;

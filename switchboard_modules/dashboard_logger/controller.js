@@ -87,7 +87,8 @@ function addRegisterSelectedInfo(registers, device)
     var newRegister;
     var curAddress;
 
-    for(var i in registers)
+    var registersLen = registers.length;
+    for(var i=0; i<registersLen; i++)
     {
         newRegister = extend({}, registers[i]);
         curAddress = newRegister.address;
@@ -342,7 +343,8 @@ function getRegistersByTag(registers)
         registers,
         function(register, callback)
         {
-            for(var i in register.tags)
+            var tagsLen = register.tags.length;
+            for(var i=0; i<tagsLen; i++)
             {
                 var tag = register.tags[i]
                 if(tag.replace(' ', '') !== '')
@@ -445,7 +447,8 @@ function flattenRegisters(registers)
         registers,
         function(registerSet, callback)
         {
-            for(var i in registerSet)
+            var registerSetLen = registerSet.length;
+            for(var i=0; i<registerSetLen; i++)
             {
                 retArray.push(registerSet[i]);
             }
