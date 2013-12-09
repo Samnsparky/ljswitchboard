@@ -7,7 +7,23 @@
  * @author A. Samuel Pottinger (LabJack, 2013)
 **/
 
+var async = require('async');
 var dict = require('dict');
+var q = require('q');
+var labjack_nodejs = require('labjack-nodejs');
+var labjack_driver = new labjack_nodejs.driver();
+
+var LJM_DT_T7 = labjack_nodejs.driver_const.LJM_DT_T7.toString();
+var DEVICE_TYPE_NAMES = dict({
+    '7': 'T7'
+});
+
+var CONNECT_TYPE_USB = 1;
+var CONNECTION_TYPE_NAMES = dict({
+    '1': 'USB',
+    '3': 'Ethernet',
+    '4': 'Wifi'
+});
 
 
 /**
@@ -19,8 +35,11 @@ var dict = require('dict');
  * @param {String} deviceType The type of model this device is. Examples include
  *      T7 and Digit-TL.
 **/
-var Device = function(serial, connectionType, deviceType)
+var Device = function (device, serial, connectionType, deviceType)
 {
+    this.device = device;
+    this.cachedName = null;
+
     /**
      * Get the serial number for this device.
      *
@@ -52,7 +71,7 @@ var Device = function(serial, connectionType, deviceType)
      * @return {String} A description of the type of device this is.
     **/
     this.getDeviceType = function () {
-        return deviceType;
+        return DEVICE_TYPE_NAMES.get(String(deviceType), 'Other');
     };
 
     /**
@@ -64,30 +83,86 @@ var Device = function(serial, connectionType, deviceType)
      * @return {String} The name of this device.
     **/
     this.getName = function () {
-        return name;
+        if (this.cachedName === null)
+            this.cachedName = this.device.readSync('DEVICE_NAME_DEFAULT');
+        return this.cachedName;
     };
 
     // TODO
     this.getFirmwareVersion = function () {
-        return '1.23';
+        return this.device.readSync('FIRMWARE_VERSION');
     };
 
     // TODO
     this.getBootloaderVersion = function () {
-        return '4.56';
-    };
-
-    // TODO
-    this.getName = function () {
-        return 'test device';
+        return this.device.readSync('BOOTLOADER_VERSION');
     };
 
     this.writeMany = function (addresses, values) {
         var deferred = q.defer();
 
-        deferred.resolve();
+        this.device.writeMany(
+            addresses,
+            values,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
 
         return deferred.promise;
+    };
+
+    this.readMany = function (addresses) {
+        var deferred = q.defer();
+
+        this.device.readMany(
+            addresses,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+
+        return deferred.promise;
+    };
+
+    this.writeAsync = function(address, value) {
+        var deferred = q.defer();
+
+        this.device.write(
+            address,
+            value,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+
+        return deferred.promise;
+    };
+
+    this.write = function (address, value) {
+        this.device.writeSync(address, value);
+    };
+
+    this.read = function (address) {
+        return this.device.readSync(address);
+    };
+
+    this.close = function (onError, onSuccess) {
+        device.close(onError, onSuccess);
+    };
+
+    this.setName = function (newName) {
+        this.write('DEVICE_NAME_DEFAULT', newName);
+        this.cachedName = newName;
     };
 };
 
@@ -172,6 +247,33 @@ function DeviceKeeper()
 
 var deviceKeeperInstance = null;
 
+
+function openDeviceFromAttributes (deviceType, serialNumber, ipAddress,
+    connectionType, onError, onSuccess)
+{
+    var device;
+    if (connectionType == CONNECT_TYPE_USB) {
+        device = new labjack_nodejs.device();
+        device.open(
+            deviceType,
+            connectionType,
+            String(serialNumber),
+            onError,
+            function () { onSuccess(device); }
+        );
+    } else {
+        device = new labjack_nodejs.device();
+        device.open(
+            deviceType,
+            connectionType,
+            ipAddress,
+            onError,
+            function () { onSuccess(device); }
+        );
+    }
+}
+
+
 /**
  * Get the device keeper singlton instance maintaining the list of open devices.
  *
@@ -208,6 +310,75 @@ function markConnectedDevices(devices)
 }
 
 
+function getListingEntry (listingDict, device)
+{
+    var deviceType = String(device.deviceType);
+
+    if (!listingDict.has(deviceType)) {
+        listingDict.set(
+            deviceType,
+            {
+                'name': DEVICE_TYPE_NAMES.get(deviceType, 'other'),
+                'devices': []
+            }
+        );
+    }
+
+    return listingDict.get(deviceType);
+}
+
+
+function createDeviceListingRecord (device, name)
+{
+    var connectionType = CONNECTION_TYPE_NAMES.get(
+        String(device.connectionType), 'other');
+    var deviceType = DEVICE_TYPE_NAMES.get(String(device.deviceType), 'other');
+
+    return {
+        'serial': device.serialNumber,
+        'connectionTypes': [connectionType],
+        'origConnectionType': device.connectionType,
+        'origDeviceType': device.deviceType,
+        'type': deviceType,
+        'name': name,
+        'ipAddress': device.ipAddress,
+        'ipSafe': device.ipAddress.replace(/\./g, '_')
+    };
+}
+
+
+function openDeviceFromInfo (deviceInfo, connectionType, onError, onSuccess)
+{
+    openDeviceFromAttributes(
+        deviceInfo.deviceType,
+        deviceInfo.serialNumber,
+        deviceInfo.ipAddress,
+        connectionType,
+        onError,
+        onSuccess
+    );
+}
+
+
+function finishDeviceRecord (listingDict, deviceInfo, callback)
+{
+    var listingEntry = getListingEntry(listingDict, deviceInfo);
+    
+    openDeviceFromInfo(
+        deviceInfo,
+        deviceInfo.connectionType,
+        function () {callback();},
+        function (device) {
+            var name = device.readSync('DEVICE_NAME_DEFAULT');
+            var record = createDeviceListingRecord(deviceInfo, name);
+            listingEntry.devices.push(record);
+            device.closeSync();
+            callback();
+        }
+    );
+}
+
+
 /**
  * Get a list of devices currently visible by to this computer.
  *
@@ -219,65 +390,34 @@ function markConnectedDevices(devices)
  *      The value of "devices" is a list of Objects with the keys "serial",
  *      "connectionTypes", "type", and "name".
 **/
-exports.getDevices = function(onError, onSuccess)
+exports.getDevices = function (onError, onSuccess)
 {
-    var data = [
-        {
-            'name': 'T7',
-            'devices': [
-                {
-                    'serial': '1234567891',
-                    'connectionTypes': ['USB'],
-                    'type': 'T7',
-                    'name': 'Test Device 1'
+    labjack_driver.listAll(
+        onError,
+        function (driverListing) {
+            var listingDict = dict();
+            async.each(
+                driverListing,
+                function (deviceInfo, callback) {
+                    finishDeviceRecord(listingDict, deviceInfo, callback);
                 },
-                {
-                    'serial': '1234567894',
-                    'connectionTypes': ['USB'],
-                    'type': 'T7',
-                    'name': 'Test Device 4'
-                },
-                {
-                    'serial': '1234567893',
-                    'connectionTypes': ['USB', 'WiFi'],
-                    'type': 'T7',
-                    'name': 'Test Device 3'
-                },
-                {
-                    'serial': '1234567801',
-                    'connectionTypes': ['Ethernet'],
-                    'type': 'T7',
-                    'name': 'Test Device 4'
-                },
-                {
-                    'serial': '1234567802',
-                    'connectionTypes': ['WiFi'],
-                    'type': 'T7',
-                    'name': 'Test Device 5'
-                },
-                {
-                    'serial': '1234567803',
-                    'connectionTypes': ['USB', 'WiFi'],
-                    'type': 'T7',
-                    'name': 'Test Device 6'
+                function (err) {
+                    if (err) {
+                        alert(err);
+                        return;
+                    }
+                    
+                    var listing = [];
+                    listingDict.forEach(function (value, key) {
+                        listing.push(value);
+                    });
+                    
+                    listing = markConnectedDevices(listing);
+                    onSuccess(listing);
                 }
-            ]
-        },
-        {
-            'name': 'Digit-TL',
-            'devices': [
-                {
-                    'serial': '9234567803',
-                    'connectionTypes': ['USB'],
-                    'type': 'digit-tl',
-                    'name': 'Test Digit'
-                }
-            ]
+            );
         }
-    ];
-
-    data = markConnectedDevices(data);
-    onSuccess(data);
+    );
 };
 
 
@@ -293,10 +433,20 @@ exports.getDevices = function(onError, onSuccess)
  * @param {function} onSuccess The function to call afte the device has been
  *      successfully opened.
 **/
-exports.openDevice = function(serial, connType, deviceType, onError, onSuccess)
+exports.openDevice = function (serial, ipAddress, connType, deviceType, onError,
+    onSuccess)
 {
-    var device = new Device(serial, connType, deviceType);
-    window.setTimeout(function(){onSuccess(device);}, 2000);
+    openDeviceFromAttributes(
+        deviceType,
+        serial,
+        ipAddress,
+        connType,
+        onError,
+        function (innerDevice) {
+            var device = new Device(innerDevice, serial, connType, deviceType);
+            onSuccess(device);
+        }
+    );
 };
 
 
@@ -311,5 +461,7 @@ exports.openDevice = function(serial, connType, deviceType, onError, onSuccess)
 **/
 exports.closeDevice = function(device, onSuccess, onError)
 {
-     window.setTimeout(function(){onSuccess(device);}, 2000);
+    device.close(onError, function() {
+        onSuccess(device);
+    });
 };

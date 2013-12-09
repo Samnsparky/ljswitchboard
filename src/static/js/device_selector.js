@@ -4,7 +4,7 @@
  * @author A. Samuel Pottinger (LabJack, 2013)
 **/
 
-var device_controller = require('./test_device_controller');
+var device_controller = require('./device_controller');
 
 
 /**
@@ -21,7 +21,9 @@ function showConnectButtons(event)
 {
     var jqueryID = '#' + event.target.id;
     $(jqueryID).parents('#info').slideUp(function(){
-        $(jqueryID).parents('#info-holder').children('#connect-buttons').slideDown();
+        var parents = $(jqueryID).parents('#info-holder');
+        var children = parents.children('#connect-buttons');
+        children.slideDown();
     });
 }
 
@@ -58,9 +60,11 @@ function connectNewDevice(event)
     var deviceInfo = event.target.id.split('-');
     var jqueryID = '#' + event.target.id;
 
-    var deviceType = deviceInfo[0];
+    console.log(jqueryID);
     var serial = deviceInfo[1];
-    var connectionType = deviceInfo[2];
+    var ipAddress = deviceInfo[2].replace(/\_/g, '.');
+    var connectionType = parseInt(deviceInfo[4]);
+    var deviceType = parseInt(deviceInfo[5]);
 
     var info = $(jqueryID).parents('#info-holder').children('#info');
     info.children('.device-load-progress').show();
@@ -77,8 +81,8 @@ function connectNewDevice(event)
         });
     };
 
-    device_controller.openDevice(serial, connectionType, deviceType, showAlert,
-        onDeviceOpenend);
+    device_controller.openDevice(serial, ipAddress, connectionType, deviceType,
+        showAlert, onDeviceOpenend);
 }
 
 

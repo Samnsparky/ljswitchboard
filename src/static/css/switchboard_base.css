@@ -8,3 +8,15 @@ body
     background-image:url('../img/background.png');
     font-size: 14px;
 }
+
+#device-search-msg
+{
+    background-color: white;
+    padding: 20px;
+    position: absolute;
+    left: 40%;
+    right: 40%;
+    -moz-box-shadow: 0 0 10px #000000;
+    -webkit-box-shadow: 0 0 10px #000000;
+    box-shadow: 0 0 10px #000000;
+}

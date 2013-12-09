@@ -5,14 +5,17 @@
         <div class="btn-toolbar" id="range-dropdown-holder">
         <div class="btn-group">
             <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                <span class="selected-all-range-display">select range</span>
+                <span id="input-display-{{range_register}}" class="selected-all-range-display">select range</span>
                 <span class="caret"></span>
             </a>
-            <ul class="range-list dropdown-menu">
+            <ul id="{{range_register}}-select" class="range-list dropdown-menu">
             </ul>
         </div>
         </div>
     </div>
-    <div class="span7"></div>
+    <div class="span7">
+        <div class="input-display" id="input-display-{{value_register}}"></div>
+        <div class="input-bar" id="input-bar-{{value_register}}"></div>
+    </div>
 </div>
 {{/inputs}}

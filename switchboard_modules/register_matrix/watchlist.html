@@ -16,7 +16,7 @@
             <td>{{type}}</td>
             <td>
                 <div class="value-display">
-                    1.0000
+                    <span id="{{address}}-cur-val-display">1.0000</span>
                     {{#writeAccess}}
                     <span id="edit-reg-{{address}}" class="icon-pencil edit-register-button"></span>
                     {{/writeAccess}}
@@ -25,11 +25,11 @@
                     <div class="close-value-editor-button">
                         <span id="close-edit-reg-{{address}}" class="value-editor-button">
                             <span id="close-edit-reg-icon-{{address}}" class="icon icon-close close-value-editor-button-icon"></span>
-                            close
+                            exit write mode
                         </span>
                     </div>
                     <div>
-                        <input class="input-small write-reg-value-input" type="text">
+                        <input id="write-reg-{{address}}-input" class="input-small write-reg-value-input" type="text">
                     </div>
                     <div class="write-controls-holder">
                         <span class="write-confirm-msg" id="write-confirm-msg-{{address}}">writing</span>

@@ -25,6 +25,7 @@ var DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR =
     '#{{address}}-description-display';
 var ADD_TO_LIST_DESCRIPTOR_TEMPLATE_STR = '#{{address}}-add-to-list-button';
 var WATCH_ROW_SELECTOR_TEMPLATE_STR = '#{{address}}-watch-row';
+var WRITE_INPUT_SELECTOR_TEMPLATE_STR = '#write-reg-{{address}}-input';
 
 var DESCRIPTION_DISPLAY_SELECTOR_TEMPLATE = handlebars.compile(
     DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR);
@@ -32,7 +33,12 @@ var ADD_TO_LIST_DESCRIPTOR_TEMPLATE = handlebars.compile(
     ADD_TO_LIST_DESCRIPTOR_TEMPLATE_STR);
 var WATCH_ROW_SELECTOR_TEMPLATE = handlebars.compile(
     WATCH_ROW_SELECTOR_TEMPLATE_STR);
+var WRITE_INPUT_SELECTOR_TEMPLATE = handlebars.compile(
+    WRITE_INPUT_SELECTOR_TEMPLATE_STR);
 
+var REFRESH_DELAY = 1000;
+
+var selectedDevice;
 var registerWatchList = [];
 
 
@@ -315,6 +321,14 @@ function getTagSet(entries)
 }
 
 
+function runRedraw()
+{
+    document.body.style.display='none';
+    document.body.offsetHeight; // no need to store this anywhere, the reference is enough
+    document.body.style.display='block';
+}
+
+
 // TODO: LJMMM allows for 'all' to be a valid register name.
 /**
  * Render a table with information about registers.
@@ -389,9 +403,7 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
             });
 
             // Redraw bug
-            document.body.style.display='none';
-            document.body.offsetHeight; // no need to store this anywhere, the reference is enough
-            document.body.style.display='block';
+            runRedraw();
 
             deferred.resolve();
         }
@@ -530,8 +542,11 @@ function addRWInfo(registers)
         registers,
         function(register, callback){
             var newRegister = $.extend({}, register);
-            newRegister.readAccess = newRegister.readwrite.indexOf('R') != -1
-            newRegister.writeAccess = newRegister.readwrite.indexOf('W') != -1
+            newRegister.readAccess = newRegister.readwrite.indexOf('R') != -1;
+            newRegister.writeAccess = newRegister.readwrite.indexOf('W') != -1;
+            var writeOnly = newRegister.writeAccess && !newRegister.readAccess;
+            newRegister.writeOnly = writeOnly;
+            newRegister.useAsWrite = writeOnly;
             callback(null, newRegister);
         },
         function(error, registers){
@@ -565,7 +580,7 @@ function refreshWatchList()
             function(renderedHTML)
             {
                 $(REGISTER_WATCHLIST_SELECTOR).html(renderedHTML);
-                $(REGISTER_WATCHLIST_SELECTOR).show();
+                $(REGISTER_WATCHLIST_SELECTOR).show(runRedraw);
 
                 var showRegiserEditControls = function(event){
                     var address = event.target.id.replace('edit-reg-', '');
@@ -573,8 +588,21 @@ function refreshWatchList()
                         'address': address
                     });
 
-                    $(rowSelector).find('.value-display').slideUp();
-                    $(rowSelector).find('.value-edit-controls').slideDown();
+                    var numAddress = Number(address);
+                    var targetRegister = registerWatchList.filter(function (e) {
+                        return e.address == numAddress;
+                    })[0];
+                    targetRegister.useAsWrite = true;
+
+                    $(rowSelector).find('.value-display').fadeOut('fast',
+                        function () {
+                            runRedraw();
+                            $(rowSelector).find('.value-edit-controls').fadeIn(
+                                'fast',
+                                runRedraw
+                            );
+                        }
+                    );
                 };
 
                 var hideRegisterEditControls = function(event){
@@ -585,8 +613,20 @@ function refreshWatchList()
                         'address': address
                     });
 
-                    $(rowSelector).find('.value-edit-controls').slideUp();
-                    $(rowSelector).find('.value-display').slideDown();
+                    var numAddress = Number(address);
+                    var targetRegister = registerWatchList.filter(function (e) {
+                        return e.address == numAddress;
+                    })[0];
+                    targetRegister.useAsWrite = false;
+
+                    $(rowSelector).find('.value-edit-controls').fadeOut('fast',
+                        function () {
+                            runRedraw();
+                            $(rowSelector).find('.value-display').fadeIn('fast',
+                                runRedraw
+                            );
+                        }
+                    );
                 };
 
                 var writeRegister = function(event){
@@ -597,13 +637,27 @@ function refreshWatchList()
                         'address': address
                     });
 
+                    var inputSelector = WRITE_INPUT_SELECTOR_TEMPLATE({
+                        'address': address
+                    });
+                    var value = $(inputSelector).val();
+
+                    var addressNum = Number(address);
+                    var valueNum = Number(value);
+
                     $(rowSelector).find('.write-confirm-msg').slideDown(
-                        function(){
-                            window.setTimeout(function(){
-                                $(rowSelector).find(
-                                    '.write-confirm-msg'
-                                ).slideUp();
-                            }, 250);
+                        function () {
+                            selectedDevice.writeAsync(addressNum, valueNum)
+                            .then(
+                                function () {
+                                    $(rowSelector).find(
+                                        '.write-confirm-msg'
+                                    ).slideUp();
+                                },
+                                function (err) {
+                                    console.log(err);
+                                }
+                            );
                         }
                     );
                 };
@@ -648,6 +702,7 @@ function addToWatchList(event, registerInfoByAddress)
     var targetRegister = registerInfoByAddress[address];
     registerWatchList.push(targetRegister);
     refreshWatchList();
+    runRedraw();
 }
 
 
@@ -660,8 +715,6 @@ function removeFromWatchList(event)
 {
     var buttonID = event.target.id;
     var address = buttonID.replace('-remove-from-list-button', '');
-
-    console.log(registerWatchList);
 
     var registersToRemove = registerWatchList.filter(
         function(e){ return e.address == address; }
@@ -680,6 +733,53 @@ function removeFromWatchList(event)
         );
         $(descriptor).show();
     }
+
+    runRedraw();
+}
+
+
+function updateReadRegisters ()
+{
+    var readRegisters = registerWatchList.filter(function (e) {
+        return !e.useAsWrite;
+    });
+    var readAddresses = readRegisters.map(function (e) {
+        return e.address;
+    });
+
+    if (readAddresses.length == 0) {
+        setTimeout(updateReadRegisters, REFRESH_DELAY);
+        return;
+    }
+
+    var promise = selectedDevice.readMany(readAddresses);
+    promise.then(function (results) {
+
+        var numResults = results.length;
+        for (var i=0; i<numResults; i++) {
+            var register = readAddresses[i];
+            var value = results[i];
+            var displaySelector = '#' + String(register) + '-cur-val-display';
+            $(displaySelector).html(value.toFixed(6));
+        }
+
+        setTimeout(updateReadRegisters, REFRESH_DELAY);
+    }, function (err) {
+        setTimeout(updateReadRegisters, REFRESH_DELAY);
+    });
+}
+
+
+function setSelectedDevice (serial)
+{
+    var keeper = device_controller.getDeviceKeeper();
+    var devices = keeper.getDevices();
+    var numDevices = devices.length;
+    
+    for (var i=0; i<numDevices; i++) {
+        if (devices[i].getSerial() === serial)
+            selectedDevice = devices[i];
+    }
 }
 
 
@@ -692,6 +792,8 @@ $('#register-matrix-holder').ready(function(){
     $('.device-selection-radio').change(function(){
         $('#device-selector').hide();
         $('#device-selector').fadeIn();
+        var serialNum = $('.device-selection-radio').val();
+        setSelectedDevice(serialNum);
     });
 
     getRegisterInfo()
@@ -702,5 +804,9 @@ $('#register-matrix-holder').ready(function(){
     .then(expandLJMMMEntries)
     .then(flattenEntries)
     .then(renderRegistersTable)
-    .done();
+    .done(function () {
+        var keeper = device_controller.getDeviceKeeper();
+        selectedDevice = keeper.getDevices()[0];
+        setTimeout(updateReadRegisters, REFRESH_DELAY);
+    });
 });

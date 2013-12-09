@@ -7,9 +7,11 @@
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
-var device_controller = require('./test_device_controller');
+var device_controller = require('./device_controller');
 
 var DEVICE_DISPLAY_SRC = 'device_info/device_display.html';
+var DEVICE_NAME_DEFAULT_REGISTER = 60500
+var NAME_MAX_LEN = 49
 
 
 /**
@@ -24,13 +26,22 @@ function showDevice(device, onSuccess)
     var location = fs_facade.getExternalURI(DEVICE_DISPLAY_SRC);
     fs_facade.renderTemplate(
         location,
-        {'device': device},
+        {
+            'device': device,
+            'firmware': device.getFirmwareVersion().toFixed(3),
+            'bootloader': device.getBootloaderVersion().toFixed(3)
+        },
         genericErrorHandler,
         function(renderedHTML)
         {
             $('#device-info-display').html(renderedHTML);
-            $('#change-name-link').click(function(){
+            $('#change-name-link').click(function () {
                 $('#change-name-controls').slideDown();
+            });
+
+            $('#change-name-button').click(function () {
+                var newName = $('#new-name-input').val();
+                changeDeviceName(device, newName);
             });
 
             $('#selected-device-display').html(device.getSerial());
@@ -73,3 +84,20 @@ $('#device-info-inspector').ready(function(){
     var device = devices[0];
     showDevice(device, function(){$('#device-info-display').fadeIn();});
 });
+
+
+function changeDeviceName (device, newName)
+{
+    newName = newName.replace('.', '');
+    newName = newName.substr(0, 49);
+    device.setName(newName);
+    $('#current-name-display').html(newName);
+    $('#change-name-controls').slideUp();
+}
+
+
+function getDeviceName (device)
+{
+    return device.read('DEVICE_NAME_DEFAULT');
+}
+

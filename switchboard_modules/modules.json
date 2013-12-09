@@ -33,7 +33,7 @@
     },
     {
         "name": "power_up_defaults",
-        "active": true
+        "active": false
     },
     {
         "name": "register_matrix",

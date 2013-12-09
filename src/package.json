@@ -1,5 +1,5 @@
 {
-  "name": "Switchboard",
+  "name": "labjack-switchboard",
   "description": "LabJack Desktop Utilities",
   "version": "0.1.0",
   "main": "index.html",
@@ -7,5 +7,6 @@
     "toolbar": false,
     "width": 870,
     "height": 730
-  }
+  },
+  "nodejs": true
 }

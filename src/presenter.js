@@ -7,10 +7,11 @@
  * @author A. Samuel Pottinger (LabJack, 2013)
 **/
 
+var async = require('async');
 var handlebars = require('handlebars');
 
 var fs_facade = require('./fs_facade');
-var device_controller = require('./test_device_controller');
+var device_controller = require('./device_controller');
 
 var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit-TL': 'tall'};
 var CHROME_TEMPLATE_NAME = 'module_chrome.html';
@@ -24,6 +25,8 @@ var LATE_LOADED_CSS_TEMPLATE_STR = '<link href="{{ href }}" rel="stylesheet" ' +
 
 var LATE_LOADED_CSS_TEMPLATE = handlebars.compile(LATE_LOADED_CSS_TEMPLATE_STR);
 var LATE_LOADED_JS_TEMPLATE = handlebars.compile(LATE_LOADED_JS_TEMPLATE_STR);
+
+var currentTab = '';
 
 
 /**
@@ -111,6 +114,8 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
             $('head').append(jsHTML);
         });
 
+        currentTab = name;
+
         $(dest).fadeIn();
     };
 
@@ -148,6 +153,30 @@ function includeDeviceDisplaySizes(deviceTypes)
         return e;
     });
 }
+
+// Load native UI library
+try {
+    var gui = require('nw.gui');
+
+    // Get the current window
+    var win = gui.Window.get();
+
+    // Register callback to close devices on application close.
+    win.on('close', function() {
+        async.each(
+            device_controller.getDeviceKeeper().getDevices(),
+            function (device, callback) {
+                device.close(
+                    callback,
+                    function() { callback(); }
+                );
+            },
+            function (err) {
+                win.close(true);
+            }
+        );
+    });
+} catch (e) {}
 
 
 /**

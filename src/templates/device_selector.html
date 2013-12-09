@@ -21,6 +21,7 @@
                             <div id="connection-types">{{#connectionTypes}}{{ . }} {{/connectionTypes}}</div>
                             <div id="type">{{type}}</div>
                             <div id="name">{{name}}</div>
+                            <div id="ip-address">{{ipAddress}}</div>
                             <div id="disconnect-button-holder" class="{{^connected}}hidden-button-holder{{/connected}}">
                                 <button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
                                     disconnect
@@ -38,7 +39,7 @@
                         </div>
                         <div id="connect-buttons">
                             {{#connectionTypes}}
-                            <div class="connect-button-holder"><button id="{{../type}}-{{../serial}}-{{.}}" class="btn btn-success connect-button">Connect {{.}}</button></div>
+                            <div class="connect-button-holder"><button id="{{../type}}-{{../serial}}-{{../ipSafe}}-{{.}}-{{../origConnectionType}}-{{../origDeviceType}}" class="btn btn-success connect-button">Connect {{.}}</button></div>
                             {{/connectionTypes}}
                             <div><button class="btn cancel-connection-button" id="{{type}}-{{serial}}-cancel">cancel</button></div>
                         </div>

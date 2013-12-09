@@ -8,7 +8,7 @@
 **/
 
 
-var device_controller = require('./test_device_controller');
+var device_controller = require('./device_controller');
 var presenter = require('./presenter')
 var module_manager = require('./module_manager');
 
