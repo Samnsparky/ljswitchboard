@@ -8,5 +8,18 @@
     "width": 870,
     "height": 730
   },
-  "nodejs": true
+  "nodejs": true,
+  "dependencies": {
+    "async": "~0",
+    "dict": "~1",
+    "handlebars": "~1",
+    "labjack-nodejs": "~0",
+    "lazy": "~1",
+    "long": "~1",
+    "node.extend": "~1",
+    "nw-gyp": "~0",
+    "q": "~0",
+    "simplesets": "~1",
+    "sprintf-js": "~0"
+  }
 }
