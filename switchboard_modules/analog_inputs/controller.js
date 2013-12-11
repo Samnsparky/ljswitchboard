@@ -32,6 +32,8 @@ var INPUT_BAR_TEMPLATE = handlebars.compile(
 var RANGE_DISPLAY_TEMPLATE = handlebars.compile(
     RANGE_DISPLAY_TEMPLATE_STR);
 
+var curTabID = getActiveTabID();
+
 
 function replaceAll(find, replace, str) {
   return str.replace(new RegExp(find, 'g'), replace);
@@ -68,7 +70,6 @@ function loadRangeOptions()
 
                 $('.range-selector').click(function (event) {
                     var pieces = event.target.id.replace('-range-selector', '').split('-');
-                    console.log(event.target.id);
                     rangeVal = parseFloat(pieces[0]);
                     if (pieces[1] == '') {
                         var numInputs = targetInputsInfo.length;
@@ -182,6 +183,11 @@ function readRangesAndStartReadingInputs (inputsInfo)
 
 
 function updateInputs (inputsInfo) {
+    if (curTabID !== getActiveTabID()) {
+        console.log('here');
+        return;
+    }
+
     var device = selectedDevices[0];
     var registers = inputsInfo.map(function (e) {
         return e.value_register;

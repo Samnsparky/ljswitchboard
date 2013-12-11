@@ -22,11 +22,14 @@ var LATE_LOADED_JS_TEMPLATE_STR = '<script src="{{ href }}"' +
     'type="text/javascript" class="late-js-{{ type }}">';
 var LATE_LOADED_CSS_TEMPLATE_STR = '<link href="{{ href }}" rel="stylesheet" ' +
     'class="late-css-{{ type }}">';
+var ACTIVE_TAB_STR_TEMPLATE_STR = '{{ name }}-{{ counter }}';
 
 var LATE_LOADED_CSS_TEMPLATE = handlebars.compile(LATE_LOADED_CSS_TEMPLATE_STR);
 var LATE_LOADED_JS_TEMPLATE = handlebars.compile(LATE_LOADED_JS_TEMPLATE_STR);
+var ACTIVE_TAB_STR_TEMPLATE = handlebars.compile(ACTIVE_TAB_STR_TEMPLATE_STR);
 
 var currentTab = '';
+var numTabChanges = 0;
 
 
 /**
@@ -114,8 +117,6 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
             $('head').append(jsHTML);
         });
 
-        currentTab = name;
-
         $(dest).fadeIn();
     };
 
@@ -131,6 +132,8 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
         return;
     }
     
+    numTabChanges++;
+    currentTab = name;
     fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
 }
 
@@ -200,5 +203,13 @@ function renderDeviceSelector()
     var devices = device_controller.getDevices(
         genericErrorHandler,
         onDevicesLoaded
+    );
+}
+
+
+function getActiveTabID()
+{
+    return ACTIVE_TAB_STR_TEMPLATE(
+        { 'name': currentTab, 'counter': numTabChanges }
     );
 }

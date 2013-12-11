@@ -40,6 +40,7 @@ var REFRESH_DELAY = 1000;
 
 var selectedDevice;
 var registerWatchList = [];
+var curTabID = getActiveTabID();
 
 
 /**
@@ -740,6 +741,10 @@ function removeFromWatchList(event)
 
 function updateReadRegisters ()
 {
+    if (curTabID !== getActiveTabID()) {
+        return;
+    }
+
     var readRegisters = registerWatchList.filter(function (e) {
         return !e.useAsWrite;
     });

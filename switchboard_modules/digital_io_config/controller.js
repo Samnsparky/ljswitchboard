@@ -32,6 +32,8 @@ var OUTPUT_SWITCH_TEMPLATE = handlebars.compile(
 
 var targetedDevices = [];
 
+var curTabID = getActiveTabID();
+
 
 /**
  * Render the controls and display for an individual device.
@@ -191,6 +193,10 @@ function writeOutputs ()
 
 function readInputsWriteOutputs ()
 {
+    if (curTabID !== getActiveTabID()) {
+        return;
+    }
+
     writeOutputs().then(readInputs).then(function() {
         setTimeout(readInputsWriteOutputs, REFRESH_DELAY);
     });
