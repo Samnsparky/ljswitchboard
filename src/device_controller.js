@@ -303,7 +303,8 @@ function markConnectedDevices(devices)
         for(var j=0; j<devicesOfTypeLen; j++)
         {
             device = devicesOfType[j];
-            device.connected = connectedSerials.indexOf(device.serial) != -1;
+            device.connected = connectedSerials.indexOf(
+                device.serial.toString()) != -1;
         }
     }
     return devices;
