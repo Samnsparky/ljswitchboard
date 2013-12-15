@@ -379,6 +379,33 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
 }
 
 
+var consolidateDevices = function (listing) {
+    var existingDevice;
+    var newDevice;
+    var deviceListing = dict();
+    var numDevices = listing.length;
+    
+    for (var i=0; i<numDevices; i++) {
+        newDevice = listing[i];
+        existingDevice = deviceListing.get(newDevice.serial, null);
+        if (existingDevice != null) {
+            newDevice.connectionTypes.push.apply(
+                newDevice.connectionTypes,
+                existingDevice.connectionTypes
+            );
+        }
+        deviceListing.set(newDevice.serial, newDevice);
+    }
+
+    var retList = [];
+    deviceListing.forEach(function (value, key) {
+        retList.push(value);
+    });
+
+    return retList;
+};
+
+
 /**
  * Get a list of devices currently visible by to this computer.
  *
@@ -395,6 +422,7 @@ exports.getDevices = function (onError, onSuccess)
     labjack_driver.listAll(
         onError,
         function (driverListing) {
+            consolidateDevices(driverListing);
             var listingDict = dict();
             async.each(
                 driverListing,
@@ -411,6 +439,8 @@ exports.getDevices = function (onError, onSuccess)
                     listingDict.forEach(function (value, key) {
                         listing.push(value);
                     });
+
+                    listing = consolidateDevices(listing);
                     
                     listing = markConnectedDevices(listing);
                     onSuccess(listing);
