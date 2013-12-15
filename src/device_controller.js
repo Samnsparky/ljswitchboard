@@ -383,18 +383,19 @@ var consolidateDevices = function (listing) {
     var existingDevice;
     var newDevice;
     var deviceListing = dict();
-    var numDevices = listing.length;
+    var devices = listing.devices;
+    var numDevices = devices.length;
     
     for (var i=0; i<numDevices; i++) {
-        newDevice = listing[i];
-        existingDevice = deviceListing.get(newDevice.serial, null);
-        if (existingDevice != null) {
+        newDevice = devices[i];
+        existingDevice = deviceListing.get(newDevice.serial.toString(), null);
+        if (existingDevice !== null) {
             newDevice.connectionTypes.push.apply(
                 newDevice.connectionTypes,
                 existingDevice.connectionTypes
             );
         }
-        deviceListing.set(newDevice.serial, newDevice);
+        deviceListing.set(newDevice.serial.toString(), newDevice);
     }
 
     var retList = [];
@@ -402,7 +403,7 @@ var consolidateDevices = function (listing) {
         retList.push(value);
     });
 
-    return retList;
+    listing.devices = retList;
 };
 
 
@@ -422,7 +423,6 @@ exports.getDevices = function (onError, onSuccess)
     labjack_driver.listAll(
         onError,
         function (driverListing) {
-            consolidateDevices(driverListing);
             var listingDict = dict();
             async.each(
                 driverListing,
@@ -440,7 +440,8 @@ exports.getDevices = function (onError, onSuccess)
                         listing.push(value);
                     });
 
-                    listing = consolidateDevices(listing);
+                    for (var i=0; i<listing.length; i++)
+                        consolidateDevices(listing[i]);
                     
                     listing = markConnectedDevices(listing);
                     onSuccess(listing);
