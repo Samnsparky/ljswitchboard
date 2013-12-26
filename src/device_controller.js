@@ -242,6 +242,11 @@ function DeviceKeeper()
         devices.forEach(function(value, key) {retList.push(key);});
         return retList;
     };
+
+    this.updateDevice = function (device) {
+        this.removeDevice(device);
+        this.addDevice(device);
+    };
 }
 
 
@@ -326,7 +331,14 @@ function markConnectedDevices(devices, onSuccess, onError)
                     callback();
                 },
                 function (newInner) {
-                    device.device = null;
+                    var convConnType = device.origConnectionType;
+                    var newDecoratedDevice = new Device(
+                        newInner,
+                        String(device.serial),
+                        convConnType,
+                        device.origDeviceType
+                    );
+                    exports.getDeviceKeeper().updateDevice(newDecoratedDevice);
                     device.connected = true;
                     callback();
                 }
@@ -371,7 +383,8 @@ function createDeviceListingRecord (device, name)
         'type': deviceType,
         'name': name,
         'ipAddress': device.ipAddress,
-        'ipSafe': device.ipAddress.replace(/\./g, '_')
+        'ipSafe': device.ipAddress.replace(/\./g, '_'),
+        'origDevice': device
     };
 }
 
