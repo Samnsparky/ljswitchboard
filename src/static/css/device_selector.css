@@ -104,6 +104,11 @@
     display: inline-block;
 }
 
+#refresh-button
+{
+    margin-right: 10px;
+}
+
 #connect-buttons
 {
     display: none;
