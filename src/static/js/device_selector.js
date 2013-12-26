@@ -4,8 +4,14 @@
  * @author A. Samuel Pottinger (LabJack, 2013)
 **/
 
+var handlebars = require('handlebars');
+
 var device_controller = require('./device_controller');
 
+var OPEN_FAIL_MESSAGE = handlebars.compile(
+    'Sorry. Failed to the open device. Please check the ' +
+    'physical connection and try again or contact support@labjack.com. ' +
+    'Driver error number: {{.}}');
 
 /**
  * Event handler to show the connect buttons for a device.
@@ -191,7 +197,8 @@ function moveToModules()
 **/
 function showAlert(errorMessage)
 {
-    $('#error-display').html(String(errorMessage));
+    var message = OPEN_FAIL_MESSAGE(errorMessage);
+    $('#error-display').html(message);
     $('.device-selector-holder').css('margin-top', '0px');
     $('#alert-message').fadeIn();
 }
