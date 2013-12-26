@@ -157,7 +157,7 @@ var Device = function (device, serial, connectionType, deviceType)
     };
 
     this.close = function (onError, onSuccess) {
-        device.close(onError, onSuccess);
+        this.device.close(onError, onSuccess);
     };
 
     this.setName = function (newName) {
@@ -288,7 +288,7 @@ exports.getDeviceKeeper = function()
 };
 
 
-function markConnectedDevices(devices)
+function markConnectedDevices(devices, onSuccess, onError)
 {
     var devicesOfType;
     var device;
@@ -296,6 +296,7 @@ function markConnectedDevices(devices)
     var connectedSerials = exports.getDeviceKeeper().getDeviceSerials();
 
     var devicesLen = devices.length;
+    var connectedDevices = [];
     for(var i=0; i<devicesLen; i++)
     {
         devicesOfType = devices[i].devices;
@@ -303,11 +304,38 @@ function markConnectedDevices(devices)
         for(var j=0; j<devicesOfTypeLen; j++)
         {
             device = devicesOfType[j];
-            device.connected = connectedSerials.indexOf(
-                device.serial.toString()) != -1;
+            if (connectedSerials.indexOf(device.serial.toString()) != -1)
+                connectedDevices.push(device);
+            else
+                device.connected = false;
         }
     }
-    return devices;
+
+    async.each(
+        connectedDevices,
+        function (item, callback) {
+            openDeviceFromAttributes(
+                device.origDeviceType,
+                device.serial,
+                device.ipAddress,
+                device.origConnectionType,
+                function (err) {
+                    console.log('===err===');
+                    console.log(err);
+                    device.connected = false;
+                    callback();
+                },
+                function (newInner) {
+                    device.device = null;
+                    device.connected = true;
+                    callback();
+                }
+            );
+        },
+        function (err) {
+            onSuccess(devices);
+        }
+    );
 }
 
 
@@ -365,6 +393,7 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
 {
     var listingEntry = getListingEntry(listingDict, deviceInfo);
     
+    console.log('..open..');
     openDeviceFromInfo(
         deviceInfo,
         deviceInfo.connectionType,
@@ -444,8 +473,7 @@ exports.getDevices = function (onError, onSuccess)
                     for (var i=0; i<listing.length; i++)
                         consolidateDevices(listing[i]);
                     
-                    listing = markConnectedDevices(listing);
-                    onSuccess(listing);
+                    markConnectedDevices(listing, onSuccess);
                 }
             );
         }
