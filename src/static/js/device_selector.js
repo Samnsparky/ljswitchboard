@@ -204,12 +204,38 @@ function showAlert(errorMessage)
 }
 
 
+function refreshDevices()
+{
+    $('#device-search-msg').show();
+    $('#content-holder').html('');
+    var onDevicesLoaded = function(devices) {
+        var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+        $('#device-search-msg').hide();
+        renderTemplate(
+            'device_selector.html',
+            context,
+            CONTENTS_ELEMENT,
+            true,
+            ['device_selector.css'],
+            ['device_selector.js'],
+            genericErrorHandler
+        );
+    };
+
+    var devices = device_controller.getDevices(
+        genericErrorHandler,
+        onDevicesLoaded
+    );
+}
+
+
 $('#device-selector-holder').ready(function(){
     $('.show-connect-button').click(showConnectButtons);
     $('.cancel-connection-button').click(hideConnectButtons);
     $('.connect-button').click(connectNewDevice);
     $('.close-alert-button').click(closeAlert);
     $('.disconnect-button').click(disconnectDevice);
+    $('#refresh-button').click(refreshDevices);
     $('#finish-button').click(moveToModules);
 
     var deviceKeeper = device_controller.getDeviceKeeper();
