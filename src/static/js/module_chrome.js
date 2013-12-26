@@ -131,7 +131,26 @@ $('#module-chrome').ready(function(){
     $('#device-count-display').html(keeper.getNumDevices());
 
     $('#manage-link').click(function(){
-        renderDeviceSelector();
+        $('#device-search-msg').show();
+        $('#content-holder').html('');
+        var onDevicesLoaded = function(devices) {
+            var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+            $('#device-search-msg').hide();
+            renderTemplate(
+                'device_selector.html',
+                context,
+                CONTENTS_ELEMENT,
+                true,
+                ['device_selector.css'],
+                ['device_selector.js'],
+                genericErrorHandler
+            );
+        };
+
+        var devices = device_controller.getDevices(
+            genericErrorHandler,
+            onDevicesLoaded
+        );
     });
     
     module_manager.getActiveModules(
