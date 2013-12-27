@@ -119,13 +119,19 @@ function filterDeviceRegisters(registers, deviceName)
     async.filter(
         registers,
         function(register, callback){
-            var names = register.devices.map(function(e){
-                if(e.name === undefined)
-                    return e;
-                else
-                    return e.name
-            });
-            callback(names.indexOf(deviceName) != -1 || names === deviceName);
+            var devices = register.devices;
+
+            if (typeof devices == 'string' || devices instanceof String) {
+                callback(devices === deviceName);
+            } else {
+                var names = devices.map(function(e){
+                    if(e.device === undefined)
+                        return e;
+                    else
+                        return e.device
+                });
+                callback(names.indexOf(deviceName) != -1);
+            }
         },
         function(registers){
             deferred.resolve(registers);
