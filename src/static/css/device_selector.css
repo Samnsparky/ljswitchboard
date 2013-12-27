@@ -94,9 +94,19 @@
     width: 100px;
 }
 
+.device #name
+{
+    max-width: 150px;
+}
+
 .device #info-holder
 {
     display: inline-block;
+}
+
+#refresh-button
+{
+    margin-right: 10px;
 }
 
 #connect-buttons

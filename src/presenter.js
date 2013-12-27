@@ -189,6 +189,7 @@ function renderDeviceSelector()
 {
     var onDevicesLoaded = function(devices) {
         var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+        $('#device-search-msg').hide();
         renderTemplate(
             'device_selector.html',
             context,

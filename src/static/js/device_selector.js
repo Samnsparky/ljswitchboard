@@ -4,8 +4,14 @@
  * @author A. Samuel Pottinger (LabJack, 2013)
 **/
 
+var handlebars = require('handlebars');
+
 var device_controller = require('./device_controller');
 
+var OPEN_FAIL_MESSAGE = handlebars.compile(
+    'Sorry. Failed to the open device. Please check the ' +
+    'physical connection and try again or contact support@labjack.com. ' +
+    'Driver error number: {{.}}');
 
 /**
  * Event handler to show the connect buttons for a device.
@@ -191,9 +197,35 @@ function moveToModules()
 **/
 function showAlert(errorMessage)
 {
-    $('#error-display').html(String(errorMessage));
+    var message = OPEN_FAIL_MESSAGE(errorMessage);
+    $('#error-display').html(message);
     $('.device-selector-holder').css('margin-top', '0px');
     $('#alert-message').fadeIn();
+}
+
+
+function refreshDevices()
+{
+    $('#device-search-msg').show();
+    $('#content-holder').html('');
+    var onDevicesLoaded = function(devices) {
+        var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+        $('#device-search-msg').hide();
+        renderTemplate(
+            'device_selector.html',
+            context,
+            CONTENTS_ELEMENT,
+            true,
+            ['device_selector.css'],
+            ['device_selector.js'],
+            genericErrorHandler
+        );
+    };
+
+    var devices = device_controller.getDevices(
+        genericErrorHandler,
+        onDevicesLoaded
+    );
 }
 
 
@@ -203,6 +235,7 @@ $('#device-selector-holder').ready(function(){
     $('.connect-button').click(connectNewDevice);
     $('.close-alert-button').click(closeAlert);
     $('.disconnect-button').click(disconnectDevice);
+    $('#refresh-button').click(refreshDevices);
     $('#finish-button').click(moveToModules);
 
     var deviceKeeper = device_controller.getDeviceKeeper();
