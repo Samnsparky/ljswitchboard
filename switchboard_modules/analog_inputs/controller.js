@@ -34,7 +34,7 @@ var RANGE_DISPLAY_TEMPLATE = handlebars.compile(
     RANGE_DISPLAY_TEMPLATE_STR);
 
 var curTabID = getActiveTabID();
-var deviceChanged = false;
+var curDevSelection = 0;
 
 
 function replaceAll(find, replace, str) {
@@ -135,7 +135,7 @@ function setRange (rangeAddr, range)
 }
 
 
-function readRangesAndStartReadingInputs (inputsInfo)
+function readRangesAndStartReadingInputs (inputsInfo, targetDevSelection)
 {
     targetInputsInfo = inputsInfo;
     var registers = inputsInfo.map(function (e) {
@@ -169,22 +169,22 @@ function readRangesAndStartReadingInputs (inputsInfo)
                 $(selector).html(text);
             }
             setTimeout(function () {
-                updateInputs(inputsInfo);
+                updateInputs(inputsInfo, targetDevSelection);
             }, 1000);
         },
         function (err) {
             console.log(err);
             setTimeout(function () {
-                updateInputs(inputsInfo);
+                updateInputs(inputsInfo, targetDevSelection);
             }, 1000);
         }
     );
 }
 
 
-function updateInputs (inputsInfo) {
+function updateInputs (inputsInfo, targetDevSelection) {
+    var deviceChanged = curDevSelection != targetDevSelection;
     if (curTabID !== getActiveTabID() || deviceChanged) {
-        deviceChanged = false;
         return;
     }
 
@@ -217,13 +217,13 @@ function updateInputs (inputsInfo) {
                 $(barSelect).css('width', String(width) + 'px');
             }
             setTimeout(function () {
-                updateInputs(inputsInfo);
+                updateInputs(inputsInfo, targetDevSelection);
             }, 1000);
         },
         function (err) {
             console.log(err);
             setTimeout(function () {
-                updateInputs(inputsInfo);
+                updateInputs(inputsInfo, targetDevSelection);
             }, 1000);
         }
     );
@@ -251,9 +251,7 @@ function loadInputs()
             {
                 $(CONTROLS_MATRIX_SELECTOR).hide(function(){
                     $(CONTROLS_MATRIX_SELECTOR).html(renderedHTML);
-                    $(CONTROLS_MATRIX_SELECTOR).fadeIn(function () {
-                        readRangesAndStartReadingInputs(inputsInfo);
-                    });
+                    $(CONTROLS_MATRIX_SELECTOR).fadeIn();
 
                     deferred.resolve();
                 });
@@ -295,7 +293,7 @@ function setAllToSingleEnded()
 function changeSelectedDevice()
 {
     var selectedCheckboxes = $('.device-selection-radio:checked');
-    deviceChanged = true;
+    curDevSelection++;
     $('#loading-ranges-display').show();
     $('#all-device-configuration-controls').hide();
     $('#individual-device-configuration-controls').hide();
@@ -315,7 +313,7 @@ function changeSelectedDevice()
 
     setAllToSingleEnded().then(
         function () {
-            readRangesAndStartReadingInputs(targetInputsInfo);
+            readRangesAndStartReadingInputs(targetInputsInfo, curDevSelection);
             $('#loading-ranges-display').hide();
             $('#all-device-configuration-controls').fadeIn();
             $('#individual-device-configuration-controls').fadeIn();
