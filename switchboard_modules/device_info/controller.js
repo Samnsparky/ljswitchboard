@@ -15,22 +15,32 @@ var NAME_MAX_LEN = 49
 
 
 /**
- * Show the information for a device.
+ * Render a template with the information for a device.
  *
  * @param {Object} device Object with device information.
- * @parma {function} onSuccess The function to call after the device info is
+ * @param {Object} specialInfo Object with additional info about the connected
+ *      model.
+ * @param {function} onSuccess The function to call after the device info is
  *      being displayed.
 **/
 function showDevice(device, onSuccess)
 {
     var location = fs_facade.getExternalURI(DEVICE_DISPLAY_SRC);
+    var isPro = device.read('HARDWARE_INSTALLED') != 0;
+    var templateValues = {
+        'device': device,
+        'firmware': device.getFirmwareVersion().toFixed(3),
+        'bootloader': device.getBootloaderVersion().toFixed(3),
+    };
+
+    if (isPro) {
+        templateValues.specialImageSuffix = '-pro';
+        templateValues.specialText = ' Pro';
+    }
+
     fs_facade.renderTemplate(
         location,
-        {
-            'device': device,
-            'firmware': device.getFirmwareVersion().toFixed(3),
-            'bootloader': device.getBootloaderVersion().toFixed(3)
-        },
+        templateValues,
         genericErrorHandler,
         function(renderedHTML)
         {

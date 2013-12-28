@@ -12,7 +12,7 @@
                 </div>
                 <div class="device-detail">
                     Model:
-                    <span id="type-display">{{getDeviceType}}</span>
+                    <span id="type-display">{{getDeviceType}}{{../specialText}}</span>
                 </div>
                 <div id="name-display-holder" class="device-detail">
                     Name:
@@ -40,7 +40,7 @@
         </div>
     </div>
     <div class="span5">
-        <img id="device-image" src="static/img/devices/{{getDeviceType}}.png">
+        <img id="device-image" src="static/img/devices/{{getDeviceType}}{{../specialImageSuffix}}.png">
     </div>
     {{/device}}
 </div>
