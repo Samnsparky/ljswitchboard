@@ -3,15 +3,18 @@
     <div class="centered-right span2">{{name}}</div>
     <div class="span3">
         <div class="btn-toolbar" id="range-dropdown-holder">
-        <div class="btn-group">
-            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                <span id="input-display-{{range_register}}" class="selected-all-range-display">select range</span>
-                <span class="caret"></span>
-            </a>
-            <ul id="{{range_register}}-select" class="range-list dropdown-menu">
-            </ul>
+            <div class="btn-group" {{#disabled_range_display}}style="display:none"{{/disabled_range_display}}>
+                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <span id="input-display-{{range_register}}" class="selected-all-range-display">select range</span>
+                    <span class="caret"></span>
+                </a>
+                <ul id="{{range_register}}-select" class="range-list dropdown-menu">
+                </ul>
+            </div>
         </div>
-        </div>
+        {{#disabled_range_display}}
+        {{ . }}
+        {{/disabled_range_display}}
     </div>
     <div class="span7">
         <div class="input-display" id="input-display-{{value_register}}"></div>

@@ -70,18 +70,14 @@
         "range_register": 40026
     },
     {
-        "name": "AIN14",
-        "value_register": 28,
-        "range_register": 40028
-    },
-    {
-        "name": "AIN15",
+        "name": "GND",
         "value_register": 30,
         "range_register": 40030
     },
     {
-        "name": "AIN16",
-        "value_register": 32,
-        "range_register": 40032
+        "name": "Temperature",
+        "value_register": 28,
+        "range_register": 40028,
+        "disabled_range_display": "Intern. (deg K)"
     }
 ]
