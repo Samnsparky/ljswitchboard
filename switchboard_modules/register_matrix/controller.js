@@ -119,13 +119,19 @@ function filterDeviceRegisters(registers, deviceName)
     async.filter(
         registers,
         function(register, callback){
-            var names = register.devices.map(function(e){
-                if(e.name === undefined)
-                    return e;
-                else
-                    return e.name
-            });
-            callback(names.indexOf(deviceName) != -1);
+            var devices = register.devices;
+
+            if (typeof devices == 'string' || devices instanceof String) {
+                callback(devices === deviceName);
+            } else {
+                var names = devices.map(function(e){
+                    if(e.device === undefined)
+                        return e;
+                    else
+                        return e.device
+                });
+                callback(names.indexOf(deviceName) != -1);
+            }
         },
         function(registers){
             deferred.resolve(registers);
@@ -441,14 +447,21 @@ function searchRegisters(entries, allTags, tag, searchTerm)
     }
 
     var termLow = searchTerm.toLowerCase();
+
+    var matchesTerm = function (testTerm) {
+        var matches = testTerm !== undefined;
+        matches = matches && testTerm.toLowerCase().indexOf(termLow) != -1;
+        return matches;
+    };
+
     if(termLow !== '')
     {
         filteredEntries = filteredEntries.filter(function(e){
-            var inName = e.name.toLowerCase().indexOf(termLow) != -1;
-            var inTag = e.flatTagStr.toLowerCase().indexOf(termLow) != -1;
-            var inDesc = e.description.toLowerCase().indexOf(termLow) != -1;
+            var matchesName = matchesTerm(e.name);
+            var matchesTag = matchesTerm(e.flatTagStr);
+            var matchesDesc = matchesTerm(e.description);
 
-            return inName || inTag || inDesc;
+            return matchesName || matchesTag || matchesDesc;
         });
     }
 
