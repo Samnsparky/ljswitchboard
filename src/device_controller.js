@@ -369,7 +369,7 @@ function getListingEntry (listingDict, device)
 }
 
 
-function createDeviceListingRecord (device, name)
+function createDeviceListingRecord (device, name, specText, specImageSuffix)
 {
     var connectionType = CONNECTION_TYPE_NAMES.get(
         String(device.connectionType), 'other');
@@ -384,7 +384,9 @@ function createDeviceListingRecord (device, name)
         'name': name,
         'ipAddress': device.ipAddress,
         'ipSafe': device.ipAddress.replace(/\./g, '_'),
-        'origDevice': device
+        'origDevice': device,
+        'specialText': specText,
+        'specialImageSuffix': specImageSuffix
     };
 }
 
@@ -412,8 +414,33 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
         deviceInfo.connectionType,
         function () {callback();},
         function (device) {
+            // TODO: This needs to change when rwMany can handle multiple types.
             var name = device.readSync('DEVICE_NAME_DEFAULT');
-            var record = createDeviceListingRecord(deviceInfo, name);
+            var hardwareInstalled;
+            var record;
+
+            if (deviceInfo.deviceType == 7) {
+                hardwareInstalled = device.readSync('HARDWARE_INSTALLED') !== 0;
+            } else {
+                hardwareInstalled = false;
+            }
+
+            if (hardwareInstalled) {
+                record = createDeviceListingRecord(
+                    deviceInfo,
+                    name,
+                    ' Pro',
+                    '-pro'
+                );
+            } else {
+                record = createDeviceListingRecord(
+                    deviceInfo,
+                    name,
+                    '',
+                    ''
+                );
+            }
+            
             listingEntry.devices.push(record);
             device.closeSync();
             callback();

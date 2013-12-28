@@ -14,12 +14,12 @@
             <div class="well devices-enumeration {{size}}">
                 {{#devices}}
                 <div class="device">
-                    <div id="image"><img src="static/img/devices/{{ type }}.png"></div>
+                    <div id="image"><img src="static/img/devices/{{ type }}{{specialImageSuffix}}.png"></div>
                     <div id="info-holder">
                         <div id="info">
                             <div id="serial">{{serial}}</div>
                             <div id="connection-types">{{#connectionTypes}}{{ . }} {{/connectionTypes}}</div>
-                            <div id="type">{{type}}</div>
+                            <div id="type">{{type}}{{specialText}}</div>
                             <div id="name">{{name}}</div>
                             <div id="ip-address">{{ipAddress}}</div>
                             <div id="disconnect-button-holder" class="{{^connected}}hidden-button-holder{{/connected}}">
