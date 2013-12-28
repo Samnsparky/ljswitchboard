@@ -101,6 +101,7 @@ var Device = function (device, serial, connectionType, deviceType)
     this.writeMany = function (addresses, values) {
         var deferred = q.defer();
 
+        console.log(addresses, values);
         this.device.writeMany(
             addresses,
             values,
