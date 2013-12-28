@@ -24,6 +24,7 @@ var targetInputsInfo;
 var INPUT_DISPLAY_TEMPLATE_STR = '#input-display-{{valueRegister}}';
 var INPUT_BAR_TEMPLATE_STR = '#input-bar-{{valueRegister}}';
 var RANGE_DISPLAY_TEMPLATE_STR = '#input-display-{{rangeRegister}}';
+var SINGLE_ENDED_CONFIG_VAL = 199;
 
 var INPUT_DISPLAY_TEMPLATE = handlebars.compile(
     INPUT_DISPLAY_TEMPLATE_STR);
@@ -33,6 +34,7 @@ var RANGE_DISPLAY_TEMPLATE = handlebars.compile(
     RANGE_DISPLAY_TEMPLATE_STR);
 
 var curTabID = getActiveTabID();
+var deviceChanged = false;
 
 
 function replaceAll(find, replace, str) {
@@ -181,8 +183,8 @@ function readRangesAndStartReadingInputs (inputsInfo)
 
 
 function updateInputs (inputsInfo) {
-    if (curTabID !== getActiveTabID()) {
-        console.log('here');
+    if (curTabID !== getActiveTabID() || deviceChanged) {
+        deviceChanged = false;
         return;
     }
 
@@ -240,6 +242,7 @@ function loadInputs()
     var inputsSrc = fs_facade.getExternalURI(INPUTS_DATA_SRC);
 
     fs_facade.getJSON(inputsSrc, genericErrorHandler, function(inputsInfo){
+        targetInputsInfo = inputsInfo;
         fs_facade.renderTemplate(
             templateLocation,
             {'inputs': inputsInfo},
@@ -262,6 +265,27 @@ function loadInputs()
 }
 
 
+function setAllToSingleEnded()
+{
+    var numInputs = targetInputsInfo.length;
+    var addrsToWrite = [];
+    var valuesToWrite = [];
+    var curInput;
+    var curNegativeChannel;
+
+    for (var i=0; i<numInputs; i++) {
+        curInput = targetInputsInfo[i];
+        if (curInput.negative_channel !== undefined) {
+            curNegativeChannel = curInput.negative_channel;
+            addrsToWrite.push(curNegativeChannel);
+            valuesToWrite.push(SINGLE_ENDED_CONFIG_VAL);
+        }
+    }
+
+    return selectedDevice.writeMany(addrsToWrite, valuesToWrite);
+}
+
+
 /**
  * Event handler for when the selected list of devices is changed.
  *
@@ -271,7 +295,10 @@ function loadInputs()
 function changeSelectedDevice()
 {
     var selectedCheckboxes = $('.device-selection-radio:checked');
-    $('#configuration-pane').hide();
+    deviceChanged = true;
+    $('#loading-ranges-display').show();
+    $('#all-device-configuration-controls').hide();
+    $('#individual-device-configuration-controls').hide();
 
     var selectedDevices = $('.device-selection-radio:checked').map(
         function () {
@@ -285,24 +312,29 @@ function changeSelectedDevice()
         }
     );
     selectedDevice = selectedDevices[0];
-    
-    if(selectedCheckboxes.length > 0) {
-        $('#configuration-pane').fadeIn();
-    } else {
-        // TODO: Redraw bug
-        document.body.style.display='none';
-        document.body.style.display='block';
-    }
+
+    setAllToSingleEnded().then(
+        function () {
+            readRangesAndStartReadingInputs(targetInputsInfo);
+            $('#loading-ranges-display').hide();
+            $('#all-device-configuration-controls').fadeIn();
+            $('#individual-device-configuration-controls').fadeIn();
+            document.body.style.display='none';
+            document.body.style.display='block';
+        },
+        function (err) {
+            console.log(err);
+        }
+    );    
 }
 
 
 $('#analog-inputs-configuration').ready(function(){
-    loadInputs().then(loadRangeOptions).done();
     $('.device-selection-radio').click(changeSelectedDevice);
     $('.device-selection-radio').first().prop('checked', true);
 
     var keeper = device_controller.getDeviceKeeper();
     devices = keeper.getDevices();
 
-    changeSelectedDevice();
+    loadInputs().then(loadRangeOptions).then(changeSelectedDevice);
 });

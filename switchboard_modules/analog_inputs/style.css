@@ -6,8 +6,12 @@
     padding: 20px;
 }
 
+#all-device-configuration-controls
+{
+    display: none;
+}
 
-#configuration-pane
+#individual-device-configuration-controls
 {
     display: none;
 }
