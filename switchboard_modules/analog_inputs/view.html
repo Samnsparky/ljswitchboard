@@ -12,9 +12,9 @@
             {{#devices}}
             <tr>
                 <td>
-                    <label class="checkbox">
-                        <input class="device-selection-checkbox" id="{{getSerial}}-selector" type="checkbox" value="{{getSerial}}">
-                        <span class="metro-checkbox"></span>
+                    <label class="radio">
+                        <input name="selected-device" class="device-selection-radio" id="{{getSerial}}-selector" type="radio" value="{{getSerial}}">
+                        <span class="metro-radio"></span>
                     </label>
                 </td>
                 <td>

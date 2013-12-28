@@ -17,7 +17,7 @@ var INPUTS_TEMPLATE_SRC = 'analog_inputs/input_config.html';
 var CONTROLS_MATRIX_SELECTOR = '#controls-matrix';
 var RANGE_LISTS_SELECTOR = '.range-list';
 var RANGE_LOADING_INDICATOR_SELECTOR = '#loading-ranges-display';
-var selectedDevices = [];
+var selectedDevice;
 var devices = [];
 var targetInputsInfo;
 
@@ -71,7 +71,7 @@ function loadRangeOptions()
                 $('.range-selector').click(function (event) {
                     var pieces = event.target.id.replace('-range-selector', '').split('-');
                     rangeVal = parseFloat(pieces[0]);
-                    if (pieces[1] == '') {
+                    if (pieces[1] === '') {
                         var numInputs = targetInputsInfo.length;
                         for (var i=0; i<numInputs; i++)
                         {
@@ -81,7 +81,7 @@ function loadRangeOptions()
                             );
                         }
                     } else {
-                        rangeReg = parseInt(pieces[1]);
+                        rangeReg = parseInt(pieces[1], 10);
                         setRange(rangeReg, rangeVal);
                     }
                 });
@@ -116,8 +116,7 @@ function extendReadMany (device, results, registers)
 
 function setRange (rangeAddr, range)
 {
-    var device = selectedDevices[0];
-    device.write(rangeAddr, range);
+    selectedDevice.write(rangeAddr, range);
 
     var text;
     if (Math.abs(range - 10) < 0.001)
@@ -136,7 +135,6 @@ function setRange (rangeAddr, range)
 
 function readRangesAndStartReadingInputs (inputsInfo)
 {
-    var device = selectedDevices[0];
     targetInputsInfo = inputsInfo;
     var registers = inputsInfo.map(function (e) {
         return e.range_register;
@@ -146,8 +144,8 @@ function readRangesAndStartReadingInputs (inputsInfo)
         registers.slice(8, 17)
     ];
     var results = [];
-    extendReadMany(device, results, registersSets[0])()
-    .then(extendReadMany(device, results, registersSets[1]))
+    extendReadMany(selectedDevice, results, registersSets[0])()
+    .then(extendReadMany(selectedDevice, results, registersSets[1]))
     .then(
         function () {
             var numResults = results.length;
@@ -188,7 +186,6 @@ function updateInputs (inputsInfo) {
         return;
     }
 
-    var device = selectedDevices[0];
     var registers = inputsInfo.map(function (e) {
         return e.value_register;
     });
@@ -197,8 +194,8 @@ function updateInputs (inputsInfo) {
         registers.slice(8, 17)
     ];
     var results = [];
-    extendReadMany(device, results, registersSets[0])()
-    .then(extendReadMany(device, results, registersSets[1]))
+    extendReadMany(selectedDevice, results, registersSets[0])()
+    .then(extendReadMany(selectedDevice, results, registersSets[1]))
     .then(
         function () {
             var numResults = results.length;
@@ -271,12 +268,12 @@ function loadInputs()
  * Event handler for changes in the selected list of devices. This collection
  * indicates which devices have AIN inputs being manipulated by this module.
 **/
-function changeSelectedDevices()
+function changeSelectedDevice()
 {
-    var selectedCheckboxes = $('.device-selection-checkbox:checked');
+    var selectedCheckboxes = $('.device-selection-radio:checked');
     $('#configuration-pane').hide();
 
-    selectedDevices = $('.device-selection-checkbox:checked').map(
+    var selectedDevices = $('.device-selection-radio:checked').map(
         function () {
             var numDevices = devices.length;
             var serial = this.id.replace('-selector', '');
@@ -287,13 +284,13 @@ function changeSelectedDevices()
             return null;
         }
     );
+    selectedDevice = selectedDevices[0];
     
     if(selectedCheckboxes.length > 0) {
         $('#configuration-pane').fadeIn();
     } else {
         // TODO: Redraw bug
         document.body.style.display='none';
-        document.body.offsetHeight;
         document.body.style.display='block';
     }
 }
@@ -301,11 +298,11 @@ function changeSelectedDevices()
 
 $('#analog-inputs-configuration').ready(function(){
     loadInputs().then(loadRangeOptions).done();
-    $('.device-selection-checkbox').click(changeSelectedDevices);
-    $('.device-selection-checkbox').first().prop('checked', true);
+    $('.device-selection-radio').click(changeSelectedDevice);
+    $('.device-selection-radio').first().prop('checked', true);
 
     var keeper = device_controller.getDeviceKeeper();
     devices = keeper.getDevices();
 
-    changeSelectedDevices();
+    changeSelectedDevice();
 });
