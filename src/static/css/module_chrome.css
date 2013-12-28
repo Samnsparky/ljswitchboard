@@ -8,10 +8,10 @@ body,html
 }
 
 .no-space {
-    margin-left:0;
+    margin-left: 0;
 }
 
-.row-fluid .span9NoGutter { width: 77% }
+.row-fluid .span9NoGutter { width: 76.9% }
 
 #module-list
 {
