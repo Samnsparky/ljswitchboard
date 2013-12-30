@@ -20,6 +20,7 @@ var MODULE_LOADING_IMAGE_DIR = 'static/img/'
 var MODULE_LOADING_IMAGE_SRC = MODULE_LOADING_IMAGE_DIR +
     MODULE_LOADING_IMAGE_NAME;
 var CURRENT_DEVICE_INDEX = 0; // Device to start off as being selected
+var resizeTimeout;
 
 
 /**
@@ -128,6 +129,30 @@ function displayActiveModulesWithEvents(activeModules, onError, onSuccess)
 }
 
 
+function onResized()
+{
+    if ($(window).width() > 767) {
+        $('#device-nav-dock').slideUp();
+        $('#module-list').slideDown();
+        $('#close-nav-dock').slideUp();
+    } else {
+        $('#device-nav-dock').slideDown();
+        $('#module-list').slideUp();
+        $('#close-nav-dock').slideUp();
+    }
+
+    var topPos = $('#module-chrome-contents').position().top;
+    var contents_height = $(window).height() - topPos;
+    if (contents_height < 500)
+        contents_height = 500;
+
+    $('#module-chrome-contents').animate(
+        {'height': contents_height.toString() + 'px'},
+        500
+    )
+}
+
+
 $('#module-chrome').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     $('#device-count-display').html(keeper.getNumDevices());
@@ -168,16 +193,18 @@ $('#module-chrome').ready(function(){
     });
 
     $( window ).resize(function () {
-        if ($(window).width() > 767) {
-            $('#device-nav-dock').slideUp();
-            $('#module-list').slideDown();
-            $('#close-nav-dock').slideUp();
-        } else {
-            $('#device-nav-dock').slideDown();
-            $('#module-list').slideUp();
-            $('#close-nav-dock').slideUp();
-        }
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(onResized, 100);
     });
+    
+    var topPos = $('#module-chrome-contents').position().top;
+    var contents_height = $(window).height() - topPos;
+    if (contents_height < 500)
+        contents_height = 500;
+
+    $('#module-chrome-contents').css(
+        {'height': contents_height.toString() + 'px'}
+    )
     
     module_manager.getActiveModules(
         genericErrorHandler,
