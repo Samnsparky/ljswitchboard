@@ -93,6 +93,10 @@ body,html
     {
         height: 657px;
     }
+    #module-chrome-contents
+    {
+        width: 76%;
+    }
     .nav-dock-component
     {
         display: none;
