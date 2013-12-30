@@ -212,5 +212,17 @@ $('#network-configuration').ready(function(){
         }
     );
 
+    $('#browse-link').click(function () {
+        var chooser = $('#file-dialog-hidden');
+        chooser.change(function(evt) {
+            var fileLoc = $(this).val();
+            $('#file-loc-input').val(fileLoc);
+        });
+
+        chooser.trigger('click');
+
+        return false;
+    });
+
     getAvailableFirmwareListing(genericErrorHandler, displayFirmwareListing);
 });

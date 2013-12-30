@@ -28,8 +28,9 @@
             <h3>Load firmware from hard drive</h3>
             <div id="firmware-browse">
                 <div>
-                    <input type="text" placeholder="Firmware location...">
-                    <a href="#" class="btn btn-link">browse for file >></a>
+                    <input type="text" id="file-loc-input" placeholder="Firmware location...">
+                    <input style="display:none;" id="file-dialog-hidden" type="file" />
+                    <a id="browse-link" href="#" class="btn btn-link">browse for file >></a>
                 <div>
                     <button class="btn">update from local file</button>
                 </div>
