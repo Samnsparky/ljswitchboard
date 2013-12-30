@@ -1,6 +1,7 @@
 html
 {
     background-image:url('../img/background.png');
+    min-width: 560px;
 }
 
 body

@@ -8,14 +8,13 @@ body,html
 }
 
 .no-space {
-    margin-left:0;
+    margin-left: 0;
 }
 
-.row-fluid .span9NoGutter { width: 77% }
+.row-fluid .span9NoGutter { width: 76.9% }
 
 #module-list
 {
-    height: 657px;
     list-style-type: none;
 }
 
@@ -70,4 +69,56 @@ body,html
     height: 730px;
 
     overflow: auto;
+}
+
+.nav-dock-component
+{
+    background-color: #999999;
+    color: white;
+}
+
+.nav-dock-component a
+{
+    color: white;
+    text-decoration: underline;
+}
+
+.nav-dock-component a:hover
+{
+    color: #E0E0E0;
+}
+
+@media screen and (min-width: 768px) {
+    #module-list
+    {
+        height: 657px;
+    }
+    .nav-dock-component
+    {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    #module-list {
+        margin: 0px;
+        display: none;
+    }
+    #device-display
+    {
+        margin-bottom: 10px;
+    }
+    #device-nav-dock
+    {
+        display: block;
+    }
+    #close-nav-dock
+    {
+        display: none;
+    }
+    .nav-dock-component
+    {
+        margin: 10px 0;
+        padding: 10px;
+    }
 }

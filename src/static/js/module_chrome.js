@@ -35,6 +35,8 @@ function selectModule(name)
         $('<img>').attr('src', MODULE_LOADING_IMAGE_SRC)
     );
 
+    $('#cur-module-display').html(name.replace(/_/g, ' '));
+
     var src = name + '/view.html';
     var cssFile = name + '/style.css';
     var jsFile = name + '/controller.js';
@@ -114,7 +116,7 @@ function displayActiveModules(activeModules, onError, onSuccess)
 **/
 function displayActiveModulesWithEvents(activeModules, onError, onSuccess)
 {
-    displayActiveModules(activeModules, onError, function()
+    displayActiveModules(activeModules.slice(0), onError, function()
     {
         $('.' + MODULE_TAB_CLASS).click(function(event){
             selectModule(event.target.id.replace(MODULE_TAB_ID_POSTFIX, ''));
@@ -130,7 +132,7 @@ $('#module-chrome').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     $('#device-count-display').html(keeper.getNumDevices());
 
-    $('#manage-link').click(function(){
+    $('#manage-link').click(function () {
         $('#device-search-msg').show();
         $('#content-holder').html('');
         var onDevicesLoaded = function(devices) {
@@ -152,11 +154,39 @@ $('#module-chrome').ready(function(){
             onDevicesLoaded
         );
     });
+
+    $('#change-modules-link').click(function () {
+        $('#device-nav-dock').slideUp();
+        $('#module-list').slideDown();
+        $('#close-nav-dock').slideDown();
+    });
+
+    $('#close-modules-link').click(function () {
+        $('#device-nav-dock').slideDown();
+        $('#module-list').slideUp();
+        $('#close-nav-dock').slideUp();
+    });
+
+    $( window ).resize(function () {
+        if ($(window).width() > 767) {
+            $('#device-nav-dock').slideUp();
+            $('#module-list').slideDown();
+            $('#close-nav-dock').slideUp();
+        } else {
+            $('#device-nav-dock').slideDown();
+            $('#module-list').slideUp();
+            $('#close-nav-dock').slideUp();
+        }
+    });
     
     module_manager.getActiveModules(
         genericErrorHandler,
         function (modules) {
-            displayActiveModulesWithEvents(modules, genericErrorHandler);
+            displayActiveModulesWithEvents(
+                modules,
+                genericErrorHandler,
+                function () {selectModule(modules[0].name);}
+            );
         }
     );
 });
