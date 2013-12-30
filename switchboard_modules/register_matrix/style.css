@@ -96,6 +96,11 @@
     font-size: 14px;
 }
 
+.register-row td
+{
+    word-wrap: break-word;
+}
+
 .small-table-row:nth-child(odd)
 {
     background-color: #F9F9F9;
@@ -151,4 +156,9 @@
     border-style: solid;
     border-color: black transparent transparent transparent;
     top: 18px;
+}
+
+#register-matrix-body table
+{
+    table-layout: fixed;
 }
