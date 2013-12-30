@@ -16,6 +16,11 @@
     display: none;
 }
 
+#range-dropdown-holder .btn-group
+{
+    margin-right: 15px;
+}
+
 .span-dropdown
 {
     width: 87%;
@@ -103,6 +108,11 @@
     {
         width: 77%;
     }
+
+    #range-dropdown-holder .btn-group
+    {
+        margin-right: 5px;
+    }
 }
 
 @media screen and (min-width: 1100px) {
@@ -131,5 +141,10 @@
     .dropdown-toggle
     {
         width: 99%;
+    }
+
+    #range-dropdown-holder .btn-group
+    {
+        margin-right: 25px;
     }
 }
