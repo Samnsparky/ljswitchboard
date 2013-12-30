@@ -1,8 +1,8 @@
 {{#inputs}}
-<div class="row-fluid input-row">
+<div class="row-fluid input-row non-responsive-row">
     <div class="centered-right span2">{{name}}</div>
-    <div class="span3">
-        <div class="btn-toolbar" id="range-dropdown-holder">
+    <div class="span3 dropdown-span">
+        <div class="btn-toolbar" class="span-dropdown" id="range-dropdown-holder">
             <div class="btn-group" {{#disabled_range_display}}style="display:none"{{/disabled_range_display}}>
                 <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                     <span id="input-display-{{range_register}}" class="selected-all-range-display">select range</span>
