@@ -75,6 +75,11 @@
     text-align: center;
 }
 
+.caret
+{
+    margin-top: 3px !important;
+}
+
 @media screen and (max-width: 767px) {
     .non-responsive-row .span2
     {
@@ -146,5 +151,11 @@
     #range-dropdown-holder .btn-group
     {
         margin-right: 25px;
+    }
+
+    .dropdown-span
+    {
+        padding-right: 2%;
+        text-align: center;
     }
 }
