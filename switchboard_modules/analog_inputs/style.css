@@ -71,7 +71,7 @@
 
 .dropdown-span
 {
-    padding-right: 4%;
+    padding-right: 9px;
     text-align: center;
 }
 
@@ -116,7 +116,7 @@
 
     #range-dropdown-holder .btn-group
     {
-        margin-right: 5px;
+        margin-right: 8px;
     }
 }
 
@@ -155,7 +155,7 @@
 
     .dropdown-span
     {
-        padding-right: 2%;
+        padding-right: 10px;
         text-align: center;
     }
 }

@@ -213,7 +213,7 @@ function updateInputs (inputsInfo, targetDevSelection) {
                 if (width < 0)
                     width = 0;
 
-                $(selector).html(value.toFixed(6));
+                $(selector).html(value.toFixed(6).toString() + ' V');
                 $(barSelect).css('width', String(width) + 'px');
             }
             setTimeout(function () {
