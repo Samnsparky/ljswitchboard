@@ -19,6 +19,7 @@
     "node.extend": "~1",
     "nw-gyp": "~0",
     "q": "~0",
+    "request": "~2",
     "simplesets": "~1",
     "sprintf-js": "~0"
   }

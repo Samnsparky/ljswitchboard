@@ -10,6 +10,10 @@ var FIRMWARE_LISTING_SRC = 'device_updater/firmware_listing.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var FIRMWARE_LIST_SELECTOR = '#firmware-list';
 
+var request = require('request');
+
+var FIRMWARE_LINK_REGEX = /href\=\".*T7firmware\_(\d+)\_(\d+)\.bin"/g;
+
 
 /**
  * A wrapper around a device to make device update operations easier.
@@ -57,7 +61,7 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getFirmwareVersion = function()
     {
-        return '1.23';
+        return device.getFirmwareVersion().toFixed(4);
     };
 
     /**
@@ -68,7 +72,7 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getBootloaderVersion = function()
     {
-        return '2.34';
+        return device.getBootloaderVersion().toFixed(4);
     }
 }
 
@@ -83,17 +87,34 @@ function UpgradeableDeviceAdapter(device)
 **/
 function getAvailableFirmwareListing(onError, onSuccess)
 {
-    var firmwareListing = [
-        {'version': '1.24', 'latest': true},
-        {'version': '1.23', 'latest': false},
-        {'version': '1.22', 'latest': false},
-        {'version': '1.21', 'latest': false},
-        {'version': '1.20', 'latest': false}
-    ];
+    request(
+        'http://www.labjack.com/support/firmware/t7',
+        function (error, response, body) {
+            if (error || response.statusCode != 200) {
+                return; // TODO: More proper error reporting
+            }
 
-    window.setTimeout(function(){
-        onSuccess(firmwareListing);
-    }, 2000);
+            var firmwareListing = [];
+            
+            var match = FIRMWARE_LINK_REGEX.exec(body);
+            while (match !== null) {
+                firmwareListing.push(
+                    {version: parseFloat(match[1])/10000, latest: false}
+                );
+                match = FIRMWARE_LINK_REGEX.exec(body);
+            }
+
+            var numFirmwares = firmwareListing.length;
+            var highestFirmware = firmwareListing[0];
+            for (var i=1; i<numFirmwares; i++) {
+                if (highestFirmware.version < firmwareListing[i].version)
+                    highestFirmware = firmwareListing[i];
+            }
+            highestFirmware.latest = true;
+
+            onSuccess(firmwareListing);
+        }
+    );
 }
 
 

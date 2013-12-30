@@ -29,8 +29,8 @@ function showDevice(device, onSuccess)
     var isPro = device.read('HARDWARE_INSTALLED') != 0;
     var templateValues = {
         'device': device,
-        'firmware': device.getFirmwareVersion().toFixed(3),
-        'bootloader': device.getBootloaderVersion().toFixed(3),
+        'firmware': device.getFirmwareVersion().toFixed(4),
+        'bootloader': device.getBootloaderVersion().toFixed(4),
     };
 
     if (isPro) {
