@@ -146,10 +146,16 @@ function onResized()
     if (contents_height < 500)
         contents_height = 500;
 
-    $('#module-chrome-contents').animate(
-        {'height': contents_height.toString() + 'px'},
-        500
-    )
+    if ($('#module-chrome-contents').height() >= contents_height) {
+        $('#module-chrome-contents').css(
+            {'height': contents_height.toString() + 'px'}
+        )
+    } else {
+        $('#module-chrome-contents').animate(
+            {'height': contents_height.toString() + 'px'},
+            250
+        );
+    }
 }
 
 
