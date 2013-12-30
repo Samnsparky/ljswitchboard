@@ -6,20 +6,33 @@
             <div>checking for new firmware release</div>
             <div><img src="static/img/progress-indeterminate.gif"></div>
         </div>
-        <div id="firmware-select">
-            <div>Change firmware to</div>
-            <div class="btn-toolbar">
-            <div class="btn-group" id="device-selection-controls">
-                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    <span id="selected-firmware"></span>
-                    <span class="caret"></span>
-                </a>
-                <ul id="firmware-list" class="dropdown-menu">
-                </ul>
+        <div class="firmware-source-option" id="firmware-internet-controls">
+            <h3>Download firmware online</h3>
+            <div id="firmware-select">
+                <div class="btn-toolbar">
+                <div class="btn-group" id="device-selection-controls">
+                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                        <span id="selected-firmware"></span>
+                        <span class="caret"></span>
+                    </a>
+                    <ul id="firmware-list" class="dropdown-menu">
+                    </ul>
+                </div>
+                </div>
+                <div>
+                    <button class="btn">update from Internet</button>
+                </div>
             </div>
-            </div>
-            <div>
-                <button class="btn">update</button>
+        </div>
+        <div class="firmware-source-option" id="firmware-local-controls">
+            <h3>Load firmware from hard drive</h3>
+            <div id="firmware-browse">
+                <div>
+                    <input type="text" placeholder="Firmware location...">
+                    <a href="#" class="btn btn-link">browse for file >></a>
+                <div>
+                    <button class="btn">update from local file</button>
+                </div>
             </div>
         </div>
         <div id="working-status-pane">
@@ -28,9 +41,6 @@
                 <div>
                     upgrading devices
                     (<span id="complete-devices-display"></span> of <span id="total-devices-display"></span>)
-                </div>
-                <div>
-                    <button class="btn">cancel</button>
                 </div>
             </div>
         </div>
