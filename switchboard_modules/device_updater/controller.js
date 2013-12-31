@@ -159,7 +159,7 @@ function onFirmwareLinkSelect(event)
     else
         firmwareDisplayStr = version;
 
-    $('#selected-firmware').html(firmwareDisplayStr);
+    $('#selected-firmware').html('version ' + firmwareDisplayStr);
     $('#selected-firmware').attr('selected-version', version);
     $('#selected-firmware').attr('remote', $(event.target).attr('remote'));
 }
@@ -179,7 +179,9 @@ function displayFirmwareListing(firmwareInfo)
     var latestFirmwares = firmwareInfo.filter(function(e){ return e.latest; });
     var latestFirmware = latestFirmwares[0];
 
-    $('#selected-firmware').html(latestFirmware.version + ' (latest)');
+    $('#selected-firmware').html(
+        'version ' + latestFirmware.version + ' (latest)'
+    );
     $('#selected-firmware').attr('selected-version', latestFirmware.version);
     $('#selected-firmware').attr('remote', latestFirmware.url);
 
