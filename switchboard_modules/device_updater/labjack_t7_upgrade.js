@@ -11,6 +11,8 @@ var async = require('async');
 var labjack_nodejs = require('labjack-nodejs');
 var lazy = require('lazy');
 var q = require('q');
+var request = require('request');
+
 var driver_const = labjack_nodejs.driver_const;
 
 var DEBUG_CHECK_ERASE = true;
@@ -33,24 +35,24 @@ var EXPECTED_REBOOT_WAIT = 5000;
  * @return {Array} Array with the numerical sequence.
  * @author Tadeck - http://stackoverflow.com/questions/8273047
 **/
-function range(start, stop, step){
+function range(start, stop, step) {
     if (typeof stop=='undefined'){
         // one param defined
         stop = start;
         start = 0;
-    };
+    }
     if (typeof step=='undefined'){
         step = 1;
-    };
+    }
     if ((step>0 && start>=stop) || (step<0 && start<=stop)){
         return [];
-    };
+    }
     var result = [];
     for (var i=start; step>0 ? i<stop : i>stop; i+=step){
         result.push(i);
-    };
+    }
     return result;
-};
+}
 
 
 /**
@@ -215,10 +217,11 @@ function DeviceFirmwareBundle()
 exports.readFirmwareFile = function(fileSrc)
 {
     var deferred = q.defer();
-
     var bundle = new DeviceFirmwareBundle();
+    var urlComponents;
+    var fileName;
 
-    fs.readFile(fileSrc, function (err, data) {
+    var parseFile = function (err, data) {
         var imageFile = new Buffer(data);
         var imageInformation = {
             rawImageInfo: imageFile.slice(0, 128),
@@ -244,12 +247,23 @@ exports.readFirmwareFile = function(fileSrc)
         bundle.setFirmwareImageInformation(imageInformation);
         bundle.setFirmwareImage(imageFile.slice(128, imageFile.length));
 
-        var versionStr = fileSrc.split('_');
+        var versionStr = fileName.split('_');
         versionStr = versionStr[1];
         bundle.setFirmwareVersion(Number(versionStr)/10000);
         
         deferred.resolve(bundle);
-    });
+    };
+
+    if (fileSrc.indexOf('http') === 0) {
+        urlComponents = fileSrc.split('/');
+        fileName = urlComponents[urlComponents.length-1];
+        request(fileSrc, function (error, response, body) {
+            parseFile(error, body);
+        });
+    } else {
+        fileName = fileSrc;
+        fs.readFile(fileSrc, parseFile);
+    }
 
     return deferred.promise;
 };
@@ -460,7 +474,7 @@ var createFlashOperation = function (bundle, startAddress, lengthInts, sizeInts,
             retArray.push(imageBuffer.readUInt32BE(i*4 + offset));
         }
         return retArray;
-    }
+    };
 
     var executeOperations = [];
     var size = sizeInts;
@@ -538,7 +552,7 @@ var createFlashOperation = function (bundle, startAddress, lengthInts, sizeInts,
     );
 
     return deferred.promise;
-}
+};
 
 
 /**
@@ -563,7 +577,7 @@ exports.readFlash = function(bundle, startAddress, length, size)
         readFlashAddress,
         true
     );
-}
+};
 
 /**
  * Reads image from flash memory.
@@ -696,7 +710,7 @@ exports.writeFlash = function(bundle, startAddress, length, size, key, data)
         key,
         data
     );
-}
+};
 
 
 /**
@@ -845,7 +859,7 @@ exports.waitForEnumeration = function(bundle)
                 });
                 deferred.resolve(serials);
             }
-        )
+        );
 
         return deferred.promise;
     };
@@ -861,7 +875,7 @@ exports.waitForEnumeration = function(bundle)
                 setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
             }
         });
-    }
+    };
 
     setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
 
