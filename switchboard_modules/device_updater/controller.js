@@ -95,11 +95,17 @@ function getAvailableFirmwareListing(onError, onSuccess)
             }
 
             var firmwareListing = [];
-            
             var match = FIRMWARE_LINK_REGEX.exec(body);
+            var targetURL = match[0].replace(/href\=\"/g, '');
+            targetURL = targetURL.replace(/\"/g, '');
+
             while (match !== null) {
                 firmwareListing.push(
-                    {version: parseFloat(match[1])/10000, latest: false}
+                    {
+                        version: parseFloat(match[1])/10000,
+                        latest: false,
+                        url: targetURL
+                    }
                 );
                 match = FIRMWARE_LINK_REGEX.exec(body);
             }
@@ -155,6 +161,7 @@ function onFirmwareLinkSelect(event)
 
     $('#selected-firmware').html(firmwareDisplayStr);
     $('#selected-firmware').attr('selected-version', version);
+    $('#selected-firmware').attr('remote', $(event.target).attr('remote'));
 }
 
 
@@ -174,6 +181,7 @@ function displayFirmwareListing(firmwareInfo)
 
     $('#selected-firmware').html(latestFirmware.version + ' (latest)');
     $('#selected-firmware').attr('selected-version', latestFirmware.version);
+    $('#selected-firmware').attr('remote', latestFirmware.url);
 
     var location = fs_facade.getExternalURI(FIRMWARE_LISTING_SRC);
     fs_facade.renderTemplate(
