@@ -4,11 +4,19 @@
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
-
 var DEVICE_SELECTOR_SRC = 'device_updater/device_selector.html';
 var FIRMWARE_LISTING_SRC = 'device_updater/firmware_listing.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var FIRMWARE_LIST_SELECTOR = '#firmware-list';
+var FIRMWARE_LINK_REGEX = /href\=\".*T7firmware\_(\d+)\_(\d+)\.bin"/g;
+var NUM_UPGRADE_STEPS = 4.0;
+
+var async = require('async');
+var request = require('request');
+
+var labjack_t7_upgrade = require('./labjack_t7_upgrade');
+
+var selectedSerials = [];
 
 
 /**
@@ -47,7 +55,7 @@ function UpgradeableDeviceAdapter(device)
     this.getDeviceType = function()
     {
         return device.getDeviceType();
-    }
+    };
 
     /**
      * Get the version of the firmware currently loaded on the given device.
@@ -57,7 +65,7 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getFirmwareVersion = function()
     {
-        return '1.23';
+        return device.getFirmwareVersion().toFixed(4);
     };
 
     /**
@@ -68,8 +76,8 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getBootloaderVersion = function()
     {
-        return '2.34';
-    }
+        return device.getBootloaderVersion().toFixed(4);
+    };
 }
 
 
@@ -83,17 +91,40 @@ function UpgradeableDeviceAdapter(device)
 **/
 function getAvailableFirmwareListing(onError, onSuccess)
 {
-    var firmwareListing = [
-        {'version': '1.24', 'latest': true},
-        {'version': '1.23', 'latest': false},
-        {'version': '1.22', 'latest': false},
-        {'version': '1.21', 'latest': false},
-        {'version': '1.20', 'latest': false}
-    ];
+    request(
+        'http://www.labjack.com/support/firmware/t7',
+        function (error, response, body) {
+            if (error || response.statusCode != 200) {
+                return; // TODO: More proper error reporting
+            }
 
-    window.setTimeout(function(){
-        onSuccess(firmwareListing);
-    }, 2000);
+            var firmwareListing = [];
+            var match = FIRMWARE_LINK_REGEX.exec(body);
+            var targetURL = match[0].replace(/href\=\"/g, '');
+            targetURL = targetURL.replace(/\"/g, '');
+
+            while (match !== null) {
+                firmwareListing.push(
+                    {
+                        version: parseFloat(match[1])/10000,
+                        latest: false,
+                        url: targetURL
+                    }
+                );
+                match = FIRMWARE_LINK_REGEX.exec(body);
+            }
+
+            var numFirmwares = firmwareListing.length;
+            var highestFirmware = firmwareListing[0];
+            for (var i=1; i<numFirmwares; i++) {
+                if (highestFirmware.version < firmwareListing[i].version)
+                    highestFirmware = firmwareListing[i];
+            }
+            highestFirmware.latest = true;
+
+            onSuccess(firmwareListing);
+        }
+    );
 }
 
 
@@ -106,10 +137,17 @@ function getAvailableFirmwareListing(onError, onSuccess)
 function onChangeSelectedDevices()
 {
     var selectedCheckboxes = $('.device-selection-checkbox:checked');
-    if(selectedCheckboxes.length == 0)
+    if(selectedCheckboxes.length === 0) {
+        selectedSerials = [];
         $('#device-configuration-pane').fadeOut();
-    else
+    }
+    else {
+        selectedSerials = [];
+        selectedCheckboxes.each(function (index, item)  {
+            selectedSerials.push($(item).attr('id'));
+        });
         $('#device-configuration-pane').fadeIn();
+    }
 }
 
 
@@ -132,8 +170,9 @@ function onFirmwareLinkSelect(event)
     else
         firmwareDisplayStr = version;
 
-    $('#selected-firmware').html(firmwareDisplayStr);
+    $('#selected-firmware').html('version ' + firmwareDisplayStr);
     $('#selected-firmware').attr('selected-version', version);
+    $('#selected-firmware').attr('remote', $(event.target).attr('remote'));
 }
 
 
@@ -151,8 +190,11 @@ function displayFirmwareListing(firmwareInfo)
     var latestFirmwares = firmwareInfo.filter(function(e){ return e.latest; });
     var latestFirmware = latestFirmwares[0];
 
-    $('#selected-firmware').html(latestFirmware.version + ' (latest)');
+    $('#selected-firmware').html(
+        'version ' + latestFirmware.version + ' (latest)'
+    );
     $('#selected-firmware').attr('selected-version', latestFirmware.version);
+    $('#selected-firmware').attr('remote', latestFirmware.url);
 
     var location = fs_facade.getExternalURI(FIRMWARE_LISTING_SRC);
     fs_facade.renderTemplate(
@@ -171,6 +213,61 @@ function displayFirmwareListing(firmwareInfo)
 }
 
 
+function updateFirmware (firmwareFileLocation) {
+    $('.firmware-source-option').slideUp();
+    $('#working-status-pane').slideDown();
+
+    var keeper = device_controller.getDeviceKeeper();
+
+    var ProgressListener = function () {
+
+        this.update = function (value, callback) {
+            $('#device-upgrade-progress-indicator-bar').css(
+                {'width': value.toString() + '%'}
+            );
+            if (callback !== undefined)
+                callback();
+        };
+
+        this.update(0);
+    };
+
+    $('#total-devices-display').html(selectedSerials.length);
+    $('#complete-devices-display').html(0);
+
+    var numUpgraded = 0;
+    async.each(
+        selectedSerials,
+        function (serial, callback) {
+            var device = keeper.getDevice(serial);
+            var progressListener = new ProgressListener();
+            labjack_t7_upgrade.updateFirmware(
+                device.device,
+                firmwareFileLocation,
+                progressListener
+            ).then(function (bundle) {
+                var firmwareDisplaySelector = '#';
+                firmwareDisplaySelector += serial.toString();
+                firmwareDisplaySelector += '-firmware-display';
+                device.device = bundle.getDevice();
+                numUpgraded++;
+                $(firmwareDisplaySelector).html(bundle.getFirmwareVersion());
+                $('#complete-devices-display').html(numUpgraded);
+                callback(null);
+            });
+        },
+        function (err) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            $('.firmware-source-option').slideDown();
+            $('#working-status-pane').slideUp();
+        }
+    );
+}
+
+
 $('#network-configuration').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     var devices = keeper.getDevices();
@@ -178,6 +275,10 @@ $('#network-configuration').ready(function(){
     var decoratedDevices = devices.map(function(device) {
         return new UpgradeableDeviceAdapter(device);
     });
+
+    selectedSerials = decoratedDevices.map(
+        function (e) { return e.getSerial(); }
+    );
 
     var location = fs_facade.getExternalURI(DEVICE_SELECTOR_SRC);
     fs_facade.renderTemplate(
@@ -190,6 +291,28 @@ $('#network-configuration').ready(function(){
             $('.device-selection-checkbox').click(onChangeSelectedDevices);
         }
     );
+
+    $('#browse-link').click(function () {
+        var chooser = $('#file-dialog-hidden');
+        chooser.change(function(evt) {
+            var fileLoc = $(this).val();
+            $('#file-loc-input').val(fileLoc);
+        });
+
+        chooser.trigger('click');
+
+        return false;
+    });
+
+    $('#local-update-button').click(function () {
+        updateFirmware($('#file-loc-input').val());
+        return false;
+    });
+
+    $('#web-update-button').click(function () {
+        updateFirmware($('#selected-firmware').attr('remote'));
+        return false;
+    });
 
     getAvailableFirmwareListing(genericErrorHandler, displayFirmwareListing);
 });

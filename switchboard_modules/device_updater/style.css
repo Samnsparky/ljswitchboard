@@ -7,3 +7,13 @@
 {
     display: none;
 }
+
+#browse-button-holder
+{
+    margin-bottom: 10px;
+}
+
+.firmware-source-option
+{
+    margin-bottom: 40px;
+}
