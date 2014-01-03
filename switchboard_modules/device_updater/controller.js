@@ -4,15 +4,19 @@
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
-
 var DEVICE_SELECTOR_SRC = 'device_updater/device_selector.html';
 var FIRMWARE_LISTING_SRC = 'device_updater/firmware_listing.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var FIRMWARE_LIST_SELECTOR = '#firmware-list';
+var FIRMWARE_LINK_REGEX = /href\=\".*T7firmware\_(\d+)\_(\d+)\.bin"/g;
+var NUM_UPGRADE_STEPS = 12.0;
 
+var async = require('async');
 var request = require('request');
 
-var FIRMWARE_LINK_REGEX = /href\=\".*T7firmware\_(\d+)\_(\d+)\.bin"/g;
+var labjack_t7_upgrade = require('./labjack_t7_upgrade');
+
+var selectedSerials = [];
 
 
 /**
@@ -51,7 +55,7 @@ function UpgradeableDeviceAdapter(device)
     this.getDeviceType = function()
     {
         return device.getDeviceType();
-    }
+    };
 
     /**
      * Get the version of the firmware currently loaded on the given device.
@@ -73,7 +77,7 @@ function UpgradeableDeviceAdapter(device)
     this.getBootloaderVersion = function()
     {
         return device.getBootloaderVersion().toFixed(4);
-    }
+    };
 }
 
 
@@ -133,10 +137,17 @@ function getAvailableFirmwareListing(onError, onSuccess)
 function onChangeSelectedDevices()
 {
     var selectedCheckboxes = $('.device-selection-checkbox:checked');
-    if(selectedCheckboxes.length == 0)
+    if(selectedCheckboxes.length === 0) {
+        selectedSerials = [];
         $('#device-configuration-pane').fadeOut();
-    else
+    }
+    else {
+        selectedSerials = [];
+        selectedCheckboxes.each(function (index, item)  {
+            selectedSerials.push($(item).attr('id'));
+        });
         $('#device-configuration-pane').fadeIn();
+    }
 }
 
 
@@ -202,6 +213,53 @@ function displayFirmwareListing(firmwareInfo)
 }
 
 
+function updateFirmware (firmwareFileLocation) {
+    $('.firmware-source-option').slideUp();
+    $('#working-status-pane').slideDown();
+
+    var keeper = device_controller.getDeviceKeeper();
+
+    var ProgressListener = function () {
+        this.currentStep = 0;
+        
+        this.increment = function () {
+            this.currentStep++;
+            this.refreshProgressBar();
+        };
+
+        this.refreshProgressBar = function () {
+            var percent = this.currentStep / NUM_UPGRADE_STEPS * 100;
+            console.log(Math.floor(percent).toString() + '%');
+            $('#device-upgrade-progress-indicator-bar').animate(
+                {'width': Math.floor(percent).toString() + '%'},
+                500
+            );
+        };
+
+        this.refreshProgressBar();
+    };
+
+    async.each(
+        selectedSerials,
+        function (serial, callback) {
+            console.log('start...');
+            var device = keeper.getDevice(serial);
+            var progressListener = new ProgressListener();
+            labjack_t7_upgrade.updateFirmware(
+                device.device,
+                firmwareFileLocation,
+                progressListener
+            ).then(function () {
+                callback(null);
+            });
+        },
+        function (err) {
+
+        }
+    );
+}
+
+
 $('#network-configuration').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     var devices = keeper.getDevices();
@@ -209,6 +267,8 @@ $('#network-configuration').ready(function(){
     var decoratedDevices = devices.map(function(device) {
         return new UpgradeableDeviceAdapter(device);
     });
+
+    selectedSerials = [decoratedDevices[0].getSerial()];
 
     var location = fs_facade.getExternalURI(DEVICE_SELECTOR_SRC);
     fs_facade.renderTemplate(
@@ -231,6 +291,11 @@ $('#network-configuration').ready(function(){
 
         chooser.trigger('click');
 
+        return false;
+    });
+
+    $('#local-update-button').click(function () {
+        updateFirmware($('#file-loc-input').val());
         return false;
     });
 
