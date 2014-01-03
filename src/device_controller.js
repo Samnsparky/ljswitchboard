@@ -300,6 +300,9 @@ function markConnectedDevices(devices, onSuccess, onError)
     var device;
 
     var connectedSerials = exports.getDeviceKeeper().getDeviceSerials();
+    connectedSerials = connectedSerials.map(
+        function (e) { return parseInt(e, 10); }
+    );
 
     var devicesLen = devices.length;
     var connectedDevices = [];
@@ -307,19 +310,21 @@ function markConnectedDevices(devices, onSuccess, onError)
     {
         devicesOfType = devices[i].devices;
         var devicesOfTypeLen = devicesOfType.length;
+        console.log(connectedSerials);
         for(var j=0; j<devicesOfTypeLen; j++)
         {
             device = devicesOfType[j];
-            if (connectedSerials.indexOf(device.serial.toString()) != -1)
+            console.log(device.serial);
+            if (connectedSerials.indexOf(device.serial) != -1)
                 connectedDevices.push(device);
             else
                 device.connected = false;
         }
     }
 
-    async.each(
+    async.eachSeries(
         connectedDevices,
-        function (item, callback) {
+        function (device, callback) {
             openDeviceFromAttributes(
                 device.origDeviceType,
                 device.serial,
