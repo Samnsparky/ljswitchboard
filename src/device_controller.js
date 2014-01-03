@@ -29,6 +29,8 @@ var CONNECTION_TYPE_NAMES = dict({
 /**
  * Object with information about a device.
  *
+ * @param {labjack-nodejs.Device} device The device object to decorate for use
+ *      with Switchboard.
  * @param {String} serial The serial number for the device.
  * @param {String} connectionType The type of connection used to communicate
  *      with the device. Examples include "USB", "Ethernet", and "WiFi".
@@ -68,7 +70,8 @@ var Device = function (device, serial, connectionType, deviceType)
      * Get a String describing what kind of device this is. Examples include
      * "T7" and "Digit-TL".
      *
-     * @return {String} A description of the type of device this is.
+     * @return {String} A description of the type of device this is. Defaults to
+     *      'other' if the device type could not be decoded.
     **/
     this.getDeviceType = function () {
         return DEVICE_TYPE_NAMES.get(String(deviceType), 'Other');
@@ -88,20 +91,39 @@ var Device = function (device, serial, connectionType, deviceType)
         return this.cachedName;
     };
 
-    // TODO
+    /**
+     * Get the version of firmware installed on this device.
+     *
+     * @return {float} The version of the firmware on this device.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.getFirmwareVersion = function () {
         return this.device.readSync('FIRMWARE_VERSION');
     };
 
-    // TODO
+    /**
+     * Get the version of the bootloader installed on this device.
+     *
+     * @return {float} The version of the bootloader on this device.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.getBootloaderVersion = function () {
         return this.device.readSync('BOOTLOADER_VERSION');
     };
 
+    /**
+     * Write many registers on this device.
+     * 
+     * @param {Array} addresses The addresses of the registers to write. Should
+     *      be an Array of numbers.
+     * @param {Array} values The values to write to these registers. Should be
+     *      an Array of numbers.
+     * @return {q.promise} Promise that resolves to the values and addresses
+     *      written. Will reject on error from lower layers.
+    **/
     this.writeMany = function (addresses, values) {
         var deferred = q.defer();
 
-        console.log(addresses, values);
         this.device.writeMany(
             addresses,
             values,
@@ -116,6 +138,15 @@ var Device = function (device, serial, connectionType, deviceType)
         return deferred.promise;
     };
 
+    /**
+     * Read many registers on the device.
+     *
+     * @param {Array} addresses The addresses of the registers to read. Should
+     *      be an Array of numbers.
+     * @return {q.promise} Promise that resolves to an array of values read from
+     *      the device, values corresponding to the addresses array passed.
+     *      Rejects on error from a lower layer.
+    **/
     this.readMany = function (addresses) {
         var deferred = q.defer();
 
@@ -132,6 +163,14 @@ var Device = function (device, serial, connectionType, deviceType)
         return deferred.promise;
     };
 
+    /**
+     * Write a single register on the device asynchronously.
+     *
+     * @param {Number} address The address of the register to write.
+     * @param {Number} value The value to write to this register.
+     * @return {q.promise} Promise that resovles to the value written to this
+     *      register. Rejects on error at the lower levels.
+    **/
     this.writeAsync = function(address, value) {
         var deferred = q.defer();
 
@@ -149,18 +188,48 @@ var Device = function (device, serial, connectionType, deviceType)
         return deferred.promise;
     };
 
+    /**
+     * Write a single register on the device synchronously.
+     * 
+     * @param {Number} address The address of the register to write.
+     * @param {Number} value The value to write to this address.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.write = function (address, value) {
         this.device.writeSync(address, value);
     };
 
+    /**
+     * Read a single register on the device synchronously.
+     *
+     * @param {Number} address The address of the register to read. 
+     * @return {Number} The value of the requested register.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.read = function (address) {
         return this.device.readSync(address);
     };
 
+    /**
+     * Release the device handle for this device.
+     *
+     * @param {function} onError The function to call if the device could not
+     *      be closed.
+     * @param {function} onSuccess The function to call after the device is
+     *      closed.
+    **/
     this.close = function (onError, onSuccess) {
         this.device.close(onError, onSuccess);
     };
 
+    // TODO: This is likely only used in the device info module. It should be
+    //       moved there.
+    /**
+     * Set the name of this device.
+     *
+     * @param {String} newName The name to give this device.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.setName = function (newName) {
         this.write('DEVICE_NAME_DEFAULT', newName);
         this.cachedName = newName;
