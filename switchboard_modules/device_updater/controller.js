@@ -9,7 +9,7 @@ var FIRMWARE_LISTING_SRC = 'device_updater/firmware_listing.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var FIRMWARE_LIST_SELECTOR = '#firmware-list';
 var FIRMWARE_LINK_REGEX = /href\=\".*T7firmware\_(\d+)\_(\d+)\.bin"/g;
-var NUM_UPGRADE_STEPS = 9.0;
+var NUM_UPGRADE_STEPS = 4.0;
 
 var async = require('async');
 var request = require('request');
@@ -220,22 +220,16 @@ function updateFirmware (firmwareFileLocation) {
     var keeper = device_controller.getDeviceKeeper();
 
     var ProgressListener = function () {
-        this.currentStep = 0;
-        
-        this.increment = function () {
-            this.currentStep++;
-            this.refreshProgressBar();
-        };
 
-        this.refreshProgressBar = function () {
-            var percent = this.currentStep / NUM_UPGRADE_STEPS * 100;
-            $('#device-upgrade-progress-indicator-bar').animate(
-                {'width': Math.round(percent).toString() + '%'},
-                500
+        this.update = function (value, callback) {
+            $('#device-upgrade-progress-indicator-bar').css(
+                {'width': value.toString() + '%'}
             );
+            if (callback !== undefined)
+                callback();
         };
 
-        this.refreshProgressBar();
+        this.update(0);
     };
 
     async.each(
@@ -248,13 +242,22 @@ function updateFirmware (firmwareFileLocation) {
                 device.device,
                 firmwareFileLocation,
                 progressListener
-            ).then(function () {
+            ).then(function (bundle) {
+                var firmwareDisplaySelector = '#';
+                firmwareDisplaySelector += serial.toString();
+                firmwareDisplaySelector += '-firmware-display';
+                device.device = bundle.getDevice();
+                $(firmwareDisplaySelector).html(bundle.getFirmwareVersion());
                 callback(null);
             });
         },
         function (err) {
-            console.log('ERROR ERROR ERROR!!!!');
-            console.log(err);
+            if (err) {
+                console.log(err);
+                return;
+            }
+            $('.firmware-source-option').slideDown();
+            $('#working-status-pane').slideUp();
         }
     );
 }

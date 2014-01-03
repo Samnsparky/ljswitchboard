@@ -173,7 +173,6 @@ function DeviceFirmwareBundle()
     **/
     this.setFirmwareVersion = function(newVersion)
     {
-        //console.log(newVersion);
         version = newVersion;
     };
 
@@ -221,8 +220,6 @@ exports.readFirmwareFile = function(fileSrc)
     var urlComponents;
     var fileName;
 
-    console.log('here 1');
-
     var parseFile = function (err, data) {
         var imageFile = new Buffer(data);
         var imageInformation = {
@@ -246,22 +243,17 @@ exports.readFirmwareFile = function(fileSrc)
             unencryptedSHA: imageFile.readUInt32BE(driver_const.HEADER_SHA1),
             headerChecksum: imageFile.readUInt32BE(driver_const.HEADER_CHECKSUM)
         };
-        console.log(imageInformation);
-        console.log('here 3');
         bundle.setFirmwareImageInformation(imageInformation);
         bundle.setFirmwareImage(imageFile.slice(128, imageFile.length));
 
         var versionStr = fileName.split('_');
         versionStr = versionStr[1];
         bundle.setFirmwareVersion(Number(versionStr)/10000);
-
-        console.log('here 4');
         
         deferred.resolve(bundle);
     };
 
     if (fileSrc.indexOf('http') === 0) {
-        console.log('here -1');
         urlComponents = fileSrc.split('/');
         fileName = urlComponents[urlComponents.length-1];
         request(
@@ -271,8 +263,6 @@ exports.readFirmwareFile = function(fileSrc)
             }
         );
     } else {
-        console.log('here -2');
-        console.log(fileSrc);
         fileName = fileSrc;
         fs.readFile(fileSrc, parseFile);
     }
@@ -298,8 +288,6 @@ exports.checkCompatibility = function(bundle)
     var firmwareVersion = bundle.getFirmwareVersion();
 
     var headerCodeCorrect = imageInformation.headerCode == expectedHeaderCode;
-    console.log('target device type');
-    console.log(imageInformation.intendedDevice);
     var intendedDeviceCorrect = ALLOWED_IMAGE_INFO_DEVICE_TYPES.indexOf(
         imageInformation.intendedDevice) != -1;
     var versionCorrect = imageInformation.containedVersion == firmwareVersion;
@@ -640,7 +628,7 @@ exports.readImageInformation = function(bundle)
         numberOfIntegers,
         driver_const.T7_FLASH_BLOCK_WRITE_SIZE
     ).then(
-        function (memoryContents) { console.log('finished'); deferred.resolve(bundle); },
+        function (memoryContents) { deferred.resolve(bundle); },
         function (err) { console.log(err); deferred.reject(err); }
     );
 
@@ -749,7 +737,7 @@ exports.writeImage = function(bundle)
         driver_const.T7_EFkey_ExtFirmwareImage,
         bundle.getFirmwareImage()
     ).then(
-        function (memoryContents) { console.log('whoops'); deferred.resolve(bundle); },
+        function (memoryContents) { deferred.resolve(bundle); },
         function (err) { console.log(err); deferred.reject(err); }
     );
 
@@ -857,32 +845,39 @@ exports.restartAndUpgrade = function(bundle)
 **/
 exports.waitForEnumeration = function(bundle)
 {
-    console.log('waitForEnumeration');
     var deferred = q.defer();
     var ljmDriver = new labjack_nodejs.driver();
     var targetSerial = bundle.getSerialNumber();
 
     var getAllConnectedSerials = function () {
-        var deferred = q.defer();
+        var innerDeferred = q.defer();
 
-        ljmDriver.listAll("LJM_dtT7", "LJM_ctUSB",
-            function (err) { deferred.reject(err); },
+        ljmDriver.listAll("LJM_dtT7", "LJM_ctANY",
+            function (err) { innerDeferred.reject(err); },
             function (devicesInfo) {
                 var serials = devicesInfo.map(function (e) {
                     return e.serialNumber; 
                 });
-                deferred.resolve(serials);
+                innerDeferred.resolve(serials);
             }
         );
 
-        return deferred.promise;
+        return innerDeferred.promise;
     };
 
     var checkForDevice = function () {
         getAllConnectedSerials().then(function (serialNumbers) {
             if (serialNumbers.indexOf(targetSerial) != -1) {
                 var newDevice = new labjack_nodejs.device();
-                newDevice.openSync("LJM_dtT7", "LJM_ctUSB", targetSerial);
+                try {
+                    newDevice.openSync(
+                        "LJM_dtT7",
+                        "LJM_ctANY",
+                        targetSerial.toString()
+                    );
+                } catch (e) {
+                    console.log(e);
+                }
                 bundle.setDevice(newDevice);
                 deferred.resolve(bundle);
             } else {
@@ -912,7 +907,11 @@ exports.checkNewFirmware = function(bundle)
     bundle.getDevice().read('FIRMWARE_VERSION',
         function (err) { deferred.reject(err); },
         function (firmwareVersion) {
-            if(bundle.getFirmwareVersion() != firmwareVersion) {
+            console.log(firmwareVersion);
+            console.log(bundle.getFirmwareVersion());
+            var dif = bundle.getFirmwareVersion() - firmwareVersion;
+            console.log(Math.abs(dif));
+            if(Math.abs(dif) > 0.0001) {
                 var errorMsg = 'New firmware version does not reflect upgrade.';
                 deferred.reject(new Error(errorMsg));
             } else {
@@ -947,46 +946,37 @@ exports.updateFirmware = function(device, firmwareFileLocation, progressListener
 
     var reportError = function (error) {
         deferred.reject(error);
-        /*console.log('!!!!!inner error!!!!!');
-        console.log(error);*/
         throw error;
     };
 
-    var incrementProgress = function (bundle) {
-        console.log('increment...');
-        var innerDeferred = q.defer();
-        progressListener.increment();
-        innerDeferred.resolve(bundle);
-        return innerDeferred.promise;
+    var updateProgress = function (value) {
+        return function (bundle) {
+            var innerDeferred = q.defer();
+            progressListener.update(value, function () {
+                innerDeferred.resolve(bundle);
+            });
+            return innerDeferred.promise;
+        };
     };
 
     // 12 steps
-    console.log('within routine...');
     exports.readFirmwareFile(firmwareFileLocation, reportError)
-    .then(incrementProgress, reportError)
     .then(injectDevice, reportError)
-    .then(incrementProgress, reportError)
     .then(exports.checkCompatibility, reportError)
-    .then(incrementProgress, reportError)
+    .then(updateProgress(10), reportError)
     .then(exports.eraseImage, reportError)
-    .then(incrementProgress, reportError)
     .then(exports.eraseImageInformation, reportError)
-    .then(incrementProgress, reportError)
     .then(exports.checkErase, reportError)
-    .then(incrementProgress, reportError)
+    .then(updateProgress(50), reportError)
     .then(exports.writeImage, reportError)
-    .then(incrementProgress, reportError)
     .then(exports.writeImageInformation, reportError)
-    .then(incrementProgress, reportError)
     .then(exports.checkImageWrite, reportError)
-    .then(incrementProgress, reportError)
+    .then(updateProgress(90), reportError)
     .then(exports.restartAndUpgrade, reportError)
-    .then(incrementProgress, reportError)
     .then(exports.waitForEnumeration, reportError)
-    .then(incrementProgress, reportError)
     .then(exports.checkNewFirmware, reportError)
-    .then(incrementProgress, reportError)
-    .fail(deferred.resolve, reportError);
+    .then(updateProgress(100), reportError)
+    .then(deferred.resolve, reportError);
 
     return deferred.promise;
 };
