@@ -9,7 +9,7 @@ var FIRMWARE_LISTING_SRC = 'device_updater/firmware_listing.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var FIRMWARE_LIST_SELECTOR = '#firmware-list';
 var FIRMWARE_LINK_REGEX = /href\=\".*T7firmware\_(\d+)\_(\d+)\.bin"/g;
-var NUM_UPGRADE_STEPS = 12.0;
+var NUM_UPGRADE_STEPS = 9.0;
 
 var async = require('async');
 var request = require('request');
@@ -229,9 +229,8 @@ function updateFirmware (firmwareFileLocation) {
 
         this.refreshProgressBar = function () {
             var percent = this.currentStep / NUM_UPGRADE_STEPS * 100;
-            console.log(Math.floor(percent).toString() + '%');
             $('#device-upgrade-progress-indicator-bar').animate(
-                {'width': Math.floor(percent).toString() + '%'},
+                {'width': Math.round(percent).toString() + '%'},
                 500
             );
         };
@@ -254,7 +253,8 @@ function updateFirmware (firmwareFileLocation) {
             });
         },
         function (err) {
-
+            console.log('ERROR ERROR ERROR!!!!');
+            console.log(err);
         }
     );
 }
@@ -296,6 +296,11 @@ $('#network-configuration').ready(function(){
 
     $('#local-update-button').click(function () {
         updateFirmware($('#file-loc-input').val());
+        return false;
+    });
+
+    $('#web-update-button').click(function () {
+        updateFirmware($('#selected-firmware').attr('remote'));
         return false;
     });
 
