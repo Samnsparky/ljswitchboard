@@ -232,10 +232,13 @@ function updateFirmware (firmwareFileLocation) {
         this.update(0);
     };
 
+    $('#total-devices-display').html(selectedSerials.length);
+    $('#complete-devices-display').html(0);
+
+    var numUpgraded = 0;
     async.each(
         selectedSerials,
         function (serial, callback) {
-            console.log('start...');
             var device = keeper.getDevice(serial);
             var progressListener = new ProgressListener();
             labjack_t7_upgrade.updateFirmware(
@@ -247,7 +250,9 @@ function updateFirmware (firmwareFileLocation) {
                 firmwareDisplaySelector += serial.toString();
                 firmwareDisplaySelector += '-firmware-display';
                 device.device = bundle.getDevice();
+                numUpgraded++;
                 $(firmwareDisplaySelector).html(bundle.getFirmwareVersion());
+                $('#complete-devices-display').html(numUpgraded);
                 callback(null);
             });
         },
@@ -271,7 +276,9 @@ $('#network-configuration').ready(function(){
         return new UpgradeableDeviceAdapter(device);
     });
 
-    selectedSerials = [decoratedDevices[0].getSerial()];
+    selectedSerials = decoratedDevices.map(
+        function (e) { return e.getSerial(); }
+    );
 
     var location = fs_facade.getExternalURI(DEVICE_SELECTOR_SRC);
     fs_facade.renderTemplate(
