@@ -413,7 +413,17 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
     openDeviceFromInfo(
         deviceInfo,
         deviceInfo.connectionType,
-        function () {callback();},
+        function (err) {
+            console.log(err);
+            record = createDeviceListingRecord(
+                deviceInfo,
+                '[ could not read name ]',
+                '',
+                ''
+            );
+            listingEntry.devices.push(record);
+            callback();
+        },
         function (device) {
             // TODO: This needs to change when rwMany can handle multiple types.
             var name = device.readSync('DEVICE_NAME_DEFAULT');
@@ -495,7 +505,7 @@ exports.getDevices = function (onError, onSuccess)
         onError,
         function (driverListing) {
             var listingDict = dict();
-            async.each(
+            async.eachSeries(
                 driverListing,
                 function (deviceInfo, callback) {
                     finishDeviceRecord(listingDict, deviceInfo, callback);
