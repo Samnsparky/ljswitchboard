@@ -66,7 +66,6 @@ function connectNewDevice(event)
     var deviceInfo = event.target.id.split('-');
     var jqueryID = '#' + event.target.id;
 
-    console.log(jqueryID);
     var serial = deviceInfo[1];
     var ipAddress = deviceInfo[2].replace(/\_/g, '.');
     var connectionType = parseInt(deviceInfo[4]);
@@ -75,6 +74,8 @@ function connectNewDevice(event)
     var info = $(jqueryID).parents('#info-holder').children('#info');
     info.children('.device-load-progress').show();
     info.children('#show-connect-button-holder').hide();
+    $('#finish-button').slideUp();
+    $('.connect-button').slideUp();
 
     hideConnectButtons(event);
 
@@ -82,6 +83,7 @@ function connectNewDevice(event)
     {
         device_controller.getDeviceKeeper().addDevice(device);
         showFinishButton();
+        $('.connect-button').slideDown();
         info.children('.progress').fadeOut(function(){
             info.children('#disconnect-button-holder').fadeIn();
         });
