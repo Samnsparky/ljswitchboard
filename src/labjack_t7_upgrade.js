@@ -998,7 +998,7 @@ exports.waitForEnumeration = function(bundle)
         var innerDeferred = q.defer();
 
         ljmDriver.listAll("LJM_dtT7", "LJM_ctANY",
-            createSafeReject(deferred),
+            createSafeReject(innerDeferred),
             function (devicesInfo) {
                 var serials = devicesInfo.map(function (e) {
                     return e.serialNumber; 
@@ -1083,7 +1083,7 @@ exports.updateFirmware = function(device, firmwareFileLocation, progressListener
         try {
             bundle.setSerialNumber(device.readSync('SERIAL_NUMBER'));
         } catch (e) {
-            safelyReject(e);
+            safelyReject(innerDeferred, e);
         }
         bundle.setDevice(device);
         innerDeferred.resolve(bundle);
