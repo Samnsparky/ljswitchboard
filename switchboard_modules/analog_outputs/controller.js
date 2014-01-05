@@ -25,24 +25,40 @@ var DEVICE_SELECT_ID_TEMPLATE = handlebars.compile(
 var devices;
 
 
+/**
+ * Wrapper around device_controller.Devices for analog output manipulation.
+ *
+ * A manager for device_controller.Device structures, making the devices
+ * easier to manipulate for analog outputs (DACs)
+**/
 function AnalogOutputDeviceController () {
     var connectedDevices = [];
     var outputs = dict();
 
+    /**
+     * Configure the current selected devices to have certain DAC values.
+     *
+     * Configure the currently selected devices to have pre-specified DAC
+     * values.
+     *
+     * @return {q.promise} Promise that resolves after the DACs have been
+     *      updated on the selected devices. Rejects on case of error.
+    **/
     this.configureDACs = function () {
         var deferred = q.defer();
 
         var registers = [];
         var values = [];
         outputs.forEach(function (value, register) {
-            registers.push(Number(register));
-            values.push(value);
+            register = Number(register);
+            if (register !== 0) {
+                registers.push(register);
+                values.push(value);
+            }
         });
 
         var writeValueClosure = function (device) {
             return function() {
-                console.log(registers);
-                console.log(values);
                 return device.writeMany(registers, values);
             };
         };
@@ -65,31 +81,58 @@ function AnalogOutputDeviceController () {
             else
                 lastPromise.then(
                     writeValueClosures[i],
-                    function (err) {throw err}
+                    deferred.reject
                 );
         }
 
         lastPromise.then(
             function () {deferred.resolve();},
-            function (err) {throw err}
+            deferred.reject
         )
 
         return deferred.promise;
     };
 
+    /**
+     * Indicate which devices this manager should operate on.
+     *
+     * @param {Array} newConnectedDevices An array of device_controller.Device
+     *      decorating the devices that this controller should operate on.
+     * @return {q.promise} Promise that resolves after the specified devices
+     *      have their DAC values updated by this manager. Rejects on error.
+    **/
     this.setConnectedDevices = function (newConnectedDevices) {
         connectedDevices = newConnectedDevices;
         return this.configureDACs();
     };
 
+    /**
+     * Set the value of a specific DAC across all managed devices.
+     *
+     * @param {Number} register The register of the DAC to write.
+     * @param {Number} value The value (volts) to write to the specified DAC.
+     * @return {q.promise} Promise that resolves after the specified devices
+     *      have their DAC values updated by this manager. Rejects on error.
+    **/
     this.setDAC = function (register, value) {
-        outputs.set(register, value);
+        outputs.set(register.toString(), value);
         return this.configureDACs();
     };
 
+    /**
+     * Load the values currently specified for the DACs on the device.
+     *
+     * Load the values currently specified for the DACs on the first selected
+     * device.
+     *
+     * @param {Number} register The register of the DAC to load current values
+     *      for.
+     * @return {Number} The currentl value of that DAC on the first selected
+     *      device.
+    **/
     this.loadDAC = function (register) {
         var value = connectedDevices[0].read(Number(register));
-        outputs.set(String(register), value);
+        outputs.set(register.toString(), value);
         return value;
     };
 }
@@ -123,19 +166,21 @@ function formatVoltageTooltip(value)
 **/
 function onVoltageSelected(event)
 {
-    var register = event.target.id.replace('-control', '');
+    var register = Number(event.target.id.replace('-control', ''));
     
     var confirmationSelector = CONFIRMATION_DISPLAY_TEMPLATE(
         {register: register}
     );
 
-    var selectedVoltage = Number(event.target.value);
+    var selectedVoltage = Number($('#'+event.target.id).val());
     
+    console.log($('#'+event.target.id).slider('getValue'));
     $(confirmationSelector).html(
         formatVoltageTooltip(selectedVoltage)
     );
 
-    analogOutputDeviceController.setDAC(register, selectedVoltage);
+    analogOutputDeviceController.setDAC(register, selectedVoltage).fail(
+        function (err) {showAlert(err.retError);});
 }
 
 
@@ -173,7 +218,8 @@ function changeActiveDevices()
         }
     );
 
-    analogOutputDeviceController.setConnectedDevices(checkedDevices);
+    analogOutputDeviceController.setConnectedDevices(checkedDevices).fail(
+        function (err) {showAlert(err.retError);});
     $('#configuration-pane-holder').hide();
     
     if(checkedDevices.length != 0)
@@ -181,6 +227,9 @@ function changeActiveDevices()
 }
 
 
+/**
+ * Load the values currently written to the selected device's DACs.
+**/
 function loadCurrentDACSettings ()
 {
     $('.slider').each(function () {
@@ -197,6 +246,9 @@ function loadCurrentDACSettings ()
 }
 
 
+/**
+ * Initialization logic for when the analog outputs module is loaded.
+**/
 $('#analog-output-config').ready(function(){
     var templateLocation = fs_facade.getExternalURI(OUTPUTS_TEMPLATE_SRC);
     var outputsSrc = fs_facade.getExternalURI(OUTPUTS_DATA_SRC);
