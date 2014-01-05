@@ -23,9 +23,8 @@ var CURRENT_DEVICE_INDEX = 0; // Device to start off as being selected
 var resizeTimeout;
 
 var OPERATION_FAIL_MESSAGE = handlebars.compile(
-    'Sorry, Kipling failed to communicate with your device. Please check the ' +
-    'physical connection and try again or contact support@labjack.com. ' +
-    'Driver error number: {{.}}');
+    'Sorry, Kipling encountered an error. Please try again or contact ' + 
+    'support@labjack.com. Error: {{.}}');
 
 
 /**
