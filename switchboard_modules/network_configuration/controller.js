@@ -57,21 +57,51 @@ function DeviceNetworkAdapter(device)
         return true;
     };
 
+    /**
+     * Get the IP address that this device will try to take when on Ethernet.
+     *
+     * Get the IP address that this device will attempt to take when connected
+     * by ethernet.
+     *
+     * @return {String} XXX.XXX.X.X string representation of the IP address that
+     *      this device will attempt to take when connected by Ethernet.
+    **/
     this.getEthernetIPAddress = function()
     {
         return readIP(device.read('ETHERNET_IP_DEFAULT'));
     };
 
+    /**
+     * Get the subnet that this device will try to use when on ethernet.
+     *
+     * Get the subnet that this device will attempt to use when connecected by
+     * ethernet.
+     *
+     * @return {String} XXX.XXX.X.X string representation of the IP address of
+     *      the subnet that this device will use when connected by ethernet.
+    **/
     this.getEthernetSubnet = function()
     {
         return readIP(device.read('ETHERNET_SUBNET_DEFAULT'));
     };
 
+    /**
+     * Get the gateway that this device will try to use when on ethernet.
+     *
+     * @return {String} XXX.XXX.X.X string representation of the IP address
+     *      of the gateway that this device will use when connected by ethernet.
+    **/
     this.getEthernetGateway = function()
     {
         return readIP(device.read('ETHERNET_GATEWAY_DEFAULT'));
     };
 
+    /**
+     * Determine if this device will use DCHP when connected by ethernet.
+     *
+     * @return {bool} True if this device will use DCHP when connected by
+     *      ethernet and false otherwise.
+    **/
     this.getEthernetDHCPEnabled = function()
     {
         return device.read('ETHERNET_DHCP_ENABLE') > 0.1;
@@ -166,93 +196,212 @@ function DeviceNetworkAdapter(device)
         return device.getDeviceType();
     };
 
+    /**
+     * Determine if the device has power to its ethernet functionality.
+     *
+     * @return {bool} True if the device has ethernet enabled and false
+     *      otherwise.
+    **/
     this.isEthernetEnabled = function()
     {
         return device.read('POWER_ETHERNET') > 0.1;
     };
 
+    /**
+     * Determine if the device has power to its WiFi functionality.
+     *
+     * @return {bool} True if the device has WiFi enabled and false otherwise.
+    **/
     this.isWiFiEnabled = function()
     {
         return device.read('POWER_WIFI') > 0.1;
     };
 
+    /**
+     * Determine if the device is a T7 or T7 pro.
+     *
+     * @return {bool} True if the enclosed device handle is for a T7 Pro and
+     *      false if the device is a T7 (not pro).
+    **/
     this.isPro = function()
     {
         return Math.abs(device.read(HARDWARE_INSTALLED_REG)) > 0.1;
     };
 
+    /**
+     * Indicate which network this device should connect to by default.
+     *
+     * @param {String} newVal The SSID (name) of the WiFi network to connect to.
+    **/
     this.setDefaultWiFiNetwork = function (newVal)
     {
         device.write('WIFI_SSID_DEFAULT', newVal);
     };
 
+    /**
+     * Indicate which password the device should use by default for WiFi.
+     *
+     * Indicate which password the device should use when connecting to the
+     * default WiFi network.
+     *
+     * @param {String} newVal The password to use to authenticate with the
+     *      default WiFi network.
+    **/
     this.setDefaultWiFiNetworkPassword = function (newVal)
     {
         device.write('WIFI_PASSWORD_DEFAULT', newVal);
     };
 
+    /**
+     * Indicate which IP address this device should try to take over WiFi.
+     *
+     * Indicate which IP address this device should try to use when connected
+     * over WiFi.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      this device should attempt to use when connected over WiFi.
+    **/
     this.setDefaultWiFiIPAddress = function (newVal)
     {
         device.write('WIFI_IP_DEFAULT', writeIP(newVal));
     };
 
+    /**
+     * Indicate which subnet this device should use when connected by WiFi.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the subnet that this device should use when connected over WiFi.
+    **/
     this.setDefaultWiFiSubnet = function (newVal)
     {
         device.write('WIFI_SUBNET_DEFAULT', writeIP(newVal));
     };
 
+    /**
+     * Indicate which gateway this device should use when connected by WiFi.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the gateway that this device should use when connected over WiFi.
+    **/
     this.setDefaultWiFiGateway = function (newVal)
     {
         device.write('WIFI_GATEWAY_DEFAULT', writeIP(newVal));
     };
 
+    /**
+     * Indicate which primary DNS servers this device should use by default.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the primary DNS servers to use.
+    **/
     this.setDefaultDNS = function (newVal)
     {
         device.write('ETHERNET_DNS_DEFAULT', writeIP(newVal));
     };
 
+    /**
+     * Indicate which DNS servers this device should use as a backup.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the DNS servers to use if the primary DNS servers cannot be
+     *      reached.
+    **/
     this.setDefaultAltDNS = function (newVal)
     {
         device.write('ETHERNET_ALTDNS_DEFAULT', writeIP(newVal));
     };
 
+    /**
+     * Indicate which IP address this device should try to take over Ethernet.
+     *
+     * Indicate which IP address this device should try to use when connected
+     * over Ethernet.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      this device should attempt to use when connected over Ethernet.
+    **/
     this.setDefaultEthernetIPAddress = function (newVal)
     {
         device.write('ETHERNET_IP_DEFAULT', writeIP(newVal));
     };
 
+    /**
+     * Indicate which subnet this device should use when connected by Ethernet.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the subnet that this device should use when connected over
+     *      Ethernet.
+    **/
     this.setDefaultEthernetSubnet = function (newVal)
     {
         device.write('ETHERNET_SUBNET_DEFAULT', writeIP(newVal));
     };
 
+    /**
+     * Indicate which gateway this device should use when connected by Ethernet.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the gateway that this device should use when connected over
+     *      Ethernet.
+    **/
     this.setDefaultEthernetGateway = function (newVal)
     {
         device.write('ETHERNET_GATEWAY_DEFAULT', writeIP(newVal));
     };
 
+    /**
+     * Specify if this device should use DCHP when connected by ethernet.
+     *
+     * @param {Number} newVal Value to write to the enable register. If > 0,
+     *      DCHP will be enabled by default when connected by ethernet.
+    **/
     this.setEthernetDHCPEnable = function (newVal)
     {
         device.write('ETHERNET_DHCP_ENABLE_DEFAULT', newVal);
     };
 
+    /**
+     * Specify if this device should use DCHP when connected by WiFi.
+     *
+     * @param {Number} newVal Value to write to the enable register. If > 0,
+     *      DCHP will be enabled by default when connected by ethernet.
+    **/
     this.setWiFiDHCPEnable = function (newVal)
     {
         device.write('WIFI_DHCP_ENABLE_DEFAULT', newVal);
     };
 
+    /**
+     * Specify if the device should power its ethernet module.
+     *
+     * @param {Number} newVal The value to write for the power enable register.
+     *      If > 0, the ethernet module will be enabled by default.
+    **/
     this.setPowerEthernet = function (newVal)
     {
         device.write('POWER_ETHERNET', newVal);
         device.write('POWER_ETHERNET_DEFAULT', newVal);
     };
 
+    /**
+     * Specify if the device should power its WiFi module.
+     *
+     * @param {Number} newVal The value to write for the power enable register.
+     *      If > 0, the WiFi module will be enabled by default.
+    **/
     this.setPowerWiFi = function (newVal)
     {
         device.write('POWER_WIFI', newVal);
         device.write('POWER_WIFI_DEFAULT', newVal);
     };
 
+    /**
+     * Indicate if the current WiFi settings should be applied.
+     *
+     * Indicate if the current WiFi settings should be applied to the device as
+     * the default settings. This is necessary to make changes to the current
+     * settings.
+    **/
     this.saveDefaultConfig = function ()
     {
         device.write('WIFI_APPLY_SETTINGS', 1);
@@ -262,6 +411,16 @@ function DeviceNetworkAdapter(device)
 }
 
 
+/**
+ * Change the numerical representation of an IP address to a string rep.
+ *
+ * Change the numerical representation of an IP address to a string
+ * representation like XXX.XXX.X.X.
+ *
+ * @param {Number} target The numerical representation of an IP address to
+ *      convert.
+ * @return {String} The string representation of the provided IP address.
+**/
 function readIP(target)
 {
     var ipStr = '';
@@ -276,6 +435,16 @@ function readIP(target)
 }
 
 
+/**
+ * Change the string representation of an IP address to a numerical rep.
+ *
+ * Change the string representation of an IP address (like XXX.XXX.X.X) to a
+ * numerical representation of an IP address.
+ *
+ * @param {String} target The string IP address (of form XXX.XXX.X.X) to convert
+ *      to a numerical form.
+ * @return {Number} The numerical representation of the provided IP address.
+**/
 function writeIP(target)
 {
     var ipPieces = target.split('.').map(function (e) {
@@ -325,6 +494,14 @@ function showCurrentDeviceSettings(device, onError, onSuccess)
 }
 
 
+/**
+ * Change the view to show the settings that can be set for the current device.
+ *
+ * Change the GUI to reflect the configuration settings that can be chanced for
+ * the current device.
+ *
+ * @param {DeviceNetworkAdapater} device Decorated device to adapt the GUI for.
+**/
 function configureForCurrentDeviceSettings (device) 
 {
     if (device.isPro()) {
@@ -436,6 +613,16 @@ function prepareIndividualDeviceConfiguration(decoratedDevice)
 }
 
 
+/**
+ * Write the configuration values the user specified in GUI to the device.
+ *
+ * Convert the user's specification of configuration values as provided through
+ * Kipling's GUI into values appropriate for the device and write those values
+ * to the device.
+ *
+ * @param {DeviceNetworkAdapter} device Decorated device to operate on /
+ *      configure.
+**/
 function writeDefaultConfiguationValues(device)
 {
     if (device.isPro()) {
@@ -481,6 +668,12 @@ function writeDefaultConfiguationValues(device)
 }
 
 
+/**
+ * Write configuration values for all devices with updates to GUI.
+ *
+ * Configure the GUI to indicate that configuration settings are being written
+ * to a device. This will both update the GUI and start the actual write.
+**/
 function writeConfigurationValues()
 {
     $('#saved-indicator').hide();
@@ -497,6 +690,9 @@ function writeConfigurationValues()
 }
 
 
+/**
+ * Initialization logic for the network configuration module.
+**/
 $('#network-configuration').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     var devices = keeper.getDevices();
