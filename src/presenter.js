@@ -39,7 +39,7 @@ var numTabChanges = 0;
 **/
 var genericErrorHandler = function(error)
 {
-    throw error;
+    alert(error.toString());
 };
 
 
