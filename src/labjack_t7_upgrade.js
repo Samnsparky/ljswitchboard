@@ -26,6 +26,59 @@ var EXPECTED_REBOOT_WAIT = 5000;
 
 
 /**
+ * Reject a deferred / promise because of an error.
+ *
+ * @param {q.deferred} deferred The deferred whose promise should be rejected.
+ * @param {Object} error Error object optionally with a retError attribute. If
+ *      there is a retError attribute on the provided error object, that
+ *      retError will be the reported value of the error. Otherwise the error's
+ *      toString method will be used.
+ * @param {String} prefix Optional string that will be prepended to the error
+ *      message the provided deferred execution / promise will be rejected with.
+ *      If not provided, the error number / message provided by the error's
+ *      retError or toString method will be used.
+**/
+function safelyReject (deferred, error, prefix) {
+    var errorMsg;
+
+    if (error.retError === undefined) {
+        errorMsg = error.toString();
+    } else {
+        errorMsg = error.retError.toString();
+    }
+
+    if (prefix === undefined) {
+        deferred.reject(errorMsg);
+    } else {
+        deferred.reject(prefix + errorMsg);
+    }
+}
+
+
+/**
+ * Create a closure over a deferred execution for error handling.
+ *
+ * Creates a closure that, when executed with an error, will reject the provided
+ * deferred execution / promise. The returned function should be called with
+ * a single parameter: an error. This error object can optionally have with a
+ * retError attribute. If there is a retError attribute on the provided error
+ * object, that retError will be the reported value of the error. Otherwise the
+ * error's toString method will be used.
+ *
+ * @param {q.deferred} deferred The deferred execution / promise to reject when
+ *      the resulting function is called.
+ * @return {function} Closure over the provided deferred. This funciton will
+ *      take a single error parameter and reject the provided deferred / promise
+ *      when executed.
+**/
+function createSafeReject (deferred) {
+    return function (error) {
+        return safelyReject(deferred, error);
+    };
+}
+
+
+/**
  * Create a range enumeration like in Python.
  *
  * @param {int} start The first number in the sequence (inclusive).
@@ -259,8 +312,10 @@ exports.readFirmwareFile = function(fileSrc)
                     driver_const.HEADER_CHECKSUM)
             };
         } catch (e) {
-            deferred.reject(
-                'Could not read image information: ' + e.toString()
+            safelyReject(
+                deferred,
+                e,
+                'Could not read image information: '
             );
             return;
         }
@@ -270,7 +325,11 @@ exports.readFirmwareFile = function(fileSrc)
         try {
             bundle.setFirmwareImage(imageFile.slice(128, imageFile.length));    
         } catch (e) {
-            deferred.reject('Could not read image: ' + e.toString());
+            safelyReject(
+                deferred,
+                e,
+                'Could not read image: '
+            );
             return;
         }        
 
@@ -280,7 +339,11 @@ exports.readFirmwareFile = function(fileSrc)
         try {
             bundle.setFirmwareVersion(Number(versionStr)/10000);
         } catch (e) {
-            deferred.reject('Could not firmware version: ' + e.toString());
+            safelyReject(
+                deferred,
+                e,
+                'Could not firmware version: '
+            );
             return;
         }
         
@@ -370,7 +433,7 @@ exports.eraseFlash = function(bundle, startAddress, numPages, key)
         },
         function (err) {
             if (err)
-                deferred.reject(err.toString());
+                safelyReject(deferred, err);
             else
                 deferred.resolve(bundle);
         }
@@ -399,7 +462,7 @@ exports.eraseImage = function(bundle)
         driver_const.T7_EFkey_ExtFirmwareImage
     ).then(
         function() { deferred.resolve(bundle); },
-        function(err) { deferred.reject(err); }
+        createSafeReject(deferred)
     );
 
     return deferred.promise;
@@ -428,7 +491,7 @@ exports.eraseImageInformation = function(bundle)
         driver_const.T7_EFkey_ExtFirmwareImgInfo
     ).then(
         function() { deferred.resolve(bundle); },
-        deferred.reject
+        createSafeReject(deferred)
     );
 
     return deferred.promise;
@@ -524,7 +587,7 @@ var createFlashOperation = function (bundle, startAddress, lengthInts, sizeInts,
                 directions,
                 numValues,
                 values,
-                innerDeferred.reject,
+                createSafeReject(innerDeferred),
                 function (newResults) { 
                     lastResults.push.apply(lastResults, newResults);
                     innerDeferred.resolve(lastResults);
@@ -611,7 +674,7 @@ var createFlashOperation = function (bundle, startAddress, lengthInts, sizeInts,
         },
         function (err, allMemoryRead) {
             if (err) {
-                deferred.reject( err );
+                safelyReject(deferred, err);
             } else {
                 deferred.resolve(bundle);
             }
@@ -668,7 +731,7 @@ exports.readImage = function(bundle)
         driver_const.T7_FLASH_BLOCK_WRITE_SIZE
     ).then(
         function (memoryContents) { deferred.resolve(bundle); },
-        function (err) { deferred.reject(err); }
+        function (err) { safelyReject(deferred, err); }
     );
 
     return deferred.promise;
@@ -696,7 +759,7 @@ exports.readImageInformation = function(bundle)
         driver_const.T7_FLASH_BLOCK_WRITE_SIZE
     ).then(
         function (memoryContents) { deferred.resolve(bundle); },
-        function (err) { deferred.reject(err); }
+        function (err) { safelyReject(deferred, err); }
     );
 
     return deferred.promise;
@@ -753,11 +816,11 @@ exports.checkErase = function(bundle)
     };
 
     exports.readImageInformation(bundle)
-    .then(checkIfZeroedThenContinue, deferred.reject)
-    .then(checkMemory(exports.readImage), deferred.reject)
+    .then(checkIfZeroedThenContinue, createSafeReject(deferred))
+    .then(checkMemory(exports.readImage), createSafeReject(deferred))
     .then(function () {
         deferred.resolve(bundle);
-    }, deferred.reject);
+    }, createSafeReject(deferred));
 
     return deferred.promise;
 };
@@ -820,7 +883,7 @@ exports.writeImage = function(bundle)
         bundle.getFirmwareImage()
     ).then(
         function (memoryContents) { deferred.resolve(bundle); },
-        function (err) { deferred.reject(err); }
+        createSafeReject(deferred)
     );
 
     return deferred.promise;
@@ -855,7 +918,7 @@ exports.writeImageInformation = function(bundle)
         rawImageInfo
     ).then(
         function (memoryContents) { deferred.resolve(bundle); },
-        function (err) { deferred.reject(err); }
+        createSafeReject(deferred)
     );
 
     return deferred.promise;
@@ -887,7 +950,7 @@ exports.checkImageWrite = function(bundle)
         }
 
         deferred.resolve(bundle);
-    }, function (err) { deferred.reject(err); });
+    }, createSafeReject(deferred));
 
     return deferred.promise;
 };
@@ -907,7 +970,7 @@ exports.restartAndUpgrade = function(bundle)
     device.write(
         driver_const.T7_MA_REQ_FWUPG,
         driver_const.T7_REQUEST_FW_UPGRADE,
-        function (err) { deferred.reject(err); },
+        createSafeReject(deferred),
         function () { device.closeSync(); deferred.resolve(bundle); }
     );
     return deferred.promise;
@@ -935,7 +998,7 @@ exports.waitForEnumeration = function(bundle)
         var innerDeferred = q.defer();
 
         ljmDriver.listAll("LJM_dtT7", "LJM_ctANY",
-            function (err) { innerDeferred.reject(err); },
+            createSafeReject(deferred),
             function (devicesInfo) {
                 var serials = devicesInfo.map(function (e) {
                     return e.serialNumber; 
@@ -958,7 +1021,7 @@ exports.waitForEnumeration = function(bundle)
                         targetSerial.toString()
                     );
                 } catch (e) {
-                    deferred.reject(e);
+                    safelyReject(deferred, e);
                 }
                 bundle.setDevice(newDevice);
                 deferred.resolve(bundle);
@@ -987,7 +1050,7 @@ exports.checkNewFirmware = function(bundle)
     var deferred = q.defer();
 
     bundle.getDevice().read('FIRMWARE_VERSION',
-        function (err) { deferred.reject(err); },
+        createSafeReject(deferred),
         function (firmwareVersion) {
             var dif = bundle.getFirmwareVersion() - firmwareVersion;
             if(Math.abs(dif) > 0.0001) {
@@ -1020,7 +1083,7 @@ exports.updateFirmware = function(device, firmwareFileLocation, progressListener
         try {
             bundle.setSerialNumber(device.readSync('SERIAL_NUMBER'));
         } catch (e) {
-            innerDeferred.reject(e);
+            safelyReject(e);
         }
         bundle.setDevice(device);
         innerDeferred.resolve(bundle);
@@ -1028,7 +1091,7 @@ exports.updateFirmware = function(device, firmwareFileLocation, progressListener
     };
 
     var reportError = function (error) {
-        deferred.reject(error);
+        safelyReject(deferred, error);
         throw error;
     };
 
