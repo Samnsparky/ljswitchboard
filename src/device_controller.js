@@ -611,7 +611,6 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
         deviceInfo,
         deviceInfo.connectionType,
         function (err) {
-    
             record = createDeviceListingRecord(
                 deviceInfo,
                 '[ could not read name ]',
@@ -622,28 +621,38 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
             callback();
         },
         function (device) {
-            // TODO: This needs to change when rwMany can handle multiple types.
-            var name = device.readSync('DEVICE_NAME_DEFAULT');
-            var hardwareInstalled;
             var record;
 
-            if (deviceInfo.deviceType == 7) {
-                hardwareInstalled = device.readSync('HARDWARE_INSTALLED') !== 0;
-            } else {
-                hardwareInstalled = false;
-            }
+            try {
+                // TODO: This needs to change when rwMany can handle multiple types.
+                var name = device.readSync('DEVICE_NAME_DEFAULT');
+                var hardwareInstalled = device.readSync('HARDWARE_INSTALLED');
 
-            if (hardwareInstalled) {
+                if (deviceInfo.deviceType == 7) {
+                    hardwareInstalled = hardwareInstalled !== 0;
+                } else {
+                    hardwareInstalled = false;
+                }
+
+                if (hardwareInstalled) {
+                    record = createDeviceListingRecord(
+                        deviceInfo,
+                        name,
+                        ' Pro',
+                        '-pro'
+                    );
+                } else {
+                    record = createDeviceListingRecord(
+                        deviceInfo,
+                        name,
+                        '',
+                        ''
+                    );
+                }
+            } catch (e) {
                 record = createDeviceListingRecord(
                     deviceInfo,
-                    name,
-                    ' Pro',
-                    '-pro'
-                );
-            } else {
-                record = createDeviceListingRecord(
-                    deviceInfo,
-                    name,
+                    '[ could not read name ]',
                     '',
                     ''
                 );
@@ -736,7 +745,7 @@ exports.getDevices = function (onError, onSuccess)
                     for (var i=0; i<listing.length; i++)
                         consolidateDevices(listing[i]);
                     
-                    markConnectedDevices(listing, onSuccess);
+                    markConnectedDevices(listing, onSuccess, onError);
                 }
             );
         }

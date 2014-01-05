@@ -71,6 +71,11 @@ body,html
     overflow: auto;
 }
 
+#alert-message
+{
+    display: none;
+}
+
 .nav-dock-component
 {
     background-color: #999999;

@@ -39,7 +39,12 @@ var numTabChanges = 0;
 **/
 var genericErrorHandler = function(error)
 {
-    alert(error.toString());
+    alert(
+        'An unexpected error occured:' + error.toString() + '. Please ' +
+        'restart Kipling. This is likely because your device was ' +
+        'disconnected physically from your machine. If this problem persists,' +
+        ' please contact support@labjack.com.'
+    );
 };
 
 
