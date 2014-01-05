@@ -31,7 +31,7 @@ var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
  *
  * @param {String} resourceName The name of the resource to resolve the full URI
  *      for.
- * @return (String) The fully resolved URI or null if it could not be resolved.
+ * @return {String} The fully resolved URI or null if it could not be resolved.
 **/
 exports.getInternalURI = function(resourceName)
 {

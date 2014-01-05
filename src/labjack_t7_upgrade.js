@@ -221,34 +221,68 @@ exports.readFirmwareFile = function(fileSrc)
     var fileName;
 
     var parseFile = function (err, data) {
+        if (err) {
+            deferred.reject('Could not read firmware file: ' + err.toString());
+            return;
+        }
+
         var imageFile = new Buffer(data);
-        var imageInformation = {
-            rawImageInfo: imageFile.slice(0, 128),
-            headerCode: imageFile.readUInt32BE(driver_const.HEADER_CODE),
-            intendedDevice: imageFile.readUInt32BE(driver_const.HEADER_TARGET),
-            containedVersion: imageFile.readFloatBE(
-                driver_const.HEADER_VERSION).toFixed(4),
-            requiredUpgraderVersion: imageFile.readFloatBE(
-                driver_const.HEADER_REQ_LJSU).toFixed(4),
-            imageNumber: imageFile.readUInt16BE(driver_const.HEADER_IMAGE_NUM),
-            numImgInFile: imageFile.readUInt16BE(
-                driver_const.HEADER_NUM_IMAGES),
-            startNextImg: imageFile.readUInt32BE(driver_const.HEADER_NEXT_IMG),
-            lenOfImg: imageFile.readUInt32BE(driver_const.HEADER_IMG_LEN),
-            imgOffset: imageFile.readUInt32BE(driver_const.HEADER_IMG_OFFSET),
-            numBytesInSHA: imageFile.readUInt32BE(
-                driver_const.HEADER_SHA_BYTE_COUNT),
-            options: imageFile.readUInt32BE(72),
-            encryptedSHA: imageFile.readUInt32BE(driver_const.HEADER_ENC_SHA1),
-            unencryptedSHA: imageFile.readUInt32BE(driver_const.HEADER_SHA1),
-            headerChecksum: imageFile.readUInt32BE(driver_const.HEADER_CHECKSUM)
-        };
+        var imageInformation;
+
+        try {
+            imageInformation = {
+                rawImageInfo: imageFile.slice(0, 128),
+                headerCode: imageFile.readUInt32BE(driver_const.HEADER_CODE),
+                intendedDevice: imageFile.readUInt32BE(
+                    driver_const.HEADER_TARGET),
+                containedVersion: imageFile.readFloatBE(
+                    driver_const.HEADER_VERSION).toFixed(4),
+                requiredUpgraderVersion: imageFile.readFloatBE(
+                    driver_const.HEADER_REQ_LJSU).toFixed(4),
+                imageNumber: imageFile.readUInt16BE(
+                    driver_const.HEADER_IMAGE_NUM),
+                numImgInFile: imageFile.readUInt16BE(
+                    driver_const.HEADER_NUM_IMAGES),
+                startNextImg: imageFile.readUInt32BE(
+                    driver_const.HEADER_NEXT_IMG),
+                lenOfImg: imageFile.readUInt32BE(driver_const.HEADER_IMG_LEN),
+                imgOffset: imageFile.readUInt32BE(
+                    driver_const.HEADER_IMG_OFFSET),
+                numBytesInSHA: imageFile.readUInt32BE(
+                    driver_const.HEADER_SHA_BYTE_COUNT),
+                options: imageFile.readUInt32BE(72),
+                encryptedSHA: imageFile.readUInt32BE(
+                    driver_const.HEADER_ENC_SHA1),
+                unencryptedSHA: imageFile.readUInt32BE(
+                    driver_const.HEADER_SHA1),
+                headerChecksum: imageFile.readUInt32BE(
+                    driver_const.HEADER_CHECKSUM)
+            };
+        } catch (e) {
+            deferred.reject(
+                'Could not read image information: ' + e.toString()
+            );
+            return;
+        }
+
         bundle.setFirmwareImageInformation(imageInformation);
-        bundle.setFirmwareImage(imageFile.slice(128, imageFile.length));
+
+        try {
+            bundle.setFirmwareImage(imageFile.slice(128, imageFile.length));    
+        } catch (e) {
+            deferred.reject('Could not read image: ' + e.toString());
+            return;
+        }        
 
         var versionStr = fileName.split('_');
         versionStr = versionStr[1];
-        bundle.setFirmwareVersion(Number(versionStr)/10000);
+
+        try {
+            bundle.setFirmwareVersion(Number(versionStr)/10000);
+        } catch (e) {
+            deferred.reject('Could not firmware version: ' + e.toString());
+            return;
+        }
         
         deferred.resolve(bundle);
     };
@@ -330,13 +364,13 @@ exports.eraseFlash = function(bundle, startAddress, numPages, key)
             device.writeMany(
                 [driver_const.T7_MA_EXF_KEY, driver_const.T7_MA_EXF_ERASE],
                 [key, startAddress + page * driver_const.T7_FLASH_PAGE_SIZE],
-                function (err) { console.log(err); callback(err); },
+                function (err) { callback(err); },
                 function () { callback(null); }
             );
         },
         function (err) {
             if (err)
-                deferred.reject( new Error(err) );
+                deferred.reject(err.toString());
             else
                 deferred.resolve(bundle);
         }
@@ -401,6 +435,37 @@ exports.eraseImageInformation = function(bundle)
 };
 
 
+/**
+ * Execute a read or write operation on a device's flash memory.
+ *
+ * As writing / reading flash is both hard and has some overlap between the read
+ * and write operation, this convenience function handles flash memory keys as
+ * well as address calculation and actual driver call generation.
+ *
+ * @param {DeviceFirmwareBundle} bundle The bundle with the device to perform
+ *      the flash memory operation on.
+ * @param {Number} startAddress The starting address where the flash operation
+ *      (read or write) should start.
+ * @param {Number} lengthInts The size of the data to read or write. This should
+ *      be reported in number of integers (4 byte pieces).
+ * @param {Number} sizeInts The size of the block to read or write. Should be
+ *      specific to the region of flash memory being operated on.
+ * @param {Number} ptrAddress The memory pointer modbus address to use to index
+ *      into the desired section of flash memory. Should be a constant like
+ *      T7_MA_EXF_pREAD. This is a modbus address not a flash address.
+ * @param {Number} flashAddress The memory modbus address to index into to get
+ *      to the desired sectin of flash memory. Should be a constants like
+ *      T7_MA_EXF_READ. This is a modbus address not a flash address.
+ * @param {bool} isReadOp Indicate if this is a read operation. If false, this
+ *      is a write operation.
+ * @param {Number} key The key specific to the section of flash memory used to
+ *      authorize / validate this memory operation. Should be a constant.
+ * @param {Buffer} data If a write operation, this is the data to write to the
+ *      flash memory. Does not need to be provided if a read operation.
+ * @param {q.promise} A promise that resolves when the operation finishes or
+ *      rejects in case of error. Will resolve to the data written or the the
+ *      data read.
+**/
 var createFlashOperation = function (bundle, startAddress, lengthInts, sizeInts,
     ptrAddress, flashAddress, isReadOp, key, data)
 {
@@ -581,6 +646,7 @@ exports.readFlash = function(bundle, startAddress, length, size)
     );
 };
 
+
 /**
  * Reads image from flash memory.
  *
@@ -602,11 +668,12 @@ exports.readImage = function(bundle)
         driver_const.T7_FLASH_BLOCK_WRITE_SIZE
     ).then(
         function (memoryContents) { deferred.resolve(bundle); },
-        function (err) { console.log(err); deferred.reject(err); }
+        function (err) { deferred.reject(err); }
     );
 
     return deferred.promise;
 };
+
 
 /**
  * Reads image information from flash memory.
@@ -629,7 +696,7 @@ exports.readImageInformation = function(bundle)
         driver_const.T7_FLASH_BLOCK_WRITE_SIZE
     ).then(
         function (memoryContents) { deferred.resolve(bundle); },
-        function (err) { console.log(err); deferred.reject(err); }
+        function (err) { deferred.reject(err); }
     );
 
     return deferred.promise;
@@ -696,6 +763,21 @@ exports.checkErase = function(bundle)
 };
 
 
+/**
+ * Creates a new flash operation that writes data to flash with a key.
+ *
+ * @param {DeviceFirmwareBundle} bundle The bundle with the device to write to.
+ * @param {Number} startAddress The flash memory address to start writing at.
+ * @param {Number} length The number of 4 byte values (integers) to write. This
+ *      could be the size of the firmware image file to write for example.
+ * @param {Number} size The full block size to write. This could be the flash
+ *      block write size for eaxmple.
+ * @param {Number} key The key that is provides access to the flash memory. This
+ *      is specific to the region of flash being written.
+ * @param {Buffer} data The data to write to flash at the given address.
+ * @param {q.promise} Promise that resolves after the flash write operation
+ *      finishes successfully or fails due to error (will reject on error).
+**/
 exports.writeFlash = function(bundle, startAddress, length, size, key, data)
 {
     var writePtrAddress = driver_const.T7_MA_EXF_pWRITE;
@@ -738,7 +820,7 @@ exports.writeImage = function(bundle)
         bundle.getFirmwareImage()
     ).then(
         function (memoryContents) { deferred.resolve(bundle); },
-        function (err) { console.log(err); deferred.reject(err); }
+        function (err) { deferred.reject(err); }
     );
 
     return deferred.promise;
@@ -876,7 +958,7 @@ exports.waitForEnumeration = function(bundle)
                         targetSerial.toString()
                     );
                 } catch (e) {
-                    console.log(e);
+                    deferred.reject(e);
                 }
                 bundle.setDevice(newDevice);
                 deferred.resolve(bundle);
@@ -907,10 +989,7 @@ exports.checkNewFirmware = function(bundle)
     bundle.getDevice().read('FIRMWARE_VERSION',
         function (err) { deferred.reject(err); },
         function (firmwareVersion) {
-            console.log(firmwareVersion);
-            console.log(bundle.getFirmwareVersion());
             var dif = bundle.getFirmwareVersion() - firmwareVersion;
-            console.log(Math.abs(dif));
             if(Math.abs(dif) > 0.0001) {
                 var errorMsg = 'New firmware version does not reflect upgrade.';
                 deferred.reject(new Error(errorMsg));
@@ -938,7 +1017,11 @@ exports.updateFirmware = function(device, firmwareFileLocation, progressListener
 
     var injectDevice = function (bundle) {
         var innerDeferred = q.defer();
-        bundle.setSerialNumber(device.readSync('SERIAL_NUMBER'));
+        try {
+            bundle.setSerialNumber(device.readSync('SERIAL_NUMBER'));
+        } catch (e) {
+            innerDeferred.reject(e);
+        }
         bundle.setDevice(device);
         innerDeferred.resolve(bundle);
         return innerDeferred.promise;
