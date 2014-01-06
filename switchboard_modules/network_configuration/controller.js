@@ -7,13 +7,34 @@
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
-var Long = require("long");
+var Long = require('long');
 
 var DEVICE_SELECTOR_SRC = 'network_configuration/device_selector.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var HARDWARE_INSTALLED_REG = 60010;
 
 var selectedDevice;
+
+
+/**
+ * Display an error encountered when operating a device via the GUI.
+ *
+ * @param {Object} err The error to display. If the passed structure has a
+ *      retError attribute, that attribute will be used to describe the error.
+**/
+function showError (err) {
+    var errorMessage;
+
+    if (err.retError === undefined) {
+        errorMessage = err.toString();
+    } else {
+        errorMessage = err.retError.toString();
+    }
+
+    showAlert(
+        'Enountered an error during device operation: ' + errorMessage
+    );
+}
 
 
 /**
@@ -26,25 +47,46 @@ var selectedDevice;
 **/
 function DeviceNetworkAdapter(device)
 {
+    var createErrorSafeGetter = function (target, defaultValue) {
+        return function () {
+            try {
+                return target();
+            } catch (e) {
+                showError(e);
+                return defaultValue;
+            }
+        };
+    };
+
+    var createErrorSafeSetter = function (target) {
+        return function (val) {
+            try {
+                target(val);
+            } catch (e) {
+                showError(e);
+            }
+        };
+    };
+
     /**
      * Get the serial number of the device encapsulated by this decorator.
      *
      * @return {String} The serial number of the encapsulated device.
     **/
-    this.getSerial = function()
+    this.getSerial = createErrorSafeGetter(function ()
     {
         return device.getSerial();
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the name of the device encapsulated by this decorator.
      *
      * @return {String} The name of the encapsulated device.
     **/
-    this.getName = function()
+    this.getName = createErrorSafeGetter(function ()
     {
         return device.getName();
-    };
+    }, '[ could not read ]');
 
     /**
      * Determine if this device is currently connected.
@@ -66,10 +108,10 @@ function DeviceNetworkAdapter(device)
      * @return {String} XXX.XXX.X.X string representation of the IP address that
      *      this device will attempt to take when connected by Ethernet.
     **/
-    this.getEthernetIPAddress = function()
+    this.getEthernetIPAddress = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_IP_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the subnet that this device will try to use when on ethernet.
@@ -80,10 +122,10 @@ function DeviceNetworkAdapter(device)
      * @return {String} XXX.XXX.X.X string representation of the IP address of
      *      the subnet that this device will use when connected by ethernet.
     **/
-    this.getEthernetSubnet = function()
+    this.getEthernetSubnet = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_SUBNET_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the gateway that this device will try to use when on ethernet.
@@ -91,10 +133,10 @@ function DeviceNetworkAdapter(device)
      * @return {String} XXX.XXX.X.X string representation of the IP address
      *      of the gateway that this device will use when connected by ethernet.
     **/
-    this.getEthernetGateway = function()
+    this.getEthernetGateway = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_GATEWAY_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Determine if this device will use DCHP when connected by ethernet.
@@ -102,20 +144,20 @@ function DeviceNetworkAdapter(device)
      * @return {bool} True if this device will use DCHP when connected by
      *      ethernet and false otherwise.
     **/
-    this.getEthernetDHCPEnabled = function()
+    this.getEthernetDHCPEnabled = createErrorSafeGetter(function ()
     {
         return device.read('ETHERNET_DHCP_ENABLE') > 0.1;
-    };
+    }, true);
 
     /**
      * Get the IP address of the device encapsulated by this decorator.
      *
      * @return {String} The IP address of the encapsulated device.
     **/
-    this.getWiFiIPAddress = function()
+    this.getWiFiIPAddress = createErrorSafeGetter(function ()
     {
         return readIP(device.read('WIFI_IP_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the name of the WiFi network this device is set to connect to.
@@ -124,10 +166,10 @@ function DeviceNetworkAdapter(device)
      *      set to connect to. This does not necessarily mean that this device
      *      is connected to that network.
     **/
-    this.getWiFiNetwork = function()
+    this.getWiFiNetwork = createErrorSafeGetter(function ()
     {
         return device.read('WIFI_SSID_DEFAULT');
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the password this device is set to use to connect to a WiFi network.
@@ -147,20 +189,32 @@ function DeviceNetworkAdapter(device)
      * @return {String} IP address of subnet this device is set to connect to.
      *      Returns null if the device does not support network connection.
     **/
-    this.getWiFiSubnet = function()
+    this.getWiFiSubnet = createErrorSafeGetter(function ()
     {
         return readIP(device.read('WIFI_SUBNET_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
-    this.getWiFiGateway = function()
+    /**
+     * Get the gateway to use when this device is connected by WiFi.
+     *
+     * @return {String} IP address of the gateway that should be used when this
+     *      device is connected by WiFi.
+    **/
+    this.getWiFiGateway = createErrorSafeGetter(function ()
     {
         return readIP(device.read('WIFI_GATEWAY_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
-    this.getWiFiDHCPEnabled = function()
+    /**
+     * Determine if this device should use DCHP when connected by WiFi.
+     *
+     * @return {bool} True if this device should use DCHP when connected by WiFi
+     *      and false otherwise.
+    **/
+    this.getWiFiDHCPEnabled = createErrorSafeGetter(function ()
     {
-        return device.read('WIFI_DHCP_ENABLE') > 0.1;
-    };
+        return device.read('WIFI_DHCP_ENABLE_DEFAULT') > 0.1;
+    }, true);
 
     /**
      * Get the first default DNS server this device is set to use.
@@ -169,10 +223,10 @@ function DeviceNetworkAdapter(device)
      *      is set to use. Return null if the device does not support network
      *      connection.
     **/
-    this.getDNS = function()
+    this.getDNS = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_DNS_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the backup / alternative DNS server this device is set to use.
@@ -181,20 +235,20 @@ function DeviceNetworkAdapter(device)
      *      connect to if the first DNS server is unreachable. Returns null
      *      if the device does not support network connection.
     **/
-    this.getAltDNS = function()
+    this.getAltDNS = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_ALTDNS_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the string description of this device's model type.
      *
      * @return {String} Description of the type of model this device is.
     **/
-    this.getDeviceType = function()
+    this.getDeviceType = createErrorSafeGetter(function ()
     {
         return device.getDeviceType();
-    };
+    }, '[ could not read ]');
 
     /**
      * Determine if the device has power to its ethernet functionality.
@@ -202,20 +256,20 @@ function DeviceNetworkAdapter(device)
      * @return {bool} True if the device has ethernet enabled and false
      *      otherwise.
     **/
-    this.isEthernetEnabled = function()
+    this.isEthernetEnabled = createErrorSafeGetter(function ()
     {
         return device.read('POWER_ETHERNET') > 0.1;
-    };
+    }, false);
 
     /**
      * Determine if the device has power to its WiFi functionality.
      *
      * @return {bool} True if the device has WiFi enabled and false otherwise.
     **/
-    this.isWiFiEnabled = function()
+    this.isWiFiEnabled = createErrorSafeGetter(function ()
     {
         return device.read('POWER_WIFI') > 0.1;
-    };
+    }, false);
 
     /**
      * Determine if the device is a T7 or T7 pro.
@@ -223,20 +277,20 @@ function DeviceNetworkAdapter(device)
      * @return {bool} True if the enclosed device handle is for a T7 Pro and
      *      false if the device is a T7 (not pro).
     **/
-    this.isPro = function()
+    this.isPro = createErrorSafeGetter(function ()
     {
         return Math.abs(device.read(HARDWARE_INSTALLED_REG)) > 0.1;
-    };
+    }, false);
 
     /**
      * Indicate which network this device should connect to by default.
      *
      * @param {String} newVal The SSID (name) of the WiFi network to connect to.
     **/
-    this.setDefaultWiFiNetwork = function (newVal)
+    this.setDefaultWiFiNetwork = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_SSID_DEFAULT', newVal);
-    };
+    });
 
     /**
      * Indicate which password the device should use by default for WiFi.
@@ -247,10 +301,10 @@ function DeviceNetworkAdapter(device)
      * @param {String} newVal The password to use to authenticate with the
      *      default WiFi network.
     **/
-    this.setDefaultWiFiNetworkPassword = function (newVal)
+    this.setDefaultWiFiNetworkPassword = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_PASSWORD_DEFAULT', newVal);
-    };
+    });
 
     /**
      * Indicate which IP address this device should try to take over WiFi.
@@ -261,10 +315,10 @@ function DeviceNetworkAdapter(device)
      * @param {String} The string XXX.XXX.X.X representation of the IP address
      *      this device should attempt to use when connected over WiFi.
     **/
-    this.setDefaultWiFiIPAddress = function (newVal)
+    this.setDefaultWiFiIPAddress = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_IP_DEFAULT', writeIP(newVal));
-    };
+    });
 
     /**
      * Indicate which subnet this device should use when connected by WiFi.
@@ -272,10 +326,10 @@ function DeviceNetworkAdapter(device)
      * @param {String} The string XXX.XXX.X.X representation of the IP address
      *      of the subnet that this device should use when connected over WiFi.
     **/
-    this.setDefaultWiFiSubnet = function (newVal)
+    this.setDefaultWiFiSubnet = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_SUBNET_DEFAULT', writeIP(newVal));
-    };
+    });
 
     /**
      * Indicate which gateway this device should use when connected by WiFi.
@@ -283,10 +337,10 @@ function DeviceNetworkAdapter(device)
      * @param {String} The string XXX.XXX.X.X representation of the IP address
      *      of the gateway that this device should use when connected over WiFi.
     **/
-    this.setDefaultWiFiGateway = function (newVal)
+    this.setDefaultWiFiGateway = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_GATEWAY_DEFAULT', writeIP(newVal));
-    };
+    });
 
     /**
      * Indicate which primary DNS servers this device should use by default.
@@ -294,10 +348,10 @@ function DeviceNetworkAdapter(device)
      * @param {String} The string XXX.XXX.X.X representation of the IP address
      *      of the primary DNS servers to use.
     **/
-    this.setDefaultDNS = function (newVal)
+    this.setDefaultDNS = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_DNS_DEFAULT', writeIP(newVal));
-    };
+    });
 
     /**
      * Indicate which DNS servers this device should use as a backup.
@@ -306,10 +360,10 @@ function DeviceNetworkAdapter(device)
      *      of the DNS servers to use if the primary DNS servers cannot be
      *      reached.
     **/
-    this.setDefaultAltDNS = function (newVal)
+    this.setDefaultAltDNS = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_ALTDNS_DEFAULT', writeIP(newVal));
-    };
+    });
 
     /**
      * Indicate which IP address this device should try to take over Ethernet.
@@ -320,10 +374,10 @@ function DeviceNetworkAdapter(device)
      * @param {String} The string XXX.XXX.X.X representation of the IP address
      *      this device should attempt to use when connected over Ethernet.
     **/
-    this.setDefaultEthernetIPAddress = function (newVal)
+    this.setDefaultEthernetIPAddress = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_IP_DEFAULT', writeIP(newVal));
-    };
+    });
 
     /**
      * Indicate which subnet this device should use when connected by Ethernet.
@@ -332,10 +386,10 @@ function DeviceNetworkAdapter(device)
      *      of the subnet that this device should use when connected over
      *      Ethernet.
     **/
-    this.setDefaultEthernetSubnet = function (newVal)
+    this.setDefaultEthernetSubnet = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_SUBNET_DEFAULT', writeIP(newVal));
-    };
+    });
 
     /**
      * Indicate which gateway this device should use when connected by Ethernet.
@@ -344,10 +398,10 @@ function DeviceNetworkAdapter(device)
      *      of the gateway that this device should use when connected over
      *      Ethernet.
     **/
-    this.setDefaultEthernetGateway = function (newVal)
+    this.setDefaultEthernetGateway = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_GATEWAY_DEFAULT', writeIP(newVal));
-    };
+    });
 
     /**
      * Specify if this device should use DCHP when connected by ethernet.
@@ -355,10 +409,10 @@ function DeviceNetworkAdapter(device)
      * @param {Number} newVal Value to write to the enable register. If > 0,
      *      DCHP will be enabled by default when connected by ethernet.
     **/
-    this.setEthernetDHCPEnable = function (newVal)
+    this.setEthernetDHCPEnable = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_DHCP_ENABLE_DEFAULT', newVal);
-    };
+    });
 
     /**
      * Specify if this device should use DCHP when connected by WiFi.
@@ -366,10 +420,10 @@ function DeviceNetworkAdapter(device)
      * @param {Number} newVal Value to write to the enable register. If > 0,
      *      DCHP will be enabled by default when connected by ethernet.
     **/
-    this.setWiFiDHCPEnable = function (newVal)
+    this.setWiFiDHCPEnable = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_DHCP_ENABLE_DEFAULT', newVal);
-    };
+    });
 
     /**
      * Specify if the device should power its ethernet module.
@@ -377,11 +431,11 @@ function DeviceNetworkAdapter(device)
      * @param {Number} newVal The value to write for the power enable register.
      *      If > 0, the ethernet module will be enabled by default.
     **/
-    this.setPowerEthernet = function (newVal)
+    this.setPowerEthernet = createErrorSafeSetter(function (newVal)
     {
         device.write('POWER_ETHERNET', newVal);
         device.write('POWER_ETHERNET_DEFAULT', newVal);
-    };
+    });
 
     /**
      * Specify if the device should power its WiFi module.
@@ -389,11 +443,11 @@ function DeviceNetworkAdapter(device)
      * @param {Number} newVal The value to write for the power enable register.
      *      If > 0, the WiFi module will be enabled by default.
     **/
-    this.setPowerWiFi = function (newVal)
+    this.setPowerWiFi = createErrorSafeSetter(function (newVal)
     {
         device.write('POWER_WIFI', newVal);
         device.write('POWER_WIFI_DEFAULT', newVal);
-    };
+    });
 
     /**
      * Indicate if the current WiFi settings should be applied.
@@ -402,10 +456,10 @@ function DeviceNetworkAdapter(device)
      * the default settings. This is necessary to make changes to the current
      * settings.
     **/
-    this.saveDefaultConfig = function ()
+    this.saveDefaultConfig = createErrorSafeSetter(function ()
     {
         device.write('WIFI_APPLY_SETTINGS', 1);
-    };
+    });
 
     this.device = device;
 }
@@ -549,7 +603,7 @@ function onChangeSelectedDevices()
     $('#device-configuration-pane').hide();
 
     var selectedCheckboxes = $('.device-selection-checkbox:checked');
-    if(selectedCheckboxes.length == 0)
+    if(selectedCheckboxes.length === 0)
         return;
     else if(selectedCheckboxes.length == 1)
         $('#multiple-device-note').hide();
@@ -682,7 +736,7 @@ function writeConfigurationValues()
         writeDefaultConfiguationValues(selectedDevice);
     }
     catch (e) {
-        console.log(e);
+        showError(e);
     }
     $('#save-indicator').hide();
     $('#saved-indicator').slideDown();
