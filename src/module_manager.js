@@ -31,6 +31,15 @@ exports.getActiveModules = function(onError, onSuccess)
     });
 };
 
+/**
+ * Get information about the modules the user has installed for Switchboard.
+ *
+ * @param {function} onError The function to call if an error is encountered
+ *      while reading module information.
+ * @param {function} onSuccess The function to call after the module information
+ *      is loaded. Should take one argument: an Array of Object with module
+ *      information.
+**/
 exports.getModuleInfo = function(onError, onSuccess)
 {
     fs_facade.getModuleInfo(onError, onSuccess);

@@ -22,6 +22,10 @@ var MODULE_LOADING_IMAGE_SRC = MODULE_LOADING_IMAGE_DIR +
 var CURRENT_DEVICE_INDEX = 0; // Device to start off as being selected
 var resizeTimeout;
 
+var OPERATION_FAIL_MESSAGE = handlebars.compile(
+    'Sorry, Kipling encountered an error. Please try again or contact ' + 
+    'support@labjack.com. Error: {{.}}');
+
 
 /**
  * Switch the view to the given module.
@@ -129,6 +133,9 @@ function displayActiveModulesWithEvents(activeModules, onError, onSuccess)
 }
 
 
+/**
+ * Callback that dyanmically handles window resizing.
+**/
 function onResized()
 {
     if ($(window).width() > 767) {
@@ -159,9 +166,40 @@ function onResized()
 }
 
 
+/**
+ * Show an error message in an alert modal at the top of the screen.
+ *
+ * Show an error message in an alert modal positioned at the top of the screen.
+ * This modal should be embedded and fixed (no moving). However, it should be
+ * closeable.
+ *
+ * @param {String} errorMessage The message to display.
+**/
+function showAlert(errorMessage)
+{
+    var message = OPERATION_FAIL_MESSAGE(errorMessage);
+    $('#error-display').html(message);
+    $('.device-selector-holder').css('margin-top', '0px');
+    $('#alert-message').fadeIn();
+}
+
+
+/**
+ * Hide the alert error display at the top of the screen.
+**/
+function closeAlert()
+{
+    $('#alert-message').fadeOut(function(){
+        $('.device-selector-holder').css('margin-top', '45px');
+    });
+}
+
+
 $('#module-chrome').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     $('#device-count-display').html(keeper.getNumDevices());
+
+    $('.close-alert-button').click(closeAlert);
 
     $('#manage-link').click(function () {
         $('#device-search-msg').show();

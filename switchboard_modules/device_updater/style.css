@@ -13,6 +13,11 @@
     margin-bottom: 10px;
 }
 
+#no-internet-message
+{
+    display: none;
+}
+
 .firmware-source-option
 {
     margin-bottom: 40px;

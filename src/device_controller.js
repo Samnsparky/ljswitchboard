@@ -29,6 +29,8 @@ var CONNECTION_TYPE_NAMES = dict({
 /**
  * Object with information about a device.
  *
+ * @param {labjack-nodejs.Device} device The device object to decorate for use
+ *      with Switchboard.
  * @param {String} serial The serial number for the device.
  * @param {String} connectionType The type of connection used to communicate
  *      with the device. Examples include "USB", "Ethernet", and "WiFi".
@@ -68,7 +70,8 @@ var Device = function (device, serial, connectionType, deviceType)
      * Get a String describing what kind of device this is. Examples include
      * "T7" and "Digit-TL".
      *
-     * @return {String} A description of the type of device this is.
+     * @return {String} A description of the type of device this is. Defaults to
+     *      'other' if the device type could not be decoded.
     **/
     this.getDeviceType = function () {
         return DEVICE_TYPE_NAMES.get(String(deviceType), 'Other');
@@ -88,20 +91,39 @@ var Device = function (device, serial, connectionType, deviceType)
         return this.cachedName;
     };
 
-    // TODO
+    /**
+     * Get the version of firmware installed on this device.
+     *
+     * @return {float} The version of the firmware on this device.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.getFirmwareVersion = function () {
         return this.device.readSync('FIRMWARE_VERSION');
     };
 
-    // TODO
+    /**
+     * Get the version of the bootloader installed on this device.
+     *
+     * @return {float} The version of the bootloader on this device.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.getBootloaderVersion = function () {
         return this.device.readSync('BOOTLOADER_VERSION');
     };
 
+    /**
+     * Write many registers on this device.
+     * 
+     * @param {Array} addresses The addresses of the registers to write. Should
+     *      be an Array of numbers.
+     * @param {Array} values The values to write to these registers. Should be
+     *      an Array of numbers.
+     * @return {q.promise} Promise that resolves to the values and addresses
+     *      written. Will reject on error from lower layers.
+    **/
     this.writeMany = function (addresses, values) {
         var deferred = q.defer();
 
-        console.log(addresses, values);
         this.device.writeMany(
             addresses,
             values,
@@ -116,6 +138,15 @@ var Device = function (device, serial, connectionType, deviceType)
         return deferred.promise;
     };
 
+    /**
+     * Read many registers on the device.
+     *
+     * @param {Array} addresses The addresses of the registers to read. Should
+     *      be an Array of numbers.
+     * @return {q.promise} Promise that resolves to an array of values read from
+     *      the device, values corresponding to the addresses array passed.
+     *      Rejects on error from a lower layer.
+    **/
     this.readMany = function (addresses) {
         var deferred = q.defer();
 
@@ -132,6 +163,14 @@ var Device = function (device, serial, connectionType, deviceType)
         return deferred.promise;
     };
 
+    /**
+     * Write a single register on the device asynchronously.
+     *
+     * @param {Number} address The address of the register to write.
+     * @param {Number} value The value to write to this register.
+     * @return {q.promise} Promise that resovles to the value written to this
+     *      register. Rejects on error at the lower levels.
+    **/
     this.writeAsync = function(address, value) {
         var deferred = q.defer();
 
@@ -149,18 +188,48 @@ var Device = function (device, serial, connectionType, deviceType)
         return deferred.promise;
     };
 
+    /**
+     * Write a single register on the device synchronously.
+     * 
+     * @param {Number} address The address of the register to write.
+     * @param {Number} value The value to write to this address.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.write = function (address, value) {
         this.device.writeSync(address, value);
     };
 
+    /**
+     * Read a single register on the device synchronously.
+     *
+     * @param {Number} address The address of the register to read. 
+     * @return {Number} The value of the requested register.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.read = function (address) {
         return this.device.readSync(address);
     };
 
+    /**
+     * Release the device handle for this device.
+     *
+     * @param {function} onError The function to call if the device could not
+     *      be closed.
+     * @param {function} onSuccess The function to call after the device is
+     *      closed.
+    **/
     this.close = function (onError, onSuccess) {
         this.device.close(onError, onSuccess);
     };
 
+    // TODO: This is likely only used in the device info module. It should be
+    //       moved there.
+    /**
+     * Set the name of this device.
+     *
+     * @param {String} newName The name to give this device.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
     this.setName = function (newName) {
         this.write('DEVICE_NAME_DEFAULT', newName);
         this.cachedName = newName;
@@ -168,8 +237,6 @@ var Device = function (device, serial, connectionType, deviceType)
 };
 
 
-// TODO: Cannot rely on serial number alone.
-// TODO: This should be in a seperate module.
 /**
  * A record keeper that holds a list of devices.
  *
@@ -230,6 +297,13 @@ function DeviceKeeper()
             return null;
     };
 
+    /**
+     * Get the devices opened in this device keeper.
+     *
+     * @return {Array} Array of decorated devices (device_controller.device)
+     *      representing devices open in the device controller / this device
+     *      keeper.
+    **/
     this.getDevices = function()
     {
         var retList = [];
@@ -237,6 +311,12 @@ function DeviceKeeper()
         return retList;
     };
 
+    /**
+     * Get the serial numbers of the devices opened in this device keeper.
+     *
+     * @return {Array} Array of serial numbers corresponding to the devices
+     *      opened in the device controller / this device keeper.
+    **/
     this.getDeviceSerials = function()
     {
         var retList = [];
@@ -244,6 +324,19 @@ function DeviceKeeper()
         return retList;
     };
 
+    /**
+     * Update the record for a device.
+     *
+     * Remove an old decorated device and replace it with this new decorated 
+     * device. More specifically, the opened device record for the device with
+     * the serial number matching the serial number assigned to the device
+     * parameter will be removed. Then, the provided device parameter will be
+     * added as a record of an open device. Actual opening and closing of
+     * devices will not happen during the execution of this function.
+     *
+     * @param {device_controller.Device} The device to add to the open device
+     *      list, removing any device records with the same serial number.
+    **/
     this.updateDevice = function (device) {
         this.removeDevice(device);
         this.addDevice(device);
@@ -251,9 +344,26 @@ function DeviceKeeper()
 }
 
 
+// Singleton instance / global device keeper instance
 var deviceKeeperInstance = null;
 
 
+/**
+ * Open a device based on device attributes.
+ *
+ * @param {String} deviceType The string description of the type / model of the
+ *      device to open. Can also accept Number corresponding to driver constant.
+ * @param {Number} serialNumber The serial number of the device to open. Can
+ *      also accept String serial number.
+ * @param {String} ipAddress The IP address of the device to open. Does not
+ *      need to be specified if not opening over the network.
+ * @param {String} connectionType The string description of the connection
+ *      type ('USB', 'Ethernet', 'Wifi') to open.
+ * @param {function} onError The function to call if an error is encountered
+ *      while opening a device.
+ * @param {function} onSuccess The function to call after the device has been
+ *      successfully opened.
+**/
 function openDeviceFromAttributes (deviceType, serialNumber, ipAddress,
     connectionType, onError, onSuccess)
 {
@@ -294,6 +404,24 @@ exports.getDeviceKeeper = function()
 };
 
 
+// TODO: markConnectedDevices is more than just marking. This is re-opening
+//       devices that were already opened before they were all closed for
+//       listing again.
+
+/**
+ * Open devices and update those devices to indicate that they are open.
+ *
+ * Re-opens devices that were already opened before they were all closed for
+ * listing again. Specifically, re-opens all devices listed in the device
+ * keeper and marks those devices as open.
+ *
+ * @param {Array} devices An array of available devices. It should be an array
+ *      of device_controller.Device.
+ * @param {function} onSuccess The function to call after the devices have been
+ *      openend.
+ * @param {function} onError The function to call if there was an error when
+ *      opening devices.
+**/
 function markConnectedDevices(devices, onSuccess, onError)
 {
     var devicesOfType;
@@ -310,11 +438,9 @@ function markConnectedDevices(devices, onSuccess, onError)
     {
         devicesOfType = devices[i].devices;
         var devicesOfTypeLen = devicesOfType.length;
-        console.log(connectedSerials);
         for(var j=0; j<devicesOfTypeLen; j++)
         {
             device = devicesOfType[j];
-            console.log(device.serial);
             if (connectedSerials.indexOf(device.serial) != -1)
                 connectedDevices.push(device);
             else
@@ -331,10 +457,8 @@ function markConnectedDevices(devices, onSuccess, onError)
                 device.ipAddress,
                 device.origConnectionType,
                 function (err) {
-                    console.log('===err===');
-                    console.log(err);
                     device.connected = false;
-                    callback();
+                    callback(err);
                 },
                 function (newInner) {
                     var convConnType = device.origConnectionType;
@@ -351,12 +475,27 @@ function markConnectedDevices(devices, onSuccess, onError)
             );
         },
         function (err) {
-            onSuccess(devices);
+            if (err) {
+                onError(err);
+            } else {
+                onSuccess(devices);
+            }
         }
     );
 }
 
 
+// TODO: This should just take deviceType.
+/**
+ * Get the listing of devices available for a certain device type.
+ *
+ * @param {dict} listingDict Dictionary mapping device type to list of devices
+ *      of that type that are available for opening.
+ * @param {device_controller.Device} device The device whose device type should
+ *      be used to find a device listing.
+ * @return {Array} Listing of available devices for opening whose device type
+ *      matches the device parameter's device type.
+**/
 function getListingEntry (listingDict, device)
 {
     var deviceType = String(device.deviceType);
@@ -375,6 +514,27 @@ function getListingEntry (listingDict, device)
 }
 
 
+/**
+ * Create a record of a device that is available to be opened.
+ *
+ * Create a record with info about a device that is available to be opened
+ * through the device management feature.
+ *
+ * @param {labjack-nodejs.device} device The device for which a listing record
+ *      should be created.
+ * @param {String} name The name of this device.
+ * @param {String} specText The "special text" that differentiates devices
+ *      of the same model (like T7 v T7 pro). This will change "T7" to "T7" pro
+ *      within the GUI.
+ * @param {String} specImageSuffix A suffix to add to the device image filename
+ *      that helps differentiate devices of the same model (like T7 v T7 pro).
+ *      This will change T7.png to T7-pro.png when deciding which image to
+ *      show in the GUI.
+ * @return {Object} Collection of information (no functions) that helps
+ *      identify a device that can be opened. This information device is
+ *      referred to as a device info structure elsewhere in device_controller
+ *      but is not used outside of the device selection functionality.
+**/
 function createDeviceListingRecord (device, name, specText, specImageSuffix)
 {
     var connectionType = CONNECTION_TYPE_NAMES.get(
@@ -397,6 +557,23 @@ function createDeviceListingRecord (device, name, specText, specImageSuffix)
 }
 
 
+/**
+ * Open a device given its device info structure.
+ *
+ * Open a device given the information structure created through
+ * createDeviceListingRecord, a record indicating that a device is available
+ * to be opened. That structure is only used for supporting device selection.
+ *
+ * @param {Object} deviceInfo The device info structure from
+ *      createDeviceListingRecord with information about the device that should
+ *      be opened.
+ * @param {String} connectionType Description of the connection type to use
+ *      to open this device.
+ * @param {function} onError The function to call if an error is encountered
+ *      while opening this device like if this device cannot be found.
+ * @param {function} onSuccess The function to call after the device has been
+ *      opened successfully.
+**/
 function openDeviceFromInfo (deviceInfo, connectionType, onError, onSuccess)
 {
     openDeviceFromAttributes(
@@ -410,16 +587,30 @@ function openDeviceFromInfo (deviceInfo, connectionType, onError, onSuccess)
 }
 
 
+/**
+ * Get Switchboard-required information about a device for device management.
+ *
+ * LJM's list all does not provide all of the required device information.
+ * This collects the extra information (device name, pro v not pro) that is
+ * required by Switchboard for basic management of devices.
+ *
+ * @param {dict} listingDict Dict that maps device type to an array of devices
+ *      available for opening that are of that type (ex: T7 devices).
+ * @param {Object} deviceInfo Device info structure with information about
+ *      a device that can be opened by Switchboard. This is the structure
+ *      produced by createDeviceListingRecord.
+ * @param {function} callback Errors are handled internally with special
+ *      attribute values. This function is called regardless of errors after
+ *      all device attributes have been loaded.
+**/
 function finishDeviceRecord (listingDict, deviceInfo, callback)
 {
     var listingEntry = getListingEntry(listingDict, deviceInfo);
     
-    console.log('..open..');
     openDeviceFromInfo(
         deviceInfo,
         deviceInfo.connectionType,
         function (err) {
-            console.log(err);
             record = createDeviceListingRecord(
                 deviceInfo,
                 '[ could not read name ]',
@@ -430,28 +621,38 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
             callback();
         },
         function (device) {
-            // TODO: This needs to change when rwMany can handle multiple types.
-            var name = device.readSync('DEVICE_NAME_DEFAULT');
-            var hardwareInstalled;
             var record;
 
-            if (deviceInfo.deviceType == 7) {
-                hardwareInstalled = device.readSync('HARDWARE_INSTALLED') !== 0;
-            } else {
-                hardwareInstalled = false;
-            }
+            try {
+                // TODO: This needs to change when rwMany can handle multiple types.
+                var name = device.readSync('DEVICE_NAME_DEFAULT');
+                var hardwareInstalled = device.readSync('HARDWARE_INSTALLED');
 
-            if (hardwareInstalled) {
+                if (deviceInfo.deviceType == 7) {
+                    hardwareInstalled = hardwareInstalled !== 0;
+                } else {
+                    hardwareInstalled = false;
+                }
+
+                if (hardwareInstalled) {
+                    record = createDeviceListingRecord(
+                        deviceInfo,
+                        name,
+                        ' Pro',
+                        '-pro'
+                    );
+                } else {
+                    record = createDeviceListingRecord(
+                        deviceInfo,
+                        name,
+                        '',
+                        ''
+                    );
+                }
+            } catch (e) {
                 record = createDeviceListingRecord(
                     deviceInfo,
-                    name,
-                    ' Pro',
-                    '-pro'
-                );
-            } else {
-                record = createDeviceListingRecord(
-                    deviceInfo,
-                    name,
+                    '[ could not read name ]',
                     '',
                     ''
                 );
@@ -465,6 +666,21 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
 }
 
 
+/**
+ * Combine device entries refering to the same device on different connections.
+ *
+ * Combine device entries that refer to the same device but indicating that the
+ * device is available on different connection types / media. Entries are
+ * combined by serial number and this function operates on collections of
+ * device info structures produced by createDeviceListingRecord.
+ *
+ * @param {Object} listing Collection of device info structures to consolidate.
+ *      This structure should match that produced by getListingEntry.
+ * @return {Object} A reference to the originally provided listing structure.
+ *      After this function returns, the device info structures will have been
+ *      consolidated such that there is only one device info structure per
+ *      device serial number.
+**/
 var consolidateDevices = function (listing) {
     var existingDevice;
     var newDevice;
@@ -517,7 +733,7 @@ exports.getDevices = function (onError, onSuccess)
                 },
                 function (err) {
                     if (err) {
-                        alert(err);
+                        onError(err);
                         return;
                     }
                     
@@ -529,7 +745,7 @@ exports.getDevices = function (onError, onSuccess)
                     for (var i=0; i<listing.length; i++)
                         consolidateDevices(listing[i]);
                     
-                    markConnectedDevices(listing, onSuccess);
+                    markConnectedDevices(listing, onSuccess, onError);
                 }
             );
         }
@@ -541,6 +757,8 @@ exports.getDevices = function (onError, onSuccess)
  * Open a connection to a device.
  *
  * @param {String} serial The serial number of the device to open.
+ * @param {String} ipAddress The IP address of the device to open. Can be
+ *      left null if not opening a device over the network.
  * @param {String} connType The type of connection to open to the device.
  *      Examples include "USB", "Ethernet", and "WiFi".
  * @param {String} deviceType The type of device that should be opened. Examples

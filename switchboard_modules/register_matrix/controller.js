@@ -44,6 +44,26 @@ var curTabID = getActiveTabID();
 
 
 /**
+ * Inform the user of an error via the GUI.
+ *
+ * @param {Object} err The error encountered. If err has a retError attribute,
+ *      that error will be described by its retError attribute. Otherwise it
+ *      will be described by its toString method.
+**/
+function showError(err) {
+    var errMsg;
+
+    if (err.retError === undefined) {
+        errMsg = err.toString();
+    } else {
+        errMsg = err.retError.toString();
+    }
+
+    showAlert('Error while communicating with the device: ' + errMsg);
+}
+
+
+/**
  * Interpret the name fields of entries as LJMMM fields.
  *
  * Interpret the name fields of entries as LJMMM fields, creating the
@@ -69,7 +89,11 @@ function expandLJMMMEntries(entries)
             });
         },
         function(error, newEntries){
-            deferred.resolve(newEntries);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(newEntries);
+            }
         }
     );
 
@@ -90,7 +114,7 @@ function getRegisterInfo()
     var deferred = q.defer();
 
     var registerInfoSrc = fs_facade.getExternalURI(REGISTERS_DATA_SRC);
-    fs_facade.getJSON(registerInfoSrc, genericErrorHandler, function(info){
+    fs_facade.getJSON(registerInfoSrc, deferred.reject, function(info){
         deferred.resolve(info['registers']);        
     });
 
@@ -192,9 +216,11 @@ function fwminSelector(registers, device)
             callback(null, newRegister);
         },
         function(error, registers){
-            if(error !== null)
-                genericErrorHandler(error);
-            deferred.resolve(registers);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(registers);
+            }
         }
     );
 
@@ -328,6 +354,9 @@ function getTagSet(entries)
 }
 
 
+/**
+ * Force a redraw on the rendering engine.
+**/
 function runRedraw()
 {
     document.body.style.display='none';
@@ -380,7 +409,7 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
     fs_facade.renderTemplate(
         location,
         templateVals,
-        genericErrorHandler,
+        showError,
         function(renderedHTML)
         {
             $(REGISTER_MATRIX_SELECTOR).html(renderedHTML);
@@ -493,7 +522,11 @@ function flattenEntries(entries)
             callback();
         },
         function(error){
-            deferred.resolve(retList);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(retList);
+            }
         }
     );
 
@@ -526,9 +559,11 @@ function flattenTags(registers)
             callback(null, newRegister);
         },
         function(error, registers){
-            if(error !== null)
-                genericErrorHandler(error);
-            deferred.resolve(registers);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(registers);
+            }
         }
     );
 
@@ -564,9 +599,11 @@ function addRWInfo(registers)
             callback(null, newRegister);
         },
         function(error, registers){
-            if(error !== null)
-                genericErrorHandler(error);
-            deferred.resolve(registers);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(registers);
+            }
         }
     );
 
@@ -669,7 +706,7 @@ function refreshWatchList()
                                     ).slideUp();
                                 },
                                 function (err) {
-                                    console.log(err);
+                                    showError(err);
                                 }
                             );
                         }
@@ -783,6 +820,9 @@ function updateReadRegisters ()
 
         setTimeout(updateReadRegisters, REFRESH_DELAY);
     }, function (err) {
+        if (err) {
+            showError(err);
+        }
         setTimeout(updateReadRegisters, REFRESH_DELAY);
     });
 }

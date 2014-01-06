@@ -17,7 +17,7 @@ var NAME_MAX_LEN = 49
 /**
  * Render a template with the information for a device.
  *
- * @param {Object} device Object with device information.
+ * @param {device_controller.Device} device Object with device information.
  * @param {Object} specialInfo Object with additional info about the connected
  *      model.
  * @param {function} onSuccess The function to call after the device info is
@@ -26,11 +26,42 @@ var NAME_MAX_LEN = 49
 function showDevice(device, onSuccess)
 {
     var location = fs_facade.getExternalURI(DEVICE_DISPLAY_SRC);
-    var isPro = device.read('HARDWARE_INSTALLED') != 0;
-    var templateValues = {
+    var isPro;
+    var templateValues;
+    var firmwareVersion;
+    var bootloaderVersion;
+
+    try {
+        isPro = device.read('HARDWARE_INSTALLED') != 0;
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        isPro = false;
+    }
+
+    try {
+        firmwareVersion = device.getFirmwareVersion().toFixed(4);
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        firmwareVersion = '[ could not read firmware ]'
+    }
+    
+    try {
+        bootloaderVersion = device.getBootloaderVersion().toFixed(4);
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        bootloaderVersion = '[ could not read bootloader version ]';
+    }
+
+    templateValues = {
         'device': device,
-        'firmware': device.getFirmwareVersion().toFixed(4),
-        'bootloader': device.getBootloaderVersion().toFixed(4),
+        'firmware': firmwareVersion,
+        'bootloader': bootloaderVersion
     };
 
     if (isPro) {
@@ -73,7 +104,7 @@ function showDeviceSerial(serial)
     var device = device_controller.getDeviceKeeper().getDevice(serial);
     if(device === null)
     {
-        displayError('Could not load device info.');
+        showAlert('Could not load device info.');
         return;
     }
 
@@ -82,6 +113,54 @@ function showDeviceSerial(serial)
 }
 
 
+/**
+ * Change the name of a device.
+ *
+ * Updates the device name as shown in Switchboard's GUI as well as on the
+ * device itself.
+ *
+ * @param {device_controller.Device} device The device to operate on / the
+ *      device whose name should be changed.
+ * @param {String} newName The new name to give this device.
+**/
+function changeDeviceName (device, newName)
+{
+    newName = newName.replace('.', '');
+    newName = newName.substr(0, 49);
+    
+    try {
+        device.setName(newName);
+    } catch (e) {
+        showAlert('Failed to set device name: ' + e.toString());
+    }
+    
+    $('#current-name-display').html(newName);
+    $('#change-name-controls').slideUp();
+}
+
+
+/**
+ * Read the name of a device.
+ *
+ * Request the name of a device from the device itself. Note that, if the name
+ * was changed before a power cycle, the new name may not be provided.
+ *
+ * @param {device_controller.Device} device The device to read the name from.
+**/
+function getDeviceName (device)
+{
+    try {
+        return device.read('DEVICE_NAME_DEFAULT');
+    } catch (e) {
+        showAlert('Could not read device info: ' + e.toString());
+        return '[ Could not read name. ]';
+    }
+}
+
+
+/**
+ * Module initialization logic for the device info inspector.
+**/
 $('#device-info-inspector').ready(function(){
     // Attach event listener
     $('.device-selection-radio').first().prop('checked', true);
@@ -94,20 +173,3 @@ $('#device-info-inspector').ready(function(){
     var device = devices[0];
     showDevice(device, function(){$('#device-info-display').fadeIn();});
 });
-
-
-function changeDeviceName (device, newName)
-{
-    newName = newName.replace('.', '');
-    newName = newName.substr(0, 49);
-    device.setName(newName);
-    $('#current-name-display').html(newName);
-    $('#change-name-controls').slideUp();
-}
-
-
-function getDeviceName (device)
-{
-    return device.read('DEVICE_NAME_DEFAULT');
-}
-

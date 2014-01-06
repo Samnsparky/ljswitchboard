@@ -4,6 +4,7 @@
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
+var FIRMWARE_LISTING_URL = 'http://www.labjack.com/support/firmware/t7';
 var DEVICE_SELECTOR_SRC = 'device_updater/device_selector.html';
 var FIRMWARE_LISTING_SRC = 'device_updater/firmware_listing.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
@@ -26,6 +27,23 @@ var selectedSerials = [];
 **/
 function UpgradeableDeviceAdapter(device)
 {
+    var executeErrorSafeFunction = function (target) {
+        try {
+            return target();
+        } catch (e) {
+            var errMsg;
+
+            if (e.retError === undefined) {
+                errMsg = e.toString();
+            } else {
+                errMsg = e.retError.toString();
+            }
+
+            showAlert('Failed to read device info: ' + errMsg);
+            return '[unavailable]';
+        }
+    };
+
     /**
      * Get the serial number of the device that is this decorator encapsulates.
      *
@@ -33,7 +51,7 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getSerial = function()
     {
-        return device.getSerial();
+        return executeErrorSafeFunction(device.getSerial);
     };
 
     /**
@@ -43,7 +61,7 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getName = function()
     {
-        return device.getName();
+        return executeErrorSafeFunction(device.getName);
     };
 
     /**
@@ -54,7 +72,7 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getDeviceType = function()
     {
-        return device.getDeviceType();
+        return executeErrorSafeFunction(device.getDeviceType);
     };
 
     /**
@@ -65,7 +83,10 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getFirmwareVersion = function()
     {
-        return device.getFirmwareVersion().toFixed(4);
+        var formattedCall = function () {
+            return device.getFirmwareVersion().toFixed(4);
+        };
+        return executeErrorSafeFunction(formattedCall);
     };
 
     /**
@@ -76,7 +97,10 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getBootloaderVersion = function()
     {
-        return device.getBootloaderVersion().toFixed(4);
+        var formattedCall = function () {
+            return device.getBootloaderVersion().toFixed(4);
+        };
+        return executeErrorSafeFunction(formattedCall);
     };
 }
 
@@ -92,10 +116,14 @@ function UpgradeableDeviceAdapter(device)
 function getAvailableFirmwareListing(onError, onSuccess)
 {
     request(
-        'http://www.labjack.com/support/firmware/t7',
+        FIRMWARE_LISTING_URL,
         function (error, response, body) {
             if (error || response.statusCode != 200) {
-                return; // TODO: More proper error reporting
+                $('#web-load-waiting-indicator').slideUp();
+                $('#no-internet-message').show();
+                $('#no-internet-message').hide();
+                $('#no-internet-message').slideDown();
+                return;
             }
 
             var firmwareListing = [];
@@ -200,7 +228,7 @@ function displayFirmwareListing(firmwareInfo)
     fs_facade.renderTemplate(
         location,
         {'firmwares': firmwareInfo},
-        genericErrorHandler,
+        showAlert,
         function(renderedHTML)
         {
             $(FIRMWARE_LIST_SELECTOR).html(renderedHTML);
@@ -213,6 +241,16 @@ function displayFirmwareListing(firmwareInfo)
 }
 
 
+/**
+ * Routine to update the firmware on the selected devices.
+ *
+ * Routine to update the firmware on the devices selected within the device
+ * keeper.
+ *
+ * @param {String} firmwareFileLocation The location of the firmware file to use
+ *      to update this device. If this location starts with "http://", the file
+ *      will be downloaded from the Internet.
+**/
 function updateFirmware (firmwareFileLocation) {
     $('.firmware-source-option').slideUp();
     $('#working-status-pane').slideDown();
@@ -245,21 +283,39 @@ function updateFirmware (firmwareFileLocation) {
                 device.device,
                 firmwareFileLocation,
                 progressListener
-            ).then(function (bundle) {
-                var firmwareDisplaySelector = '#';
-                firmwareDisplaySelector += serial.toString();
-                firmwareDisplaySelector += '-firmware-display';
-                device.device = bundle.getDevice();
-                numUpgraded++;
-                $(firmwareDisplaySelector).html(bundle.getFirmwareVersion());
-                $('#complete-devices-display').html(numUpgraded);
-                callback(null);
-            });
+            ).then(
+                function (bundle) {
+                    var firmwareDisplaySelector = '#';
+                    firmwareDisplaySelector += serial.toString();
+                    firmwareDisplaySelector += '-firmware-display';
+                    device.device = bundle.getDevice();
+                    numUpgraded++;
+                    $(firmwareDisplaySelector).html(
+                        bundle.getFirmwareVersion()
+                    );
+                    $('#complete-devices-display').html(numUpgraded);
+                    callback(null);
+                },
+                function (err) {
+                    callback(err);
+                }
+            );
         },
         function (err) {
             if (err) {
-                console.log(err);
-                return;
+                var errMsg;
+                
+                if (err.retError === undefined) {
+                    errMsg = err.toString();
+                } else  {
+                    errMsg = err.retError.toString();
+                }
+
+                showAlert(
+                    'Failed to update device firmware. Please try ' + 
+                    'again. If the problem persists, please contact ' + 
+                    'support@labjack.com. Error: ' + errMsg
+                );
             }
             $('.firmware-source-option').slideDown();
             $('#working-status-pane').slideUp();
@@ -268,6 +324,9 @@ function updateFirmware (firmwareFileLocation) {
 }
 
 
+/**
+ * Initialization logic for the devie update module.
+**/
 $('#network-configuration').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     var devices = keeper.getDevices();

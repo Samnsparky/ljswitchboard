@@ -37,6 +37,18 @@ var curTabID = getActiveTabID();
 var curDevSelection = 0;
 
 
+/**
+ * Convenience function that executes a string replace all function.
+ *
+ * Convenience function that executes a string replace function that replaces
+ * all instances of a substring with another substring.
+ *
+ * @param {String} find The substring to find.
+ * @param {String} replace The text to replace the find substring with.
+ * @param {String} str The string to execute the find / replace operation on.
+ * @return {String} The provided str input string after the find / replace
+ *      operation.
+**/
 function replaceAll(find, replace, str) {
   return str.replace(new RegExp(find, 'g'), replace);
 }
@@ -61,7 +73,7 @@ function loadRangeOptions()
         fs_facade.renderTemplate(
             templateLocation,
             {'ranges': rangeInfo},
-            genericErrorHandler,
+            deferred.reject,
             function(renderedHTML)
             {
                 $(RANGE_LISTS_SELECTOR).each(function (index, e) {
@@ -71,7 +83,8 @@ function loadRangeOptions()
                 $(RANGE_LOADING_INDICATOR_SELECTOR).fadeOut();
 
                 $('.range-selector').click(function (event) {
-                    var pieces = event.target.id.replace('-range-selector', '').split('-');
+                    var pieces = event.target.id;
+                    pieces = pieces.replace('-range-selector', '').split('-');
                     rangeVal = parseFloat(pieces[0]);
                     if (pieces[1] === '') {
                         var numInputs = targetInputsInfo.length;
@@ -98,6 +111,17 @@ function loadRangeOptions()
 }
 
 
+/**
+ * A version of read many that appends the results to an existing array.
+ *
+ * @param {device_controller.Device} device The device to execute the read many
+ *      operation on.
+ * @param {Array} results The array to extend with results of the read many.
+ * @param {Array} registers Array of addresses or register names to read.
+ * @return {q.promise} Promise that resolves after the read many completes or
+ *      rejects on error. Resolves to nothing as results will be extended to
+ *      provide access to the read results.
+**/
 function extendReadMany (device, results, registers)
 {
     return function () {
@@ -116,6 +140,15 @@ function extendReadMany (device, results, registers)
 }
 
 
+/**
+ * Set the range for an analog input.
+ *
+ * @param {Number or String} rangeAddr The numerical address or the string name
+ *      of the register where the range for an input is held.
+ * @param {Number} range The positive side of the range. The range will be set
+ *      from +range volts to -range volts. Passing 10 will result in a range of
+ *      -10 to 10V.
+**/
 function setRange (rangeAddr, range)
 {
     selectedDevice.write(rangeAddr, range);
@@ -135,6 +168,20 @@ function setRange (rangeAddr, range)
 }
 
 
+/**
+ * Read the ranges for analog inputs & start the callback for reading AIN vals.
+ *
+ * Read the ranges for analog inputs and then start the periodic callback that
+ * reads the values of those analog inputs.
+ *
+ * @param {Object} Structure containing information about the device analog
+ *      inputs.
+ * @param {Number} targetDevSelection A unique numerical ID specifying which
+ *      set of devices have been selected. If the user changes their selection
+ *      of devices, that new device selection will be given a new unique
+ *      numerical ID. This ensures that old callbacks return without attempting
+ *      to access devices.
+**/
 function readRangesAndStartReadingInputs (inputsInfo, targetDevSelection)
 {
     targetInputsInfo = inputsInfo;
@@ -174,6 +221,7 @@ function readRangesAndStartReadingInputs (inputsInfo, targetDevSelection)
         },
         function (err) {
             console.log(err);
+            showAlert(err.retError);
             setTimeout(function () {
                 updateInputs(inputsInfo, targetDevSelection);
             }, 1000);
@@ -182,6 +230,18 @@ function readRangesAndStartReadingInputs (inputsInfo, targetDevSelection)
 }
 
 
+/**
+ * Read all analog inputs again and display their values on the GUI.
+ *
+ * @param {Object} inputsInfo Information about the analog inputs to read.
+ *      Should match the structure in inputs.json within the analog_inputs
+ *      Switchboard module.
+ * @param {Number} targetDevSelection A unique numerical ID specifying which
+ *      set of devices have been selected. If the user changes their selection
+ *      of devices, that new device selection will be given a new unique
+ *      numerical ID. This ensures that old callbacks return without attempting
+ *      to access devices.
+**/
 function updateInputs (inputsInfo, targetDevSelection) {
     var deviceChanged = curDevSelection != targetDevSelection;
     if (curTabID !== getActiveTabID() || deviceChanged) {
@@ -221,7 +281,7 @@ function updateInputs (inputsInfo, targetDevSelection) {
             }, 1000);
         },
         function (err) {
-            console.log(err);
+            showAlert(err.retError);
             setTimeout(function () {
                 updateInputs(inputsInfo, targetDevSelection);
             }, 1000);
@@ -263,6 +323,9 @@ function loadInputs()
 }
 
 
+/**
+ * Set the current device's analog inputs to be single ended.
+**/
 function setAllToSingleEnded()
 {
     var numInputs = targetInputsInfo.length;
@@ -321,12 +384,15 @@ function changeSelectedDevice()
             document.body.style.display='block';
         },
         function (err) {
-            console.log(err);
+            showAlert(err.retError);
         }
     );    
 }
 
 
+/**
+ * Initialization logic for the analog inputs module.
+**/
 $('#analog-inputs-configuration').ready(function(){
     $('.device-selection-radio').click(changeSelectedDevice);
     $('.device-selection-radio').first().prop('checked', true);
