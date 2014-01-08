@@ -41,6 +41,7 @@ var CLOSE_BTN_ID_TEMPLATE = handlebars.compile('#{{ . }}-close-btn');
 var VAL_INPUT_ID_TEMPLATE = handlebars.compile('#{{ . }}-val-input');
 
 var writing = false;
+var selectedDevice = device_controller.getDeviceKeeper().getDevices()[0];
 
 
 function formatNum(target) {
@@ -270,7 +271,18 @@ function createDrawing (overlaySpec, onFinish) {
 
 function readDeviceValues (refreshFunction, updateFunctions) {
     var registersToRead;
+    var numCallbacks;
     var callbacks;
+    var setReadTimeout;
+
+    setReadTimeout = function () {
+        setTimeout(
+            function () {
+                readDeviceValues(refreshFunction, updateFunctions);
+            },
+            1000
+        );
+    };
 
     if (!writing) {
         registersToRead = [];
@@ -283,25 +295,25 @@ function readDeviceValues (refreshFunction, updateFunctions) {
             return func !== null;
         });
 
-        callbacks.forEach(function (func) {
-            func(Math.random());
-        });
+        selectedDevice.readMany(registersToRead)
+        .then(
+            function (values) {
+                numCallbacks = callbacks.length;
+                for (var i=0; i<numCallbacks; i++) {
+                    callbacks[i](values[i]);
+                }
+
+                setReadTimeout();
+            },
+            function (err) {
+                showError(err);
+            }
+        )
         
         refreshFunction();
 
-        setTimeout(
-            function () {
-                readDeviceValues(refreshFunction, updateFunctions);
-            },
-            1000
-        );
     } else {
-        setTimeout(
-            function () {
-                readDeviceValues(refreshFunction, updateFunctions);
-            },
-            500
-        );
+        setReadTimeout();
     }
 }
 
