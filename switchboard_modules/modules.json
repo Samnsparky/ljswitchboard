@@ -8,6 +8,10 @@
         "active": true
     },
     {
+        "name": "device_overview",
+        "active": true
+    },
+    {
         "name": "dashboard_logger",
         "active": false
     },
