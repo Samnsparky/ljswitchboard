@@ -9,7 +9,7 @@
     },
     {
         "name": "dashboard_logger",
-        "active": true
+        "active": false
     },
     {
         "name": "digital_io_config",
@@ -41,6 +41,6 @@
     },
     {
         "name": "module_manager",
-        "active": true
+        "active": false
     }
 ]
