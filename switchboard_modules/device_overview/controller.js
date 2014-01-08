@@ -176,8 +176,7 @@ function createOverlayElement(layer, overlayElementSpec) {
 
     writeFunction = function (value) {
         writing = true;
-        console.log('writing to ' + overlayElementSpec.register);
-        console.log('writing value ' + value.toString());
+        selectedDevice.write(overlayElementSpec.register, value);
         valueText.setText(formatNum(value));
         writing = false;
     };
@@ -280,7 +279,7 @@ function readDeviceValues (refreshFunction, updateFunctions) {
             function () {
                 readDeviceValues(refreshFunction, updateFunctions);
             },
-            1000
+            750
         );
     };
 
