@@ -28,10 +28,10 @@ var TEST_OVERLAY_SPEC = [
 
 var EDIT_CONTROLS_TEMPLATE_STR = '<div id="{{ . }}-edit-control" class="row-fluid edit-control">' +
     '<div class="span1 edit-label">{{ . }}</div>' +
-    '<div class="span3"><input id="{{ . }}-val-input" type="text" placeholder="val to write"></div>' +
-    '<div class="span4">' +
+    '<div class="span5 val-input-holder"><input id="{{ . }}-val-input" type="text" placeholder="val to write"></div>' +
+    '<div class="span6">' +
     '<a href="#" id="{{ . }}-write-btn" class="write-button btn btn-success">write</a>' +
-    '<a href="#" id="{{ . }}-close-btn" class="close-button btn btn-warning">return to read-mode</a>' +
+    '<a href="#" id="{{ . }}-close-btn" class="close-button btn btn-warning">return {{ . }} to read-mode</a>' +
     '</div>' +
     '</div>';
 var EDIT_CONTROLS_TEMPLATE = handlebars.compile(EDIT_CONTROLS_TEMPLATE_STR);
@@ -193,13 +193,17 @@ function showEditControls (registerLabel, writeFunction, closeFunction) {
     var valInputID = VAL_INPUT_ID_TEMPLATE(registerLabel);
 
     $('#edit-fields').append(resultingHTML);
+    $(editControlID).hide();
+    $(editControlID).slideDown();
     $(writeBtnID).click(function () {
         // TODO: Error handler here if cannot convert
         writeFunction(parseFloat($(valInputID).val()));
         return false;
     });
     $(closeBtnID).click(function () {
-        $(editControlID).remove();
+        $(editControlID).slideUp(function () {
+            $(editControlID).remove();
+        });
         closeFunction();
     });
 }
