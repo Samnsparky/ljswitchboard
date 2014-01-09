@@ -14,19 +14,34 @@ var EDIT_TEXT_X_OFFSET = 3;
 var EDIT_TEXT_Y_OFFSET = 0;
 
 var TEST_OVERLAY_SPEC = [
-    {register: 'AIN0', yLocation: 0.783, editStrategy: null},
-    {register: 'AIN1', yLocation: 0.757, editStrategy: null},
-    {register: 'AIN2', yLocation: 0.664, editStrategy: null},
-    {register: 'AIN3', yLocation: 0.639, editStrategy: null},
-    {register: 'DAC0', yLocation: 0.545, editStrategy: 'simpleWrite'},
-    {register: 'DAC1', yLocation: 0.519, editStrategy: 'simpleWrite'},
-    {register: 'FIO0', yLocation: 0.426, editStrategy: 'fioWrite'},
-    {register: 'FIO1', yLocation: 0.403, editStrategy: 'fioWrite'},
-    {register: 'FIO2', yLocation: 0.308, editStrategy: 'fioWrite'},
-    {register: 'FIO3', yLocation: 0.283, editStrategy: 'fioWrite'}
+    {register: 'AIN0', yLocation: 0.783, type: null},
+    {register: 'AIN1', yLocation: 0.757, type: null},
+    {register: 'AIN2', yLocation: 0.664, type: null},
+    {register: 'AIN3', yLocation: 0.639, type: null},
+    {register: 'DAC0', yLocation: 0.545, type: 'dac'},
+    {register: 'DAC1', yLocation: 0.519, type: 'dac'},
+    {register: 'FIO0', yLocation: 0.426, type: 'fio'},
+    {register: 'FIO1', yLocation: 0.403, type: 'fio'},
+    {register: 'FIO2', yLocation: 0.308, type: 'fio'},
+    {register: 'FIO3', yLocation: 0.283, type: 'fio'}
 ];
 
-var EDIT_CONTROLS_TEMPLATE_STR = '<div id="{{ . }}-edit-control" class="row-fluid edit-control">' +
+var INITIALIZATION_STRATEGIES = {
+    'fio': noopStrategy,
+    'dac': noopStrategy
+};
+
+var START_READ_STRATEGIES = {
+    'fio': setFIOToInput,
+    'dac': noopStrategy
+};
+
+var START_WRITE_STRATEGIES = {
+    'fio': setFIOToOutput,
+    'dac': noopStrategy
+};
+
+var EDIT_CONTROLS_TEMPLATE_STR = '<div class="edit-control row-fluid" id="{{ . }}-edit-control">' +
     '<div class="span1 edit-label">{{ . }}</div>' +
     '<div class="span5 val-input-holder"><input id="{{ . }}-val-input" type="text" placeholder="val to write"></div>' +
     '<div class="span6">' +
@@ -41,6 +56,7 @@ var CLOSE_BTN_ID_TEMPLATE = handlebars.compile('#{{ . }}-close-btn');
 var VAL_INPUT_ID_TEMPLATE = handlebars.compile('#{{ . }}-val-input');
 
 var writing = false;
+var selectedDevice = device_controller.getDeviceKeeper().getDevices()[0];
 
 
 function formatNum(target) {
@@ -108,7 +124,7 @@ function createOverlayElement(layer, overlayElementSpec) {
     layer.add(connectingLine);
     layer.add(valueText);
 
-    if (overlayElementSpec.editStrategy !== null) {
+    if (overlayElementSpec.type !== null) {
         editCtrl = new Kinetic.Group({
             x: editCtrlXOffset,
             y: editCtrlYOffset
@@ -175,8 +191,7 @@ function createOverlayElement(layer, overlayElementSpec) {
 
     writeFunction = function (value) {
         writing = true;
-        console.log('writing to ' + overlayElementSpec.register);
-        console.log('writing value ' + value.toString());
+        selectedDevice.write(overlayElementSpec.register, value);
         valueText.setText(formatNum(value));
         writing = false;
     };
@@ -270,7 +285,18 @@ function createDrawing (overlaySpec, onFinish) {
 
 function readDeviceValues (refreshFunction, updateFunctions) {
     var registersToRead;
+    var numCallbacks;
     var callbacks;
+    var setReadTimeout;
+
+    setReadTimeout = function () {
+        setTimeout(
+            function () {
+                readDeviceValues(refreshFunction, updateFunctions);
+            },
+            750
+        );
+    };
 
     if (!writing) {
         registersToRead = [];
@@ -283,27 +309,73 @@ function readDeviceValues (refreshFunction, updateFunctions) {
             return func !== null;
         });
 
-        callbacks.forEach(function (func) {
-            func(Math.random());
-        });
+        selectedDevice.readMany(registersToRead)
+        .then(
+            function (values) {
+                numCallbacks = callbacks.length;
+                for (var i=0; i<numCallbacks; i++) {
+                    callbacks[i](values[i]);
+                }
+
+                setReadTimeout();
+            },
+            function (err) {
+                showError(err);
+            }
+        )
         
         refreshFunction();
 
-        setTimeout(
-            function () {
-                readDeviceValues(refreshFunction, updateFunctions);
-            },
-            1000
-        );
     } else {
-        setTimeout(
-            function () {
-                readDeviceValues(refreshFunction, updateFunctions);
-            },
-            500
-        );
+        setReadTimeout();
     }
 }
 
 
-createDrawing(TEST_OVERLAY_SPEC, readDeviceValues);
+function setFIOToInput (device, registerInfo) {
+
+}
+
+
+function setFIOToOutput (device, registerInfo) {
+
+}
+
+
+function noopStrategy (device, registerInfo) {}
+
+
+function setupDevice (targetSpec) {
+    var targetFunc;
+
+    selectedDevice.write('FIO_DIRECTION', 0);
+
+    targetSpec.forEach(function (specComponent) {
+        targetFunc = INITIALIZATION_STRATEGIES[specComponent.type];
+        if(targetFunc !== undefined)
+            targetFunc(selectedDevice, specComponent);
+    });
+}
+
+
+$('#device-info-inspector').ready(function () {
+    $('.device-selection-radio').first().prop('checked', true);
+    $('.device-selection-radio').change( function (event) {
+        var serial = event.target.id.replace('-selector', '');
+        $('.edit-control').slideUp(function () {
+            $('.edit-control').remove();
+        });
+        $('#container').fadeOut(function () {
+            var deviceKeeper = device_controller.getDeviceKeeper();
+            selectedDevice = deviceKeeper.getDevice(serial);
+            setupDevice(TEST_OVERLAY_SPEC);
+            createDrawing(TEST_OVERLAY_SPEC, readDeviceValues);
+            $('#container').fadeIn();
+        });
+    });
+
+    var devices = device_controller.getDeviceKeeper().getDevices();
+    selectedDevice = devices[0];
+    setupDevice(TEST_OVERLAY_SPEC);
+    createDrawing(TEST_OVERLAY_SPEC, readDeviceValues);
+});
