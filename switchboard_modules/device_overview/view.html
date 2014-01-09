@@ -1,4 +1,35 @@
 <div id="device-overview">
+    <table class="table table-striped" id="device-selector">
+        <thead>
+            <tr>
+                <th>select</th>
+                <th>device type</th>
+                <th>serial number</th>
+                <th>name</th>
+            <tr>
+        </thead>
+        <tbody>
+            {{#devices}}
+            <tr>
+                <td>
+                    <label class="radio">
+                        <input name="deviceSelectionRadios" class="device-selection-radio" id="{{getSerial}}-selector" type="radio" value="{{getSerial}}">
+                        <span class="metro-radio"></span>
+                    </label>
+                </td>
+                <td>
+                    {{getDeviceType}}
+                </td>
+                <td>
+                    {{getSerial}}
+                </td>
+                <td>
+                    {{getName}}
+                </td>
+            </tr>
+            {{/devices}}
+        </tbody>
+    </table>
     <div id="edit-fields"></div>
     <div id="container"></div>
 </div>
