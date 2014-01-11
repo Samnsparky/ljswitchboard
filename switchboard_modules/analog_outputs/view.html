@@ -1,4 +1,5 @@
 <div id="analog-output-config">
+    {{#hasMultipleDevices}}
     <table class="table table-striped" id="device-selector">
         <thead>
             <tr>
@@ -30,6 +31,7 @@
             {{/devices}}
         </tbody>
     </table>
+    {{/hasMultipleDevices}}
     <div id="configuration-pane-holder">
         <div id="configuration-pane">
             <div id="loading-display" class="progress progress-indeterminate">

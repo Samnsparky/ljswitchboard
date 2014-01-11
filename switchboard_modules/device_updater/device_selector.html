@@ -1,4 +1,5 @@
 <table class="table table-striped">
+    {{#hasMultipleDevices}}
     <thead>
         <tr>
             <th>update</th>
@@ -24,4 +25,5 @@
         <td>{{getBootloaderVersion}}</td>
     </tr>
     {{/devices}}
+    {{/hasMultipleDevices}}
 </table>
