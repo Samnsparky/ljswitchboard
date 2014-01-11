@@ -25,6 +25,7 @@ var CONNECTION_TYPE_NAMES = dict({
     '4': 'Wifi'
 });
 
+exports.driver_const = labjack_nodejs.driver_const;
 
 /**
  * Object with information about a device.
@@ -208,6 +209,10 @@ var Device = function (device, serial, connectionType, deviceType)
     **/
     this.read = function (address) {
         return this.device.readSync(address);
+    };
+
+    this.readAsync = function (address, onError, onSuccess) {
+        this.device.read(address, onError, onSuccess);
     };
 
     /**

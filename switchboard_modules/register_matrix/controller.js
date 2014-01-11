@@ -19,7 +19,7 @@ var REGISTERS_TABLE_TEMPLATE_SRC = 'register_matrix/matrix.html';
 var REGISTER_WATCH_LIST_TEMPLATE_SRC = 'register_matrix/watchlist.html';
 
 var REGISTER_MATRIX_SELECTOR = '#register-matrix';
-var REGISTER_WATCHLIST_SELECTOR = '#register-watchlist'
+var REGISTER_WATCHLIST_SELECTOR = '#register-watchlist';
 
 var DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR =
     '#{{address}}-description-display';
@@ -115,7 +115,7 @@ function getRegisterInfo()
 
     var registerInfoSrc = fs_facade.getExternalURI(REGISTERS_DATA_SRC);
     fs_facade.getJSON(registerInfoSrc, deferred.reject, function(info){
-        deferred.resolve(info['registers']);        
+        deferred.resolve(info.registers);
     });
 
     return deferred.promise;
@@ -152,7 +152,7 @@ function filterDeviceRegisters(registers, deviceName)
                     if(e.device === undefined)
                         return e;
                     else
-                        return e.device
+                        return e.device;
                 });
                 callback(names.indexOf(deviceName) != -1);
             }
@@ -179,7 +179,7 @@ function createDeviceFilter(device)
 {
     return function(registers){
         return filterDeviceRegisters(registers, device);
-    }
+    };
 }
 
 
@@ -242,7 +242,7 @@ function createFwminSelector(device)
 {
     return function(registers){
         return fwminSelector(registers, device);
-    }
+    };
 }
 
 
@@ -390,7 +390,7 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
     var location = fs_facade.getExternalURI(REGISTERS_TABLE_TEMPLATE_SRC);
     var entriesByAddress = organizeRegistersByAddress(entries);
 
-    if(tags == undefined)
+    if(tags === undefined)
         tags = getTagSet(entries);
     if(currentTag === undefined)
         currentTag = 'all';
@@ -596,6 +596,7 @@ function addRWInfo(registers)
             var writeOnly = newRegister.writeAccess && !newRegister.readAccess;
             newRegister.writeOnly = writeOnly;
             newRegister.useAsWrite = writeOnly;
+            newRegister.type = newRegister.type;
             callback(null, newRegister);
         },
         function(error, registers){
@@ -789,27 +790,10 @@ function removeFromWatchList(event)
 }
 
 
-function updateReadRegisters ()
+function createUpdateReadNumberRegistersCallback (readAddresses)
 {
-    if (curTabID !== getActiveTabID()) {
-        return;
-    }
-
-    var readRegisters = registerWatchList.filter(function (e) {
-        return !e.useAsWrite;
-    });
-    var readAddresses = readRegisters.map(function (e) {
-        return e.address;
-    });
-
-    if (readAddresses.length == 0) {
-        setTimeout(updateReadRegisters, REFRESH_DELAY);
-        return;
-    }
-
-    var promise = selectedDevice.readMany(readAddresses);
-    promise.then(function (results) {
-
+    return function (results) {
+        var deferred = q.defer();
         var numResults = results.length;
         for (var i=0; i<numResults; i++) {
             var register = readAddresses[i];
@@ -817,14 +801,96 @@ function updateReadRegisters ()
             var displaySelector = '#' + String(register) + '-cur-val-display';
             $(displaySelector).html(value.toFixed(6));
         }
+        deferred.resolve();
+        return deferred.promise;
+    };
+}
 
-        setTimeout(updateReadRegisters, REFRESH_DELAY);
-    }, function (err) {
+
+function updateStringRegisterCallback (register, value)
+{
+    var displaySelector = '#' + String(register) + '-cur-val-display';
+    $(displaySelector).html(value);
+}
+
+
+function splitByRetType (registers)
+{
+    var numberRegisters = [];
+    var stringRegisters = [];
+    
+    registers.forEach(function (register) {
+        if (register.type === 'STRING') {
+            stringRegisters.push(register);
+        } else {
+            numberRegisters.push(register);
+        }
+    });
+
+    return {numRegs: numberRegisters, strRegs: stringRegisters};
+}
+
+
+function updateReadRegisters ()
+{
+    var onError = function (err) {
         if (err) {
             showError(err);
         }
         setTimeout(updateReadRegisters, REFRESH_DELAY);
+    };
+
+    if (curTabID !== getActiveTabID()) {
+        return;
+    }
+
+    var readRegisters = registerWatchList.filter(function (e) {
+        return !e.useAsWrite;
     });
+
+    var splitResult = splitByRetType(readRegisters);
+    var numberReadRegisters = splitResult.numRegs;
+    var stringReadRegisters = splitResult.strRegs;
+
+    var numberReadAddresses = numberReadRegisters.map(function (e) {
+        return e.address;
+    });
+    var stringReadAddresses = stringReadRegisters.map(function (e) {
+        return e.address;
+    });
+
+    var promise;
+    if (numberReadAddresses.length > 0) {
+        promise = selectedDevice.readMany(numberReadAddresses);
+        promise.then(
+            createUpdateReadNumberRegistersCallback(numberReadAddresses),
+            onError
+        );
+    } else {
+        var immediateDeferred = q.defer();
+        promise = immediateDeferred.promise;
+        immediateDeferred.resolve();
+    }
+
+    stringReadAddresses.forEach(function (address) {
+        promise.then(function () {
+            var innerDeferred = q.defer();
+            selectedDevice.readAsync(
+                address,
+                onError,
+                function (val) {
+                    updateStringRegisterCallback(address, val);
+                    innerDeferred.resolve();
+                }
+            );
+            return innerDeferred.promise;
+        }, onError);
+    });
+
+    promise.then(
+        function () { setTimeout(updateReadRegisters, REFRESH_DELAY); },
+        onError
+    );
 }
 
 
