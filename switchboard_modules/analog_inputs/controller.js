@@ -33,7 +33,6 @@ var INPUT_BAR_TEMPLATE = handlebars.compile(
 var RANGE_DISPLAY_TEMPLATE = handlebars.compile(
     RANGE_DISPLAY_TEMPLATE_STR);
 
-var curTabID = getActiveTabID();
 var curDevSelection = 0;
 
 
@@ -216,14 +215,14 @@ function readRangesAndStartReadingInputs (inputsInfo, targetDevSelection)
                 $(selector).html(text);
             }
             setTimeout(function () {
-                updateInputs(inputsInfo, targetDevSelection);
+                updateInputs(inputsInfo, targetDevSelection, getActiveTabID());
             }, 1000);
         },
         function (err) {
             console.log(err);
             showAlert(err.retError);
             setTimeout(function () {
-                updateInputs(inputsInfo, targetDevSelection);
+                updateInputs(inputsInfo, targetDevSelection, getActiveTabID());
             }, 1000);
         }
     );
@@ -242,8 +241,10 @@ function readRangesAndStartReadingInputs (inputsInfo, targetDevSelection)
  *      numerical ID. This ensures that old callbacks return without attempting
  *      to access devices.
 **/
-function updateInputs (inputsInfo, targetDevSelection) {
+function updateInputs (inputsInfo, targetDevSelection, curTabID) {
     var deviceChanged = curDevSelection != targetDevSelection;
+    console.log(curTabID);
+    console.log(curTabID !== getActiveTabID());
     if (curTabID !== getActiveTabID() || deviceChanged) {
         return;
     }
@@ -277,13 +278,13 @@ function updateInputs (inputsInfo, targetDevSelection) {
                 $(barSelect).css('width', String(width) + 'px');
             }
             setTimeout(function () {
-                updateInputs(inputsInfo, targetDevSelection);
+                updateInputs(inputsInfo, targetDevSelection, curTabID);
             }, 1000);
         },
         function (err) {
             showAlert(err.retError);
             setTimeout(function () {
-                updateInputs(inputsInfo, targetDevSelection);
+                updateInputs(inputsInfo, targetDevSelection, curTabID);
             }, 1000);
         }
     );

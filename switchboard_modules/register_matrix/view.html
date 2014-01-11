@@ -1,4 +1,5 @@
 <div id="register-matrix-holder">
+    {{#hasMultipleDevices}}
     <table class="table table-striped" id="device-selector">
         <thead>
             <tr>
@@ -30,6 +31,7 @@
             {{/devices}}
         </tbody>
     </table>
+    {{/hasMultipleDevices}}
     <div id="register-watchlist">
     </div>
     <div id="register-matrix">

@@ -1,4 +1,5 @@
 <div id="device-overview">
+    {{#hasMultipleDevices}}
     <table class="table table-striped" id="device-selector">
         <thead>
             <tr>
@@ -30,6 +31,7 @@
             {{/devices}}
         </tbody>
     </table>
+    {{/hasMultipleDevices}}
     <div id="edit-fields"></div>
     <div id="container"></div>
 </div>
