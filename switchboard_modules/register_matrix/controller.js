@@ -685,6 +685,7 @@ function refreshWatchList()
                     var address = event.target.id;
                     address = address.replace('write-reg-', '');
                     address = address.replace('icon-', '');
+                    var isString = $('#' + address.toString() + '-type-display').html() === 'STRING';
                     var rowSelector = WATCH_ROW_SELECTOR_TEMPLATE({
                         'address': address
                     });
@@ -695,11 +696,16 @@ function refreshWatchList()
                     var value = $(inputSelector).val();
 
                     var addressNum = Number(address);
-                    var valueNum = Number(value);
+                    var convValue;
+                    if (isString) {
+                        convValue = value;
+                    } else {
+                        convValue = Number(value);
+                    }
 
                     $(rowSelector).find('.write-confirm-msg').slideDown(
                         function () {
-                            selectedDevice.writeAsync(addressNum, valueNum)
+                            selectedDevice.writeAsync(addressNum, convValue)
                             .then(
                                 function () {
                                     $(rowSelector).find(
