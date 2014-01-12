@@ -57,6 +57,8 @@ var VAL_INPUT_ID_TEMPLATE = handlebars.compile('#{{ . }}-val-input');
 
 var writing = false;
 var selectedDevice = device_controller.getDeviceKeeper().getDevices()[0];
+var currentDeviceSelection = 0;
+var tabID = getActiveTabID();
 
 
 function formatNum(target) {
@@ -283,16 +285,25 @@ function createDrawing (overlaySpec, onFinish) {
 }
 
 
-function readDeviceValues (refreshFunction, updateFunctions) {
+function readDeviceValues (refreshFunction, updateFunctions, deviceSelection) {
     var registersToRead;
     var numCallbacks;
     var callbacks;
     var setReadTimeout;
 
+    var changedDevice = deviceSelection !== currentDeviceSelection;
+    var changedTab = tabID !== getActiveTabID();
+    if (changedDevice || changedTab)
+        return;
+
     setReadTimeout = function () {
         setTimeout(
             function () {
-                readDeviceValues(refreshFunction, updateFunctions);
+                readDeviceValues(
+                    refreshFunction,
+                    updateFunctions,
+                    deviceSelection
+                );
             },
             750
         );
@@ -369,7 +380,16 @@ $('#device-info-inspector').ready(function () {
             var deviceKeeper = device_controller.getDeviceKeeper();
             selectedDevice = deviceKeeper.getDevice(serial);
             setupDevice(TEST_OVERLAY_SPEC);
-            createDrawing(TEST_OVERLAY_SPEC, readDeviceValues);
+            currentDeviceSelection++;
+            createDrawing(
+                TEST_OVERLAY_SPEC,
+                function (refreshFunction, updateFunctions) {
+                    readDeviceValues(
+                        refreshFunction,
+                        updateFunctions,
+                        currentDeviceSelection
+                    );
+                }); 
             $('#container').fadeIn();
         });
     });
@@ -377,5 +397,14 @@ $('#device-info-inspector').ready(function () {
     var devices = device_controller.getDeviceKeeper().getDevices();
     selectedDevice = devices[0];
     setupDevice(TEST_OVERLAY_SPEC);
-    createDrawing(TEST_OVERLAY_SPEC, readDeviceValues);
+    createDrawing(
+        TEST_OVERLAY_SPEC,
+        function (refreshFunction, updateFunctions) {
+            readDeviceValues(
+                refreshFunction,
+                updateFunctions,
+                currentDeviceSelection
+            );
+        }
+    );
 });
