@@ -12,6 +12,7 @@ var Long = require('long');
 var DEVICE_SELECTOR_SRC = 'network_configuration/device_selector.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var HARDWARE_INSTALLED_REG = 60010;
+var FLASH_UNAVAILABLE_ERROR = 2358;
 
 var selectedDevice;
 
@@ -63,7 +64,12 @@ function DeviceNetworkAdapter(device)
             try {
                 target(val);
             } catch (e) {
-                showError(e);
+                console.log(e);
+                if (e.code == FLASH_UNAVAILABLE_ERROR) {
+                    throw e;
+                } else {
+                    showError(e);
+                }
             }
         };
     };
@@ -723,6 +729,27 @@ function writeDefaultConfiguationValues(device)
 }
 
 
+function showFlashWait(callback)
+{
+    var canceled = false;
+    $('#cancel-flash-button').off('click');
+    $('#cancel-flash-button').click(function () {
+        canceled = true;
+    });
+    $('#flash-write-notice').fadeIn();
+    setTimeout(
+        function () {
+            if (canceled)
+                return;
+
+            $('#flash-write-notice').fadeOut();
+            callback();
+        },
+        3000
+    );
+}
+
+
 /**
  * Write configuration values for all devices with updates to GUI.
  *
@@ -731,16 +758,22 @@ function writeDefaultConfiguationValues(device)
 **/
 function writeConfigurationValues()
 {
+    $('#update-button').slideUp();
     $('#saved-indicator').hide();
     $('#save-indicator').slideDown();
     try {
         writeDefaultConfiguationValues(selectedDevice);
+        $('#save-indicator').hide();
+        $('#saved-indicator').slideDown();
+        $('#update-button').slideDown();
     }
     catch (e) {
-        showError(e);
+        if (e.code === FLASH_UNAVAILABLE_ERROR) {
+            showFlashWait(writeConfigurationValues);
+        } else {
+            showError(e);
+        }
     }
-    $('#save-indicator').hide();
-    $('#saved-indicator').slideDown();
     return false;
 }
 
