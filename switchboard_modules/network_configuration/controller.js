@@ -180,7 +180,7 @@ function DeviceNetworkAdapter(device)
     **/
     this.getWiFiNetworkPassword = function()
     {
-        return '12345678';
+        return '        ';
     };
 
     /**
@@ -303,7 +303,8 @@ function DeviceNetworkAdapter(device)
     **/
     this.setDefaultWiFiNetworkPassword = createErrorSafeSetter(function (newVal)
     {
-        device.write('WIFI_PASSWORD_DEFAULT', newVal);
+        if (newVal !== '        ')
+            device.write('WIFI_PASSWORD_DEFAULT', newVal);
     });
 
     /**

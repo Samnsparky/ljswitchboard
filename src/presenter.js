@@ -195,6 +195,8 @@ function renderDeviceSelector()
     var onDevicesLoaded = function(devices) {
         var context = {'connection_types': includeDeviceDisplaySizes(devices)};
         $('#device-search-msg').hide();
+        if (devices.length === 0)
+            context.noDevices = true;
         renderTemplate(
             'device_selector.html',
             context,

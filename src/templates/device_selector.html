@@ -5,6 +5,9 @@
       <div id="error-display"></div>
     </div>
     <div class="device-pane">
+        {{#noDevices}}
+        Sorry, no devices found... Please check your network and / or USB ports and try again.
+        {{/noDevices}}
         {{#connection_types}}
         <div class="device-pane-section connection-type">
             <div class="device-pane-popover">

@@ -212,6 +212,9 @@ function refreshDevices()
     $('#content-holder').html('');
     var onDevicesLoaded = function(devices) {
         var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+        console.log(devices);
+        if (devices.length == 0)
+            context.noDevices = true;
         $('#device-search-msg').hide();
         renderTemplate(
             'device_selector.html',
