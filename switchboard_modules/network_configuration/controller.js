@@ -53,8 +53,12 @@ function DeviceNetworkAdapter(device)
             try {
                 return target();
             } catch (e) {
-                showError(e);
-                return defaultValue;
+                if (e.code == FLASH_UNAVAILABLE_ERROR) {
+                    throw e;
+                } else {
+                    showError(e);
+                    return defaultValue;
+                }
             }
         };
     };
@@ -535,23 +539,41 @@ function writeIP(target)
 **/
 function showCurrentDeviceSettings(device, onError, onSuccess)
 {
-    if (device.isPro()) {
-        $('#wifi-network-name-input').val(device.getWiFiNetwork());
-        $('#wifi-network-password-input').val(device.getWiFiNetworkPassword());
-        $('#wifi-ip-input').val(device.getWiFiIPAddress());
-        $('#wifi-subnet-input').val(device.getWiFiSubnet());
-        $('#wifi-gateway-input').val(device.getWiFiGateway());
+    var curTab = getActiveTabID();
+    try {
+        
+        if (device.isPro()) {
+            $('#wifi-network-name-input').val(device.getWiFiNetwork());
+            $('#wifi-network-password-input').val(device.getWiFiNetworkPassword());
+            $('#wifi-ip-input').val(device.getWiFiIPAddress());
+            $('#wifi-subnet-input').val(device.getWiFiSubnet());
+            $('#wifi-gateway-input').val(device.getWiFiGateway());
+        }
+
+        $('#ethernet-ip-input').val(device.getEthernetIPAddress());
+        $('#ethernet-subnet-input').val(device.getEthernetSubnet());
+        $('#ethernet-gateway-input').val(device.getEthernetGateway());
+        $('#default-dns-input').val(device.getDNS());
+        $('#alt-dns-input').val(device.getAltDNS());
+
+        configureForCurrentDeviceSettings(device);
+
+        onSuccess();
+
+    } catch (e) {
+        if (e.code == FLASH_UNAVAILABLE_ERROR) {
+            $('#flash-read-notice').slideDown();
+            setTimeout(
+                function () {
+                    if (curTab === getActiveTabID())
+                        showCurrentDeviceSettings(device, onError, onSuccess);
+                },
+                3000
+            );
+        } else {
+            showError(e);
+        }
     }
-
-    $('#ethernet-ip-input').val(device.getEthernetIPAddress());
-    $('#ethernet-subnet-input').val(device.getEthernetSubnet());
-    $('#ethernet-gateway-input').val(device.getEthernetGateway());
-    $('#default-dns-input').val(device.getDNS());
-    $('#alt-dns-input').val(device.getAltDNS());
-
-    configureForCurrentDeviceSettings(device);
-
-    onSuccess();
 }
 
 
@@ -622,7 +644,8 @@ function onChangeSelectedDevices()
     var device = new DeviceNetworkAdapter(keeper.getDevice(deviceSerial));
     selectedDevice = device;
 
-    showCurrentDeviceSettings(device, genericErrorHandler, function(){
+    showCurrentDeviceSettings(device, genericErrorHandler, function () {
+        $('#flash-read-notice').slideUp();
         $('#device-configuration-pane').fadeIn();
     });
 }
@@ -669,6 +692,7 @@ function prepareIndividualDeviceConfiguration(decoratedDevice)
 {
     showCurrentDeviceSettings(decoratedDevice, genericErrorHandler, function(){
         $('#device-configuration-pane').css('display', 'inline');
+        $('#flash-read-notice').slideUp();
         $('.switch').bootstrapSwitch();
     });
 }
@@ -735,6 +759,10 @@ function showFlashWait(callback)
     $('#cancel-flash-button').off('click');
     $('#cancel-flash-button').click(function () {
         canceled = true;
+        $('#save-indicator').hide();
+        $('#saved-indicator').hide();
+        $('#flash-write-notice').hide();
+        $('#update-button').slideDown();
     });
     $('#flash-write-notice').fadeIn();
     setTimeout(

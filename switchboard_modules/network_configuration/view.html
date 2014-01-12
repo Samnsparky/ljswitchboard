@@ -1,4 +1,10 @@
 <div id="network-configuration">
+<div class="flash-notice" id="flash-read-notice">
+        <div><img src="static/img/progress-indeterminate-ring-light.gif"></div>
+        <div>
+            Whoops! This will just take a minute. Device flash memory is not ready (code 2358). This likely means that the WiFi / Ethernet module is initializing. Please wait...
+        </div>
+    </div>
     <div id="device-overview"></div>
     <div id="device-configuration-pane">
         <form>
@@ -61,10 +67,10 @@
                 </div>
             </fieldset>
             <button id="update-button" class="btn">Update Configuration</button>
-            <div id="flash-write-notice">
+            <div class="flash-notice" id="flash-write-notice">
                 <div><img src="static/img/progress-indeterminate-ring-light.gif"></div>
                 <div>
-                    Device flash memory is not ready (code 2358). This likely means that the WiFi / Ethernet module is initializing. Please wait...
+                    Whoops! This will just take a minute. Device flash memory is not ready (code 2358). This likely means that the WiFi / Ethernet module is initializing. Please wait...
                 </div>
                 <div>
                     <a href="#" id="cancel-flash-button" class="btn btn-danger">Cancel</a>
