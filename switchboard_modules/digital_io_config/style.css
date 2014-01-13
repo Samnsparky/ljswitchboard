@@ -42,10 +42,20 @@
     color: white;
 }
 
+.state-indicator.active:before
+{
+    content: 'high ';
+}
+
 .state-indicator.inactive
 {
     color: black;
     background-color: #C0C0C0;
+}
+
+.state-indicator.inactive:before
+{
+    content: 'low ';
 }
 
 .switch-holder

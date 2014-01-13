@@ -154,10 +154,8 @@ function readInputs ()
                         $(targetID).removeClass('inactive');
                         $(targetID).removeClass('active');
                         if (Math.abs(value - 1) < 0.1) {
-                            $(targetID).html('high');
                             $(targetID).addClass('active');
                         } else {
-                            $(targetID).html('low');
                             $(targetID).addClass('inactive');
                         }
                     }
