@@ -61,7 +61,7 @@ function UpgradeableDeviceAdapter(device)
     **/
     this.getName = function()
     {
-        return executeErrorSafeFunction(device.getName);
+        return device.getName();
     };
 
     /**
@@ -307,7 +307,9 @@ function updateFirmware (firmwareFileLocation) {
             try {
                 if (device.read('WIFI_STATUS') != 2900) {
                     device.write('POWER_WIFI', 0);
-                    setTimeout(runUpgrade, 2000);
+                    setTimeout(runUpgrade, 3000);
+                } else {
+                    runUpgrade();
                 }
             } catch (e) {
                 callback(
@@ -320,6 +322,18 @@ function updateFirmware (firmwareFileLocation) {
             if (err) {
                 var errMsg;
                 
+                if (err == 2358) {
+                    $('#flash-notice').slideDown();
+                    setTimeout(
+                        function () {
+                            $('#flash-notice').slideUp();
+                            updateFirmware(firmwareFileLocation);
+                        },
+                        3000
+                    );
+                    return;
+                }
+
                 if (err.retError === undefined) {
                     errMsg = err.toString();
                 } else  {
@@ -357,7 +371,10 @@ $('#network-configuration').ready(function(){
     var location = fs_facade.getExternalURI(DEVICE_SELECTOR_SRC);
     fs_facade.renderTemplate(
         location,
-        {'devices': decoratedDevices},
+        {
+            'devices': decoratedDevices,
+            'hasMultipleDevices': decoratedDevices.length > 1
+        },
         genericErrorHandler,
         function(renderedHTML)
         {
