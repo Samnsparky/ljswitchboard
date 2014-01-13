@@ -922,7 +922,7 @@ $('#register-matrix-holder').ready(function(){
     $('.device-selection-radio').change(function(){
         $('#device-selector').hide();
         $('#device-selector').fadeIn();
-        var serialNum = $('.device-selection-radio').val();
+        var serialNum = $('input[name=deviceSelectionRadios]:checked').val();
         setSelectedDevice(serialNum);
     });
 
