@@ -56,7 +56,8 @@ function DeviceNetworkAdapter(device)
                 if (e.code == FLASH_UNAVAILABLE_ERROR) {
                     throw e;
                 } else {
-                    showError(e);
+                    if (e.code != 54)
+                        showError(e);
                     return defaultValue;
                 }
             }
@@ -72,7 +73,8 @@ function DeviceNetworkAdapter(device)
                 if (e.code == FLASH_UNAVAILABLE_ERROR) {
                     throw e;
                 } else {
-                    showError(e);
+                    if (e.code != 54)
+                        showError(e);
                 }
             }
         };
@@ -593,9 +595,12 @@ function configureForCurrentDeviceSettings (device)
 {
     if (device.isPro()) {
         $('#wifi-note').hide();
+        $('#wifi-controls').show();
+        $('#wifi-advanced-controls').show();
     } else {
         $('#wifi-controls').hide();
         $('#wifi-advanced-controls').hide();
+        $('#wifi-note').show();
     }
 
     if (device.isEthernetEnabled()) {
