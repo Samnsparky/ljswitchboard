@@ -727,6 +727,7 @@ var consolidateDevices = function (listing) {
 **/
 exports.getDevices = function (onError, onSuccess)
 {
+    labjack_driver.closeAllSync();
     labjack_driver.listAll(
         onError,
         function (driverListing) {
