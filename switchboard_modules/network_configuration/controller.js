@@ -12,6 +12,7 @@ var Long = require('long');
 var DEVICE_SELECTOR_SRC = 'network_configuration/device_selector.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var HARDWARE_INSTALLED_REG = 60010;
+var FLASH_UNAVAILABLE_ERROR = 2358;
 
 var selectedDevice;
 
@@ -52,8 +53,12 @@ function DeviceNetworkAdapter(device)
             try {
                 return target();
             } catch (e) {
-                showError(e);
-                return defaultValue;
+                if (e.code == FLASH_UNAVAILABLE_ERROR) {
+                    throw e;
+                } else {
+                    showError(e);
+                    return defaultValue;
+                }
             }
         };
     };
@@ -63,7 +68,12 @@ function DeviceNetworkAdapter(device)
             try {
                 target(val);
             } catch (e) {
-                showError(e);
+                console.log(e);
+                if (e.code == FLASH_UNAVAILABLE_ERROR) {
+                    throw e;
+                } else {
+                    showError(e);
+                }
             }
         };
     };
@@ -462,6 +472,10 @@ function DeviceNetworkAdapter(device)
         device.write('WIFI_APPLY_SETTINGS', 1);
     });
 
+    this.isWiFiConnected = createErrorSafeGetter(function () {
+        return device.read('WIFI_STATUS') == 2900;
+    });
+
     this.device = device;
 }
 
@@ -529,23 +543,41 @@ function writeIP(target)
 **/
 function showCurrentDeviceSettings(device, onError, onSuccess)
 {
-    if (device.isPro()) {
-        $('#wifi-network-name-input').val(device.getWiFiNetwork());
-        $('#wifi-network-password-input').val(device.getWiFiNetworkPassword());
-        $('#wifi-ip-input').val(device.getWiFiIPAddress());
-        $('#wifi-subnet-input').val(device.getWiFiSubnet());
-        $('#wifi-gateway-input').val(device.getWiFiGateway());
+    var curTab = getActiveTabID();
+    try {
+        
+        if (device.isPro()) {
+            $('#wifi-network-name-input').val(device.getWiFiNetwork());
+            $('#wifi-network-password-input').val(device.getWiFiNetworkPassword());
+            $('#wifi-ip-input').val(device.getWiFiIPAddress());
+            $('#wifi-subnet-input').val(device.getWiFiSubnet());
+            $('#wifi-gateway-input').val(device.getWiFiGateway());
+        }
+
+        $('#ethernet-ip-input').val(device.getEthernetIPAddress());
+        $('#ethernet-subnet-input').val(device.getEthernetSubnet());
+        $('#ethernet-gateway-input').val(device.getEthernetGateway());
+        $('#default-dns-input').val(device.getDNS());
+        $('#alt-dns-input').val(device.getAltDNS());
+
+        configureForCurrentDeviceSettings(device);
+
+        onSuccess();
+
+    } catch (e) {
+        if (e.code == FLASH_UNAVAILABLE_ERROR) {
+            $('#flash-read-notice').slideDown();
+            setTimeout(
+                function () {
+                    if (curTab === getActiveTabID())
+                        showCurrentDeviceSettings(device, onError, onSuccess);
+                },
+                3000
+            );
+        } else {
+            showError(e);
+        }
     }
-
-    $('#ethernet-ip-input').val(device.getEthernetIPAddress());
-    $('#ethernet-subnet-input').val(device.getEthernetSubnet());
-    $('#ethernet-gateway-input').val(device.getEthernetGateway());
-    $('#default-dns-input').val(device.getDNS());
-    $('#alt-dns-input').val(device.getAltDNS());
-
-    configureForCurrentDeviceSettings(device);
-
-    onSuccess();
 }
 
 
@@ -616,7 +648,8 @@ function onChangeSelectedDevices()
     var device = new DeviceNetworkAdapter(keeper.getDevice(deviceSerial));
     selectedDevice = device;
 
-    showCurrentDeviceSettings(device, genericErrorHandler, function(){
+    showCurrentDeviceSettings(device, genericErrorHandler, function () {
+        $('#flash-read-notice').slideUp();
         $('#device-configuration-pane').fadeIn();
     });
 }
@@ -663,6 +696,7 @@ function prepareIndividualDeviceConfiguration(decoratedDevice)
 {
     showCurrentDeviceSettings(decoratedDevice, genericErrorHandler, function(){
         $('#device-configuration-pane').css('display', 'inline');
+        $('#flash-read-notice').slideUp();
         $('.switch').bootstrapSwitch();
     });
 }
@@ -681,45 +715,96 @@ function prepareIndividualDeviceConfiguration(decoratedDevice)
 function writeDefaultConfiguationValues(device)
 {
     if (device.isPro()) {
+        if (!device.isWiFiConnected()) {
+            console.log('1');
+            device.setPowerWiFi(0);
+            device.saveDefaultConfig();
+        }
         device.setDefaultWiFiNetwork($('#wifi-network-name-input').val());
+        console.log('2');
         device.setDefaultWiFiNetworkPassword(
             $('#wifi-network-password-input').val());
+        console.log('3');
         device.setDefaultWiFiIPAddress($('#wifi-ip-input').val());
+        console.log('4');
         device.setDefaultWiFiSubnet($('#wifi-subnet-input').val());
+        console.log('5');
         device.setDefaultWiFiGateway($('#wifi-gateway-input').val());
-
-        if ($('#wifi-dhcp-switch').is(':checked')) {
-            device.setWiFiDHCPEnable(1);
-        } else {
-            device.setWiFiDHCPEnable(0);
-        }
-        
-        if($('#wifi-switch').is(':checked')) {
-            device.setPowerWiFi(1);
-        } else {
-            device.setPowerWiFi(0);
-        }
+        console.log('6');
     }
 
     device.setDefaultDNS($('#default-dns-input').val());
+    console.log('11');
     device.setDefaultAltDNS($('#alt-dns-input').val());
+    console.log('12');
     device.setDefaultEthernetIPAddress($('#ethernet-ip-input').val());
+    console.log('13');
     device.setDefaultEthernetSubnet($('#ethernet-subnet-input').val());
+    console.log('14');
     device.setDefaultEthernetGateway($('#ethernet-gateway-input').val());
+    console.log('15');
 
     if($('#ethernet-dhcp-switch').is(':checked')) {
         device.setEthernetDHCPEnable(1);
+        console.log('16');
     } else {
         device.setEthernetDHCPEnable(0);
+        console.log('17');
     }
 
     if ($('#ethernet-switch').is(':checked')) {
         device.setPowerEthernet(1);
+        console.log('18');
     } else {
         device.setPowerEthernet(0);
+        console.log('19');
+    }
+
+    if (device.isPro()) {
+        if ($('#wifi-dhcp-switch').is(':checked')) {
+            console.log('7');
+            device.setWiFiDHCPEnable(1);
+        } else {
+            console.log('8');
+            device.setWiFiDHCPEnable(0);
+        }
+        
+        if($('#wifi-switch').is(':checked')) {
+            console.log('9');
+            device.setPowerWiFi(1);
+        } else {
+            console.log('10');
+            device.setPowerWiFi(0);
+        }
     }
 
     device.saveDefaultConfig();
+    console.log('20');
+}
+
+
+function showFlashWait(callback)
+{
+    var canceled = false;
+    $('#cancel-flash-button').off('click');
+    $('#cancel-flash-button').click(function () {
+        canceled = true;
+        $('#save-indicator').hide();
+        $('#saved-indicator').hide();
+        $('#flash-write-notice').hide();
+        $('#update-button').slideDown();
+    });
+    $('#flash-write-notice').fadeIn();
+    setTimeout(
+        function () {
+            if (canceled)
+                return;
+
+            $('#flash-write-notice').fadeOut();
+            callback();
+        },
+        3000
+    );
 }
 
 
@@ -731,16 +816,22 @@ function writeDefaultConfiguationValues(device)
 **/
 function writeConfigurationValues()
 {
+    $('#update-button').slideUp();
     $('#saved-indicator').hide();
     $('#save-indicator').slideDown();
     try {
         writeDefaultConfiguationValues(selectedDevice);
+        $('#save-indicator').hide();
+        $('#saved-indicator').slideDown();
+        $('#update-button').slideDown();
     }
     catch (e) {
-        showError(e);
+        if (e.code === FLASH_UNAVAILABLE_ERROR) {
+            showFlashWait(writeConfigurationValues);
+        } else {
+            showError(e);
+        }
     }
-    $('#save-indicator').hide();
-    $('#saved-indicator').slideDown();
     return false;
 }
 
