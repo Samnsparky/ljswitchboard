@@ -472,6 +472,10 @@ function DeviceNetworkAdapter(device)
         device.write('WIFI_APPLY_SETTINGS', 1);
     });
 
+    this.isWiFiConnected = createErrorSafeGetter(function () {
+        return device.read('WIFI_STATUS') == 2900;
+    });
+
     this.device = device;
 }
 
@@ -711,46 +715,71 @@ function prepareIndividualDeviceConfiguration(decoratedDevice)
 function writeDefaultConfiguationValues(device)
 {
     if (device.isPro()) {
-        device.setPowerWiFi(0);
+        if (!device.isWiFiConnected()) {
+            console.log('1');
+            device.setPowerWiFi(0);
+            device.saveDefaultConfig();
+        }
         device.setDefaultWiFiNetwork($('#wifi-network-name-input').val());
+        console.log('2');
         device.setDefaultWiFiNetworkPassword(
             $('#wifi-network-password-input').val());
+        console.log('3');
         device.setDefaultWiFiIPAddress($('#wifi-ip-input').val());
+        console.log('4');
         device.setDefaultWiFiSubnet($('#wifi-subnet-input').val());
+        console.log('5');
         device.setDefaultWiFiGateway($('#wifi-gateway-input').val());
-
-        if ($('#wifi-dhcp-switch').is(':checked')) {
-            device.setWiFiDHCPEnable(1);
-        } else {
-            device.setWiFiDHCPEnable(0);
-        }
-        
-        if($('#wifi-switch').is(':checked')) {
-            device.setPowerWiFi(1);
-        } else {
-            device.setPowerWiFi(0);
-        }
+        console.log('6');
     }
 
     device.setDefaultDNS($('#default-dns-input').val());
+    console.log('11');
     device.setDefaultAltDNS($('#alt-dns-input').val());
+    console.log('12');
     device.setDefaultEthernetIPAddress($('#ethernet-ip-input').val());
+    console.log('13');
     device.setDefaultEthernetSubnet($('#ethernet-subnet-input').val());
+    console.log('14');
     device.setDefaultEthernetGateway($('#ethernet-gateway-input').val());
+    console.log('15');
 
     if($('#ethernet-dhcp-switch').is(':checked')) {
         device.setEthernetDHCPEnable(1);
+        console.log('16');
     } else {
         device.setEthernetDHCPEnable(0);
+        console.log('17');
     }
 
     if ($('#ethernet-switch').is(':checked')) {
         device.setPowerEthernet(1);
+        console.log('18');
     } else {
         device.setPowerEthernet(0);
+        console.log('19');
+    }
+
+    if (device.isPro()) {
+        if ($('#wifi-dhcp-switch').is(':checked')) {
+            console.log('7');
+            device.setWiFiDHCPEnable(1);
+        } else {
+            console.log('8');
+            device.setWiFiDHCPEnable(0);
+        }
+        
+        if($('#wifi-switch').is(':checked')) {
+            console.log('9');
+            device.setPowerWiFi(1);
+        } else {
+            console.log('10');
+            device.setPowerWiFi(0);
+        }
     }
 
     device.saveDefaultConfig();
+    console.log('20');
 }
 
 
