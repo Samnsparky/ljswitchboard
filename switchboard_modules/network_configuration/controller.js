@@ -711,6 +711,7 @@ function prepareIndividualDeviceConfiguration(decoratedDevice)
 function writeDefaultConfiguationValues(device)
 {
     if (device.isPro()) {
+        device.setPowerWiFi(0);
         device.setDefaultWiFiNetwork($('#wifi-network-name-input').val());
         device.setDefaultWiFiNetworkPassword(
             $('#wifi-network-password-input').val());

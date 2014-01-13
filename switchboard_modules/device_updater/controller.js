@@ -279,27 +279,42 @@ function updateFirmware (firmwareFileLocation) {
         function (serial, callback) {
             var device = keeper.getDevice(serial);
             var progressListener = new ProgressListener();
-            labjack_t7_upgrade.updateFirmware(
-                device.device,
-                firmwareFileLocation,
-                progressListener
-            ).then(
-                function (bundle) {
-                    var firmwareDisplaySelector = '#';
-                    firmwareDisplaySelector += serial.toString();
-                    firmwareDisplaySelector += '-firmware-display';
-                    device.device = bundle.getDevice();
-                    numUpgraded++;
-                    $(firmwareDisplaySelector).html(
-                        bundle.getFirmwareVersion()
-                    );
-                    $('#complete-devices-display').html(numUpgraded);
-                    callback(null);
-                },
-                function (err) {
-                    callback(err);
+
+            var runUpgrade = function () {
+                labjack_t7_upgrade.updateFirmware(
+                    device.device,
+                    firmwareFileLocation,
+                    progressListener
+                ).then(
+                    function (bundle) {
+                        var firmwareDisplaySelector = '#';
+                        firmwareDisplaySelector += serial.toString();
+                        firmwareDisplaySelector += '-firmware-display';
+                        device.device = bundle.getDevice();
+                        numUpgraded++;
+                        $(firmwareDisplaySelector).html(
+                            bundle.getFirmwareVersion()
+                        );
+                        $('#complete-devices-display').html(numUpgraded);
+                        callback(null);
+                    },
+                    function (err) {
+                        callback(err);
+                    }
+                );
+            };
+
+            try {
+                if (device.read('WIFI_STATUS') != 2900) {
+                    device.write('POWER_WIFI', 0);
+                    setTimeout(runUpgrade, 2000);
                 }
-            );
+            } catch (e) {
+                callback(
+                    'Configuring WIFI failed. Please try upgrading again.'
+                );
+            }
+            
         },
         function (err) {
             if (err) {
