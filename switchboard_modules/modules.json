@@ -36,15 +36,19 @@
         "active": true
     },
     {
-        "name": "power_up_defaults",
-        "active": false
-    },
-    {
         "name": "register_matrix",
         "active": true
     },
     {
         "name": "module_manager",
         "active": false
+    },
+    {
+        "name": "set_defaults",
+        "active": true
+    },
+    {
+        "name": "reset",
+        "active": true
     }
 ]
