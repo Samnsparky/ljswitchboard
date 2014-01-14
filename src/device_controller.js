@@ -348,8 +348,8 @@ function DeviceKeeper()
     };
 
     this.clearRecord = function () {
-        devices = dict();
-    }
+        devices.clear();
+    };
 }
 
 
