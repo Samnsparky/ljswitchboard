@@ -278,12 +278,14 @@ function updateFirmware (firmwareFileLocation) {
         selectedSerials,
         function (serial, callback) {
             var device = keeper.getDevice(serial);
+            var connectionType = device.getConnectionTypeStr();
             var progressListener = new ProgressListener();
 
             var runUpgrade = function () {
                 labjack_t7_upgrade.updateFirmware(
                     device.device,
                     firmwareFileLocation,
+                    connectionType,
                     progressListener
                 ).then(
                     function (bundle) {

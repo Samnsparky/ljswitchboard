@@ -24,6 +24,11 @@ var CONNECTION_TYPE_NAMES = dict({
     '3': 'Ethernet',
     '4': 'Wifi'
 });
+var DRIVER_CONNECTION_TYPE_NAMES = dict({
+    '1': 'LJM_ctUSB',
+    '3': 'LJM_ctETHERNET',
+    '4': 'LJM_ctWIFI'
+});
 
 exports.driver_const = labjack_nodejs.driver_const;
 
@@ -63,6 +68,10 @@ var Device = function (device, serial, connectionType, deviceType)
     **/
     this.getConnectionType = function () {
         return connectionType;
+    };
+
+    this.getConnectionTypeStr = function () {
+        return DRIVER_CONNECTION_TYPE_NAMES.get(this.getConnectionType().toString());
     };
 
     /**

@@ -122,6 +122,7 @@ function DeviceFirmwareBundle()
     var device = null;
     var version = null;
     var serial = null;
+    var connectionType = null;
 
     /**
      * Get the raw contents of the firmware image.
@@ -165,6 +166,11 @@ function DeviceFirmwareBundle()
     this.getFirmwareImageInformation = function()
     {
         return firmwareImageInformation;
+    };
+
+    this.setConnectionType = function(newConnectionType)
+    {
+        connectionType = newConnectionType;
     };
 
     /**
@@ -252,6 +258,11 @@ function DeviceFirmwareBundle()
     this.getSerialNumber = function()
     {
         return serial;
+    };
+
+    this.getConnectionType = function ()
+    {
+        return connectionType;
     };
 }
 
@@ -997,7 +1008,7 @@ exports.waitForEnumeration = function(bundle)
     var getAllConnectedSerials = function () {
         var innerDeferred = q.defer();
 
-        ljmDriver.listAll("LJM_dtT7", "LJM_ctANY",
+        ljmDriver.listAll("LJM_dtT7", bundle.getConnectionType(),
             createSafeReject(innerDeferred),
             function (devicesInfo) {
                 var serials = devicesInfo.map(function (e) {
@@ -1074,7 +1085,8 @@ exports.checkNewFirmware = function(bundle)
  *      firmware from.
  * @return {q.promise} Promise that resolves after the build process completes.
 **/
-exports.updateFirmware = function(device, firmwareFileLocation, progressListener)
+exports.updateFirmware = function(device, firmwareFileLocation,
+    connectionType, progressListener)
 {
     var deferred = q.defer();
 
@@ -1082,6 +1094,7 @@ exports.updateFirmware = function(device, firmwareFileLocation, progressListener
         var innerDeferred = q.defer();
         try {
             bundle.setSerialNumber(device.readSync('SERIAL_NUMBER'));
+            bundle.setConnectionType(connectionType);
         } catch (e) {
             safelyReject(innerDeferred, e);
         }
