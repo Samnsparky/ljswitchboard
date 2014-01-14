@@ -202,6 +202,7 @@ $('#module-chrome').ready(function(){
     $('.close-alert-button').click(closeAlert);
 
     $('#manage-link').click(function () {
+        keeper.clearRecord();
         $('#device-search-msg').show();
         $('#content-holder').html('');
         var onDevicesLoaded = function(devices) {

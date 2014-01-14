@@ -346,6 +346,10 @@ function DeviceKeeper()
         this.removeDevice(device);
         this.addDevice(device);
     };
+
+    this.clearRecord = function () {
+        devices = dict();
+    }
 }
 
 
