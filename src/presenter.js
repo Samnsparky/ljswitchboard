@@ -11,7 +11,16 @@ var async = require('async');
 var handlebars = require('handlebars');
 
 var fs_facade = require('./fs_facade');
-var device_controller = require('./device_controller');
+var device_controller = null;
+try {
+    device_controller = require('./device_controller');
+} catch (e) {
+    showPrematureAlert(
+        '<b>Failed to load JSON constants file or LJM on your machine. Please '+
+        'check the install and restart Kipling</b>. Original error: '+
+        e.toString()
+    );
+}
 
 var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit-TL': 'tall'};
 var CHROME_TEMPLATE_NAME = 'module_chrome.html';
@@ -30,6 +39,17 @@ var ACTIVE_TAB_STR_TEMPLATE = handlebars.compile(ACTIVE_TAB_STR_TEMPLATE_STR);
 
 var currentTab = '';
 var numTabChanges = 0;
+
+
+function showPrematureAlert(content) {
+    $('#premature-error-holder').html(content);
+    setTimeout(function () {
+        $('#premature-error-holder').slideDown();
+        $('#global-load-image-holder').slideUp();
+        $('#searching-devices-message').slideUp();
+        $('#device-search-msg').animate({'width': '90%', 'left': '0%'});
+    }, 1000);
+}
 
 
 /**
@@ -171,6 +191,11 @@ try {
 
     // Register callback to close devices on application close.
     win.on('close', function() {
+        if (device_controller === null) {
+            win.close(true);
+            return;
+        }
+
         async.each(
             device_controller.getDeviceKeeper().getDevices(),
             function (device, callback) {
