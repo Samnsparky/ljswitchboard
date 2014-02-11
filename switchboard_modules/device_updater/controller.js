@@ -393,7 +393,6 @@ $('#network-configuration').ready(function(){
         });
 
         chooser.trigger('click');
-
         return false;
     });
 

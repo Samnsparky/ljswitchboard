@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "main": "index.html",
   "window": {
-    "toolbar": false,
+    "toolbar": true,
     "width": 870,
     "height": 730
   },
@@ -14,6 +14,7 @@
     "dict": "~1",
     "handlebars": "~1",
     "labjack-nodejs": "~0",
+    "ljmmm-parse": "~0.1",
     "lazy": "~1",
     "long": "~1",
     "node.extend": "~1",

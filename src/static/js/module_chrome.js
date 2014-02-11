@@ -22,9 +22,21 @@ var MODULE_LOADING_IMAGE_SRC = MODULE_LOADING_IMAGE_DIR +
 var CURRENT_DEVICE_INDEX = 0; // Device to start off as being selected
 var resizeTimeout;
 
+//Framework constants
+var FRAMEWORK_DIR = 'framework';
+var SINGLE_DEVICE_FRAMEWORK_DIR = FRAMEWORK_DIR + '/kipling-module-framework';
+var SINGLE_DEVICE_FRAMEWORK_PRESENTER = SINGLE_DEVICE_FRAMEWORK_DIR + 
+    '/presenter_framework.js';
+var SINGLE_DEVICE_FRAMEWORK_VIEW = SINGLE_DEVICE_FRAMEWORK_DIR + '/view.html';
+var SINGLE_DEVICE_FRAMEWORK_CONNECTOR = SINGLE_DEVICE_FRAMEWORK_DIR + '/framework_connector.js';
+var SINGLE_DEVICE_FRAMEWORK_CSS = SINGLE_DEVICE_FRAMEWORK_DIR + '/style.css';
+
+// var OPERATION_FAIL_MESSAGE = handlebars.compile(
+//     'Sorry, Kipling encountered an error. Please try again or contact ' + 
+//     'support@labjack.com. Error: {{.}}');
 var OPERATION_FAIL_MESSAGE = handlebars.compile(
-    'Sorry, Kipling encountered an error. Please try again or contact ' + 
-    'support@labjack.com. Error: {{.}}');
+    'Sorry, Kipling encountered an error. ' + 
+    'Error: {{.}}');
 
 
 /**
@@ -52,8 +64,58 @@ function selectModule(name)
         'hasMultipleDevices': keeper.getNumDevices() > 1,
         'currentDevice': devices[CURRENT_DEVICE_INDEX]
     };
-    renderTemplate(src, standardContext, MODULE_CONTENTS_ELEMENT, false,
-        [cssFile], [jsFile], genericErrorHandler);
+
+    //Function that performs a standard load-module
+    var renderNoFrameworkModule = function () {
+        //Renders the module, function lives in 'ljswitchboard/src/presenter.js'
+        renderTemplate(src, standardContext, MODULE_CONTENTS_ELEMENT, false,
+            [cssFile], [jsFile], genericErrorHandler);
+    };
+
+    //Function that loads a module with the singleDevice framework
+    var renderSingleDeviceFrameworkModule = function () {
+        //Get the file path for the presenter_framework that runs the 
+        //  singleDevice framework.
+        //File is found in the non-compiled switchboard_modules/frameworks 
+        //  directory.
+        var framework_location = SINGLE_DEVICE_FRAMEWORK_PRESENTER;
+        var framework_connector = SINGLE_DEVICE_FRAMEWORK_CONNECTOR;
+        var framework_style = SINGLE_DEVICE_FRAMEWORK_CSS;
+
+        //Renders the module, function lives in 'ljswitchboard/src/presenter.js'
+        renderTemplate(
+            SINGLE_DEVICE_FRAMEWORK_VIEW, 
+            standardContext, 
+            MODULE_CONTENTS_ELEMENT, 
+            false,
+            [framework_style, cssFile], 
+            [framework_location, jsFile, framework_connector], 
+            genericErrorHandler);
+        //Render a template based off of a framework:
+        //renderFrameworkTemplate(SINGLE_DEVICE_FRAMEWORK_VIEW);
+    };
+
+    // TODO: Better error handler
+    fs_facade.getModuleInfo(
+        name,
+        function (err) { showAlert(err); },
+        function (moduleInfo) {
+            //Check to see if a framework should be loaded
+            if (moduleInfo.framework) {
+                if(moduleInfo.framework === 'singleDevice') {
+                    //load the 'singleDevice' framework
+                    renderSingleDeviceFrameworkModule();
+                } else {
+                    //if no appropriate framework was found, load as if there 
+                    //  was no framework requested
+                    renderNoFrameworkModule();
+                }
+            } else {
+                //Perform a standard module-load
+                renderNoFrameworkModule();
+            }
+        }
+    )
 }
 
 

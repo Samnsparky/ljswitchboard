@@ -68,11 +68,16 @@ exports.getInternalURI = function(resourceName)
 exports.getExternalURI = function(fullResourceName)
 {
     var resourceNamePieces = fullResourceName.split('/');
-    var moduleName = resourceNamePieces[0];
-    var resourceName = resourceNamePieces[1];
+    var moduleName = "";
+    var resourceName = resourceNamePieces[(resourceNamePieces.length - 1)];
+    var i = 0;
+    for (i = 0; i < (resourceNamePieces.length - 1); i++) {
+        moduleName = path.join(moduleName, resourceNamePieces[i]);
+    }
     var parentDir = exports.getParentDir();
-    return path.join(parentDir, EXTERNAL_RESOURCES_DIR, moduleName,
+    var fullPath = path.join(parentDir, EXTERNAL_RESOURCES_DIR, moduleName,
         resourceName);
+    return fullPath;
 };
 
 

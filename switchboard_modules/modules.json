@@ -50,5 +50,9 @@
     {
         "name": "reset",
         "active": true
+    },
+    {
+        "name": "thermocouple_simple",
+        "active": true
     }
 ]

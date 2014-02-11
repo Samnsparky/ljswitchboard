@@ -124,13 +124,12 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
 
         $.each(jsFiles, function (index, fileLoc)
         {
-            if(internal)
+            if(internal) {
                 fileLoc = fs_facade.getInternalURI(fileLoc);
-            else
+            } else {
                 fileLoc = fs_facade.getExternalURI(fileLoc);
-
-            if(fileLoc === null)
-            {
+            }
+            if(fileLoc === null) {
                 onErr(new Error('Could not find ' + fileLoc + ' .'));
                 return;
             }
@@ -159,7 +158,11 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
     
     numTabChanges++;
     currentTab = name;
-    fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
+    try {
+        fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
+    } catch(err) {
+        console.log('error caught rendering template',err);
+    }
 }
 
 
