@@ -88,14 +88,20 @@ function JQueryWrapper (origJQuery) {
  *      returned from this function.
  * @return {Object} New binding.
 **/
-function cloneBindingInfo (original, binding, template) {
-    return {
-        class: original.class,
-        template: template,
-        binding: binding,
-        direction: original.direction,
-        event: original.event
-    };
+function cloneBindingInfo (original, bindingClass, binding, template) {
+    try{
+        var retVar = {
+            bindingClass: bindingClass,
+            template: template,
+            binding: binding,
+            direction: original.direction,
+            event: original.event
+        };
+    } catch (err) {
+        console.log('ERROR: ',err);
+        var retVar = {};
+    }
+    return retVar;
 }
 
 
@@ -120,6 +126,7 @@ function cloneBindingInfo (original, binding, template) {
  *      with a single binding info object will be returned.
 **/
 function expandBindingInfo (bindingInfo) {
+    var expandedBindingClasses = ljmmm_parse.expandLJMMMName(bindingInfo.bindingClass);
     var expandedBindings = ljmmm_parse.expandLJMMMName(bindingInfo.binding);
     var expandedTemplates = ljmmm_parse.expandLJMMMName(bindingInfo.template);
 
@@ -132,6 +139,7 @@ function expandBindingInfo (bindingInfo) {
     for (var i=0; i<numBindings; i++) {
         var clone = cloneBindingInfo(
             bindingInfo,
+            expandedBindingClasses[i],
             expandedBindings[i],
             expandedTemplates[i]
         );
@@ -173,6 +181,9 @@ function Framework() {
     var writeBindings = dict({});
     var selectedDevices = [];
     var userViewFile = "";
+    var moduleTemplateBindings = {};
+    var moduleName = '';
+    var moduleJsonFiles = [];
 
     this.jquery = jquery;
     this.refreshRate = refreshRate;
@@ -183,6 +194,9 @@ function Framework() {
     this.selectedDevices = selectedDevices;
     this.runLoop = false;
     this.userViewFile = userViewFile;
+    this.moduleTemplateBindings = moduleTemplateBindings;
+    this.moduleName = moduleName;
+    this.moduleJsonFiles = moduleJsonFiles;
 
     var self = this;
 
@@ -265,6 +279,18 @@ function Framework() {
     };
     var fire = this.fire;
 
+    this.convertBindingsToDict = function() {
+        // console.log('(In: convertBindingsToDict) bindings:',self.bindings);
+        // console.log('(In: convertBindingsToDict) templateData:',self.moduleTemplateBindings);
+        // self.bindings.forEach(
+        //     function(value, key){
+        //         console.log(key + ": " + value);
+        //     }
+        // );
+        return self.moduleTemplateBindings;
+    }
+    var convertBindingsToDict = this.convertBindingsToDict;
+
     this.qExecOnModuleLoaded = function() {
         var innerDeferred = q.defer();
         self.fire(
@@ -329,12 +355,27 @@ function Framework() {
     }
     var qExecOnLoadError = this.qExecOnLoadError;
 
+    this.qExecOnUnloadModule = function(err) {
+        self.stopLoop();
+
+        var innerDeferred = q.defer();
+        self.fire(
+            'onUnloadModule',
+            [],
+            innerDeferred.reject,
+            innerDeferred.resolve
+        );
+        return innerDeferred.promise;
+    }
+    var qExecOnUnloadModule = this.qExecOnUnloadModule;
+
     this.qRenderModuleTemplate = function() {
         var innerDeferred = q.defer();
         self.setDeviceView(
             self.userViewFile,
-            undefined,
-            undefined, 
+            //['thermocouple_simple/moduleData.json'],
+            self.moduleJsonFiles,
+            self.convertBindingsToDict(), 
             innerDeferred.reject, 
             innerDeferred.resolve
         );
@@ -360,7 +401,6 @@ function Framework() {
             }
         );
 
-        console.log('devices', selectedDevices);
         self._SetSelectedDevices(selectedDevices);
         innerDeferred.resolve();
         return innerDeferred.promise;
@@ -437,14 +477,22 @@ function Framework() {
             self.runLoop = shouldContinue;
         }
 
-        if (newBinding['class'] === undefined) {
+        if (newBinding['bindingClass'] === undefined) {
             self.fire(
                 'onLoadError',
-                [ 'Config binding missing class' ],
+                [ 'Config binding missing bindingClass' ],
                 onErrorHandle
             );
             return;
         }
+        // if (newBinding['templateKey'] === undefined) {
+        //     self.fire(
+        //         'onLoadError',
+        //         [ 'Config binding missing templateKey' ],
+        //         onErrorHandle
+        //     );
+        //     return;
+        // }
 
         if (newBinding['template'] === undefined) {
             self.fire(
@@ -453,7 +501,7 @@ function Framework() {
                 onErrorHandle
             );
             return;
-        }
+        }        
 
         if (newBinding['binding'] === undefined) {
             self.fire(
@@ -491,6 +539,14 @@ function Framework() {
             return;
         }
 
+        try{
+            if(self.moduleTemplateBindings[newBinding.bindingClass] === undefined) {
+                self.moduleTemplateBindings[newBinding.bindingClass] = [];
+            }
+            self.moduleTemplateBindings[newBinding.bindingClass].push(newBinding);
+        } catch (err) {
+            console.log('here');
+        }
         bindings.set(newBinding.template, newBinding);
         
 
@@ -514,6 +570,14 @@ function Framework() {
     };
     var putConfigBinding = this.putConfigBinding;
 
+    this.putConfigBindings = function(bindings) {
+        var numBindings = bindings.length;
+        for(var i = 0; i < numBindings; i++) {
+            self.putConfigBinding(bindings[i]);
+        }
+    }
+    var putConfigBindings = this.putConfigBindings;
+
     this._writeToDevice = function (bindingInfo) {
         var jquerySelector = '#' + bindingInfo.template;
         var newVal = self.jquery.val(jquerySelector);
@@ -523,7 +587,7 @@ function Framework() {
             self.fire(
                 'onRegisterWrite',
                 [
-                    bindingInfo.binding,
+                    bindingInfo,
                     newVal
                 ],
                 innerDeferred.reject,
@@ -532,26 +596,46 @@ function Framework() {
             return innerDeferred.promise;
         };
 
-        var writeToDevice = function () {
+        var writeToDevice = function (skipWrite) {
             var innerDeferred = q.defer();
             var device = self.getSelectedDevice();
-            device.write(bindingInfo.binding, newVal);
-            innerDeferred.resolve();
+            if(bindingInfo.binding.split('-').length == 2) {
+                if(bindingInfo.binding.split('-')[1] === 'invalid') {
+                    innerDeferred.resolve(false);
+                    return innerDeferred.promise;
+                }
+            }
+            if(typeof(skipWrite) === undefined) {
+                device.write(bindingInfo.binding, newVal);
+                innerDeferred.resolve(true);
+            } else if(typeof(skipWrite) === "boolean") {
+                if(skipWrite == false) {
+                    device.write(bindingInfo.binding, newVal);
+                    innerDeferred.resolve(true);
+                }
+                else {
+                    innerDeferred.resolve(false);
+                }
+            } else {
+                innerDeferred.resolve(false);
+            }
             return innerDeferred.promise;
         }
 
-        var alertRegisterWritten = function () {
-            var innerDeferred = q.defer();
-            self.fire(
-                'onRegisterWritten',
-                [
-                    bindingInfo.binding,
-                    newVal
-                ],
-                innerDeferred.reject,
-                innerDeferred.resolve
-            );
-            return innerDeferred.promise;
+        var alertRegisterWritten = function (wasNotHandledExternally) {
+            if(wasNotHandledExternally) {
+                var innerDeferred = q.defer();
+                self.fire(
+                    'onRegisterWritten',
+                    [
+                        bindingInfo.binding,
+                        newVal
+                    ],
+                    innerDeferred.reject,
+                    innerDeferred.resolve
+                );
+                return innerDeferred.promise;
+            }
         };
 
         var deferred = q.defer();
@@ -634,6 +718,8 @@ function Framework() {
 
         if (!onSuccess)
             onSuccess = noop;
+        // console.log('context (analogInputs)', context);
+        // console.log('moduleTemplateBindings:', self.moduleTemplateBindings);
 
         // Create an error handler
         var reportLoadError = function (details) {
@@ -658,7 +744,8 @@ function Framework() {
                         fullURI,
                         callback,
                         function (result) {
-                            var name = location.replace(/\.json/g, '');
+                            var lName = location.replace(/\.json/g, '');
+                            var name = lName.split('/')[lName.split('/').length-1];
                             jsonTemplateVals[name] = result;
                             callback(null); 
                         }
@@ -766,6 +853,7 @@ function Framework() {
             jquery.on(value.selector, value.event, listener);
         });
     };
+    var establishConfigControlBindings = this.establishConfigControlBindings;
 
     /**
      * Stop the module's refresh loop.
@@ -786,7 +874,6 @@ function Framework() {
 
     this.qConfigureTimer = function() {
         var innerDeferred = q.defer();
-        console.log('inTimerConfig');
         setTimeout(self.loopIteration, self.refreshRate);
         innerDeferred.resolve();
         return innerDeferred.promise;
@@ -800,7 +887,6 @@ function Framework() {
      *      during the loop iteration.
     **/
     this.loopIteration = function () {
-        console.log('here');
         var deferred = q.defer();
 
         if (!self.runLoop) {
@@ -845,6 +931,15 @@ function Framework() {
             );
             return innerDeferred.promise;
         };
+        var checkModuleStatus = function(bindingsInfo) {
+            var innerDeferred = q.defer();
+            if(self.moduleName === getActiveTabID()) {
+                innerDeferred.resolve(bindingsInfo);
+            } else {
+                innerDeferred.reject(bindingsInfo);
+            }
+            return innerDeferred.promise;
+        }
 
         var requestDeviceValues = function (bindingsInfo) {
             var innerDeferred = q.defer();
@@ -916,14 +1011,15 @@ function Framework() {
         // var setTimeout = function () {
             
         // };
-
+        //checkModuleStatus()
         getNeededAddresses()
         .then(alertRefresh, reportError)
         .then(requestDeviceValues, reportError)
         .then(processDeviceValues, reportError)
         .then(alertOn, reportError)
         .then(alertRefreshed, reportError)
-        .then(self.qConfigureTimer, reportError)
+        .then(checkModuleStatus, reportError)
+        .then(self.qConfigureTimer, self.qExecOnUnloadModule)
         .then(deferred.resolve, deferred.reject);
 
         return deferred.promise;
@@ -964,13 +1060,46 @@ function Framework() {
         self.userViewFile = viewLoc;
         //self.fire('onModuleLoaded')
     };
+    this.configureFrameworkData = function(jsonDataFiles) {
+        moduleJsonFiles = jsonDataFiles;
+        self.moduleJsonFiles = jsonDataFiles;
+    };
+    var configureFrameworkData = this.configureFrameworkData;
+
+    this.saveModuleName = function() {
+        moduleName = getActiveTabID();
+        self.moduleName = getActiveTabID();
+    };
+    var saveModuleName = this.saveModuleName;
+
+    this.setCustomContext = function(data) {
+        moduleTemplateBindings['custom'] = data;
+        self.moduleTemplateBindings['custom'] = data;
+    }
+    var setCustomContext = this.setCustomContext;
+
+    this.tabClickHandler = function() {
+        var visibleTabs = self.jquery.get('.module-tab');
+        visibleTabs.off('click.sdFramework'+self.moduleName);
+        self.qExecOnUnloadModule();
+    }
+    var tabClickHandler = this.tabClickHandler;
+
+    this.attachNavListeners = function() {
+        var visibleTabs = self.jquery.get('.module-tab');
+        visibleTabs.on('click.sdFramework'+getActiveTabID(),self.tabClickHandler);
+    }
+    var attachNavListeners = this.attachNavListeners;
+
     this.startFramework = function() {
         var deferred = q.defer();
         
         self.qExecOnModuleLoaded()
+        .then(self.attachNavListeners, self.qExecOnLoadError)
         .then(deferred.resolve, deferred.reject);
         return deferred.promise;
     };
+
     this.runFramework = function() {
         var deferred = q.defer();
         var handleError = function(details) {
@@ -993,8 +1122,15 @@ function Framework() {
             innerDeferred.resolve();
             return innerDeferred.promise;
         }
+        var setModuleName = function() {
+            var innerDeferred = q.defer();
+            self.saveModuleName();
+            innerDeferred.resolve();
+            return innerDeferred.promise;
+        }
         
         checkFirstDevice()
+        .then(setModuleName, self.qExecOnLoadError)
         .then(self.qUpdateActiveDevice, self.qExecOnLoadError)
         .then(self.qExecOnDeviceSelected, self.qExecOnLoadError)
         .then(self.qRenderModuleTemplate, self.qExecOnLoadError)

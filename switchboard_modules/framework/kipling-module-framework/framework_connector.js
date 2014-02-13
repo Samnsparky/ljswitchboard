@@ -74,12 +74,15 @@ try {
             }
 
             //figure out what tab is loaded:
-            activeTabID = $('.module-tab.selected').attr('id');
-            tabName = activeTabID.split('-module-tab')[0];
-            userViewPath = tabName + '/view.html';
+            var activeTabID = $('.module-tab.selected').attr('id');
+            var tabName = activeTabID.split('-module-tab')[0];
+            var moduleViewPath = tabName + '/view.html';
+            var moduleDataPath = tabName + '/moduleData.json';
 
-            // Configure the framework to use the user's 'view.html' by default
-            sdFramework.configFramework(userViewPath);
+            // Configure the framework to use the module's 'view.html' by default
+            // Also configure the framework to use module's data, 'moduleData.json'
+            sdFramework.configFramework(moduleViewPath);
+            sdFramework.configureFrameworkData([moduleDataPath]);
 
             // Start the framework
             sdFramework.startFramework();
@@ -98,41 +101,17 @@ try {
         'is being used.');
 }
 
-
-console.log('finished connecting module to framework');
 /**
  * Initialization logic for the analog inputs module.
 **/
 $('#single-device-framework-obj').ready(function(){
-    //Listener for device selection radio buttons
-    //$('.device-selection-radio').click(changeSelectedDevice);
-    //$('.device-selection-radio').first().prop('checked', true);
-
     //gives access to device
     var keeper = device_controller.getDeviceKeeper();
     //list of devices
-    devices = keeper.getDevices();
-    //Performing 'on-window-load' stuff
-    //loadInputs().then(loadTCTypes).then(changeSelectedDevice);
+    devices = keeper.getDevices();    
 
-
-    console.log('inDoc-ready function');
-    
-
-    // Running the framework
+    // Run the framework
     sdFramework.runFramework();
-
-    //console.log('testing moduleLoad execution');
-    // m.onModuleLoad();
-
-    // sdFramework.setDeviceView('thermocouple_simple/view.html', undefined, undefined, 
-    //     function() {
-    //         console.log('Error setting device view');
-    //     },
-    //     function() {
-    //         console.log('Successfully set device view');
-    //     });
-    //f.establishConfigControlBindings();
 });
 
 //End bracket for autoLinkToFramework

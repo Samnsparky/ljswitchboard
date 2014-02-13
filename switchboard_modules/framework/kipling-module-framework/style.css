@@ -6,26 +6,6 @@
     padding: 20px;
 }
 
-#range-dropdown-holder .btn-group
-{
-    margin-right: 15px;
-}
-
-.span-dropdown
-{
-    width: 87%;
-}
-
-.span-dropdown .btn-group
-{
-    width: 87%;
-}
-
-.dropdown-toggle
-{
-    width: 87%;
-}
-
 .subsection
 {
     margin: 50px 0 50px 0;
@@ -40,6 +20,11 @@
 {
     padding: 15px 10px 0 0;
     text-align: right;
+}
+.centered-left
+{
+    padding: 15px 10px 0 0;
+    text-align: left;
 }
 
 .input-row:nth-child(odd)
@@ -61,12 +46,32 @@
 
 .dropdown-span
 {
-    padding-right: 9px;
-    text-align: center;
+    padding-left: 0px;
+    text-align: left;
 }
 
 .caret
 {
     margin-top: 3px !important;
 }
+.table-dataHeader th {
+    text-transform: none;
+}
+.table-dataRow th {
+    color:black;
+    text-transform: none;
+}
+.table th, .table td {
+    padding:2px;
+}
+.options-toggle-button {
+    cursor:pointer;
+}
+.options-toggle-button:hover {
+    color:grey;
+}
+.wrap-select {
+    width: inherit;
+    margin-bottom: 0px;
+} 
 

@@ -83,8 +83,9 @@ function selectModule(name)
         var framework_style = SINGLE_DEVICE_FRAMEWORK_CSS;
 
         //Renders the module, function lives in 'ljswitchboard/src/presenter.js'
-        renderTemplate(
+        renderTemplateFramework(
             SINGLE_DEVICE_FRAMEWORK_VIEW, 
+            src,
             standardContext, 
             MODULE_CONTENTS_ELEMENT, 
             false,

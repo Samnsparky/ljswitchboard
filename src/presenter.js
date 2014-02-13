@@ -164,6 +164,11 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
         console.log('error caught rendering template',err);
     }
 }
+function renderTemplateFramework(frameworkName, name, context, dest, internal, cssFiles, jsFiles, onErr) {
+    renderTemplate(frameworkName, context, dest, internal, cssFiles, jsFiles, onErr);
+    currentTab = name;
+}
+
 
 
 /**
@@ -249,3 +254,5 @@ function getActiveTabID()
         { 'name': currentTab, 'counter': numTabChanges }
     );
 }
+
+
