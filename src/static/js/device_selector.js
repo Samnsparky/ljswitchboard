@@ -5,6 +5,7 @@
 **/
 
 var handlebars = require('handlebars');
+var q = require('q');
 
 var device_controller = require('./device_controller');
 
@@ -212,7 +213,6 @@ function refreshDevices()
     $('#content-holder').html('');
     var onDevicesLoaded = function(devices) {
         var context = {'connection_types': includeDeviceDisplaySizes(devices)};
-        console.log(devices);
         if (devices.length == 0)
             context.noDevices = true;
         $('#device-search-msg').hide();
@@ -233,6 +233,211 @@ function refreshDevices()
     );
 }
 
+function kiplingStartupManager() {
+
+    var startupConfigData = [];
+
+
+    var handleErrors = function() {
+        var innerDeferred = q.defer();
+        innerDeferred.reject();
+        return innerDeferred.promise;
+    }
+
+    this.loadConfigData = function() {
+        var innerDeferred = q.defer();
+        var filePath = fs_facade.getExternalURI('startupConfig.json');
+
+        fs_facade.getJSON(
+            filePath,
+            function(){
+                console.log('startupConfig.json, fileNotFound');
+                innerDeferred.reject();
+            },
+            function(contents){
+                innerDeferred.resolve(contents);
+            }
+        );
+        return innerDeferred.promise;
+    }
+    var loadConfigData = this.loadConfigData;
+
+    this.checkIfAutoConfigure = function(configData) {
+        var innerDeferred = q.defer();
+        if(configData.autoConnectToDevices !== undefined) {
+            if(configData.autoConnectToDevices){
+                innerDeferred.resolve(configData);
+            } else {
+                innerDeferred.reject();
+            }
+        } else {
+            innerDeferred.reject();
+        }
+        return innerDeferred.promise;
+    }
+    var checkIfAutoConfigure = this.checkIfAutoConfigure;
+
+    this.getDeviceData = function() {
+        var devices = [];
+        var serialNumbers = [];
+        var connectionTypes = [];
+        var devObjs = $('.devices-enumeration .device');
+        var numDevicesFound = devObjs.length;
+
+
+        var i;
+        for(i = 0; i < numDevicesFound; i++) {
+            var dev = devObjs.eq(i);
+            var sn = dev.find('#serial').html();
+            var conTypes = [];
+            var conButtonObjects = dev.find('.connect-button');
+            var numConTypes = conButtonObjects.length;
+            var dtText = dev.find('#type').html();
+            var dt = 0;
+            if(dtText === 'T7 Pro') {
+                dt = 'LJM_dtT7';
+            } else if(dtText === 'T7') {
+                dt = 'LJM_dtT7';
+            }
+
+
+            // var deviceInfo = event.target.id.split('-');
+            // var jqueryID = '#' + event.target.id;
+            // var serial = deviceInfo[1];
+            // var ipAddress = deviceInfo[2].replace(/\_/g, '.');
+            // var connectionType = parseInt(deviceInfo[4]);
+            // var deviceType = parseInt(deviceInfo[5]);
+
+            var j;
+            for(j = 0; j < numConTypes; j++) {
+                conTypes.push(
+                    {
+                        "type": conButtonObjects.eq(j).html().split(' ')[1],
+                        "button": conButtonObjects.eq(j)
+                    }
+                )
+            }
+            devices.push(
+                {
+                    "serialNumber": sn,
+                    "connectionTypes": conTypes,
+                    "deviceType": dt,
+
+
+                }
+            );
+        }
+        return devices;
+    }
+    var getDeviceData = getDeviceData;
+
+    this.connectToDevices = function(configData) {
+        var innerDeferred = q.defer();
+        var foundDevices = self.getDeviceData();
+        var moveToModule = false;
+        var numDevicesConnected = 0;
+        var numDevicesToConnectTo = 0;
+
+        var openDevice = function(sn, ct, dt) {
+            if(ct === 'Wifi') {
+                ct = 'LJM_ctWIFI';
+            } else if(ct === 'Ethernet') {
+                ct = 'LJM_ctETHERNET';
+            } else if(ct === 'USB') {
+                ct = 'LJM_ctUSB';
+            }
+            // console.log('ct',ct);
+            device_controller.openDevice(
+                sn, 
+                '', 
+                ct, 
+                dt,
+                function() {
+                    numDevicesConnected += 1;
+                    if(numDevicesConnected == numDevicesToConnectTo) {
+                        innerDeferred.resolve(configData);
+                    }
+                }, 
+                function(device) {
+                    numDevicesConnected += 1;
+                    device_controller.getDeviceKeeper().addDevice(device);
+                    if(numDevicesConnected == numDevicesToConnectTo) {
+                        innerDeferred.resolve(configData);
+                    }
+                }
+            );
+        }
+
+        configData.ljmDeviceParameters.forEach(function(reqDevice){
+            foundDevices.forEach(function(foundDevice) {
+                if(reqDevice.serialNumber === foundDevice.serialNumber) {
+                    foundDevice.connectionTypes.forEach(function(cType){
+                        if(reqDevice.connectionType === cType.type) {
+                            cType.button.click();
+                            // openDevice(
+                            //     foundDevice.serialNumber,
+                            //     cType.type,
+                            //     foundDevice.deviceType
+                            // );
+                            numDevicesToConnectTo += 1;
+                            moveToModule = true;
+                        }
+                    })
+                }
+            });
+        });
+        if(!moveToModule) {
+            innerDeferred.reject();
+        } else {
+            innerDeferred.resolve(configData);
+        }
+        return innerDeferred.promise;
+    }
+    var connectToDevices = this.connectToDevices;
+
+    this.configureStartUpModule = function(configData) {
+        var innerDeferred = q.defer();
+
+        if(configData.overrideAutoModuleLoad !== undefined) {
+            if(configData.overrideAutoModuleLoad){
+                START_UP_MODULE_OVERRIDE = configData.overrideAutoModuleLoad;
+                START_UP_MODULE_NAME = configData.moduleName;
+            }
+        }
+
+        innerDeferred.resolve(configData);
+        return innerDeferred.promise;
+    }
+    var configureStartUpModule = this.configureStartUpModule;
+    this.introduceDelay = function(configData) {
+        var innerDeferred = q.defer();
+        setTimeout(innerDeferred.resolve, 2000);
+        return innerDeferred.promise;
+    }
+    this.clickFinishButton = function() {
+        var innerDeferred = q.defer();
+        $('#finish-button').click();
+        innerDeferred.resolve();
+        return innerDeferred.promise;
+    }
+    var clickFinishButton = this.clickFinishButton;
+    
+
+    this.autoStart = function() {
+        var deferred = q.defer();
+        self.loadConfigData()
+        .then(self.configureStartUpModule, handleErrors)
+        .then(self.checkIfAutoConfigure, handleErrors)
+        .then(self.connectToDevices, handleErrors)
+        .then(self.introduceDelay, handleErrors)
+        .then(self.clickFinishButton, handleErrors)
+        .then(deferred.resolve, deferred.reject)
+
+        return deferred.promise;
+    }
+
+    var self = this;
+}
 
 $('#device-selector-holder').ready(function(){
     $('.show-connect-button').click(showConnectButtons);
@@ -243,8 +448,12 @@ $('#device-selector-holder').ready(function(){
     $('#refresh-button').click(refreshDevices);
     $('#finish-button').click(moveToModules);
 
+    
     var deviceKeeper = device_controller.getDeviceKeeper();
 
     if(deviceKeeper.getNumDevices() > 0)
         $('#finish-button').show();
+
+    var starter = new kiplingStartupManager();
+    starter.autoStart();
 });

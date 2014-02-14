@@ -320,7 +320,13 @@ $('#module-chrome').ready(function(){
             displayActiveModulesWithEvents(
                 modules,
                 genericErrorHandler,
-                function () {selectModule(modules[0].name);}
+                function () {
+                    if(START_UP_MODULE_OVERRIDE) {
+                        selectModule(START_UP_MODULE_NAME);
+                    } else {
+                        selectModule(modules[0].name);
+                    }
+                }
             );
         }
     );

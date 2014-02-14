@@ -149,6 +149,17 @@ function expandBindingInfo (bindingInfo) {
     return newBindingsInfo;
 }
 
+/**
+ * Force a redraw on the rendering engine.
+**/
+function runRedraw()
+{
+    console.log('running runRedraw');
+    document.body.style.display='none';
+    document.body.offsetHeight; // no need to store this anywhere, the reference is enough
+    document.body.style.display='block';
+}
+
 
 /**
  * Object that manages the modules using the Kipling Module Framework.
@@ -316,6 +327,7 @@ function Framework() {
     var qExecOnDeviceSelected = this.qExecOnDeviceSelected;
 
     this.qExecOnTemplateLoaded = function() {
+        setTimeout(runRedraw,200);
         var innerDeferred = q.defer();
         self.fire(
             'onTemplateLoaded',
@@ -775,16 +787,36 @@ function Framework() {
             return deferred.promise;
         };
 
+        this.introduceDelay = function() {
+            console.log('introduceDelay');
+            var innerDeferred = q.defer();
+            setTimeout(innerDeferred.resolve, 200);
+            return innerDeferred.promise;
+        }
+        this.forceRefresh = function() {
+            console.log('forceRefresh');
+            var innerDeferred = q.defer();
+            runRedraw();
+            innerDeferred.resolve();
+            return innerDeferred.promise;
+        }
+
         var injectHTMLTemplate = function (htmlContents) {
+            console.log('injectHTMLTemplate');
             var deferred = q.defer();
             // var moduleDiv = $(DEVICE_VIEW_TARGET);
             // moduleDiv.html(htmlContents);
+            
+            htmlContents = '<div class="framework-template">' + htmlContents + '</div>';
             self.jquery.html(DEVICE_VIEW_TARGET, htmlContents);
+            $('.framework-template').ready(runRedraw);
+
             deferred.resolve();
             return deferred.promise;
         };
 
         var attachListeners = function () {
+            console.log('attachListeners');
             self.jquery.on(
                 '.device-selection-radio',
                 'click',
@@ -797,6 +829,8 @@ function Framework() {
         loadJSONFiles()
         .then(prepareHTMLTemplate, reportLoadError)
         .then(injectHTMLTemplate, reportLoadError)
+        //.then(introduceDelay, reportLoadError)
+        //.then(forceRefresh, reportLoadError)
         .then(attachListeners, reportLoadError)
         .then(onSuccess, reportLoadError);
     };

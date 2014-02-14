@@ -181,11 +181,13 @@ function module() {
                 var tcTempMetric = $('#'+reg+'-thermocouple-metric-select').val();
                 // console.log('overRidden',reg, 'type:',value, 'metric',tcTempMetric);
                 self.configureChannel(framework.getSelectedDevice(),reg,parseInt(value),parseInt(tcTempMetric));
+                
             } else if(binding.template === (reg + '-thermocouple-metric-select')) {
                 overRideWrite = true;
                 var tcType = $('#'+reg+'-thermocouple-type-select').val();
                 // console.log('overRidden',reg, 'type',tcType, 'metric:',value);
                 self.configureChannel(framework.getSelectedDevice(),reg,parseInt(tcType),parseInt(value));
+
             } else if(binding.template === (reg + '-options-toggle-button')) {
                 overRideWrite = true;
                 var btnObj = $('#'+binding.template);

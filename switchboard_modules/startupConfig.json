@@ -1,0 +1,18 @@
+{
+    "autoConnectToDevices": true,
+    "ljmDeviceParameters": 
+    [
+        {
+            "serialNumber":"470010620",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010533",
+            "connectionType":"Ethernet"
+        }
+    ],
+    "overrideAutoModuleLoad": true,
+    "moduleName": "thermocouple_simple",
+    "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
+
+}

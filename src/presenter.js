@@ -36,6 +36,8 @@ var ACTIVE_TAB_STR_TEMPLATE_STR = '{{ name }}-{{ counter }}';
 var LATE_LOADED_CSS_TEMPLATE = handlebars.compile(LATE_LOADED_CSS_TEMPLATE_STR);
 var LATE_LOADED_JS_TEMPLATE = handlebars.compile(LATE_LOADED_JS_TEMPLATE_STR);
 var ACTIVE_TAB_STR_TEMPLATE = handlebars.compile(ACTIVE_TAB_STR_TEMPLATE_STR);
+var START_UP_MODULE_OVERRIDE = false;
+var START_UP_MODULE_NAME = 'thermocouple_simple';
 
 var currentTab = '';
 var numTabChanges = 0;
@@ -164,6 +166,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
         console.log('error caught rendering template',err);
     }
 }
+
 function renderTemplateFramework(frameworkName, name, context, dest, internal, cssFiles, jsFiles, onErr) {
     renderTemplate(frameworkName, context, dest, internal, cssFiles, jsFiles, onErr);
     currentTab = name;
