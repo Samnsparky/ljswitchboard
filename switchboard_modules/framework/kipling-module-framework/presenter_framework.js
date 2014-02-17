@@ -618,8 +618,11 @@ function Framework() {
         var writeToDevice = function (skipWrite) {
             var innerDeferred = q.defer();
             var device = self.getSelectedDevice();
-            if(bindingInfo.binding.split('-').length == 2) {
-                if(bindingInfo.binding.split('-')[1] === 'invalid') {
+            var invalidString = '-invalid';
+            var baseStr = bindingInfo.binding;
+            var searchIndex = baseStr.search(invalidString);
+            if( searchIndex >= 0) {
+                if((baseStr.length - searchIndex - invalidString.length) == 0) {
                     innerDeferred.resolve(false);
                     return innerDeferred.promise;
                 }

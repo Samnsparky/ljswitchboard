@@ -60,6 +60,8 @@ function module() {
     // Initialize variable where module config data will go.
     var moduleContext = {};
 
+    var INITIALIZED_CLICK_HANDLERS = false;
+
     /** 
      * Function to simplify configuring thermocouple channels.
      * ex: configureChannel(device, 'AIN0', 'TypeK', 'K');
@@ -163,14 +165,19 @@ function module() {
     }
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        var moduleBindings = [
-            {bindingClass: baseReg+'-thermocouple-type-select',  template: baseReg+'-thermocouple-type-select', binding: baseReg+'_EF_TYPE',  direction: 'write', event: 'change'},
-            {bindingClass: baseReg+'-thermocouple-metric-select',  template: baseReg+'-thermocouple-metric-select', binding: baseReg+'_EF_CONFIG_A',  direction: 'write', event: 'change'},
-            {bindingClass: baseReg+'-options-toggle-button',  template: baseReg+'-options-toggle-button', binding: baseReg+'-invalid',  direction: 'write', event: 'click'}
-        ];
+        if(!INITIALIZED_CLICK_HANDLERS) {
+            var moduleBindings = [
+                {bindingClass: baseReg+'-thermocouple-type-select',  template: baseReg+'-thermocouple-type-select', binding: baseReg+'_EF_TYPE',  direction: 'write', event: 'change'},
+                {bindingClass: baseReg+'-thermocouple-metric-select',  template: baseReg+'-thermocouple-metric-select', binding: baseReg+'_EF_CONFIG_A',  direction: 'write', event: 'change'},
+                {bindingClass: baseReg+'-options-toggle-button',  template: baseReg+'-options-toggle-button', binding: baseReg+'-invalid',  direction: 'write', event: 'click'}
+            ];
 
-        // Save the bindings to the framework instance.
-        framework.putConfigBindings(moduleBindings);
+            // Save the bindings to the framework instance.
+            framework.putConfigBindings(moduleBindings);
+
+            // Save that click-handlers have been configured
+            INITIALIZED_CLICK_HANDLERS = true;
+        }
         onSuccess();
     }
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
