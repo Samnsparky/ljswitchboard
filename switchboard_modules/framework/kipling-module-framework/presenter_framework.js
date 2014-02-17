@@ -159,6 +159,12 @@ function runRedraw()
     document.body.offsetHeight; // no need to store this anywhere, the reference is enough
     document.body.style.display='block';
 }
+function qRunRedraw() {
+    var innerDeferred = q.defer();
+    runRedraw();
+    innerDeferred.resolve
+    return innerDeferred.promise; 
+}
 
 
 /**
@@ -316,6 +322,7 @@ function Framework() {
 
     this.qExecOnDeviceSelected = function() {
         var innerDeferred = q.defer();
+        console.log('in onDeviceSelected');
         self.fire(
             'onDeviceSelected',
             [self.getSelectedDevice()],
@@ -327,8 +334,8 @@ function Framework() {
     var qExecOnDeviceSelected = this.qExecOnDeviceSelected;
 
     this.qExecOnTemplateLoaded = function() {
-        setTimeout(runRedraw,200);
         var innerDeferred = q.defer();
+        console.log('in onTemplateLoaded');
         self.fire(
             'onTemplateLoaded',
             [],
@@ -1138,7 +1145,7 @@ function Framework() {
         var deferred = q.defer();
         var handleError = function(details) {
             var innerDeferred = q.defer();
-            console.log('booo... error', details);
+            console.log('Presenter_Framework, runFramework Error:', details);
             deferred.reject(details);
             innerDeferred.resolve();
             return innerDeferred.promise;
@@ -1171,6 +1178,7 @@ function Framework() {
         .then(displayModuleTemplate, self.qExecOnLoadError)
         .then(self.qExecOnTemplateLoaded, self.qExecOnLoadError)
         .then(self.startLoop, self.qExecOnLoadError)
+        .then(qRunRedraw, self.qExecOnLoadError)
         .then(deferred.resolve, deferred.reject);
         return deferred.promise;
     }
@@ -1180,9 +1188,9 @@ var singleDeviceFramework = Framework;
 try {
     exports.Framework = Framework
 } catch (err) {
-    //console.log('error defining presenter_framework.js exports');
-    
+    console.log('error defining presenter_framework.js exports', err);  
 }
+
 // console.log('initializing framework & module');
 // Initialize the framework
 var sdFramework = new Framework();

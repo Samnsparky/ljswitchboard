@@ -54,5 +54,10 @@
     {
         "name": "thermocouple_simple",
         "active": true
+    },
+    {
+        "name": "script_debugger",
+        "active": true
     }
+
 ]

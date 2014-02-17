@@ -388,7 +388,8 @@ function kiplingStartupManager() {
         });
         if(!moveToModule) {
             innerDeferred.reject();
-        } else {
+        } 
+        else {
             innerDeferred.resolve(configData);
         }
         return innerDeferred.promise;
