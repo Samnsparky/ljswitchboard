@@ -154,7 +154,6 @@ function expandBindingInfo (bindingInfo) {
 **/
 function runRedraw()
 {
-    console.log('running runRedraw');
     document.body.style.display='none';
     document.body.offsetHeight; // no need to store this anywhere, the reference is enough
     document.body.style.display='block';
@@ -322,7 +321,6 @@ function Framework() {
 
     this.qExecOnDeviceSelected = function() {
         var innerDeferred = q.defer();
-        console.log('in onDeviceSelected');
         self.fire(
             'onDeviceSelected',
             [self.getSelectedDevice()],
@@ -564,7 +562,7 @@ function Framework() {
             }
             self.moduleTemplateBindings[newBinding.bindingClass].push(newBinding);
         } catch (err) {
-            console.log('here');
+            console.log('Error in presenter_framework.js, putConfigBinding',err);
         }
         bindings.set(newBinding.template, newBinding);
         
@@ -798,13 +796,11 @@ function Framework() {
         };
 
         this.introduceDelay = function() {
-            console.log('introduceDelay');
             var innerDeferred = q.defer();
             setTimeout(innerDeferred.resolve, 200);
             return innerDeferred.promise;
         }
         this.forceRefresh = function() {
-            console.log('forceRefresh');
             var innerDeferred = q.defer();
             runRedraw();
             innerDeferred.resolve();
@@ -812,7 +808,6 @@ function Framework() {
         }
 
         var injectHTMLTemplate = function (htmlContents) {
-            console.log('injectHTMLTemplate');
             var deferred = q.defer();
             // var moduleDiv = $(DEVICE_VIEW_TARGET);
             // moduleDiv.html(htmlContents);
@@ -826,7 +821,6 @@ function Framework() {
         };
 
         var attachListeners = function () {
-            console.log('attachListeners');
             self.jquery.on(
                 '.device-selection-radio',
                 'click',
@@ -1191,7 +1185,7 @@ var singleDeviceFramework = Framework;
 try {
     exports.Framework = Framework
 } catch (err) {
-    console.log('error defining presenter_framework.js exports', err);  
+    //console.log('error defining presenter_framework.js exports', err);  
 }
 
 // console.log('initializing framework & module');

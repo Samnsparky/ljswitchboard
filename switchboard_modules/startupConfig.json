@@ -12,7 +12,7 @@
         }
     ],
     "overrideAutoModuleLoad": true,
-    "moduleName": "script_debugger",
+    "moduleName": "lua_script_debugger",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }

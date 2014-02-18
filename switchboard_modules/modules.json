@@ -56,7 +56,7 @@
         "active": true
     },
     {
-        "name": "script_debugger",
+        "name": "lua_script_debugger",
         "active": true
     }
 

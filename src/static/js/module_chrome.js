@@ -73,7 +73,7 @@ function selectModule(name)
     };
 
     //Function that loads a module with the singleDevice framework
-    var renderSingleDeviceFrameworkModule = function () {
+    var renderSingleDeviceFrameworkModule = function (thirdPartyJSList) {
         //Get the file path for the presenter_framework that runs the 
         //  singleDevice framework.
         //File is found in the non-compiled switchboard_modules/frameworks 
@@ -81,6 +81,20 @@ function selectModule(name)
         var framework_location = SINGLE_DEVICE_FRAMEWORK_PRESENTER;
         var framework_connector = SINGLE_DEVICE_FRAMEWORK_CONNECTOR;
         var framework_style = SINGLE_DEVICE_FRAMEWORK_CSS;
+        var jsLibFiles = [];
+        var jsLocalFiles = [framework_location, jsFile, framework_connector];
+        var jsFiles = [];
+        console.log('module_chrome: addLibs',thirdPartyJSList);
+        thirdPartyJSList.forEach(function(element, index, array){
+            jsLibFiles.push('third_party_code/'+element);
+        });
+        jsLibFiles.forEach(function(element, index, array){
+            jsFiles.push(element);
+        });
+        jsLocalFiles.forEach(function(element, index, array){
+            jsFiles.push(element);
+        });
+
 
         //Renders the module, function lives in 'ljswitchboard/src/presenter.js'
         renderTemplateFramework(
@@ -90,7 +104,7 @@ function selectModule(name)
             MODULE_CONTENTS_ELEMENT, 
             false,
             [framework_style, cssFile], 
-            [framework_location, jsFile, framework_connector], 
+            jsFiles, 
             genericErrorHandler);
         //Render a template based off of a framework:
         //renderFrameworkTemplate(SINGLE_DEVICE_FRAMEWORK_VIEW);
@@ -105,7 +119,7 @@ function selectModule(name)
             if (moduleInfo.framework) {
                 if(moduleInfo.framework === 'singleDevice') {
                     //load the 'singleDevice' framework
-                    renderSingleDeviceFrameworkModule();
+                    renderSingleDeviceFrameworkModule(moduleInfo.third_party_code);
                 } else {
                     //if no appropriate framework was found, load as if there 
                     //  was no framework requested

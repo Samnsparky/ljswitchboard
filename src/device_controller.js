@@ -122,6 +122,95 @@ var Device = function (device, serial, connectionType, deviceType)
     };
 
     /**
+     * This function writes an array of values to a single address.  It is 
+     * created using the LJM_eNames and LJM_eAddresses functions to maintain
+     * backward compatability so kipling can be used with old versions of the
+     * LJM driver wich is commonly required for testing devices.  A newer 
+     * native function does exist in LJM to do this same thing.
+     * 
+     * @param  {number/string} address The address/register number to write all
+     *       values to.
+     * @param  {Array} values  The array of data to write to the device.
+     * @return {[type]}         [description]
+     */
+    this.writeArray = function(address, values) {
+        var addresses = [];
+        var directions = [];
+        var numValues = [];
+
+        addresses.push(address);
+        directions.push(1);
+        numValues.push(values.length);
+
+        return this.rwMany(addresses, directions, numValues, values);
+    }
+
+    /**
+     * This function writes an array of values to a single address.  It is 
+     * created using the LJM_eNames and LJM_eAddresses functions to maintain
+     * backward compatability so kipling can be used with old versions of the
+     * LJM driver wich is commonly required for testing devices.  A newer 
+     * native function does exist in LJM to do this same thing.
+     * 
+     * @param  {number/string} address The address/register number to write all
+     *       values to.
+     * @param  {Array} values  The array of data to write to the device.
+     * @return {[type]}         [description]
+     */
+    this.readArray = function(address, numReads) {
+        var addresses = [];
+        var directions = [];
+        var numValues = [];
+        var values = [];
+
+        addresses.push(address);
+        directions.push(0);
+        numValues.push(numReads);
+
+        var i;
+        for(i = 0; i < numReads; i++) {
+            values.push(0);
+        }
+
+        return this.rwMany(addresses, directions, numValues, values);
+    }
+
+    /**
+     * Read and Write many registers on this device.  The rwMany function 
+     * switches between using "LJM_eNames" and "LJM_eAddresses" depending on if
+     * it is passed numeric or string address values.
+     * 
+     * @param {Array} addresses The addresses of the registers to write. Should
+     *      be an Array of numbers or strings.
+     * @param {Array} directions The determines whether to read or write to any
+     *      given registers.
+     * @param {Array} numValues The addresses of the registers to write. Should
+     *      be an Array of numbers or strings.
+     * @param {Array} values The values to write to these registers. Should be
+     *      an Array of numbers or strings.
+     * @return {q.promise} Promise that resolves to the values and addresses
+     *      written. Will reject on error from lower layers.
+    **/
+    this.rwMany = function(addresses, directions, numValues, values) {
+        var deferred = q.defer();
+
+        this.device.rwMany(
+            addresses,
+            directions,
+            numValues,
+            values,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+
+        return deferred.promise;
+    };
+
+    /**
      * Write many registers on this device.
      * 
      * @param {Array} addresses The addresses of the registers to write. Should
