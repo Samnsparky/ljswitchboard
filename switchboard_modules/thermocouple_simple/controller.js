@@ -5,7 +5,7 @@
  * @author Chris Johnson (LabJack Corp, 2013)
  *
  * Configure Device:
- *  1. Re-configure analog input range registers using "AIN_ALL_RANGE" register
+    1. Re-configure analog input range registers using "AIN_ALL_RANGE" register
     2. Write 0 to AINx_EF_TYPE in order to re-set all EF config values
     3. Configure AINx_EF_TYPE to the proper thermocouple constant:
         20: typeE
@@ -15,9 +15,10 @@
         24: typeT
     4. Set AINx_EF_CONFIG_B to 60052 to __XXXX-DESCRIPTION-XXXX__
 
-    Periodically sample:
-        1. Read AINx_EF_READ_A for a converted thermocouple reading.  
+ * Periodically sample:
+    1. Read AINx_EF_READ_A for a converted thermocouple reading.  
 **/
+var sprintf = require('sprintf').sprintf;
 
 // Constant that determines device polling rate.
 var MODULE_UPDATE_PERIOD_MS = 1000;
@@ -62,6 +63,20 @@ function module() {
 
     var INITIALIZED_CLICK_HANDLERS = false;
 
+    var AIN_EF_SETUP_CONFIG_STR = '_EF_TYPE';
+
+    /**
+     * Function to handle thermocouple reading formatting & add conditional
+     * statements for determining whether a thermocouple reading is out of range
+     * or not connected vs it being a valid reading.
+     */
+    this.tcFormatFunc = function(tcReading) {
+        if(tcReading == -9999) {
+            return "TC Not Connected";
+        } else {
+            return sprintf('%.10f',tcReading);
+        }
+    }
     /** 
      * Function to simplify configuring thermocouple channels.
      * ex: configureChannel(device, 'AIN0', 'TypeK', 'K');
@@ -100,8 +115,9 @@ function module() {
         }
 
         //Perform device I/O
-        device.write(channelName + '_EF_TYPE',0);
-        device.write(channelName + '_EF_TYPE',tcTypeVal);
+        device.write(channelName + AIN_EF_SETUP_CONFIG_STR,0);
+        device.write(channelName + '_RANGE',0.1);
+        device.write(channelName + AIN_EF_SETUP_CONFIG_STR,tcTypeVal);
         device.write(channelName + '_EF_CONFIG_A',tempMetricVal);
         device.write(channelName + '_EF_CONFIG_B',60052);
     }
@@ -127,14 +143,22 @@ function module() {
         var moduleBindings = [
             {bindingClass: baseReg, template: baseReg,   binding: baseReg,    direction: 'read',  format: '%.10f'},
             {bindingClass: baseReg+'_BINARY', template: baseReg+'_BINARY',   binding: baseReg+'_BINARY',    direction: 'read',  format: '%.10f'},
-            {bindingClass: baseReg+'_EF_READ_A',  template: baseReg+'_EF_READ_A', binding: baseReg+'_EF_READ_A',  direction: 'read',  format: '%.10f'},
+            {bindingClass: baseReg+'_EF_READ_A',  template: baseReg+'_EF_READ_A', binding: baseReg+'_EF_READ_A',  direction: 'read',  format: 'customFormat', customFormatFunc: self.tcFormatFunc},
             {bindingClass: baseReg+'_EF_READ_B',  template: baseReg+'_EF_READ_B', binding: baseReg+'_EF_READ_B',  direction: 'read',  format: '%.10f'},
             {bindingClass: baseReg+'_EF_READ_C',  template: baseReg+'_EF_READ_C', binding: baseReg+'_EF_READ_C',  direction: 'read',  format: '%.10f'},
             {bindingClass: baseReg+'_EF_READ_D',  template: baseReg+'_EF_READ_D', binding: baseReg+'_EF_READ_D',  direction: 'read',  format: '%.10f'}
         ];
 
+        var setupBindings = [
+            {bindingClass: baseReg+AIN_EF_SETUP_CONFIG_STR, binding: baseReg+AIN_EF_SETUP_CONFIG_STR, direction: 'read'},
+            {bindingClass: baseReg+'_EF_CONFIG_A', binding: baseReg+'_EF_CONFIG_A', direction: 'read'}
+        ]
+
         // Save the bindings to the framework instance.
         framework.putConfigBindings(moduleBindings);
+
+        // Save the setupBindings to the framework instance.
+        framework.putSetupBindings(setupBindings);
         onSuccess();
     }
     
@@ -146,21 +170,29 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
-        
-        device.write('AIN_ALL_RANGE',0.1);
-
         // While configuring the device build a dict to be used for generating the
         // module's template.
         moduleContext['tcInputs'] = [];
 
-        baseRegisters.forEach(function(reg) {
+        baseRegisters.forEach(function(reg, index) {
+            // console.log('index',index);
             self.configureChannel(device, reg, 'TypeK', 'K');
-            moduleContext['tcInputs'].push({"name": reg,"types": thermocoupleTypes, "metrics": tcTemperatureMetrics})
+            moduleContext['tcInputs'].push({
+                "name": reg,
+                "types": thermocoupleTypes, 
+                "metrics": tcTemperatureMetrics
+            });
         });
 
         // save the custom context to the framework so it can be used when
         // rendering the module's template.
         framework.setCustomContext(moduleContext);
+        onSuccess();
+
+    }
+
+    this.onDeviceConfigured = function(framework, device, onError, onSuccess) {
+        console.log('in onDeviceConfigured');
         onSuccess();
     }
 

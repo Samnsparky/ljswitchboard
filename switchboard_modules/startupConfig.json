@@ -9,10 +9,18 @@
         {
             "serialNumber":"470010533",
             "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010117",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010604",
+            "connectionType":"Ethernet"
         }
     ],
     "overrideAutoModuleLoad": true,
-    "moduleName": "lua_script_debugger",
+    "moduleName": "thermocouple_simple",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }

@@ -35,6 +35,9 @@ try {
         if(typeof(sdModule.onDeviceSelected) === "function") {
             sdFramework.on('onDeviceSelected',sdModule.onDeviceSelected);
         }
+        if(typeof(sdModule.onDeviceConfigured) === "function") {
+            sdFramework.on('onDeviceConfigured',sdModule.onDeviceConfigured);
+        }
         if(typeof(sdModule.onTemplateLoaded) === "function") {
             sdFramework.on('onTemplateLoaded',sdModule.onTemplateLoaded); 
         }

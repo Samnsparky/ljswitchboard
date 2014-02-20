@@ -38,6 +38,7 @@ var OPERATION_FAIL_MESSAGE = handlebars.compile(
     'Sorry, Kipling encountered an error. ' + 
     'Error: {{.}}');
 
+var LOADED_MODULE_INFO_OBJECT;
 
 /**
  * Switch the view to the given module.
@@ -84,10 +85,13 @@ function selectModule(name)
         var jsLibFiles = [];
         var jsLocalFiles = [framework_location, jsFile, framework_connector];
         var jsFiles = [];
-        console.log('module_chrome: addLibs',thirdPartyJSList);
-        thirdPartyJSList.forEach(function(element, index, array){
-            jsLibFiles.push('third_party_code/'+element);
-        });
+
+        // Add third party js files (if they are defined)
+        if(thirdPartyJSList !== undefined) {
+            thirdPartyJSList.forEach(function(element, index, array){
+                jsLibFiles.push('third_party_code/'+element);
+            });
+        }
         jsLibFiles.forEach(function(element, index, array){
             jsFiles.push(element);
         });
@@ -118,6 +122,8 @@ function selectModule(name)
             //Check to see if a framework should be loaded
             if (moduleInfo.framework) {
                 if(moduleInfo.framework === 'singleDevice') {
+                    // Save the module info object
+                    LOADED_MODULE_INFO_OBJECT = moduleInfo;
                     //load the 'singleDevice' framework
                     renderSingleDeviceFrameworkModule(moduleInfo.third_party_code);
                 } else {

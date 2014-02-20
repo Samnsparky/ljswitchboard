@@ -95,7 +95,9 @@ function cloneBindingInfo (original, bindingClass, binding, template) {
             template: template,
             binding: binding,
             direction: original.direction,
-            event: original.event
+            event: original.event,
+            format: original.format,
+            customFormatFunc: original.customFormatFunc
         };
     } catch (err) {
         console.log('ERROR: ',err);
@@ -106,7 +108,7 @@ function cloneBindingInfo (original, bindingClass, binding, template) {
 
 
 /**
- * Expands the LJMMM in the binding and template names.
+ * Expands the LJMMM in the bindingClass, binding, and template names.
  *
  * Each binding info object has a binding attribute with the name of the
  * register on the device to bind from as well as a template attribute that
@@ -149,6 +151,43 @@ function expandBindingInfo (bindingInfo) {
     return newBindingsInfo;
 }
 
+function cloneSetupBindingInfo (original, bindingClass, binding) {
+    try{
+        var retVar = {
+            bindingClass: bindingClass,
+            binding: binding,
+            direction: original.direction,
+            defaultVal: original.defaultVal
+        };
+    } catch (err) {
+        console.log('ERROR: ',err);
+        var retVar = {};
+    }
+    return retVar;
+}
+
+function expandSetupBindingInfo (bindingInfo) {
+    var expandedBindingClasses = ljmmm_parse.expandLJMMMName(bindingInfo.bindingClass);
+    var expandedBindings = ljmmm_parse.expandLJMMMName(bindingInfo.binding);
+
+    if (expandedBindingClasses.length != expandedBindings.length) {
+        throw 'Unexpected ljmmm expansion mismatch.';
+    }
+
+    var newBindingsInfo = [];
+    var numBindings = expandedBindings.length;
+
+    for (var i=0; i<numBindings; i++) {
+        var clone = cloneSetupBindingInfo(
+            bindingInfo,
+            expandedBindingClasses[i],
+            expandedBindings[i]
+        );
+        newBindingsInfo.push(clone);
+    }
+
+    return newBindingsInfo;
+}
 /**
  * Force a redraw on the rendering engine.
 **/
@@ -175,6 +214,7 @@ function Framework() {
     var eventListener = dict({
         onModuleLoaded: null,
         onDeviceSelected: null,
+        onDeviceConfigured: null,
         onTemplateLoaded: null,
         onRegisterWrite: null,
         onRegisterWritten: null,
@@ -192,27 +232,43 @@ function Framework() {
     var jquery = null;
     var refreshRate = DEFAULT_REFRESH_RATE;
     var configControls = [];
+
     var bindings = dict({});
     var readBindings = dict({});
     var writeBindings = dict({});
+
+    var setupBindings = dict({});
+    var readSetupBindings = dict({});
+    var writeSetupBindings = dict({});
+
     var selectedDevices = [];
     var userViewFile = "";
     var moduleTemplateBindings = {};
+    var moduleTemplateSetupBindings = {};
     var moduleName = '';
     var moduleJsonFiles = [];
+    var moduleInfoObj;
 
     this.jquery = jquery;
     this.refreshRate = refreshRate;
     this.configControls = configControls;
+
     this.bindings = bindings;
     this.readBindings = readBindings;
     this.writeBindings = writeBindings;
+
+    this.setupBindings = setupBindings;
+    this.readSetupBindings = readSetupBindings;
+    this.writeSetupBindings = writeSetupBindings;
+
     this.selectedDevices = selectedDevices;
     this.runLoop = false;
     this.userViewFile = userViewFile;
     this.moduleTemplateBindings = moduleTemplateBindings;
+    this.moduleTemplateSetupBindings = moduleTemplateSetupBindings;
     this.moduleName = moduleName;
     this.moduleJsonFiles = moduleJsonFiles;
+    this.moduleInfoObj = moduleInfoObj;
 
     var self = this;
 
@@ -295,20 +351,37 @@ function Framework() {
     };
     var fire = this.fire;
 
+    /**
+     * Function deletes various 'window.' objects that need to be removed in 
+     * order for module to behave properly when switching tabs.
+     * @param  {Array} moduleLibraries Array of string "window.xxx" calls that
+     *      need to be deleted, (delete window.xxx) when a module gets unloaded.
+     */
+    this.unloadModuleLibraries = function(moduleLibraries) {
+        if(moduleLibraries !== undefined) {
+            moduleLibraries.forEach(function(element, index, array){
+                var delStr = 'delete ' + element;
+                eval(delStr);
+            });
+        } else {
+            // console.log('presenter_framework, "third_party_code_unload" undefined');
+        }
+    }
+    var unloadModuleLibraries = this.unloadModuleLibraries;
+
     this.convertBindingsToDict = function() {
-        // console.log('(In: convertBindingsToDict) bindings:',self.bindings);
-        // console.log('(In: convertBindingsToDict) templateData:',self.moduleTemplateBindings);
-        // self.bindings.forEach(
-        //     function(value, key){
-        //         console.log(key + ": " + value);
-        //     }
-        // );
         return self.moduleTemplateBindings;
     }
     var convertBindingsToDict = this.convertBindingsToDict;
 
     this.qExecOnModuleLoaded = function() {
         var innerDeferred = q.defer();
+
+        //Save module info
+        self.moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
+        moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
+
+        //Fire onModuleLoaded function
         self.fire(
             'onModuleLoaded',
             [],
@@ -330,6 +403,18 @@ function Framework() {
         return innerDeferred.promise;
     }
     var qExecOnDeviceSelected = this.qExecOnDeviceSelected;
+
+    this.qExecOnDeviceConfigured = function() {
+        var innerDeferred = q.defer();
+        self.fire(
+            'onDeviceConfigured',
+            [self.getSelectedDevice()],
+            innerDeferred.reject,
+            innerDeferred.resolve
+        );
+        return innerDeferred.promise;
+    }
+    var qExecOnDeviceConfigured = this.qExecOnDeviceConfigured;
 
     this.qExecOnTemplateLoaded = function() {
         var innerDeferred = q.defer();
@@ -372,10 +457,16 @@ function Framework() {
     }
     var qExecOnLoadError = this.qExecOnLoadError;
 
-    this.qExecOnUnloadModule = function(err) {
+    this.qExecOnUnloadModule = function() {
+        var innerDeferred = q.defer();
+
+        //Halt the daq loop
         self.stopLoop();
 
-        var innerDeferred = q.defer();
+        //clean up module's third party libraries
+        self.unloadModuleLibraries(self.moduleInfoObj.third_party_code_unload);
+
+        //Inform the module that it has been unloaded.
         self.fire(
             'onUnloadModule',
             [],
@@ -537,6 +628,16 @@ function Framework() {
             );
             return;
         }
+        if (newBinding['format'] === undefined) {
+            newBinding['format'] = '%.4f';
+        }
+        if (newBinding['customFormatFunc'] === undefined) {
+            newBinding['customFormatFunc'] = function(rawReading){
+                console.log('Here, val:',rawReading);
+                var retStr = "'customFormatFunc' NotDefined";
+                return retStr;
+            };
+        }
 
         var isWrite = newBinding['direction'] === 'write';
         if (isWrite && newBinding['event'] === undefined) {
@@ -594,6 +695,187 @@ function Framework() {
         }
     }
     var putConfigBindings = this.putConfigBindings;
+
+    /**
+     * Function to add a single binding that gets read once upon device 
+     * selection.
+     * @param  {[type]} binding [description]
+     * @return {[type]}         [description]
+     */
+    this.putSetupBinding = function(newBinding) {
+        var onErrorHandle = function (shouldContinue) {
+            self.runLoop = shouldContinue;
+        }
+
+        // Check for various required binding attributes & report onLoadErrors 
+        // if they dont exist
+        if (newBinding['bindingClass'] === undefined) {
+            self.fire(
+                'onLoadError',
+                [ 'Config binding missing bindingClass' ],
+                onErrorHandle
+            );
+            return;
+        }
+
+        if (newBinding['binding'] === undefined) {
+            self.fire(
+                'onLoadError',
+                [ 'Config binding missing binding' ],
+                onErrorHandle
+            );
+            return;
+        }
+
+        if (newBinding['direction'] === undefined) {
+            self.fire(
+                'onLoadError',
+                [ 'Config binding missing direction' ],
+                onErrorHandle
+            );
+            return;
+        }
+
+        var isWrite = newBinding['direction'] === 'write';
+        if ( (isWrite) && (newBinding['defaultVal'] === undefined) ) {
+            self.fire(
+                'onLoadError',
+                [ 'Config binding missing defaultVal' ],
+                onErrorHandle
+            );
+            return;
+        }
+        
+
+        var expandedBindings = expandSetupBindingInfo(newBinding);
+        var numBindings = expandedBindings.length;
+        if (numBindings > 1) {
+            for (var i=0; i<numBindings; i++)
+                putSetupBinding(expandedBindings[i]);
+            return;
+        }
+
+        try{
+            if(self.moduleTemplateSetupBindings[newBinding.bindingClass] === undefined) {
+                self.moduleTemplateSetupBindings[newBinding.bindingClass] = [];
+            }
+            self.moduleTemplateSetupBindings[newBinding.bindingClass].push(newBinding);
+        } catch (err) {
+            console.log('Error in presenter_framework.js, putSetupBinding', err);
+        }
+        setupBindings.set(newBinding.bindingClass, newBinding);
+        
+        if (newBinding.direction === 'read') {
+            readSetupBindings.set(newBinding.bindingClass, newBinding);
+        } else if (newBinding.direction === 'write') {
+            writeSetupBindings.set(newBinding.bindingClass, newBinding);
+        } else {
+            self.fire(
+                'onLoadError',
+                [ 'Config binding has invalid direction' ],
+                onErrorHandle
+            );
+        }
+
+
+    }
+    var putSetupBinding = this.putSetupBinding;
+
+    /**
+     * Function to add multiple bindings that get read once upon device 
+     * selection.
+     * @param  {[type]} binding [description]
+     * @return {[type]}         [description]
+     */
+    this.putSetupBindings = function(bindings) {
+        console.log('putSetupBindings');
+        bindings.forEach(function(binding){
+            self.putSetupBinding(binding);
+        });
+    }
+    var putSetupBindings = this.putSetupBindings;
+
+    this.exicuteSetupBindings = function() {
+        var deferred = q.defer();
+
+        var addresses = [];
+        var directions = [];
+        var numValues = [];
+        var values = [];
+
+        var rwManyData = {
+            addresses: addresses,
+            directions: directions,
+            numValues: numValues,
+            values: values
+        }
+
+        // return this.rwMany(addresses, directions, numValues, values);
+
+        var saveSetupBindings = function(setupInfo) {
+            var innerDeferred = q.defer();
+            self.setupBindings.forEach(function(binding, index, array){
+                setupInfo.addresses.push(binding.binding);
+                setupInfo.numValues.push(1);
+                if ( binding.direction === 'read' ) {
+                    setupInfo.directions.push(0);
+                    setupInfo.values.push(-1);
+                } else if ( binding.direction === 'write' ) {
+                    setupInfo.directions.push(1);
+                    setupInfo.values.push(setupInfo.defaultVal);
+                }
+            });
+            innerDeferred.resolve(setupInfo);
+            return innerDeferred.promise;
+        }
+
+        var performDeviceWrites = function(setupInfo) {
+            var innerDeferred = q.defer();
+
+            var device;
+            var addresses = [];
+            var directions = [];
+            var numValues = [];
+            var values = [];
+
+            device = self.getSelectedDevice();
+            addresses = setupInfo.addresses;
+            directions = setupInfo.directions;
+            numValues = setupInfo.numValues;
+            values = setupInfo.values;
+            
+            console.log('Active Device Name',device);
+            console.log('setupInfo',setupInfo);
+            try{
+                device.rwMany(
+                    addresses,
+                    directions,
+                    numValues,
+                    values
+                    ).then(
+                    function(results) {
+                        console.log('configResults',results);
+                        innerDeferred.resolve(results);
+                    },
+                    function(err) {
+                        console.log('configResults Err',err);
+                        innerDeferred.reject(err);
+                    });
+            }
+            catch(err) {
+                console.log('performDeviceWrites err',err)
+                innerDeferred.reject(err);
+            }
+            return innerDeferred.promise;
+        }
+        
+        console.log('exicuteSetupBindings');
+        // Save the setup information
+        saveSetupBindings(rwManyData)
+        .then(performDeviceWrites,self.qExecOnLoadError)
+        .then(deferred.resolve,deferred.reject);
+        return deferred.promise;
+    }
 
     this._writeToDevice = function (bindingInfo) {
         var jquerySelector = '#' + bindingInfo.template;
@@ -851,17 +1133,35 @@ function Framework() {
 
         var showUserTemplate = function() {
             //self.jquery.fadeout(CONFIGURING_DEVICE_TARGET);
+            var innerDeferred = q.defer();
             self.jquery.fadeIn(DEVICE_VIEW_TARGET);
+            innerDeferred.resolve();
+            return innerDeferred.promise;
         }
 
-        //Perform necessary actions
+        //Perform necessary actions:
+        // Report that the device has been closed
         self.qExecOnCloseDevice(self.getSelectedDevice())
-        .then(self.qUpdateActiveDevice, self.qExecOnLoadError)
-        .then(self.qExecOnDeviceSelected, self.qExecOnLoadError)
-        .then(showUserTemplate, self.qExecOnLoadError)
-        .then(self.qExecOnTemplateLoaded, self.qExecOnLoadError)
-        .then(deferred.resolve, deferred.reject);
 
+        // Update the currently-active device
+        .then(self.qUpdateActiveDevice, self.qExecOnLoadError)
+
+        // Report that a new device has been selected
+        .then(self.qExecOnDeviceSelected, self.qExecOnLoadError)
+
+        // Configure the device
+        .then(self.exicuteSetupBindings, self.qExecOnLoadError)
+
+        // Report that the device has been configured
+        .then(self.qExecOnDeviceConfigured, self.qExecOnLoadError)
+
+        // Re-Display the module's template
+        .then(showUserTemplate, self.qExecOnLoadError)
+
+        // Report that the module's template has been loaded
+        .then(self.qExecOnTemplateLoaded, self.qExecOnLoadError)
+
+        .then(deferred.resolve, deferred.reject);
         return deferred.promise;
     };
 
@@ -946,16 +1246,19 @@ function Framework() {
             var innerDeferred = q.defer();
             var addresses = [];
             var formats = [];
+            var customFormatFuncs = [];
 
             self.readBindings.forEach(function (value, key) {
                 addresses.push(value.binding);
-                if (value.format)
-                    formats.push(value.format);
-                else
-                    formats.push('%.4f');
+                formats.push(value.format);
+                customFormatFuncs.push(value.customFormatFunc)
             });
 
-            innerDeferred.resolve({addresses: addresses, formats: formats});
+            innerDeferred.resolve({
+                addresses: addresses, 
+                formats: formats,
+                customFormatFuncs: customFormatFuncs
+            });
             return innerDeferred.promise;
         };
 
@@ -984,12 +1287,14 @@ function Framework() {
             var device = self.getSelectedDevice();
             var addresses = bindingsInfo.addresses;
             var formats = bindingsInfo.formats;
+            var customFormatFuncs = bindingsInfo.customFormatFuncs;
             
             if (addresses.length == 0) {
                 innerDeferred.resolve({
                     values: [],
                     addresses: [],
-                    formats: []
+                    formats: [],
+                    customFormatFuncs: []
                 });
                 return innerDeferred.promise;
             }
@@ -1000,7 +1305,8 @@ function Framework() {
                     innerDeferred.resolve({
                         values: values,
                         addresses: addresses,
-                        formats: formats
+                        formats: formats,
+                        customFormatFuncs: customFormatFuncs
                     });
                 },
                 innerDeferred.reject
@@ -1014,16 +1320,22 @@ function Framework() {
             var values = valuesInfo.values;
             var addresses = valuesInfo.addresses;
             var formats = valuesInfo.formats;
+            var customFormatFuncs = valuesInfo.customFormatFuncs;
             var numAddresses = addresses.length;
             var retDict = dict();
 
             for (var i=0; i<numAddresses; i++) {
+                var stringVal;
+                if(formats[i] !== 'customFormat') {
+                    stringVal = sprintf(formats[i], values[i])
+                } else {
+                    stringVal = customFormatFuncs[i](values[i]);
+                }
                 retDict.set(
                     addresses[i].toString(),
-                    sprintf(formats[i], values[i])
+                    stringVal
                 );
             }
-
             innerDeferred.resolve(retDict);
             return innerDeferred.promise;
         };
@@ -1168,16 +1480,41 @@ function Framework() {
         }
         
         checkFirstDevice()
+
+        // Save the module's current instance name
         .then(setModuleName, self.qExecOnLoadError)
+
+        // Update the currently-active device
         .then(self.qUpdateActiveDevice, self.qExecOnLoadError)
+
+        // Report that a new device has been selected
         .then(self.qExecOnDeviceSelected, self.qExecOnLoadError)
+
+        // Configure the device
+        .then(self.exicuteSetupBindings, self.qExecOnLoadError)
+
+        // Report that the device has been configured
+        .then(self.qExecOnDeviceConfigured, self.qExecOnLoadError)
+
+        // Render the module's template
         .then(self.qRenderModuleTemplate, self.qExecOnLoadError)
+        
+        // Display the module's template
         .then(displayModuleTemplate, self.qExecOnLoadError)
+
+        // Report that the module's template has been loaded
         .then(self.qExecOnTemplateLoaded, self.qExecOnLoadError)
+
+        // Start the DAQ loop
         .then(self.startLoop, self.qExecOnLoadError)
+
+        // Re-draw the window to prevent window-disapearing issues
         .then(qRunRedraw, self.qExecOnLoadError)
+
         .then(deferred.resolve, deferred.reject);
         return deferred.promise;
+
+
     }
 }
 

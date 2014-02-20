@@ -53,7 +53,7 @@ function module() {
         var moduleBindings = [
             {bindingClass: 'LUA_RUN', template: 'LUA_RUN',   binding: 'LUA_RUN',    direction: 'read',  format: '%d'},
             {bindingClass: 'LUA_DEBUG_ENABLE', template: 'LUA_DEBUG_ENABLE',   binding: 'LUA_DEBUG_ENABLE',    direction: 'read',  format: '%d'},
-            {bindingClass: 'LUA_DEBUG_NUM_BYTES', template: 'LUA_DEBUG_NUM_BYTES',   binding: 'LUA_DEBUG_NUM_BYTES',    direction: 'read',  format: '%d'},
+            {bindingClass: 'LUA_DEBUG_NUM_BYTES', template: 'LUA_DEBUG_NUM_BYTES',   binding: 'LUA_DEBUG_NUM_BYTES',    direction: 'read',  format: 'customFormat'},
         ];
 
         // Save the bindings to the framework instance.
@@ -108,6 +108,7 @@ function module() {
         onSuccess();
     }
     this.onUnloadModule = function(framework, onError, onSuccess) {
+        aceEditor = undefined;
         onSuccess();
     }
     this.onLoadError = function(framework, description, onHandle) {

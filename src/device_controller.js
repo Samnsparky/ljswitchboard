@@ -175,6 +175,43 @@ var Device = function (device, serial, connectionType, deviceType)
         return this.rwMany(addresses, directions, numValues, values);
     }
 
+    this.rwA = function() {
+        var addresses = ['AIN0'];
+        var directions = [0];
+        var numValues = [1];
+        var values = [-1];
+        this.rwManyTest(addresses, directions, numValues, values);
+    }
+    this.rwB = function() {
+        var addresses = ['AIN0'];
+        var directions = [0];
+        var numValues = [8];
+        var values = [-1,-1,-1,-1,-1,-1,-1,-1];
+        this.rwManyTest(addresses, directions, numValues, values);
+    }
+    this.rwC = function() {
+        var addresses = ['AIN0','AIN1'];
+        var directions = [0,0];
+        var numValues = [1,1];
+        var values = [-1,-1];
+        this.rwManyTest(addresses, directions, numValues, values);
+    }
+
+    this.rwManyTest = function(addresses, directions, numValues, values) {
+        this.device.rwMany(
+            addresses,
+            directions,
+            numValues,
+            values,
+            function (err) {
+                console.log('Error!',err,addresses);
+            },
+            function (results) {
+                console.log('Success!',results,addresses);
+            }
+        );
+    }
+
     /**
      * Read and Write many registers on this device.  The rwMany function 
      * switches between using "LJM_eNames" and "LJM_eAddresses" depending on if
@@ -193,23 +230,48 @@ var Device = function (device, serial, connectionType, deviceType)
     **/
     this.rwMany = function(addresses, directions, numValues, values) {
         var deferred = q.defer();
+        console.log('in device_controller.device.rwMany',addresses,directions,numValues,values)
 
-        this.device.rwMany(
-            addresses,
-            directions,
-            numValues,
-            values,
-            function (err) {
-                deferred.reject(err);
-            },
-            function (results) {
-                deferred.resolve(results);
-            }
-        );
+        // this.device.rwMany(
+        //     addresses,
+        //     directions,
+        //     numValues,
+        //     values,
+        //     function (err) {
+        //         deferred.reject(err);
+        //     },
+        //     function (results) {
+        //         deferred.resolve(results);
+        //     }
+        // );
+        deferred.resolve([0,0]);
 
         return deferred.promise;
     };
+    this.writeManyA = function() {
+        var addresses = ['DAC0'];
+        var values = [2.5];
+        this.writeManyTest(addresses,values);
 
+    }
+    this.writeManyB = function() {
+        var addresses = ['DAC0','DAC1'];
+        var values = [2.5,2.5];
+        this.writeManyTest(addresses,values);
+
+    }
+    this.writeManyTest = function (addresses, values) {
+        this.device.writeMany(
+            addresses,
+            values,
+            function (err) {
+                console.log('Error!',err,addresses);
+            },
+            function (results) {
+                console.log('Success!',results,addresses);
+            }
+        );
+    };
     /**
      * Write many registers on this device.
      * 
