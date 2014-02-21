@@ -122,7 +122,7 @@ function module() {
         device.write(channelName + '_EF_CONFIG_B',60052);
     }
 
-    this.editBindings = function(framework, method, channelNumber) {
+    this.editBindings = function(method, channelNumber) {
         var chNum;
         if (typeof(channelNumber) === 'string') {
             chNum = channelNumber;
@@ -165,6 +165,14 @@ function module() {
          * direction:
          * format: 
         **/
+        var moduleBindings = [
+            {bindingClass: baseReg, template: baseReg,   binding: baseReg,    direction: 'read',  format: '%.10f'},
+            {bindingClass: baseReg+'_BINARY', template: baseReg+'_BINARY',   binding: baseReg+'_BINARY',    direction: 'read',  format: '%.10f'},
+            {bindingClass: baseReg+'_EF_READ_A',  template: baseReg+'_EF_READ_A', binding: baseReg+'_EF_READ_A',  direction: 'read',  format: 'customFormat', customFormatFunc: self.tcFormatFunc},
+            {bindingClass: baseReg+'_EF_READ_B',  template: baseReg+'_EF_READ_B', binding: baseReg+'_EF_READ_B',  direction: 'read',  format: '%.10f'},
+            {bindingClass: baseReg+'_EF_READ_C',  template: baseReg+'_EF_READ_C', binding: baseReg+'_EF_READ_C',  direction: 'read',  format: '%.10f'},
+            {bindingClass: baseReg+'_EF_READ_D',  template: baseReg+'_EF_READ_D', binding: baseReg+'_EF_READ_D',  direction: 'read',  format: '%.10f'}
+        ];
 
         var setupBindings = [
             {bindingClass: baseReg+AIN_EF_SETUP_CONFIG_STR, binding: baseReg+AIN_EF_SETUP_CONFIG_STR, direction: 'read'},
@@ -184,6 +192,23 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
+        // // While configuring the device build a dict to be used for generating the
+        // // module's template.
+        // moduleContext['tcInputs'] = [];
+
+        // baseRegisters.forEach(function(reg, index) {
+        //     // console.log('index',index);
+        //     self.configureChannel(device, reg, 'TypeK', 'K');
+        //     moduleContext['tcInputs'].push({
+        //         "name": reg,
+        //         "types": thermocoupleTypes, 
+        //         "metrics": tcTemperatureMetrics
+        //     });
+        // });
+
+        // // save the custom context to the framework so it can be used when
+        // // rendering the module's template.
+        // framework.setCustomContext(moduleContext);
         onSuccess();
 
     }
@@ -225,7 +250,7 @@ function module() {
                 }
             });
             if(validTCType) {
-                self.editBindings(framework, 'put',index);
+                self.editBindings('put',index);
             }
             moduleContext['tcInputs'].push({
                 "name": reg,
@@ -263,23 +288,22 @@ function module() {
                 overRideWrite = true;
                 var tcTempMetric = $('#'+reg+'-thermocouple-metric-select').val();
                 // console.log('overRidden',reg, 'type:',value, 'metric',tcTempMetric);
-                
-                // Delete active binding from framework:
-                self.editBindings(framework, 'delete',reg.split('AIN')[1]);
-
                 self.configureChannel(framework.getSelectedDevice(),reg,parseInt(value),parseInt(tcTempMetric));
-
-                //Add the binding back if it is a valid channel.
-                if(tcType != 0) {
-                    self.editBindings(framework, 'put',reg.split('AIN')[1]);
-                }
                 
             } else if(binding.template === (reg + '-thermocouple-metric-select')) {
                 overRideWrite = true;
                 var tcType = $('#'+reg+'-thermocouple-type-select').val();
                 // console.log('overRidden',reg, 'type',tcType, 'metric:',value);
-                
+                // Delete active binding from framework:
+                self.self.editBindings('delete',reg.split('AIN')[1]);
                 self.configureChannel(framework.getSelectedDevice(),reg,parseInt(tcType),parseInt(value));
+                //Add the binding back if it is a valid channel.
+                if(tcType != 0) {
+                    self.self.editBindings('put',reg.split('AIN')[1]);
+                }
+                
+            }
+
             } else if(binding.template === (reg + '-options-toggle-button')) {
                 overRideWrite = true;
                 var btnObj = $('#'+binding.template);

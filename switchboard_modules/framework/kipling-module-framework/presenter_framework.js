@@ -404,11 +404,11 @@ function Framework() {
     }
     var qExecOnDeviceSelected = this.qExecOnDeviceSelected;
 
-    this.qExecOnDeviceConfigured = function() {
+    this.qExecOnDeviceConfigured = function(data) {
         var innerDeferred = q.defer();
         self.fire(
             'onDeviceConfigured',
-            [self.getSelectedDevice()],
+            [self.getSelectedDevice(), data],
             innerDeferred.reject,
             innerDeferred.resolve
         );
@@ -788,22 +788,23 @@ function Framework() {
      * @return {[type]}         [description]
      */
     this.putSetupBindings = function(bindings) {
-        console.log('putSetupBindings');
         bindings.forEach(function(binding){
             self.putSetupBinding(binding);
         });
     }
     var putSetupBindings = this.putSetupBindings;
 
-    this.exicuteSetupBindings = function() {
+    this.executeSetupBindings = function() {
         var deferred = q.defer();
 
         var addresses = [];
         var directions = [];
         var numValues = [];
         var values = [];
+        var bindingClasses = [];
 
         var rwManyData = {
+            bindingClasses: bindingClasses,
             addresses: addresses,
             directions: directions,
             numValues: numValues,
@@ -814,7 +815,8 @@ function Framework() {
 
         var saveSetupBindings = function(setupInfo) {
             var innerDeferred = q.defer();
-            self.setupBindings.forEach(function(binding, index, array){
+            self.setupBindings.forEach(function(binding, index){
+                setupInfo.bindingClasses.push(binding.bindingClass);
                 setupInfo.addresses.push(binding.binding);
                 setupInfo.numValues.push(1);
                 if ( binding.direction === 'read' ) {
@@ -844,8 +846,6 @@ function Framework() {
             numValues = setupInfo.numValues;
             values = setupInfo.values;
             
-            console.log('Active Device Name',device);
-            console.log('setupInfo',setupInfo);
             try{
                 device.rwMany(
                     addresses,
@@ -854,11 +854,27 @@ function Framework() {
                     values
                     ).then(
                     function(results) {
-                        console.log('configResults',results);
-                        innerDeferred.resolve(results);
+                        var configResults = dict({});
+                        if(results.length != self.setupBindings.size) {
+                            console.log('presenter_framework setupBindings ERROR!!');
+                            console.log('resultsLength',results.length);
+                            console.log('setupBindings length', self.setupBindings.size);
+                        } else {
+                            var i = 0;
+                            self.setupBindings.forEach(function(binding, key){
+                                configResults.set(
+                                    key,
+                                    {
+                                        binding: binding,
+                                        address: addresses[i], 
+                                        result: results[i]
+                                    });
+                                i += 1;
+                            });
+                        }
+                        innerDeferred.resolve(configResults);
                     },
                     function(err) {
-                        console.log('configResults Err',err);
                         innerDeferred.reject(err);
                     });
             }
@@ -869,7 +885,6 @@ function Framework() {
             return innerDeferred.promise;
         }
         
-        console.log('exicuteSetupBindings');
         // Save the setup information
         saveSetupBindings(rwManyData)
         .then(performDeviceWrites,self.qExecOnLoadError)
@@ -953,7 +968,8 @@ function Framework() {
      * @param {String} bindingName The name of the binding (the binding info
      *      object's original "template" attribute) to delete.
     **/
-    this.deleteConfigBinding = function (bindingName) {
+    this.deleteConfigBinding = function (binding) {
+        var bindingName = binding.bindingClass;
         var expandedBindings = ljmmm_parse.expandLJMMMName(bindingName);
         var numBindings = expandedBindings.length;
         if (numBindings > 1) {
@@ -990,6 +1006,13 @@ function Framework() {
         }
     };
     var deleteConfigBinding = this.deleteConfigBinding;
+
+    this.deleteConfigBindings = function(bindings) {
+        bindings.forEach(function(binding){
+            self.deleteConfigBinding(binding);
+        });
+    }
+    var deleteConfigBindings = this.deleteConfigBindings;
 
     /**
      * Render the HTML view to use for the current module.
@@ -1150,7 +1173,7 @@ function Framework() {
         .then(self.qExecOnDeviceSelected, self.qExecOnLoadError)
 
         // Configure the device
-        .then(self.exicuteSetupBindings, self.qExecOnLoadError)
+        .then(self.executeSetupBindings, self.qExecOnLoadError)
 
         // Report that the device has been configured
         .then(self.qExecOnDeviceConfigured, self.qExecOnLoadError)
@@ -1491,7 +1514,7 @@ function Framework() {
         .then(self.qExecOnDeviceSelected, self.qExecOnLoadError)
 
         // Configure the device
-        .then(self.exicuteSetupBindings, self.qExecOnLoadError)
+        .then(self.executeSetupBindings, self.qExecOnLoadError)
 
         // Report that the device has been configured
         .then(self.qExecOnDeviceConfigured, self.qExecOnLoadError)

@@ -230,22 +230,18 @@ var Device = function (device, serial, connectionType, deviceType)
     **/
     this.rwMany = function(addresses, directions, numValues, values) {
         var deferred = q.defer();
-        console.log('in device_controller.device.rwMany',addresses,directions,numValues,values)
-
-        // this.device.rwMany(
-        //     addresses,
-        //     directions,
-        //     numValues,
-        //     values,
-        //     function (err) {
-        //         deferred.reject(err);
-        //     },
-        //     function (results) {
-        //         deferred.resolve(results);
-        //     }
-        // );
-        deferred.resolve([0,0]);
-
+        this.device.rwMany(
+            addresses,
+            directions,
+            numValues,
+            values,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
         return deferred.promise;
     };
     this.writeManyA = function() {

@@ -19,6 +19,7 @@
                 </td>
                 <td>
                     <select id="{{name}}-thermocouple-type-select" class="wrap-select">
+                        <option value="0">UnConfigured</option>
                         <option value="20">TypeE</option>
                         <option value="21">TypeJ</option>
                         <option value="22" selected>TypeK</option>
@@ -26,17 +27,17 @@
                         <option value="24">TypeT</option>
                     </select>
                 </td>
-                <td>
+                <td style="{{style}}">
                     <p id="{{name}}_EF_READ_A">0.0000</p>
                 </td>
-                <td>
+                <td style="{{style}}">
                     <select id="{{name}}-thermocouple-metric-select" class="wrap-select">
                         <option value="0" selected>K</option>
                         <option value="1">C</option>
                         <option value="2">F</option>
                     </select>
                 </td>
-                <td id="{{name}}-options-toggle-button" class="options-toggle-button expand icon-plus"></td>
+                <td id="{{name}}-options-toggle-button" class="options-toggle-button expand icon-plus" style="{{style}}"></td>
             </tr>
             <tr style="display:none"></tr>
             <tr id="{{name}}-hidden-options" class="thermocouple-config-options">
