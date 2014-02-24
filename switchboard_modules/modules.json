@@ -57,7 +57,7 @@
     },
     {
         "name": "lua_script_debugger",
-        "active": true
+        "active": false
     }
 
 ]
