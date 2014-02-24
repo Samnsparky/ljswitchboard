@@ -317,7 +317,9 @@ function module() {
                 binding: baseReg+'-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: function(binding, value, onSuccess) {
+                writeCallback: function(data, onSuccess) {
+                    var binding = data.binding;
+                    var value = data.value;
                     //Get AIN channel name, 'AIN0'
                     var reg = binding.binding.split('-callback')[0];
 
@@ -342,7 +344,9 @@ function module() {
                 binding: baseReg+'-callback',  
                 direction: 'write', 
                 event: 'click',
-                writeCallback: function(binding, value, onSuccess) {
+                writeCallback: function(data, onSuccess) {
+                    var binding = data.binding;
+                    var value = data.value;
                     var btnObj = $('#'+binding.template);
                     // Switch based off icon state
                     if(btnObj.hasClass('icon-plus'))  {

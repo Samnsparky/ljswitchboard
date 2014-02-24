@@ -1135,8 +1135,12 @@ function Framework() {
             if( searchIndex >= 0) {
                 if((baseStr.length - searchIndex - callbackString.length) === 0) {
                     bindingInfo.writeCallback(
-                        bindingInfo,
-                        newVal,
+                        {
+                            framework: self,
+                            device: self.getSelectedDevice(),
+                            binding: bindingInfo,
+                            value: newVal,
+                        },
                         function() {
                             innerDeferred.resolve(skipWrite, true);
                         });

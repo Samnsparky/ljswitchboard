@@ -21,7 +21,7 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "thermocouple_simple",
+    "moduleName": "analog_inputs_fw",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }

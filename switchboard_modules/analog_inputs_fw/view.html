@@ -1,0 +1,59 @@
+<div id="advanced-ain-readout">
+    <div id="advanced-ain-measurement-obj">
+        <h3>Analog Input</h3>
+        <table class="table table-striped" id="device-selector-table">
+            <thead>
+                <tr class="table-dataHeader">
+                    <th>Channel</th>
+                    <th>Range</th>
+                    <th>Resolution</th>
+                    <th>Settling</th>
+                    <th>Reading</th>
+                    <th>Options</th>
+                </tr>
+            </thead>
+            <tbody>
+            {{#each custom.analogInputs}}
+            <tr id="{{name}}-table-data" class="table-dataRow">
+                <td>
+                    <p id="{{name}}-channel-name">{{name}}</p>
+                </td>
+                <td>
+                    <select id="{{name}}-analog-input-range-select" class="wrap-select">
+                        {{#each ainRangeMenuOptions}}
+                        <option value="{{value}}" {{selected}}>{{name}}</option>
+                        {{/each}}
+                    </select>
+                </td>
+                <td>
+                    <select id="{{name}}-analog-input-resolution-select" class="wrap-select">
+                        {{#each ainResolutionMenuOptions}}
+                        <option value="{{value}}" {{selected}}>{{name}}</option>
+                        {{/each}}
+                    </select>
+                </td>
+                <td>
+                    <select id="{{name}}-analog-input-settling-select" class="wrap-select">
+                        {{#each ainSettlingMenuOptions}}
+                        <option value="{{value}}" {{selected}}>{{name}}</option>
+                        {{/each}}
+                    </select>
+                </td>
+                <td>
+                    <p id="{{name}}">0.0000</p>
+                </td>
+                <td>
+                    <span  id="{{name}}-options-toggle-button" class="options-toggle-button expand icon-plus"></span>
+                </td>
+            </tr>
+            <tr style="display:none"></tr>
+            <tr id="{{name}}-options-toggle-button-options" class="thermocouple-config-options">
+                <td colspan="7">
+                    <p>{{name}}: <span id="{{name}}_BINARY">0.0000</span> (raw binary)</p>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+        </table>
+    </div>
+</div>
