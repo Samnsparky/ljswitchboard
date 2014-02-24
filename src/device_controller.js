@@ -175,6 +175,43 @@ var Device = function (device, serial, connectionType, deviceType)
         return this.rwMany(addresses, directions, numValues, values);
     }
 
+    this.rwA = function() {
+        var addresses = ['AIN0'];
+        var directions = [0];
+        var numValues = [1];
+        var values = [-1];
+        this.rwManyTest(addresses, directions, numValues, values);
+    }
+    this.rwB = function() {
+        var addresses = ['AIN0'];
+        var directions = [0];
+        var numValues = [8];
+        var values = [-1,-1,-1,-1,-1,-1,-1,-1];
+        this.rwManyTest(addresses, directions, numValues, values);
+    }
+    this.rwC = function() {
+        var addresses = ['AIN0','AIN1'];
+        var directions = [0,0];
+        var numValues = [1,1];
+        var values = [-1,-1];
+        this.rwManyTest(addresses, directions, numValues, values);
+    }
+
+    this.rwManyTest = function(addresses, directions, numValues, values) {
+        this.device.rwMany(
+            addresses,
+            directions,
+            numValues,
+            values,
+            function (err) {
+                console.log('Error!',err,addresses);
+            },
+            function (results) {
+                console.log('Success!',results,addresses);
+            }
+        );
+    }
+
     /**
      * Read and Write many registers on this device.  The rwMany function 
      * switches between using "LJM_eNames" and "LJM_eAddresses" depending on if
@@ -193,7 +230,6 @@ var Device = function (device, serial, connectionType, deviceType)
     **/
     this.rwMany = function(addresses, directions, numValues, values) {
         var deferred = q.defer();
-
         this.device.rwMany(
             addresses,
             directions,
@@ -206,10 +242,32 @@ var Device = function (device, serial, connectionType, deviceType)
                 deferred.resolve(results);
             }
         );
-
         return deferred.promise;
     };
+    this.writeManyA = function() {
+        var addresses = ['DAC0'];
+        var values = [2.5];
+        this.writeManyTest(addresses,values);
 
+    }
+    this.writeManyB = function() {
+        var addresses = ['DAC0','DAC1'];
+        var values = [2.5,2.5];
+        this.writeManyTest(addresses,values);
+
+    }
+    this.writeManyTest = function (addresses, values) {
+        this.device.writeMany(
+            addresses,
+            values,
+            function (err) {
+                console.log('Error!',err,addresses);
+            },
+            function (results) {
+                console.log('Success!',results,addresses);
+            }
+        );
+    };
     /**
      * Write many registers on this device.
      * 
@@ -288,6 +346,29 @@ var Device = function (device, serial, connectionType, deviceType)
     };
 
     /**
+     * Write a single register on the device asynchronously.
+     *
+     * @param {Number} address The address of the register to write.
+     * @param {Number} value The value to write to this register.
+     * @return {q.promise} Promise that resovles to the value written to this
+     *      register. Rejects on error at the lower levels.
+    **/
+    this.qWrite = function(address, value) {
+        var deferred = q.defer();
+        this.device.write(
+            address,
+            value,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+        return deferred.promise;
+    }
+
+    /**
      * Write a single register on the device synchronously.
      * 
      * @param {Number} address The address of the register to write.
@@ -308,6 +389,27 @@ var Device = function (device, serial, connectionType, deviceType)
     this.read = function (address) {
         return this.device.readSync(address);
     };
+
+    /**
+     * Read a single register on the device asynchronously.
+     *
+     * @param {Number} address The address of the register to read.
+     * @return {q.promise} Promise that resovles to the value read from this
+     *      register. Rejects on error at the lower levels.
+    **/
+    this.qRead = function(address, value) {
+        var deferred = q.defer();
+        this.device.read(
+            address,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+        return deferred.promise;
+    }
 
     this.readAsync = function (address, onError, onSuccess) {
         this.device.read(address, onError, onSuccess);

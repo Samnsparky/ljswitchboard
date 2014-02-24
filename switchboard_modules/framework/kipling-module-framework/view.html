@@ -18,15 +18,9 @@
                             <span class="metro-radio"></span>
                         </label>
                     </td>
-                    <td>
-                        {{getDeviceType}}
-                    </td>
-                    <td>
-                        {{getSerial}}
-                    </td>
-                    <td>
-                        {{getName}}
-                    </td>
+                    <td class="device-selector-table-device-type">{{getDeviceType}}</td>
+                    <td class="device-selector-table-serial-number">{{getSerial}}</td>
+                    <td class="device-selector-table-device-name">{{getName}}</td>
                 </tr>
                 {{/devices}}
             </tbody>

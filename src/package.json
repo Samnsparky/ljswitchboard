@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "main": "index.html",
   "window": {
-    "toolbar": true,
+    "toolbar": false,
     "width": 870,
     "height": 730
   },
@@ -13,6 +13,7 @@
     "async": "~0",
     "dict": "~1",
     "handlebars": "~1",
+    "jshint": "~2",
     "labjack-nodejs": "~0",
     "ljmmm-parse": "~0.1",
     "lazy": "~1",
