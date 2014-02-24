@@ -38,13 +38,17 @@ var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
  * When using the 'singleDevice' framework it is instantiated as sdModule.
  */
 function module() {
+    //Define nop (do-nothing) function
     var nop = function(){};
+
     // Base-Register Variable for Configuring multiple thermocouples.
     var baseReg = 'AIN#(0:13)';
 
     // Expand baseReg & create baseRegister list using ljmmm.
     // ex: ['AIN0', 'AIN1', ... 'AIN13']
     var baseRegisters = ljmmm_parse.expandLJMMMName(baseReg);
+
+    // Define support analog input ef-types
     var ain_ef_types = 
         [
             {"name": "Not Configured", "value": 0, "selected": ''},
@@ -164,7 +168,7 @@ function module() {
                 } else if (key.search('_RESOLUTION_INDEX') > 0) {
                     configuredResolution.push(binding.result);
                 } else if (key.search('_SETTLING_US') > 0) {
-                    console.log('settling: ',binding.result);
+                    // console.log('settling: ',binding.result);
                     configuredSettlingUS.push(binding.result);
                 }
             } else {
@@ -243,10 +247,22 @@ function module() {
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
+        // Define device-configuration event handler function.
+        var configDevice = function(data, onSuccess) {
+            console.log(data.binding.bindingClass,'!event!');
+            var framework = data.framework;
+            var device = data.device;
+            var binding = data.binding.binding.split('-callback')[0];
+            var value = data.value;
+
+            console.log('binding: ',binding,', value:',value);
+            onSuccess();
+        };
+
         // Define the module's run-time bindings:
         var moduleBindings = [
             {
-                // Define binding to automatically read AINx Registers
+                // Define binding to automatically read AINx Registers.
                 bindingClass: baseReg, 
                 template: baseReg, 
                 binding: baseReg, 
@@ -254,7 +270,7 @@ function module() {
                 format: '%0.6f'
             },
             {
-                // Define binding to automatically read AINx_BINARY Registers
+                // Define binding to automatically read AINx_BINARY Registers.
                 bindingClass: baseReg+'_BINARY', 
                 template: baseReg+'_BINARY',   
                 binding: baseReg+'_BINARY',    
@@ -262,43 +278,34 @@ function module() {
                 format: '%d'
             },
             {
-                // Define binding to handle AINx_RANGE user inputs
+                // Define binding to handle AINx_RANGE user inputs.
                 bindingClass: baseReg+'-analog-input-range-select',  
                 template: baseReg+'-analog-input-range-select', 
-                binding: baseReg+'-callback',  
+                binding: baseReg+'_RANGE-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: function(data, onSuccess) {
-                    console.log('RangeChange-event');
-                    onSuccess();
-                }
+                writeCallback: configDevice
             },
             {
-                // Define binding to handle AINx_RESOLUTION user inputs
+                // Define binding to handle AINx_RESOLUTION user inputs.
                 bindingClass: baseReg+'-analog-input-resolution-select',  
                 template: baseReg+'-analog-input-resolution-select', 
-                binding: baseReg+'-callback',  
+                binding: baseReg+'_RESOLUTION-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: function(data, onSuccess) {
-                    console.log('ResolutionChange-event');
-                    onSuccess();
-                }
+                writeCallback: configDevice
             },
             {
-                // Define binding to handle AINx_SETTLING_US user inputs
+                // Define binding to handle AINx_SETTLING_US user inputs.
                 bindingClass: baseReg+'-analog-input-settling-select',  
                 template: baseReg+'-analog-input-settling-select', 
-                binding: baseReg+'-callback',  
+                binding: baseReg+'_SETTLING_US-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: function(data, onSuccess) {
-                    console.log('SettlingChange-event');
-                    onSuccess();
-                }
+                writeCallback: configDevice
             },
             {
-                // Define binding to handle display/hide option-button presses
+                // Define binding to handle display/hide option-button presses.
                 bindingClass: baseReg+'-options-toggle-button',  
                 template: baseReg+'-options-toggle-button', 
                 binding: baseReg+'-callback',  
@@ -336,7 +343,6 @@ function module() {
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
-        // console.log('in onRegisterWrite',binding);
         onSuccess();
     };
     this.onRegisterWritten = function(framework, registerName, value, onError, onSuccess) {
@@ -367,9 +373,6 @@ function module() {
         console.log('in onRefreshError', description);
         onHandle(true);
     };
-    try{
-        var self = this;
-    } catch (err) {
-        console.log('Error.... defining self',err);
-    }
+
+    var self = this;
 }
