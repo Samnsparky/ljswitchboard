@@ -6,6 +6,7 @@
 
 var handlebars = require('handlebars');
 var q = require('q');
+var gui = require('nw.gui');
 
 var device_controller = require('./device_controller');
 
@@ -124,11 +125,11 @@ function disconnectDevice(event)
             info.children('#show-connect-button-holder').fadeIn();
         });
 
-        if(deviceKeeper.getNumDevices() == 0)
+        if(deviceKeeper.getNumDevices() === 0)
         {
             hideFinishButton();
         }
-    }
+    };
 
     device_controller.closeDevice(device, onDeviceClosed, showAlert);
 }
@@ -213,7 +214,7 @@ function refreshDevices()
     $('#content-holder').html('');
     var onDevicesLoaded = function(devices) {
         var context = {'connection_types': includeDeviceDisplaySizes(devices)};
-        if (devices.length == 0)
+        if (devices.length === 0)
             context.noDevices = true;
         $('#device-search-msg').hide();
         renderTemplate(
@@ -242,8 +243,8 @@ function kiplingStartupManager() {
         var innerDeferred = q.defer();
         innerDeferred.reject();
         return innerDeferred.promise;
-    }
-
+    };
+    
     this.loadConfigData = function() {
         var innerDeferred = q.defer();
         var filePath = fs_facade.getExternalURI('startupConfig.json');
@@ -259,8 +260,22 @@ function kiplingStartupManager() {
             }
         );
         return innerDeferred.promise;
-    }
+    };
     var loadConfigData = this.loadConfigData;
+
+    this.startDevTools = function(configData) {
+        var innerDeferred = q.defer();
+        if(typeof(configData.displayDevTools) === "boolean") {
+            if(configData.displayDevTools){
+                // Display Dev-tools window, code ref:
+                // https://github.com/rogerwang/node-webkit/wiki/Debugging-with-devtools
+                gui.Window.get().showDevTools();
+            }
+        }
+        innerDeferred.resolve(configData);
+        return innerDeferred.promise;
+    };
+    var startDevTools = this.startDevTools;
 
     this.checkIfAutoConfigure = function(configData) {
         var innerDeferred = q.defer();
@@ -274,7 +289,7 @@ function kiplingStartupManager() {
             innerDeferred.reject();
         }
         return innerDeferred.promise;
-    }
+    };
     var checkIfAutoConfigure = this.checkIfAutoConfigure;
 
     this.getDeviceData = function() {
@@ -315,7 +330,7 @@ function kiplingStartupManager() {
                         "type": conButtonObjects.eq(j).html().split(' ')[1],
                         "button": conButtonObjects.eq(j)
                     }
-                )
+                );
             }
             devices.push(
                 {
@@ -328,7 +343,7 @@ function kiplingStartupManager() {
             );
         }
         return devices;
-    }
+    };
     var getDeviceData = getDeviceData;
 
     this.connectToDevices = function(configData) {
@@ -366,7 +381,7 @@ function kiplingStartupManager() {
                     }
                 }
             );
-        }
+        };
 
         configData.ljmDeviceParameters.forEach(function(reqDevice){
             foundDevices.forEach(function(foundDevice) {
@@ -382,7 +397,7 @@ function kiplingStartupManager() {
                             numDevicesToConnectTo += 1;
                             moveToModule = true;
                         }
-                    })
+                    });
                 }
             });
         });
@@ -393,7 +408,7 @@ function kiplingStartupManager() {
             innerDeferred.resolve(configData);
         }
         return innerDeferred.promise;
-    }
+    };
     var connectToDevices = this.connectToDevices;
 
     this.configureStartUpModule = function(configData) {
@@ -408,34 +423,35 @@ function kiplingStartupManager() {
 
         innerDeferred.resolve(configData);
         return innerDeferred.promise;
-    }
+    };
     var configureStartUpModule = this.configureStartUpModule;
     this.introduceDelay = function(configData) {
         var innerDeferred = q.defer();
         setTimeout(innerDeferred.resolve, 2000);
         return innerDeferred.promise;
-    }
+    };
     this.clickFinishButton = function() {
         var innerDeferred = q.defer();
         $('#finish-button').click();
         innerDeferred.resolve();
         return innerDeferred.promise;
-    }
+    };
     var clickFinishButton = this.clickFinishButton;
     
 
     this.autoStart = function() {
         var deferred = q.defer();
         self.loadConfigData()
+        .then(self.startDevTools, handleErrors)
         .then(self.configureStartUpModule, handleErrors)
         .then(self.checkIfAutoConfigure, handleErrors)
         .then(self.connectToDevices, handleErrors)
         .then(self.introduceDelay, handleErrors)
         .then(self.clickFinishButton, handleErrors)
-        .then(deferred.resolve, deferred.reject)
+        .then(deferred.resolve, deferred.reject);
 
         return deferred.promise;
-    }
+    };
 
     var self = this;
 }

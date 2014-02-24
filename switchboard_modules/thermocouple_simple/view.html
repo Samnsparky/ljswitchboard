@@ -19,32 +19,31 @@
                 </td>
                 <td>
                     <select id="{{name}}-thermocouple-type-select" class="wrap-select">
-                        <option value="0">UnConfigured</option>
-                        <option value="20">TypeE</option>
-                        <option value="21">TypeJ</option>
-                        <option value="22" selected>TypeK</option>
-                        <option value="23">TypeR</option>
-                        <option value="24">TypeT</option>
+                        {{#each typeOptions}}
+                        <option value="{{value}}" {{selected}}>{{name}}</option>
+                        {{/each}}
                     </select>
                 </td>
-                <td style="{{style}}">
-                    <p id="{{name}}_EF_READ_A">0.0000</p>
+                <td>
+                    <p class="configuration-dependent-attribute" style="{{style}}" id="{{name}}_EF_READ_A">0.0000</p>
                 </td>
-                <td style="{{style}}">
-                    <select id="{{name}}-thermocouple-metric-select" class="wrap-select">
-                        <option value="0" selected>K</option>
-                        <option value="1">C</option>
-                        <option value="2">F</option>
+                <td>
+                    <select id="{{name}}-thermocouple-metric-select" class="wrap-select configuration-dependent-attribute" style="{{style}}">
+                        {{#each metricOptions}}
+                        <option value="{{value}}" {{selected}}>{{name}}</option>
+                        {{/each}}
                     </select>
                 </td>
-                <td id="{{name}}-options-toggle-button" class="options-toggle-button expand icon-plus" style="{{style}}"></td>
+                <td>
+                    <span  id="{{name}}-options-toggle-button" class="options-toggle-button expand icon-plus configuration-dependent-attribute" style="{{style}}"></span>
+                </td>
             </tr>
             <tr style="display:none"></tr>
-            <tr id="{{name}}-hidden-options" class="thermocouple-config-options">
+            <tr id="{{name}}-options-toggle-button-options" class="thermocouple-config-options">
                 <td colspan="7">
-                    <p>CJC Voltage + Thermocouple Voltage: <span id="{{name}}_EF_READ_B">0.0000</span> (Volts)</p>
-                    <p>CJC Temperature: <span id="{{name}}_EF_READ_C">0.0000</span> (K)</p>
-                    <p>CJC Volts: <span id="{{name}}_EF_READ_D">0.0000</span> (Volts)</p>
+                    <p>CJC Voltage + Thermocouple Voltage ({{name}}_EF_READ_B): <span id="{{name}}_EF_READ_B">0.0000</span> (Volts)</p>
+                    <p>CJC Temperature ({{name}}_EF_READ_C): <span id="{{name}}_EF_READ_C">0.0000</span> (K)</p>
+                    <p>CJC Volts ({{name}}_EF_READ_D): <span id="{{name}}_EF_READ_D">0.0000</span> (Volts)</p>
                     <p>{{name}}: <span id="{{name}}">0.0000</span> (Volts)</p>
                     <p>{{name}}: <span id="{{name}}_BINARY">0.0000</span> (raw binary)</p>
                 </td>

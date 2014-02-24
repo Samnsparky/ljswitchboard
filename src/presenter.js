@@ -42,7 +42,18 @@ var START_UP_MODULE_NAME = 'thermocouple_simple';
 var currentTab = '';
 var numTabChanges = 0;
 
-
+function showCriticalAlert(content) {
+    $('#device-search-msg').css("background-color",'#e16908');
+    $('#device-search-msg').css("border",'1px solid #e16908');
+    $('#device-search-msg').css("z-index",1000);
+    $('#device-search-msg').animate({'width': '100%', 'left': '0%'});
+    $('#searching-devices-message').hide();
+    $('#device-search-msg').show();
+    $('#premature-error-holder').html(content);
+    $('#premature-error-holder').slideDown();
+    $('#global-load-image-holder').slideUp();
+    
+}
 function showPrematureAlert(content) {
     $('#premature-error-holder').html(content);
     setTimeout(function () {
@@ -93,6 +104,28 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
 {
     var onRender = function (renderedHTML)
     {
+        var appendToHead = function(data, filePath) {
+            try{
+                $('head').append(data);
+            } catch (err) {
+                var fpArray = filePath.split('/');
+                var fileName = fpArray[fpArray.length-1];
+                var moduleName = currentTab.split('/')[0];
+                console.log('Critical Error:',err.name);
+                console.log('When Loading File:',fileName);
+                console.log('Error Contents:',err);
+
+                showCriticalAlert('<br>'+'<br>'+'<br>'+'<br>'+
+                    'Critical Error Encountered Loading Module: '+moduleName+'<br>'+
+                    'Error: <strong>'+err.name+'</strong><br>'+
+                    'When Loading File: <strong>'+fileName+'</strong><br>'+
+                    'Full Path To File: '+filePath+'<br>'+
+                    'Error Contents: '+err.toString()+'<br>'+
+                    'Check console.log for more info.'+'<br>'+
+                    'Consider using <strong>www.jshint.com</strong> to debug file'
+                    );
+            };
+        }
         var cssHTML;
         var jsHTML;
 
@@ -121,7 +154,8 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                 'href': fileLoc,
                 'type': safeDest
             }); 
-            $('head').append(cssHTML);
+            // $('head').append(cssHTML);
+            appendToHead(cssHTML, fileLoc);
         });
 
         $.each(jsFiles, function (index, fileLoc)
@@ -140,7 +174,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                 'href': fileLoc,
                 'type': safeDest
             });
-            $('head').append(jsHTML);
+            appendToHead(jsHTML, fileLoc);
         });
 
         $(dest).fadeIn();

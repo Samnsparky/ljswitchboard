@@ -346,6 +346,29 @@ var Device = function (device, serial, connectionType, deviceType)
     };
 
     /**
+     * Write a single register on the device asynchronously.
+     *
+     * @param {Number} address The address of the register to write.
+     * @param {Number} value The value to write to this register.
+     * @return {q.promise} Promise that resovles to the value written to this
+     *      register. Rejects on error at the lower levels.
+    **/
+    this.qWrite = function(address, value) {
+        var deferred = q.defer();
+        this.device.write(
+            address,
+            value,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+        return deferred.promise;
+    }
+
+    /**
      * Write a single register on the device synchronously.
      * 
      * @param {Number} address The address of the register to write.
@@ -366,6 +389,27 @@ var Device = function (device, serial, connectionType, deviceType)
     this.read = function (address) {
         return this.device.readSync(address);
     };
+
+    /**
+     * Read a single register on the device asynchronously.
+     *
+     * @param {Number} address The address of the register to read.
+     * @return {q.promise} Promise that resovles to the value read from this
+     *      register. Rejects on error at the lower levels.
+    **/
+    this.qRead = function(address, value) {
+        var deferred = q.defer();
+        this.device.read(
+            address,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+        return deferred.promise;
+    }
 
     this.readAsync = function (address, onError, onSuccess) {
         this.device.read(address, onError, onSuccess);

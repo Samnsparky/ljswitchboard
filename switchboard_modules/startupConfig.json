@@ -19,6 +19,7 @@
             "connectionType":"Ethernet"
         }
     ],
+    "displayDevTools": true,
     "overrideAutoModuleLoad": true,
     "moduleName": "thermocouple_simple",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
