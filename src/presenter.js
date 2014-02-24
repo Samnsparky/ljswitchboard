@@ -49,7 +49,12 @@ function showCriticalAlert(content) {
     $('#device-search-msg').animate({'width': '100%', 'left': '0%'});
     $('#searching-devices-message').hide();
     $('#device-search-msg').show();
-    $('#premature-error-holder').html(content);
+    var prevInfo = $('#premature-error-holder').html();
+    if(prevInfo === '') {
+        $('#premature-error-holder').html(content);
+    } else {
+        $('#premature-error-holder').html(prevInfo + '<br>' + content);
+    }
     $('#premature-error-holder').slideDown();
     $('#global-load-image-holder').slideUp();
     

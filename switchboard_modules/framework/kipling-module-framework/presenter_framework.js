@@ -358,7 +358,15 @@ function Framework() {
             try{
                 listener.apply(null, passParams);
             } catch (err) {
-                console.log('Error firing: '+name, ' Error caught is: ',err);
+                console.log(
+                    'Error firing: '+name, 
+                    ' Error caught is: ',err.name, 
+                    'message: ',err.message);
+                showCriticalAlert(
+                    'Error Firing: '+name+
+                    '<br>--Error Type: '+err.name+
+                    '<br>--Error Message: '+err.message);
+                onErr(err);
             }
         } else {
             onSuccess();
