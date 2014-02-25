@@ -1026,13 +1026,17 @@ exports.waitForEnumeration = function(bundle)
             if (serialNumbers.indexOf(targetSerial) != -1) {
                 var newDevice = new labjack_nodejs.device();
                 try {
+                    console.log(bundle.getConnectionType(),targetSerial);
                     newDevice.openSync(
                         "LJM_dtT7",
-                        "LJM_ctANY",
+                        bundle.getConnectionType(),
                         targetSerial.toString()
                     );
                 } catch (e) {
-                    safelyReject(deferred, e);
+                    //safelyReject(deferred, e);
+                    console.log(e);
+                    setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
+                    return;
                 }
                 bundle.setDevice(newDevice);
                 deferred.resolve(bundle);

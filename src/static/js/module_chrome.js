@@ -30,6 +30,7 @@ var SINGLE_DEVICE_FRAMEWORK_PRESENTER = SINGLE_DEVICE_FRAMEWORK_DIR +
 var SINGLE_DEVICE_FRAMEWORK_VIEW = SINGLE_DEVICE_FRAMEWORK_DIR + '/view.html';
 var SINGLE_DEVICE_FRAMEWORK_CONNECTOR = SINGLE_DEVICE_FRAMEWORK_DIR + '/framework_connector.js';
 var SINGLE_DEVICE_FRAMEWORK_CSS = SINGLE_DEVICE_FRAMEWORK_DIR + '/style.css';
+var SINGLE_DEVICE_FRAMEWORK_DEVICE_CONSTANTS = SINGLE_DEVICE_FRAMEWORK_DIR + '/device_constants.js';
 
 // var OPERATION_FAIL_MESSAGE = handlebars.compile(
 //     'Sorry, Kipling encountered an error. Please try again or contact ' + 
@@ -79,11 +80,17 @@ function selectModule(name)
         //  singleDevice framework.
         //File is found in the non-compiled switchboard_modules/frameworks 
         //  directory.
+        var device_constants = SINGLE_DEVICE_FRAMEWORK_DEVICE_CONSTANTS;
         var framework_location = SINGLE_DEVICE_FRAMEWORK_PRESENTER;
         var framework_connector = SINGLE_DEVICE_FRAMEWORK_CONNECTOR;
         var framework_style = SINGLE_DEVICE_FRAMEWORK_CSS;
         var jsLibFiles = [];
-        var jsLocalFiles = [framework_location, jsFile, framework_connector];
+        var jsLocalFiles = [
+            device_constants,
+            framework_location, 
+            jsFile, 
+            framework_connector
+        ];
         var jsFiles = [];
 
         // Add third party js files (if they are defined)

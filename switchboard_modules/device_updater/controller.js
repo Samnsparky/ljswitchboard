@@ -102,6 +102,10 @@ function UpgradeableDeviceAdapter(device)
         };
         return executeErrorSafeFunction(formattedCall);
     };
+
+    this.getConnectionTypeStr = function () {
+        return device.getConnectionTypeStr();
+    };
 }
 
 
@@ -277,6 +281,9 @@ function updateFirmware (firmwareFileLocation) {
     async.each(
         selectedSerials,
         function (serial, callback) {
+            console.log('reported serial',serial);
+            console.log('typeof',typeof(serial));
+            serial = serial.split('-selector')[0];
             var device = keeper.getDevice(serial);
             var connectionType = device.getConnectionTypeStr();
             var progressListener = new ProgressListener();
@@ -293,6 +300,7 @@ function updateFirmware (firmwareFileLocation) {
                         firmwareDisplaySelector += serial.toString();
                         firmwareDisplaySelector += '-firmware-display';
                         device.device = bundle.getDevice();
+                        console.log(device.device);
                         numUpgraded++;
                         $(firmwareDisplaySelector).html(
                             bundle.getFirmwareVersion()
@@ -307,15 +315,20 @@ function updateFirmware (firmwareFileLocation) {
             };
 
             try {
-                if (device.read('WIFI_STATUS') != 2900) {
-                    device.write('POWER_WIFI', 0);
+                if (device.getConnectionTypeStr() !== "LJM_ctWIFI" && device.read('POWER_WIFI') != 0) {
+                    try{
+                        device.write('POWER_WIFI', 0);
+                        device.write('POWER_WIFI_DEFAULT', 0);
+                    } catch(err) {
+
+                    }
                     setTimeout(runUpgrade, 3000);
                 } else {
                     runUpgrade();
                 }
             } catch (e) {
                 callback(
-                    'Configuring WIFI failed. Please try upgrading again.'
+                    'Configuring WIFI failed. Please try upgrading again.'+e.toString()
                 );
             }
             
@@ -323,7 +336,6 @@ function updateFirmware (firmwareFileLocation) {
         function (err) {
             if (err) {
                 var errMsg;
-                
                 if (err == 2358) {
                     $('#flash-notice').slideDown();
                     setTimeout(

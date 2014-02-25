@@ -49,60 +49,16 @@ function module() {
     var baseRegisters = ljmmm_parse.expandLJMMMName(baseReg);
 
     // Define support analog input ef-types
-    var ain_ef_types = 
-        [
-            {"name": "Not Configured", "value": 0, "selected": ''},
-            {"name": "TypeE","value": 20, "selected": ''},
-            {"name": "TypeJ","value": 21, "selected": ''},
-            {"name": "TypeK","value": 22, "selected": ''},
-            {"name": "TypeR","value": 23, "selected": ''},
-            {"name": "TypeT","value": 24, "selected": ''}
-        ];
+    var ain_ef_types = t7DeviceConstants.ainEFTypeOptions;
 
     // Supported analog input range options.
-    var ainRangeOptions =  
-        [
-            {"name": "-10 to 10V","value": 10},
-            {"name": "-1 to 1V","value": 1},
-            {"name": "-0.1 to 0.1V","value": 0.1},
-            {"name": "-0.01 to 0.01V","value": 0.01}
-        ];
+    var ainRangeOptions = t7DeviceConstants.ainRangeOptions;
 
     // Supported analog input resolution options.
-    var ainResolutionOptions =  
-        [
-            {"name": "Auto","value": 0},
-            {"name": "1","value": 1},
-            {"name": "2","value": 2},
-            {"name": "3","value": 3},
-            {"name": "4","value": 4},
-            {"name": "5","value": 5},
-            {"name": "6","value": 6},
-            {"name": "7","value": 7},
-            {"name": "8","value": 8},
-            {"name": "9","value": 9},
-            {"name": "10","value": 10},
-            {"name": "11","value": 11},
-            {"name": "12","value": 12},
-        ];
+    var ainResolutionOptions = t7DeviceConstants.ainResolutionOptions;
 
     // Supported analog input resolution options.
-    var ainSettlingOptions =  
-        [
-            {"name": "Auto",    "value": 0},
-            {"name": "10us",    "value": 10},
-            {"name": "25us",    "value": 25},
-            {"name": "50us",    "value": 50},
-            {"name": "100us",   "value": 100},
-            {"name": "250us",   "value": 250},
-            {"name": "500us",   "value": 500},
-            {"name": "1ms",     "value": 1000},
-            {"name": "2.5ms",   "value": 2500},
-            {"name": "5ms",     "value": 5000},
-            {"name": "10ms",    "value": 10000},
-            {"name": "25ms",    "value": 25000},
-            {"name": "50ms",    "value": 50000},
-        ];
+    var ainSettlingOptions = t7DeviceConstants.ainSettlingOptions;
 
     /**
      * Function is called once every time the module tab is selected, loads the module.
@@ -247,16 +203,23 @@ function module() {
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
+
         // Define device-configuration event handler function.
         var configDevice = function(data, onSuccess) {
+            var handleConfigError = function(err) {
+                console.log('configError',err,binding,value);
+                onSuccess();
+            }
             console.log(data.binding.bindingClass,'!event!');
             var framework = data.framework;
             var device = data.device;
             var binding = data.binding.binding.split('-callback')[0];
-            var value = data.value;
+            var value = Number(data.value);
 
             console.log('binding: ',binding,', value:',value);
-            onSuccess();
+
+            device.qWrite(binding,value)
+            .then(onSuccess,handleConfigError)
         };
 
         // Define the module's run-time bindings:
@@ -290,7 +253,7 @@ function module() {
                 // Define binding to handle AINx_RESOLUTION user inputs.
                 bindingClass: baseReg+'-analog-input-resolution-select',  
                 template: baseReg+'-analog-input-resolution-select', 
-                binding: baseReg+'_RESOLUTION-callback',  
+                binding: baseReg+'_RESOLUTION_INDEX-callback',  
                 direction: 'write', 
                 event: 'change',
                 writeCallback: configDevice

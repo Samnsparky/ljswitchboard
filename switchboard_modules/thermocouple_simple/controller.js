@@ -49,34 +49,15 @@ function module() {
     // Expand baseReg & create baseRegister list using ljmmm.
     // ex: ['AIN0', 'AIN1', ... 'AIN13']
     var baseRegisters = ljmmm_parse.expandLJMMMName(baseReg);
-    var ain_ef_types = 
-        [
-            {"name": "Not Configured", "value": 0, "selected": ''},
-            {"name": "TypeE","value": 20, "selected": ''},
-            {"name": "TypeJ","value": 21, "selected": ''},
-            {"name": "TypeK","value": 22, "selected": ''},
-            {"name": "TypeR","value": 23, "selected": ''},
-            {"name": "TypeT","value": 24, "selected": ''}
-        ];
+
+    var ain_ef_types = t7DeviceConstants.ainEFTypeOptions;
 
     // Supported thermocouple types & associated constants.
-    var thermocoupleTypes =  
-        [
-            {"name": "TypeE","value": 20},
-            {"name": "TypeJ","value": 21},
-            {"name": "TypeK","value": 22},
-            {"name": "TypeR","value": 23},
-            {"name": "TypeT","value": 24}
-        ];
+    var thermocoupleTypes = t7DeviceConstants.thermocoupleTypes;
     this.thermocoupleTypes = thermocoupleTypes;
 
     // Supported thermocouple temperature metrics & associated constants.
-    var tcTemperatureMetrics =  
-        [
-            {"name": "K","value": 0},
-            {"name": "C","value": 1},
-            {"name": "F","value": 2}
-        ];
+    var tcTemperatureMetrics = t7DeviceConstants.thermocoupleTemperatureMetrics;
     this.tcTemperatureMetrics = tcTemperatureMetrics;
 
     var INITIALIZED_CLICK_HANDLERS = false;
@@ -429,9 +410,5 @@ function module() {
         console.log('in onRefreshError', description);
         onHandle(true);
     };
-    try{
-        var self = this;
-    } catch (err) {
-        console.log('Error.... defining self',err);
-    }
+    var self = this;
 }
