@@ -1,3 +1,17 @@
 .thermocouple-config-options {
     display:none;
 }
+#device-config-options-table {
+	margin-bottom: 15px;
+	background-color: transparent;
+	margin-top: -15px;
+}
+#device-config-options-table td {
+	background-color: transparent;
+}
+.displayed-icon {
+	font-size: large;
+}
+.ef-status-message {
+	color: red;
+}

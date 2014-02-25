@@ -60,6 +60,13 @@ function module() {
     // Supported analog input resolution options.
     var ainSettlingOptions = t7DeviceConstants.ainSettlingOptions;
 
+    // Supported analog input negative channel options
+    var ainNegativeCHOptions = [{
+        value: 199,
+        name: "GND",
+        selected:''
+    }];
+
     /**
      * Function is called once every time the module tab is selected, loads the module.
      * @param  {[type]} framework   The active framework instance.
@@ -72,7 +79,12 @@ function module() {
             {bindingClass: baseReg+'_EF_TYPE', binding: baseReg+'_EF_TYPE', direction: 'read'},
             {bindingClass: baseReg+'_RANGE', binding: baseReg+'_RANGE', direction: 'read'},
             {bindingClass: baseReg+'_RESOLUTION_INDEX', binding: baseReg+'_RESOLUTION_INDEX', direction: 'read'},
-            {bindingClass: baseReg+'_SETTLING_US', binding: baseReg+'_SETTLING_US', direction: 'read'}
+            {bindingClass: baseReg+'_SETTLING_US', binding: baseReg+'_SETTLING_US', direction: 'read'},
+            {bindingClass: baseReg+'_NEGATIVE_CH', binding: baseReg+'_NEGATIVE_CH', direction: 'read'},
+            {bindingClass: 'AIN_ALL_RANGE', binding: 'AIN_ALL_RANGE', direction: 'read'},
+            {bindingClass: 'AIN_ALL_RESOLUTION_INDEX', binding: 'AIN_ALL_RESOLUTION_INDEX', direction: 'read'},
+            {bindingClass: 'AIN_ALL_SETTLING_US', binding: 'AIN_ALL_SETTLING_US', direction: 'read'},
+            {bindingClass: 'AIN_ALL_NEGATIVE_CH', binding: 'AIN_ALL_NEGATIVE_CH', direction: 'read'},
         ];
 
         // Save the setupBindings to the framework instance.
@@ -105,6 +117,14 @@ function module() {
         var configuredRange = [];
         var configuredResolution = [];
         var configuredSettlingUS = [];
+        var configuredNegativeCH = [];
+        var configuredAllAinRange = -9999;
+        var configuredAllAinResolution = -9999;
+        var configuredAllAinSettlingUS = -9999;
+        var configuredAllAinNegativeCH = -9999;
+
+        //by default don't show the efSystemStatusWarning message
+        var showEFSystemStatusWarning = false;
 
         //Loop through results and save them appropriately.  
         setupBindings.forEach(function(binding, key){
@@ -119,13 +139,23 @@ function module() {
                     configuredEFType.push(0);
                 }
             } else if (binding.status === 'success') {
-                if (key.search('_RANGE') > 0) {
+                if(key.search('AIN_ALL_RANGE') >= 0) {
+                    configuredAllAinRange = binding.result.toFixed(3);
+                } else if(key.search('AIN_ALL_RESOLUTION_INDEX') >= 0) {
+                    configuredAllAinResolution = binding.result;
+                } else if(key.search('AIN_ALL_SETTLING_US') >= 0) {
+                    configuredAllAinSettlingUS = binding.result;
+                } else if(key.search('AIN_ALL_NEGATIVE_CH') >= 0) {
+                    configuredAllAinNegativeCH = binding.result;
+                } else if (key.search('_RANGE') > 0) {
                     configuredRange.push(binding.result.toFixed(3));
                 } else if (key.search('_RESOLUTION_INDEX') > 0) {
                     configuredResolution.push(binding.result);
                 } else if (key.search('_SETTLING_US') > 0) {
                     // console.log('settling: ',binding.result);
                     configuredSettlingUS.push(binding.result);
+                } else if (key.search('_NEGATIVE_CH') > 0) {
+                    configuredNegativeCH.push(binding.result);
                 }
             } else {
                 console.log(
@@ -135,76 +165,197 @@ function module() {
                 );
             }
         });
+    
+        var populateMenuArray = function(newArray, origArray) {
+            origArray.forEach(function(type){
+                newArray.push({
+                    name:type.name,
+                    value:type.value,
+                    selected:'',
+                    disp:true,
+                    style:''
+                });
+            });
+            return newArray;
+        }
+        var selectValue = function(array, value, debug) {
+            var i;
+            for(i = 0; i < array.length; i++) {
+                if(array[i].value == value){
+                    if(typeof(debug) === "boolean") {
+                        if(debug) {
+                            console.log('selecting...');
+                        }
+                    }
+                    array[i].selected = 'selected';
+                    return array;
+                }
+            }
+        }
 
         baseRegisters.forEach( function (reg, index) {
-            var style = "display:none";
+            var efSystemStatusMessage = "Not Configured";
+            var style = "color:black";
             var ainRangeMenuOptions = [];
             var ainResolutionMenuOptions = [];
             var ainSettlingMenuOptions = [];
+            var negativeCHMenuOptions = [];
 
-            ainRangeOptions.forEach(function(type){
-                ainRangeMenuOptions.push({
-                    name:type.name,
-                    value:type.value,
-                    selected:''
-                });
-            });
+            var displayNegativeCh = false;
+            var efSystemStatus = {
+                message: 'Not Configured',
+                showWarning: false,
+                style: 'color:black',
+                class: ''
+            }
 
-            ainResolutionOptions.forEach(function(type){
-                ainResolutionMenuOptions.push({
-                    name:type.name,
-                    value:type.value,
-                    selected:''
+            var efType = configuredEFType[index];
+            if (efType !== 0) {
+                var name = '';
+                ain_ef_types.forEach(function(type){
+                    if (type.value == efType) {
+                        name = type.name;
+                    }
                 });
-            });
-
-            ainSettlingOptions.forEach(function(type){
-                ainSettlingMenuOptions.push({
-                    name:type.name,
-                    value:type.value,
-                    selected:''
-                });
-            });
+                if (name === '') {
+                    name = "Configured: " + efType.toString();
+                }
+                efSystemStatus.message = name+': ('+efType.toString()+')';
+                efSystemStatus.style = "color:red";
+                efSystemStatus.showWarning = true;
+                showEFSystemStatusWarning = true;
+                efSystemStatus.class = 'text-warning';
+            }
 
             // Populate ainRangeMenuOptions
-            for(i = 0; i < ainRangeMenuOptions.length; i++) {
-                if(ainRangeMenuOptions[i].value == configuredRange[index]){
-                    ainRangeMenuOptions[i].selected = 'selected';
-                    break;
-                }
-            }
+            ainRangeOptions = populateMenuArray(ainRangeMenuOptions, ainRangeOptions);
 
             // Populate ainResolutionMenuOptions
-            for(i = 0; i < ainResolutionMenuOptions.length; i++) {
-                if(ainResolutionMenuOptions[i].value == configuredResolution[index]){
-                    ainResolutionMenuOptions[i].selected = 'selected';
-                    break;
-                }
+            ainResolutionOptions = populateMenuArray(ainResolutionMenuOptions, ainResolutionOptions);
+
+            // Populate negativeCHMenuOptions
+            ainSettlingOptions = populateMenuArray(ainSettlingMenuOptions, ainSettlingOptions);
+
+            // Populate negativeCHMenuOptions
+            ainNegativeCHOptions = populateMenuArray(negativeCHMenuOptions, ainNegativeCHOptions);
+
+            if ((index % 2) == 0) {
+                var displayNegativeCh = true;
+                negativeCHMenuOptions.push({
+                    value: index+1,
+                    name: "AIN"+(index+1).toString(),
+                    selected:''
+                });
             }
 
-            // Populate ainSettlingMenuOptions
-            // for(i = 0; i < ainSettlingMenuOptions.length; i++) {
-            //     if(ainSettlingMenuOptions[i].value === configuredSettlingUS[index]){
-            //         ainSettlingMenuOptions[i].selected = 'selected';
-            //         break;
-            //     }
-            // }
+            // Select configured menu option for: ainRangeMenuOptions
+            selectValue(ainRangeMenuOptions, configuredRange[index]);
+
+            // Select configured menu option for: ainResolutionMenuOptions
+            selectValue(ainResolutionMenuOptions, configuredResolution[index]);
+
+            // Select configured menu option for: ainSettlingMenuOptions
+            selectValue(ainSettlingMenuOptions, configuredResolution[index]);
+
+            // Select configured menu option for: negativeCHMenuOptions
+            selectValue(negativeCHMenuOptions, configuredNegativeCH[index]);
+
             moduleContext.analogInputs.push({
                 "name": reg,
                 "style": style,
+                "efSystemStatus": efSystemStatus,
                 "ainRangeMenuOptions": ainRangeMenuOptions,
                 "ainResolutionMenuOptions": ainResolutionMenuOptions,
                 "ainSettlingMenuOptions": ainSettlingMenuOptions,
+                "displayNegativeCh": displayNegativeCh,
+                "negativeCHMenuOptions": negativeCHMenuOptions,
             });
             
         });
+
+        var ainRangeMenuOptionsAll = [];
+        var ainResolutionMenuOptionsAll = [];
+        var ainSettlingMenuOptionsAll = [];
+        var ainNegativeCHMenuOptionsAll = [];
+
+        //Populate Menu's with Select Option & default value:
+        ainRangeMenuOptionsAll.push({
+            name: 'Select',
+            value: -9999,
+            selected: '',
+            disp: false,
+        });
+        ainResolutionMenuOptionsAll.push({
+            name: 'Select',
+            value: -9999,
+            selected: '',
+            disp: false,
+        });
+        ainSettlingMenuOptionsAll.push({
+            name: 'Select',
+            value: -9999,
+            selected: '',
+            disp: false,
+        });
+        ainNegativeCHMenuOptionsAll.push({
+            name: 'Select',
+            value: -9999,
+            selected: '',
+            disp: false,
+        });
+
+        // Populate Menu's with remaining options
+        ainRangeOptions = populateMenuArray(ainRangeMenuOptionsAll, ainRangeOptions);
+        ainResolutionOptions = populateMenuArray(ainResolutionMenuOptionsAll, ainResolutionOptions);
+        ainSettlingOptions = populateMenuArray(ainSettlingMenuOptionsAll, ainSettlingOptions);
+        ainNegativeCHOptions = populateMenuArray(ainNegativeCHMenuOptionsAll, ainNegativeCHOptions);
+
+        // Select appropriate values
+        selectValue(ainRangeOptions, configuredAllAinRange);
+        selectValue(ainResolutionOptions, configuredAllAinResolution);
+        selectValue(ainSettlingOptions, configuredAllAinSettlingUS);
+        selectValue(ainNegativeCHOptions, configuredAllAinNegativeCH);
+
+        
+        moduleContext.ainRangeMenuOptionsAll = ainRangeMenuOptionsAll;
+        moduleContext.ainResolutionMenuOptionsAll = ainResolutionMenuOptionsAll;
+        moduleContext.ainSettlingMenuOptionsAll = ainSettlingMenuOptionsAll;
+        moduleContext.ainNegativeCHMenuOptionsAll = ainNegativeCHMenuOptionsAll;
+        moduleContext.showEFSystemStatusWarning = showEFSystemStatusWarning;
         framework.setCustomContext(moduleContext);
         onSuccess();
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
+        // Define device-global device-configuration event handler function.
+        var configDeviceGlobal = function(data, onSuccess) {
+            var handleConfigError = function(err) {
+                console.log('configError',err,binding,value);
+                onSuccess();
+            }
+            console.log(data.binding.bindingClass,'!event!');
+            var framework = data.framework;
+            var device = data.device;
+            var binding = data.binding.binding.split('-callback')[0];
+            var value = Number(data.value);
+            var className = data.binding.bindingClass.split('all-ain')[1];
+            className = '.analog-input' + className;
 
-        // Define device-configuration event handler function.
+            console.log('binding: ',binding,', value:',value, ', className: ',className);
+
+            if(value != -9999) {
+                // Update related selectors
+                $(className).val(value);
+
+                // Perform device I/O
+                device.qWrite(binding,value)
+                .then(onSuccess,handleConfigError)
+            } else {
+                onSuccess();
+            }
+        }
+
+        // Define individual channel device-configuration event handler function.
         var configDevice = function(data, onSuccess) {
             var handleConfigError = function(err) {
                 console.log('configError',err,binding,value);
@@ -215,9 +366,15 @@ function module() {
             var device = data.device;
             var binding = data.binding.binding.split('-callback')[0];
             var value = Number(data.value);
+            var className = data.binding.bindingClass.split('analog-input')[1];
+            className = '#all-ain' + className;
 
             console.log('binding: ',binding,', value:',value);
 
+            // Update related selectors
+            $(className).val(-9999);
+
+            // Perform device I/O
             device.qWrite(binding,value)
             .then(onSuccess,handleConfigError)
         };
@@ -241,6 +398,42 @@ function module() {
                 format: '%d'
             },
             {
+                // Define binding to handle AIN_ALL_RANGE user inputs.
+                bindingClass: 'all-ain-range-select',  
+                template: 'all-ain-range-select', 
+                binding: 'AIN_ALL_RANGE-callback',  
+                direction: 'write', 
+                event: 'change',
+                writeCallback: configDeviceGlobal
+            },
+            {
+                // Define binding to handle AIN_ALL_RESOLUTION_INDEX user inputs.
+                bindingClass: 'all-ain-resolution-select',  
+                template: 'all-ain-resolution-select', 
+                binding: 'AIN_ALL_RESOLUTION_INDEX-callback',  
+                direction: 'write', 
+                event: 'change',
+                writeCallback: configDeviceGlobal
+            },
+            {
+                // Define binding to handle AIN_ALL_SETTLING_US user inputs.
+                bindingClass: 'all-ain-settling-select',  
+                template: 'all-ain-settling-select', 
+                binding: 'AIN_ALL_SETTLING_US-callback',  
+                direction: 'write', 
+                event: 'change',
+                writeCallback: configDeviceGlobal
+            },
+            {
+                // Define binding to handle AIN_ALL_NEGATIVE_CH user inputs.
+                bindingClass: 'all-ain-negative-channel-select',  
+                template: 'all-ain-negative-channel-select', 
+                binding: 'AIN_ALL_NEGATIVE_CH-callback',  
+                direction: 'write', 
+                event: 'change',
+                writeCallback: configDeviceGlobal
+            },
+            {
                 // Define binding to handle AINx_RANGE user inputs.
                 bindingClass: baseReg+'-analog-input-range-select',  
                 template: baseReg+'-analog-input-range-select', 
@@ -250,7 +443,7 @@ function module() {
                 writeCallback: configDevice
             },
             {
-                // Define binding to handle AINx_RESOLUTION user inputs.
+                // Define binding to handle AINx_RESOLUTION_INDEX user inputs.
                 bindingClass: baseReg+'-analog-input-resolution-select',  
                 template: baseReg+'-analog-input-resolution-select', 
                 binding: baseReg+'_RESOLUTION_INDEX-callback',  
@@ -263,6 +456,15 @@ function module() {
                 bindingClass: baseReg+'-analog-input-settling-select',  
                 template: baseReg+'-analog-input-settling-select', 
                 binding: baseReg+'_SETTLING_US-callback',  
+                direction: 'write', 
+                event: 'change',
+                writeCallback: configDevice
+            },
+            {
+                // Define binding to handle AINx_NEGATIVE_CH user inputs.
+                bindingClass: baseReg+'-analog-input-negative-ch-select',  
+                template: baseReg+'-analog-input-negative-ch-select', 
+                binding: baseReg+'_NEGATIVE_CH-callback',  
                 direction: 'write', 
                 event: 'change',
                 writeCallback: configDevice
