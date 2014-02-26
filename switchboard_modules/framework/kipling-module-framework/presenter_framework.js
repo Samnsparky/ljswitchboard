@@ -362,11 +362,20 @@ function Framework() {
                     'Error firing: '+name, 
                     ' Error caught is: ',err.name, 
                     'message: ',err.message);
-                showCriticalAlert(
-                    'Error Firing: '+name+
-                    '<br>--Error Type: '+err.name+
-                    '<br>--Error Message: '+err.message);
-                onErr(err);
+                try{
+                    var isHandled = false;
+                    if (err.name === 'Driver Operation Error') {
+                        isHandled = self.manageLJMError(err.message);
+                    }
+                    onErr(err);
+                } catch (newError) {
+                    // Not an LJM error...
+                    showCriticalAlert(
+                        'Error Firing: '+name+
+                        '<br>--Error Type: '+err.name+
+                        '<br>--Error Message: '+err.message);
+                    onErr(err);
+                }
             }
         } else {
             onSuccess();
@@ -1815,6 +1824,21 @@ function Framework() {
 
 
     };
+    this.manageLJMError = function(errNum) {
+        var isHandled = false;
+        // Error for old firmware version...
+        if (errNum === 1307) {
+            showAlert('Current Device Firmware Version Not Supported By This Module');
+            isHandled = true;
+        }
+        return isHandled
+    }
+    var manageLJMError = this.manageLJMError;
+
+    this.manageError = function(err) {
+        showAlert('Error: '+err.toString());
+    }
+    var manageError = this.manageError;
 }
 
 var singleDeviceFramework = Framework;

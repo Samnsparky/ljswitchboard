@@ -67,6 +67,10 @@ function module() {
         selected:''
     }];
 
+    var overrideGraphRanges = false;
+    var minGraphRange;
+    var maxGraphRange;
+
     /**
      * Function to handle ain reading formatting & updating the mini-graph.
      */
@@ -280,16 +284,16 @@ function module() {
             }
 
             // Populate ainRangeMenuOptions
-            ainRangeOptions = populateMenuArray(ainRangeMenuOptions, ainRangeOptions);
+            ainRangeMenuOptions = populateMenuArray(ainRangeMenuOptions, ainRangeOptions);
 
             // Populate ainResolutionMenuOptions
-            ainResolutionOptions = populateMenuArray(ainResolutionMenuOptions, ainResolutionOptions);
+            ainResolutionMenuOptions = populateMenuArray(ainResolutionMenuOptions, ainResolutionOptions);
 
             // Populate negativeCHMenuOptions
-            ainSettlingOptions = populateMenuArray(ainSettlingMenuOptions, ainSettlingOptions);
+            ainSettlingMenuOptions = populateMenuArray(ainSettlingMenuOptions, ainSettlingOptions);
 
             // Populate negativeCHMenuOptions
-            ainNegativeCHOptions = populateMenuArray(negativeCHMenuOptions, ainNegativeCHOptions);
+            negativeCHMenuOptions = populateMenuArray(negativeCHMenuOptions, ainNegativeCHOptions);
 
             if ((index % 2) == 0) {
                 var displayNegativeCh = true;
@@ -383,6 +387,7 @@ function module() {
         var configDeviceGlobal = function(data, onSuccess) {
             var handleConfigError = function(err) {
                 console.log('configError',err,binding,value);
+                sdFramework.manageError(err);
                 onSuccess();
             }
             console.log(data.binding.bindingClass,'!event!');
@@ -429,6 +434,32 @@ function module() {
             // Perform device I/O
             device.qWrite(binding,value)
             .then(onSuccess,handleConfigError)
+        };
+
+        // Define Generic Options Button Callback
+        var optionsButtonHandler = function(data, onSuccess) {
+            var binding = data.binding;
+            var value = data.value;
+            console.log('OptionsButton-event');
+            var btnObj = $('#'+binding.template);
+            // Switch based off icon state
+            if(btnObj.hasClass('icon-plus'))  {
+                btnObj.removeClass('icon-plus');
+                btnObj.addClass('icon-minus');
+                $('#'+binding.template+'-options').fadeIn(
+                    FADE_DURATION,
+                    onSuccess
+                    );
+            } else if(btnObj.hasClass('icon-minus'))  {
+                btnObj.removeClass('icon-minus');
+                btnObj.addClass('icon-plus');
+                $('#'+binding.template+'-options').fadeOut(
+                    FADE_DURATION,
+                    onSuccess
+                    );
+            } else {
+                onSuccess();
+            }
         };
 
         // Define the module's run-time bindings:
@@ -524,34 +555,29 @@ function module() {
             },
             {
                 // Define binding to handle display/hide option-button presses.
+                bindingClass: 'module-options-toggle-button',  
+                template: 'module-options-toggle-button', 
+                binding: 'module-options-callback',  
+                direction: 'write', 
+                event: 'click',
+                writeCallback: function(data, onSuccess) {
+                    //Use for reading checkbox:
+                    // $('').prop('checked',false) to set
+                    // $('').prop('checked') to read
+                    // for html:
+                    // <input type="checkbox" id="inlineCheckbox1" value="option1">
+                    optionsButtonHandler(data, onSuccess);
+                }
+            },
+            {
+                // Define binding to handle display/hide option-button presses.
                 bindingClass: baseReg+'-options-toggle-button',  
                 template: baseReg+'-options-toggle-button', 
                 binding: baseReg+'-callback',  
                 direction: 'write', 
                 event: 'click',
                 writeCallback: function(data, onSuccess) {
-                    var binding = data.binding;
-                    var value = data.value;
-                    console.log('OptionsButton-event');
-                    var btnObj = $('#'+binding.template);
-                    // Switch based off icon state
-                    if(btnObj.hasClass('icon-plus'))  {
-                        btnObj.removeClass('icon-plus');
-                        btnObj.addClass('icon-minus');
-                        $('#'+binding.template+'-options').fadeIn(
-                            FADE_DURATION,
-                            onSuccess
-                            );
-                    } else if(btnObj.hasClass('icon-minus'))  {
-                        btnObj.removeClass('icon-minus');
-                        btnObj.addClass('icon-plus');
-                        $('#'+binding.template+'-options').fadeOut(
-                            FADE_DURATION,
-                            onSuccess
-                            );
-                    } else {
-                        onSuccess();
-                    }
+                    optionsButtonHandler(data, onSuccess);
                 }
             },
         ];
