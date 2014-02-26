@@ -4,7 +4,7 @@
 #device-config-options-table {
 	margin-bottom: 15px;
 	background-color: transparent;
-	margin-top: -15px;
+	margin-top: -5px;
 }
 #device-config-options-table td {
 	background-color: transparent;
@@ -12,6 +12,22 @@
 .displayed-icon {
 	font-size: large;
 }
-.ef-status-message {
-	color: red;
+.input-bar
+{
+    background-color: grey;
+    margin-top:8px;
+    height:5px;
+}
+.ain-range-text {
+	font-size: xx-small;
+	width: 3px;
+}
+#output-data-table {
+	background-color: transparent;
+}
+#output-data-table .result-text p {
+	margin-bottom: -11px;
+}
+#output-data-table td {
+	background-color: transparent;
 }

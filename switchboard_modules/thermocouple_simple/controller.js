@@ -69,7 +69,8 @@ function module() {
      * statements for determining whether a thermocouple reading is out of range
      * or not connected vs it being a valid reading.
      */
-    this.tcFormatFunc = function(tcReading) {
+    this.tcFormatFunc = function(info) {
+        var tcReading = info.value;
         if(tcReading == -9999) {
             return "TC Not Connected";
         } else {

@@ -1543,17 +1543,20 @@ function Framework() {
             var addresses = [];
             var formats = [];
             var customFormatFuncs = [];
+            var bindings = [];
 
             self.readBindings.forEach(function (value, key) {
                 addresses.push(value.binding);
                 formats.push(value.format);
                 customFormatFuncs.push(value.customFormatFunc);
+                bindings.push(value);
             });
 
             innerDeferred.resolve({
                 addresses: addresses, 
                 formats: formats,
-                customFormatFuncs: customFormatFuncs
+                customFormatFuncs: customFormatFuncs,
+                bindings: bindings
             });
             return innerDeferred.promise;
         };
@@ -1584,6 +1587,7 @@ function Framework() {
             var addresses = bindingsInfo.addresses;
             var formats = bindingsInfo.formats;
             var customFormatFuncs = bindingsInfo.customFormatFuncs;
+            var bindings = bindingsInfo.bindings;
             
             if (addresses.length === 0) {
                 innerDeferred.resolve({
@@ -1602,7 +1606,8 @@ function Framework() {
                         values: values,
                         addresses: addresses,
                         formats: formats,
-                        customFormatFuncs: customFormatFuncs
+                        customFormatFuncs: customFormatFuncs,
+                        bindings: bindings
                     });
                 },
                 innerDeferred.reject
@@ -1618,6 +1623,7 @@ function Framework() {
             var formats = valuesInfo.formats;
             var customFormatFuncs = valuesInfo.customFormatFuncs;
             var numAddresses = addresses.length;
+            var bindings = valuesInfo.bindings;
             var retDict = dict();
 
             for (var i=0; i<numAddresses; i++) {
@@ -1625,7 +1631,11 @@ function Framework() {
                 if(formats[i] !== 'customFormat') {
                     stringVal = sprintf(formats[i], values[i]);
                 } else {
-                    stringVal = customFormatFuncs[i](values[i]);
+                    stringVal = customFormatFuncs[i]({
+                        value: values[i],
+                        address: addresses[i],
+                        binding: bindings[i]
+                        });
                 }
                 retDict.set(
                     addresses[i].toString(),
@@ -1689,7 +1699,7 @@ function Framework() {
             var valRead = valueReadFromDevice.get(bindingName.toString());
             if (valRead !== undefined) {
                 var jquerySelector = '#' + bindingInfo.template;
-                jquery.html(jquerySelector, valRead);
+                jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
             }
         });
     };

@@ -57,7 +57,7 @@
                 <thead>
                     <tr class="table-dataHeader">
                         <th class="span2">Channel</th>
-                        <th class="span9">Reading</th>
+                        <th class="span9" style="padding-left: 30px;">Reading</th>
                         <th class="span1">Options</th>
                     </tr>
                 </thead>
@@ -67,8 +67,37 @@
                         <td>
                             <p id="{{name}}-channel-name">{{name}}</p>
                         </td>
-                        <td>
+                        {{!--<td>
                             <p title="Register: {{name}}"><span id="{{name}}">0.000000</span> V</p>
+                            <div class="input-bar" id="{{name}}-input-bar"></div>
+                        </td>--}}
+                        <td>
+                            <table style="width: 100%;margin-bottom: -14px;" id="output-data-table">
+                                <tbody style="background-color:transparent">
+                                    <tr>
+                                        <td>
+                                        </td>
+                                        <td class="result-text">
+                                            <p title="Register: {{name}}"><span id="{{name}}">0.000000</span> V</p>
+                                        </td>
+                                        <td>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="ain-range-text"><span id="{{name}}-min-range-val">-10</span>V</div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="custom-input-bar input-bar" id="{{name}}-input-bar"></div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="ain-range-text"><span id="{{name}}-max-range-val">+10</span>V</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </td>
                         <td>
                             <span  id="{{name}}-options-toggle-button" class="displayed-icon options-toggle-button expand icon-plus"></span>

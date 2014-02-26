@@ -1,5 +1,5 @@
 /**
- * Logic for the Thermocouple Reading module.
+ * Logic for the Analog Input Control Module.
  *
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
  * @author Chris Johnson (LabJack Corp, 2013)
@@ -66,6 +66,58 @@ function module() {
         name: "GND",
         selected:''
     }];
+
+    /**
+     * Function to handle ain reading formatting & updating the mini-graph.
+     */
+    this.ainResultUpdate = function(info) {
+        var ainReading = info.value;
+        var binding = info.binding.binding;
+        var rangeIdName = '#'+binding+'-analog-input-range-select';
+        var barIdName = '#'+binding+'-input-bar';
+        var minValIdName = '#'+binding+'-min-range-val';
+        var maxValIdName = '#'+binding+'-max-range-val';
+        var rangeVal = Number($(rangeIdName).val());
+        var minRangeText = $(minValIdName).text();
+        var maxRangeText = $(maxValIdName).text();
+        var tStr;
+        // console.log('binding',binding,'range: ',rangeVal);
+        
+        tStr = (-1 * rangeVal).toString();
+        if (minRangeText !== tStr) {
+            $(minValIdName).text(tStr);
+        }
+        tStr = '+'+(rangeVal.toString());
+        if (maxRangeText !== tStr) {
+            $(maxValIdName).text(tStr);
+        }
+        
+        switch (rangeVal) {
+            case 10:
+                break;
+            case 1:
+                ainReading = ainReading * 10;
+                break;
+            case 0.1:
+                ainReading = ainReading * 100;
+                break;
+            case 0.01:
+                ainReading = ainReading * 1000;
+                break;
+            default:
+                break;
+        }
+        var width = 100 * ((ainReading + 10) / 20);
+        if (width > 100){
+            width = 100;
+        }
+        if (width < 0) {
+            width = 0;
+        }
+        $(barIdName).css('width', String(width) + '%');
+
+        return sprintf('%10.6f',info.value);
+    };
 
     /**
      * Function is called once every time the module tab is selected, loads the module.
@@ -387,7 +439,8 @@ function module() {
                 template: baseReg, 
                 binding: baseReg, 
                 direction: 'read', 
-                format: '%0.6f'
+                format: 'customFormat', 
+                customFormatFunc: self.ainResultUpdate
             },
             {
                 // Define binding to automatically read AINx_BINARY Registers.
