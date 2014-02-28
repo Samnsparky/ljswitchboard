@@ -554,6 +554,18 @@ function module() {
                 writeCallback: configDevice
             },
             {
+                // Define binding to handle graph button presses
+                bindingClass: 'Graph-Range-Options#(0:2)',
+                template: 'Graph-Range-Options#(0:2)',
+                binding: 'Graph-Range-Options#(0:2)-callback',
+                direction: 'write',
+                event: 'change',
+                writeCallback: function(data, onSuccess) {
+                    console.log('data',data);
+                    onSuccess();
+                }
+            },
+            {
                 // Define binding to handle display/hide option-button presses.
                 bindingClass: 'module-options-toggle-button',  
                 template: 'module-options-toggle-button', 

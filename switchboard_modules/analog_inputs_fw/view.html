@@ -12,7 +12,7 @@
 						{{#if custom.showEFSystemStatusWarning}}
 						<th>EF System Status</th>
 						{{/if}}
-						<th>Options</th>
+						{{!--<th>Options</th>--}
 					</tr>
 				</thead>
 				<tbody style="background-color:transparent">
@@ -50,9 +50,9 @@
 							<i id="AIN_EF_ALL-ef-status-icon" class="displayed-icon text-warning icon-warning" title="An Analog Input is configured for use by the AIN_EF system"></i>
 						</td>
 						{{/if}}
-						<td>
+						{{!--<td>
 							<span id="module-options-toggle-button" class="displayed-icon options-toggle-button expand icon-plus"></span>
-						</td>
+						</td>--}}
 					</tr>
 					<tr style="display:none"></tr>
 					<tr id="module-options-toggle-button-options" class="ain-config-options">
@@ -68,12 +68,22 @@
 								<tbody style="background-color:transparent">
 									<tr>
 										<td title="Configure Graph Min & Max Ranges">
-											<input type="checkbox" id="graphRangeOverrideInput" value="option1">
-											{{!--<select id="module-options-range-override" class="wrap-select">
+											<select id="module-options-range-override" class="wrap-select">
+												<option title="Use Default Ranges" value="0" selected>Default</option>
+												<option title="Use Custom Ranges" value="1">Custom</option>
+											</select>
+											{{!--<input type="checkbox" id="Graph-Range-Options0" value="option1">
+											<select id="module-options-range-override" class="wrap-select">
 												{{#each custom.graphRangeOverrideMenuOptions}}
 												<option title="{{optionDesc}}" value="{{value}}" {{selected}}>{{name}}</option>
 												{{/each}}
 											</select>--}}
+										</td>
+										<td title="Configure Graph Min Ranges">
+											<input type="number" id="Graph-Range-Options1" value="-10">
+										</td>
+										<td title="Configure Graph Max Ranges">
+											<input type="number" id="Graph-Range-Options2" value="10">
 										</td>
 									</tr>
 								</tbody>
