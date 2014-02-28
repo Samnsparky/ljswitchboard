@@ -54,7 +54,16 @@ function selectModule(name)
         $('<img>').attr('src', MODULE_LOADING_IMAGE_SRC)
     );
 
-    $('#cur-module-display').html(name.replace(/_/g, ' '));
+    fs_facade.getModuleInfo(
+        name,
+        function(err) {
+            $('#cur-module-display').html(name.replace(/_/g, ' '));
+        },
+        function(moduleInfo) {
+            $('#cur-module-display').html(moduleInfo.humanName);
+            
+        });
+    // $('#cur-module-display').html(name.replace(/_/g, ' '));
 
     var src = name + '/view.html';
     var cssFile = name + '/style.css';
@@ -238,10 +247,16 @@ function onResized()
         $('#close-nav-dock').slideUp();
     }
 
+    var windowHeight = $(window).height();
     var topPos = $('#module-chrome-contents').position().top;
-    var contents_height = $(window).height() - topPos;
+    var contents_height =  - topPos;
+    var sidebar_height_diff = windowHeight - $('#module-list').height();
+
     if (contents_height < 500)
         contents_height = 500;
+
+    $('#module-list').height((windowHeight - 75).toString() + 'px');
+
 
     if ($('#module-chrome-contents').height() >= contents_height) {
         $('#module-chrome-contents').css(
@@ -329,7 +344,7 @@ $('#module-chrome').ready(function(){
 
     $( window ).resize(function () {
         clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(onResized, 100);
+        resizeTimeout = setTimeout(onResized, 60);
     });
     
     var topPos = $('#module-chrome-contents').position().top;

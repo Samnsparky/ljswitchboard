@@ -20,6 +20,10 @@
         "active": true
     },
     {
+        "name": "digital_io_fw",
+        "active": false
+    },
+    {
         "name": "analog_inputs",
         "active": true
     },
@@ -61,7 +65,7 @@
     },
     {
         "name": "lua_script_debugger",
-        "active": false
+        "active": true
     }
 
 ]
