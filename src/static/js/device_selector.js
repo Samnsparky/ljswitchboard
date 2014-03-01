@@ -15,6 +15,8 @@ var OPEN_FAIL_MESSAGE = handlebars.compile(
     'physical connection and try again or contact support@labjack.com. ' +
     'Driver error number: {{.}}');
 
+var resizeTimeout;
+
 /**
  * Event handler to show the connect buttons for a device.
  *
@@ -456,6 +458,19 @@ function kiplingStartupManager() {
     var self = this;
 }
 
+/**
+ * Callback that dyanmically handles window resizing.
+**/
+function onResized()
+{
+    console.log('here');
+    var decrement = 170;
+    if($('.device-selector-holder h1').height() > 48) {
+        decrement += 48;
+    }
+    $('#t7DeviceListBox').height(($(window).height()-decrement).toString()+'px');
+}
+
 $('#device-selector-holder').ready(function(){
     $('.show-connect-button').click(showConnectButtons);
     $('.cancel-connection-button').click(hideConnectButtons);
@@ -465,6 +480,10 @@ $('#device-selector-holder').ready(function(){
     $('#refresh-button').click(refreshDevices);
     $('#finish-button').click(moveToModules);
 
+    $( window ).resize(function () {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(onResized, 2);
+    });
     
     var deviceKeeper = device_controller.getDeviceKeeper();
 

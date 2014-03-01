@@ -41,6 +41,7 @@ var OPERATION_FAIL_MESSAGE = handlebars.compile(
 
 var LOADED_MODULE_INFO_OBJECT;
 
+var MODULE_CONTENT_BOTTOM_BORDER_HEIGHT = 20;
 /**
  * Switch the view to the given module.
  *
@@ -231,13 +232,13 @@ function displayActiveModulesWithEvents(activeModules, onError, onSuccess)
     });
 }
 
-
 /**
  * Callback that dyanmically handles window resizing.
 **/
 function onResized()
 {
-    if ($(window).width() > 767) {
+    // in the module_chrome.css file this magic number is 768 & 767
+    if ($(window).width() > 782) {
         $('#device-nav-dock').slideUp();
         $('#module-list').slideDown();
         $('#close-nav-dock').slideUp();
@@ -248,26 +249,27 @@ function onResized()
     }
 
     var windowHeight = $(window).height();
-    var topPos = $('#module-chrome-contents').position().top;
-    var contents_height =  - topPos;
-    var sidebar_height_diff = windowHeight - $('#module-list').height();
-
-    if (contents_height < 500)
-        contents_height = 500;
-
-    $('#module-list').height((windowHeight - 75).toString() + 'px');
-
-
-    if ($('#module-chrome-contents').height() >= contents_height) {
+    var contents_height = windowHeight - MODULE_CONTENT_BOTTOM_BORDER_HEIGHT;
+    if($('#module-chrome-contents').css('overflow') !== 'hidden') {
+        $('#module-list').height((windowHeight - 75).toString() + 'px');
         $('#module-chrome-contents').css(
             {'height': contents_height.toString() + 'px'}
-        )
-    } else {
-        $('#module-chrome-contents').animate(
-            {'height': contents_height.toString() + 'px'},
-            250
         );
+    } else {
+        $('#module-chrome-contents').css({'height': '100%'});
     }
+    // var topPos = $('#module-chrome-contents').position().top;
+    // var sidebar_height_diff = windowHeight - $('#module-list').height();
+    // if ($('#module-chrome-contents').height() >= contents_height) {
+    //     $('#module-chrome-contents').css(
+    //         {'height': contents_height.toString() + 'px'}
+    //     )
+    // } else {
+    //     $('#module-chrome-contents').animate(
+    //         {'height': contents_height.toString() + 'px'},
+    //         250
+    //     );
+    // }
 }
 
 
@@ -344,17 +346,25 @@ $('#module-chrome').ready(function(){
 
     $( window ).resize(function () {
         clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(onResized, 60);
+        resizeTimeout = setTimeout(onResized, 16);
     });
     
-    var topPos = $('#module-chrome-contents').position().top;
-    var contents_height = $(window).height() - topPos;
-    if (contents_height < 500)
-        contents_height = 500;
+    // var topPos = $('#module-chrome-contents').position().top;
+    // var contents_height = $(window).height() - MODULE_CONTENT_BOTTOM_BORDER_HEIGHT;
 
-    $('#module-chrome-contents').css(
-        {'height': contents_height.toString() + 'px'}
-    )
+    // $('#module-chrome-contents').css(
+    //     {'height': contents_height.toString() + 'px'}
+    // )
+    var windowHeight = $(window).height();
+    var contents_height = windowHeight - MODULE_CONTENT_BOTTOM_BORDER_HEIGHT;
+    if($('#module-chrome-contents').css('overflow') !== 'hidden') {
+        $('#module-list').height((windowHeight - 75).toString() + 'px');
+        $('#module-chrome-contents').css(
+            {'height': contents_height.toString() + 'px'}
+        );
+    } else {
+        $('#module-chrome-contents').css({'height': '100%'});
+    }
     
     module_manager.getActiveModules(
         genericErrorHandler,

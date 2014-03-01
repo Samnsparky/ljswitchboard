@@ -1,5 +1,5 @@
 <div class="device-selector-holder">
-    <h1>select devices <button id="refresh-button" class="btn btn-primary">Refresh Devices >></button><button id="finish-button" class="btn btn-primary">Finish >></button></h1>
+    <h1>Select Devices <button id="refresh-button" class="btn btn-primary">Refresh Devices >></button><button id="finish-button" class="btn btn-primary">Finish >></button></h1>
     <div id="alert-message" class="alert">
       <button type="button" class="close close-alert-button"></button>
       <div id="error-display"></div>
@@ -9,46 +9,48 @@
         Sorry, no devices found... Please check your network and / or USB ports and try again.
         {{/noDevices}}
         {{#connection_types}}
-        <div class="device-pane-section connection-type">
+        <div id="t7DeviceListBox" class="device-pane-section connection-type">
             <div class="device-pane-popover">
                 <div class="arrow"></div>
                 <div class="label">{{name}}</div>
             </div>
-            <div class="well devices-enumeration {{size}}">
-                {{#devices}}
-                <div class="device">
-                    <div id="image"><img src="static/img/devices/{{ type }}{{specialImageSuffix}}.png"></div>
-                    <div id="info-holder">
-                        <div id="info">
-                            <div id="serial">{{serial}}</div>
-                            <div id="connection-types">{{#connectionTypes}}{{ . }} {{/connectionTypes}}</div>
-                            <div id="type">{{type}}{{specialText}}</div>
-                            <div id="name">{{name}}</div>
-                            <div id="ip-address">{{ipAddress}}</div>
-                            <div id="disconnect-button-holder" class="{{^connected}}hidden-button-holder{{/connected}}">
-                                <button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
-                                    disconnect
-                                </button>
+            <div class="devices-enumeration-scroller">
+                <div class="well devices-enumeration {{size}}">
+                    {{#devices}}
+                    <div class="device">
+                        <div id="image"><img src="static/img/devices/{{ type }}{{specialImageSuffix}}.png"></div>
+                        <div id="info-holder">
+                            <div id="info">
+                                <div id="serial">{{serial}}</div>
+                                <div id="connection-types">{{#connectionTypes}}{{ . }} {{/connectionTypes}}</div>
+                                <div id="type">{{type}}{{specialText}}</div>
+                                <div id="name">{{name}}</div>
+                                <div id="ip-address">{{ipAddress}}</div>
+                                <div id="disconnect-button-holder" class="{{^connected}}hidden-button-holder{{/connected}}">
+                                    <button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
+                                        disconnect
+                                    </button>
+                                </div>
+                                <div id="show-connect-button-holder" class="{{#connected}}hidden-button-holder{{/connected}}">
+                                    <button class="btn show-connect-button" id="{{type}}-{{serial}}-show">
+                                        connect
+                                    </button>
+                                </div>
+                                <div class="device-load-progress progress progress-indeterminate">
+                                    <div>loading</div>
+                                    <div><img src="static/img/progress-indeterminate.gif"></div>
+                                </div>
                             </div>
-                            <div id="show-connect-button-holder" class="{{#connected}}hidden-button-holder{{/connected}}">
-                                <button class="btn show-connect-button" id="{{type}}-{{serial}}-show">
-                                    connect
-                                </button>
+                            <div id="connect-buttons">
+                                {{#connectionTypes}}
+                                <div class="connect-button-holder"><button id="{{../type}}-{{../serial}}-{{../ipSafe}}-{{.}}-{{../origConnectionType}}-{{../origDeviceType}}" class="btn btn-success connect-button">Connect {{.}}</button></div>
+                                {{/connectionTypes}}
+                                <div><button class="btn cancel-connection-button" id="{{type}}-{{serial}}-cancel">cancel</button></div>
                             </div>
-                            <div class="device-load-progress progress progress-indeterminate">
-                                <div>loading</div>
-                                <div><img src="static/img/progress-indeterminate.gif"></div>
-                            </div>
-                        </div>
-                        <div id="connect-buttons">
-                            {{#connectionTypes}}
-                            <div class="connect-button-holder"><button id="{{../type}}-{{../serial}}-{{../ipSafe}}-{{.}}-{{../origConnectionType}}-{{../origDeviceType}}" class="btn btn-success connect-button">Connect {{.}}</button></div>
-                            {{/connectionTypes}}
-                            <div><button class="btn cancel-connection-button" id="{{type}}-{{serial}}-cancel">cancel</button></div>
                         </div>
                     </div>
+                    {{/devices}}
                 </div>
-                {{/devices}}
             </div>
         </div>
         {{/connection_types}}

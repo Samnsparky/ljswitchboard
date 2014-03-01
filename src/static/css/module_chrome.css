@@ -69,9 +69,6 @@ body,html
 
     /*height: 500px;*/
     height:100%;
-    min-height: 657px;
-
-    overflow: auto;
 }
 
 #alert-message
@@ -95,48 +92,28 @@ body,html
 {
     color: #E0E0E0;
 }
-
 @media screen and (min-width: 768px) {
-    #module-list
-    {
-        height: 657px;
+    #content-holder{
+        margin-left: -20px;
+        margin-right: -10px;
+    }
+    #module-chrome-contents{
         overflow: auto;
     }
-    #module-chrome-contents
-    {
-        width: 76%;
+}
+@media screen and (max-width: 767px) {
+    #content-holder{
+        margin-left: -20px;
+        margin-right: -20px;
     }
-    #device-display
-    {
-        position: fixed;
-        bottom: 0px;
+    #system-navigation {
+        width: 100%;
     }
-    .nav-dock-component
-    {
-        display: none;
+    #module-chrome-contents {
+        width: 100%;
+    }
+    #module-chrome-contents{
+        overflow: hidden;
     }
 }
 
-@media screen and (max-width: 767px) {
-    #module-list {
-        margin: 0px;
-        display: none;
-    }
-    #device-display
-    {
-        margin-bottom: 10px;
-    }
-    #device-nav-dock
-    {
-        display: block;
-    }
-    #close-nav-dock
-    {
-        display: none;
-    }
-    .nav-dock-component
-    {
-        margin: 10px 0;
-        padding: 10px;
-    }
-}

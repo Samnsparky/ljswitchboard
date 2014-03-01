@@ -6,7 +6,8 @@
   "window": {
     "toolbar": true,
     "width": 870,
-    "height": 730
+    "height": 730,
+    "min_width":500
   },
   "nodejs": true,
   "dependencies": {
