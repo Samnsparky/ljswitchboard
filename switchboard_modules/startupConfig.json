@@ -1,5 +1,5 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "ljmDeviceParameters": 
     [
         {
@@ -21,7 +21,7 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "analog_inputs_fw",
+    "moduleName": "lua_script_debugger",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }

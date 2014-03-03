@@ -66,6 +66,10 @@
     {
         "name": "lua_script_debugger",
         "active": true
+    },
+    {
+        "name": "data_logger",
+        "active": false
     }
 
 ]
