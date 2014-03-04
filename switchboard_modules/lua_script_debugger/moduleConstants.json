@@ -1,0 +1,25 @@
+{
+	"constants": {
+		"editor": {
+			"defaultScript":"basicExample"
+		},
+		"console": {
+			"maxNumLines": 1000
+		}
+	},
+	"preBuiltScripts": [
+		{
+			"name": "basicExample",
+			"location":"lua_script_debugger/premade_scripts/test1.lua"
+		},
+		{
+			"name": "test1",
+			"location":"lua_script_debugger/premade_scripts/test1.lua"
+		},
+		{
+			"name": "test2",
+			"location":"lua_script_debugger/premade_scripts/test2.lua"
+		}
+	],
+	"scriptTemplates": []
+}

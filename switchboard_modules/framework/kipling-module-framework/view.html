@@ -1,12 +1,12 @@
 <div id="single-device-framework-obj">
-    <div id="device-selector">
+    <div id="device-selector" class="unselectable">
         <table class="table table-striped" {{#unless hasMultipleDevices}}style="display:none"{{/unless}} id="device-selector-table">
             <thead>
                 <tr>
-                    <th>select</th>
-                    <th>device type</th>
-                    <th>serial number</th>
-                    <th>name</th>
+                    <th><p>select</p></th>
+                    <th><p>device type</p></th>
+                    <th><p>serial number</p></th>
+                    <th><p>name</p></th>
                 <tr>
             </thead>
             <tbody>
@@ -18,17 +18,17 @@
                             <span class="metro-radio"></span>
                         </label>
                     </td>
-                    <td class="device-selector-table-device-type">{{getDeviceType}}</td>
-                    <td class="device-selector-table-serial-number">{{getSerial}}</td>
-                    <td class="device-selector-table-device-name">{{getName}}</td>
+                    <td class="device-selector-table-device-type"><p>{{getDeviceType}}</p></td>
+                    <td class="device-selector-table-serial-number"><p>{{getSerial}}</p></td>
+                    <td class="device-selector-table-device-name"><p>{{getName}}</p></td>
                 </tr>
                 {{/devices}}
             </tbody>
         </table>
     </div>
     <div id="sd-ramework-configuring-device-display" class="progress progress-indeterminate">
-        <div>configuring device</div>
+        <div><p>configuring device</p></div>
         <div><img src="static/img/progress-indeterminate.gif"></div>
     </div>
-    <div id="device-view" style="display:none"></div>
+    <div id="device-view" style="display:none" class="unselectable"></div>
 </div>

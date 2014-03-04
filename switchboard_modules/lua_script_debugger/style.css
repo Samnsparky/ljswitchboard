@@ -1,4 +1,8 @@
-#editor { 
+#lua-script-window-views {
+	width: 100%;
+	height: 500px;
+}
+#lua-code-editor { 
 	width: 100%;
 	height: 500px;
 }

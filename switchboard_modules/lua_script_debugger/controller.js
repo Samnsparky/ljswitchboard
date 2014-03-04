@@ -30,6 +30,7 @@ var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
  */
 function module() {
     var aceEditor;
+    this.aceEditor = aceEditor;
     var moduleContext = {};
 
     /**
@@ -53,13 +54,13 @@ function module() {
         var moduleBindings = [
             {bindingClass: 'LUA_RUN', template: 'LUA_RUN',   binding: 'LUA_RUN',    direction: 'read',  format: '%d'},
             {bindingClass: 'LUA_DEBUG_ENABLE', template: 'LUA_DEBUG_ENABLE',   binding: 'LUA_DEBUG_ENABLE',    direction: 'read',  format: '%d'},
-            {bindingClass: 'LUA_DEBUG_NUM_BYTES', template: 'LUA_DEBUG_NUM_BYTES',   binding: 'LUA_DEBUG_NUM_BYTES',    direction: 'read',  format: 'customFormat'},
+            {bindingClass: 'LUA_DEBUG_NUM_BYTES', template: 'LUA_DEBUG_NUM_BYTES',   binding: 'LUA_DEBUG_NUM_BYTES',    direction: 'read',  format: '%d'},
         ];
 
         // Save the bindings to the framework instance.
         framework.putConfigBindings(moduleBindings);
         onSuccess();
-    }
+    };
     
     /**
      * Function is called once every time a user selects a new device.  
@@ -72,57 +73,109 @@ function module() {
 
         // While configuring the device build a dict to be used for generating the
         // module's template.
-        moduleContext['debugData'] = [];
+        moduleContext.debugData = [];
 
         // save the custom context to the framework so it can be used when
         // rendering the module's template.
         framework.setCustomContext(moduleContext);
         onSuccess();
-    }
+    };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         //Initialize ace editor:
-        aceEditor = ace.edit("editor");
+        aceEditor = ace.edit("lua-code-editor");
         aceEditor.setTheme("ace/theme/monokai");
-        aceEditor.getSession().setMode("ace/mode/javascript");
+        aceEditor.getSession().setMode("ace/mode/lua");
 
         onSuccess();
-    }
+    };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
         onSuccess();
-    }
+    };
     this.onRegisterWritten = function(framework, registerName, value, onError, onSuccess) {
         onSuccess();
-    }
+    };
     this.onRefresh = function(framework, registerNames, onError, onSuccess) {
         onSuccess();
-    }
+    };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
         // console.log('in onRefreshed',results);
         results.forEach(function(key, value){
             // console.log('results['+value+']:',key)
         });
         onSuccess();
-    }
+    };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
         onSuccess();
-    }
+    };
     this.onUnloadModule = function(framework, onError, onSuccess) {
         aceEditor = undefined;
         onSuccess();
-    }
+    };
     this.onLoadError = function(framework, description, onHandle) {
         console.log('in onLoadError', description);
         onHandle(true);
-    }
+    };
     this.onWriteError = function(framework, registerName, value, description, onHandle) {
         console.log('in onConfigError', description);
         onHandle(true);
-    }
+    };
     this.onRefreshError = function(framework, registerNames, description, onHandle) {
         console.log('in onRefreshError', description);
         onHandle(true);
-    }
+    };
 
+    this.getEditor = function() {
+        return aceEditor;
+    }
     var self = this;
 }
+/*
+Code Notes:
+
+Notes about ace-editor:
+set read-only:
+editor.setReadOnly(true)
+
+read num-lines visible:
+editor.session.getLength()
+
+focus on the last-visible line:
+editor.gotoLine(editor.session.getLength())
+
+focus on line #5
+editor.gotoLine(5)
+
+set text-mode:
+editor.getSession().setMode("ace/mode/text")
+
+make user-cursor look greyed out:
+editor.blur()
+
+get last row of actual text:
+editor.getLastVisibleRow()
+
+getting document object:
+var cDoc = editor.getSession().getDocument()
+
+removing lines from document:
+cDoc.removeLines(6,7)
+
+remove line #5 from editor
+cDoc.removeLines(4,4)
+
+insert text to lines 21->23:
+str="abcd\r\n\r\nefg"
+cDoc.insert({row:20,column:0},str)
+
+insert text to end of document:
+cDoc.insert({row:editor.session.getLength(),column:0},str)
+
+insert text to begining of document:
+cDoc.insert({row:0,column:0},str)
+
+remove first two lines from document
+cDoc.removeLines(0,1)
+ */
+
+

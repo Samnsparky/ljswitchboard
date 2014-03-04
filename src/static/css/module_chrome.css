@@ -25,6 +25,10 @@ body,html
     padding: 10px;
     margin-bottom: 2px;
     cursor: pointer;
+    -webkit-user-select: none;
+}
+#module-list li:active {
+    cursor: pointer;
 }
 
 #module-list li:hover
@@ -32,6 +36,35 @@ body,html
     background-color: #888888;
     color: white;
 }
+#module-list li a
+{
+    cursor: pointer;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.unselectable {
+    cursor: default;
+   -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
+    user-select: none; 
+}
+p, h1, h2, h3 {
+    cursor: default;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 
 #module-list .selected
 {
@@ -92,6 +125,20 @@ body,html
 {
     color: #E0E0E0;
 }
+@media screen and (min-width: 968px) {
+    #module-chrome-contents{
+        position:absolute;
+        left:220px;
+        right:20px;
+        width: initial;
+    }
+}
+@media screen and (max-width: 967px) {
+    #module-chrome-contents{
+        position: inherit;
+        width:76%;
+    }
+}
 @media screen and (min-width: 768px) {
     #content-holder{
         margin-left: -20px;
@@ -99,6 +146,12 @@ body,html
     }
     #module-chrome-contents{
         overflow: auto;
+        /*position:absolute;
+        left:22.92817679558011%;
+        right:20px;*/
+    }
+    #system-navigation {
+        max-width:220px;
     }
 }
 @media screen and (max-width: 767px) {
@@ -111,9 +164,11 @@ body,html
     }
     #module-chrome-contents {
         width: 100%;
-    }
-    #module-chrome-contents{
         overflow: hidden;
     }
+    #system-navigation {
+        max-width:100%;
+    }
 }
+
 

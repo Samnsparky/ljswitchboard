@@ -40,6 +40,7 @@ var OPERATION_FAIL_MESSAGE = handlebars.compile(
     'Error: {{.}}');
 
 var LOADED_MODULE_INFO_OBJECT;
+var LOADED_MODULE_CONSTANTS_OBJECT;
 
 var MODULE_CONTENT_BOTTOM_BORDER_HEIGHT = 20;
 /**
@@ -134,24 +135,40 @@ function selectModule(name)
     // TODO: Better error handler
     fs_facade.getModuleInfo(
         name,
-        function (err) { showAlert(err); },
+        function (err) { 
+            console.log('Error Loading moduleConstants.json');
+            showAlert(err); 
+        },
         function (moduleInfo) {
-            //Check to see if a framework should be loaded
-            if (moduleInfo.framework) {
-                if(moduleInfo.framework === 'singleDevice') {
-                    // Save the module info object
-                    LOADED_MODULE_INFO_OBJECT = moduleInfo;
-                    //load the 'singleDevice' framework
-                    renderSingleDeviceFrameworkModule(moduleInfo.third_party_code);
+            var moduleInfo = moduleInfo;
+            // Save the module info object
+            LOADED_MODULE_INFO_OBJECT = moduleInfo;
+            var loadModule = function(moduleConstants) {
+                // Save the module constants object
+                LOADED_MODULE_CONSTANTS_OBJECT = moduleConstants;
+                //Check to see if a framework should be loaded
+                if (moduleInfo.framework) {
+                    if(moduleInfo.framework === 'singleDevice') {
+                        //load the 'singleDevice' framework
+                        renderSingleDeviceFrameworkModule(moduleInfo.third_party_code);
+                    } else {
+                        //if no appropriate framework was found, load as if there 
+                        //  was no framework requested
+                        renderNoFrameworkModule();
+                    }
                 } else {
-                    //if no appropriate framework was found, load as if there 
-                    //  was no framework requested
+                    //Perform a standard module-load
                     renderNoFrameworkModule();
                 }
-            } else {
-                //Perform a standard module-load
-                renderNoFrameworkModule();
             }
+            fs_facade.getModuleConstants(
+                name,
+                function (err) { 
+                    console.log('Error Loading moduleConstants.json');
+                    showAlert(err);
+                },
+                loadModule
+            );
         }
     )
 }

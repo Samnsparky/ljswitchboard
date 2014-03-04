@@ -13,6 +13,7 @@ var handlebars = require('handlebars');
 
 var MODULES_DIR = 'switchboard_modules';
 var MODULE_DESC_FILENAME = 'module.json';
+var MODULE_CONST_FILENAME = 'moduleConstants.json';
 var MODULES_DESC_FILENAME = 'modules.json';
 
 var INTERNAL_TEMPLATES_DIR = 'templates';
@@ -163,24 +164,20 @@ exports.getModuleInfo = function(name, onError, onSuccess)
 
     fs.exists(modulesDescriptorSrc, function(exists)
     {
-        if(exists)
-        {
+        if(exists) {
             fs.readFile(modulesDescriptorSrc, 'utf8',
                 function (error, contents)
                 {
-                    if (error)
-                    {
+                    if (error) {
                         onError(error);
-                    }
-                    else
-                    {
-                        onSuccess(JSON.parse(contents));
+                    } else {
+                        var moduleConstants = JSON.parse(contents);
+                        moduleConstants.activePath = modulesDescriptorSrc;
+                        onSuccess(moduleConstants);
                     }
                 }
             );
-        }
-        else
-        {
+        } else {
             var error = new Error(
                 'Could not find modules info at ' + modulesDescriptorSrc + '.'
             );
@@ -188,6 +185,54 @@ exports.getModuleInfo = function(name, onError, onSuccess)
         }
     });
 };
+
+exports.getModuleConstants = function(name, onError, onSuccess) {
+    var moduleDir = path.join(exports.getParentDir(), MODULES_DIR);
+    var modulesDescriptorSrc = path.join(moduleDir, name,
+        MODULE_CONST_FILENAME);
+
+    fs.exists(modulesDescriptorSrc, function(exists) {
+        if(exists) {
+            fs.readFile(modulesDescriptorSrc, 'utf8',
+                function (error, contents)
+                {
+                    if (error) {
+                        onError(error);
+                    } else {
+                        onSuccess(JSON.parse(contents));
+                    }
+                }
+            );
+        } else {
+            //return no-data
+            var constants = {};
+            onSuccess(constants);
+        }
+    });
+}
+
+exports.readModuleFile = function(filePath, onError, onSuccess) {
+    var fullPath = exports.getExternalURI(filePath);
+    fs.exists(fullPath, function(exists) {
+        if(exists) {
+            fs.readFile(fullPath, 'utf8',
+                function (error, contents)
+                {
+                    if (error) {
+                        onError(error);
+                    } else {
+                        onSuccess(contents);
+                    }
+                }
+            );
+        } else {
+            var error = new Error(
+                'Could not find modules info at ' + fullPath + '.'
+            );
+            onError(error);
+        }
+    });
+}
 
 // TODO: Move to module manager
 /**
