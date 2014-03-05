@@ -24,6 +24,7 @@
     "q": "~0",
     "request": "~2",
     "simplesets": "~1",
-    "sprintf-js": "~0"
+    "sprintf-js": "~0",
+    "sprintf":  "~1.3"
   }
 }
