@@ -692,6 +692,12 @@ function Framework() {
             );
             return;
         }
+        if (newBinding.iterationDelay === undefined) {
+            newBinding.iterationDelay = 0;
+            return;
+        }
+        newBinding.currentDelay = newBinding.iterationDelay;
+        
         if (newBinding.format === undefined) {
             newBinding.format = '%.4f';
         }

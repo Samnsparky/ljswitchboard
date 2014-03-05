@@ -5,12 +5,16 @@
 		},
 		"console": {
 			"maxNumLines": 1000
-		}
+		},
+		"statusShownAtStartup": true,
+		"consoleShownAtStartup": true,
+		"editorShownAtStartup": true,
+		"defaultSaveLocation": "testDirectory"
 	},
 	"preBuiltScripts": [
 		{
 			"name": "basicExample",
-			"location":"lua_script_debugger/premade_scripts/test1.lua"
+			"location":"lua_script_debugger/premade_scripts/basicExample.lua"
 		},
 		{
 			"name": "test1",
