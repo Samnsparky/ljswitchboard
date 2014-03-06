@@ -15,7 +15,7 @@
     "dict": "~1",
     "handlebars": "~1",
     "jshint": "~2",
-    "labjack-nodejs": "~0",
+    "labjack-nodejs": "0.0.5",
     "ljmmm-parse": "~0.1",
     "lazy": "~1",
     "long": "~1",

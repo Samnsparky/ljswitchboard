@@ -694,7 +694,6 @@ function Framework() {
         }
         if (newBinding.iterationDelay === undefined) {
             newBinding.iterationDelay = 0;
-            return;
         }
         newBinding.currentDelay = newBinding.iterationDelay;
         
