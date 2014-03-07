@@ -17,6 +17,10 @@
         {
             "serialNumber":"470010604",
             "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010610",
+            "connectionType":"USB"
         }
     ],
     "displayDevTools": false,

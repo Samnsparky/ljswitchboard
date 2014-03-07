@@ -316,6 +316,7 @@ function kiplingStartupManager() {
             } else if(dtText === 'T7') {
                 dt = 'LJM_dtT7';
             }
+            // console.log('Found:',sn,conButtonObjects,dtText);
 
 
             // var deviceInfo = event.target.id.split('-');
@@ -343,6 +344,7 @@ function kiplingStartupManager() {
 
                 }
             );
+            // console.log(devices,conTypes)
         }
         return devices;
     };
