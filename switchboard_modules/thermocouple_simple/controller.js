@@ -299,7 +299,8 @@ function module() {
                 binding: baseReg+'-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: function(data, onSuccess) {
+                execCallback: true,
+                callback: function(data, onSuccess) {
                     var binding = data.binding;
                     var value = data.value;
                     //Get AIN channel name, 'AIN0'
@@ -326,7 +327,8 @@ function module() {
                 binding: baseReg+'-callback',  
                 direction: 'write', 
                 event: 'click',
-                writeCallback: function(data, onSuccess) {
+                execCallback: true,
+                callback: function(data, onSuccess) {
                     var binding = data.binding;
                     var value = data.value;
                     var btnObj = $('#'+binding.template);

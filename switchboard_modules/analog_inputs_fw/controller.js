@@ -488,7 +488,8 @@ function module() {
                 binding: 'AIN_ALL_RANGE-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: configDeviceGlobal
+                execCallback: true,
+                callback: configDeviceGlobal
             },
             {
                 // Define binding to handle AIN_ALL_RESOLUTION_INDEX user inputs.
@@ -497,7 +498,8 @@ function module() {
                 binding: 'AIN_ALL_RESOLUTION_INDEX-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: configDeviceGlobal
+                execCallback: true,
+                callback: configDeviceGlobal
             },
             {
                 // Define binding to handle AIN_ALL_SETTLING_US user inputs.
@@ -506,7 +508,8 @@ function module() {
                 binding: 'AIN_ALL_SETTLING_US-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: configDeviceGlobal
+                execCallback: true,
+                callback: configDeviceGlobal
             },
             {
                 // Define binding to handle AIN_ALL_NEGATIVE_CH user inputs.
@@ -515,7 +518,8 @@ function module() {
                 binding: 'AIN_ALL_NEGATIVE_CH-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: configDeviceGlobal
+                execCallback: true,
+                callback: configDeviceGlobal
             },
             {
                 // Define binding to handle AINx_RANGE user inputs.
@@ -524,7 +528,8 @@ function module() {
                 binding: baseReg+'_RANGE-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: configDevice
+                execCallback: true,
+                callback: configDevice
             },
             {
                 // Define binding to handle AINx_RESOLUTION_INDEX user inputs.
@@ -533,7 +538,8 @@ function module() {
                 binding: baseReg+'_RESOLUTION_INDEX-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: configDevice
+                execCallback: true,
+                callback: configDevice
             },
             {
                 // Define binding to handle AINx_SETTLING_US user inputs.
@@ -542,7 +548,8 @@ function module() {
                 binding: baseReg+'_SETTLING_US-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: configDevice
+                execCallback: true,
+                callback: configDevice
             },
             {
                 // Define binding to handle AINx_NEGATIVE_CH user inputs.
@@ -551,7 +558,8 @@ function module() {
                 binding: baseReg+'_NEGATIVE_CH-callback',  
                 direction: 'write', 
                 event: 'change',
-                writeCallback: configDevice
+                execCallback: true,
+                callback: configDevice
             },
             {
                 // Define binding to handle graph button presses
@@ -560,7 +568,8 @@ function module() {
                 binding: 'Graph-Range-Options#(0:2)-callback',
                 direction: 'write',
                 event: 'change',
-                writeCallback: function(data, onSuccess) {
+                execCallback: true,
+                callback: function(data, onSuccess) {
                     console.log('data',data);
                     onSuccess();
                 }
@@ -572,7 +581,8 @@ function module() {
                 binding: 'module-options-callback',  
                 direction: 'write', 
                 event: 'click',
-                writeCallback: function(data, onSuccess) {
+                execCallback: true,
+                callback: function(data, onSuccess) {
                     //Use for reading checkbox:
                     // $('').prop('checked',false) to set
                     // $('').prop('checked') to read
@@ -588,7 +598,8 @@ function module() {
                 binding: baseReg+'-callback',  
                 direction: 'write', 
                 event: 'click',
-                writeCallback: function(data, onSuccess) {
+                execCallback: true,
+                callback: function(data, onSuccess) {
                     optionsButtonHandler(data, onSuccess);
                 }
             },

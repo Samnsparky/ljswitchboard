@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "main": "index.html",
   "window": {
+    "title": "Kiplingv3",
+    "icon": "Kiplingv3_Icon2.png",
     "toolbar": true,
     "width": 870,
     "height": 730,

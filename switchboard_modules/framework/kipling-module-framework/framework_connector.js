@@ -25,6 +25,7 @@ try {
     // try and create an instance of the user's module, if it doesn't exist
     // catch the error & produce an error message via 'showAlert'
     sdModule = new module();
+
     try {
         // Try and link the framework to the various implemented functions, 
         // if they don't exist don't link them.  If there is an error, show an
@@ -77,8 +78,9 @@ try {
             }
 
             //figure out what tab is loaded:
-            var activeTabID = $('.module-tab.selected').attr('id');
-            var tabName = activeTabID.split('-module-tab')[0];
+            // var activeTabID = $('.module-tab.selected').attr('id');
+            // var tabName = activeTabID.split('-module-tab')[0];
+            var tabName = LOADED_MODULE_INFO_OBJECT.name;
             var moduleViewPath = tabName + '/view.html';
             var moduleDataPath = tabName + '/moduleData.json';
 
@@ -86,6 +88,12 @@ try {
             // Also configure the framework to use module's data, 'moduleData.json'
             sdFramework.configFramework(moduleViewPath);
             sdFramework.configureFrameworkData([moduleDataPath]);
+
+            //Save loaded module data to the framework instance
+            sdFramework.saveModuleInfo(
+                LOADED_MODULE_INFO_OBJECT,
+                LOADED_MODULE_CONSTANTS_OBJECT
+            );
 
             // Start the framework
             sdFramework.startFramework();

@@ -19,19 +19,67 @@
 
 // Constant that determines device polling rate.  Use an increased rate to aid
 // in user experience.
-var MODULE_UPDATE_PERIOD_MS = 1000;
+var MODULE_UPDATE_PERIOD_MS = 100;
 
 // Constant that can be set to disable auto-linking the module to the framework
 var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
+
+function textEditor() {
+    var editor;
+    var htmlID = '';
+    var editorTheme = '';
+    var editorMode = '';
+
+    this.setupEditor = function(id, theme, mode) {
+        self.htmlID = id;
+        self.editorTheme = theme;
+        self.editorMode = mode;
+
+        // Initialize the aceEditor instance
+        self.editor = ace.edit(id);
+        self.editor.setTheme(theme);
+        self.editor.getSession().setMode(mode);
+    }
+
+    var self = this;
+}
 
 /**
  * Module object that gets automatically instantiated & linked to the appropriate framework.
  * When using the 'singleDevice' framework it is instantiated as sdModule.
  */
 function module() {
-    var aceEditor;
-    this.aceEditor = aceEditor;
+    var luaEditor = new textEditor();
+    this.luaEditor = luaEditor;
+    var debuggingLog = new textEditor();
+    this.debuggingLog = debuggingLog;
+
     var moduleContext = {};
+
+    var luaVariables = 
+    {
+
+        "runStatus": {
+            "icon": {
+                0: 'icon-pause',
+                1: 'icon-play'
+            },
+            "title": {
+                0: 'Script Stopped',
+                1: 'Script Running' 
+            }
+        },
+        "startupStatus": {
+            "icon": {
+                0: 'icon-blocked-3',
+                1: 'icon-switch-3'
+            },
+            "title": {
+                0: 'Script will not run at startup',
+                1: 'Script will run at startup' 
+            }
+        },
+    };
 
     /**
      * Function is called once every time the module tab is selected, loads the module.
@@ -40,25 +88,15 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onModuleLoaded = function(framework, onError, onSuccess) {
-        /**
-         * Format for a single binding,
-         * bindingClass: The string constant made available in the handlebars template. ex: {{AIN0.direction}}
-         * template: The string constant that must be present as the id, 
-         *     ex: <p id="AIN0">0.000</p>
-         *     in the module's 'view.html' file to serve as the location to get automatically 
-         *     updated by the framework.
-         * binding: The string constant representing the register to be read. ex: 'AIN0'
-         * direction:
-         * format: 
-        **/
-        var moduleBindings = [
-            {bindingClass: 'LUA_RUN', template: 'LUA_RUN',   binding: 'LUA_RUN',    direction: 'read',  format: '%d'},
-            {bindingClass: 'LUA_DEBUG_ENABLE', template: 'LUA_DEBUG_ENABLE',   binding: 'LUA_DEBUG_ENABLE',    direction: 'read',  format: '%d'},
-            {bindingClass: 'LUA_DEBUG_NUM_BYTES', template: 'LUA_DEBUG_NUM_BYTES',   binding: 'LUA_DEBUG_NUM_BYTES',    direction: 'read',  format: '%d'},
+        var setupBindings = [
+            {bindingClass: 'LUA_RUN', binding: 'LUA_RUN', direction: 'read'},
+            {bindingClass: 'LUA_DEBUG_ENABLE', binding: 'LUA_DEBUG_ENABLE', direction: 'read'},
+            {bindingClass: 'LUA_DEBUG_NUM_BYTES', binding: 'LUA_DEBUG_NUM_BYTES', direction: 'read'},
+            {bindingClass: 'LUA_STARTUP_CONFIG', binding: 'LUA_STARTUP_CONFIG', direction: 'read'},
         ];
 
-        // Save the bindings to the framework instance.
-        framework.putConfigBindings(moduleBindings);
+        // Save the setupBindings to the framework instance.
+        framework.putSetupBindings(setupBindings);
         onSuccess();
     };
     
@@ -71,21 +109,161 @@ function module() {
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
 
-        // While configuring the device build a dict to be used for generating the
-        // module's template.
-        moduleContext.debugData = [];
+        // // While configuring the device build a dict to be used for generating the
+        // // module's template.
+        // moduleContext.debugData = [];
 
-        // save the custom context to the framework so it can be used when
-        // rendering the module's template.
-        framework.setCustomContext(moduleContext);
+        framework.clearConfigBindings();
         onSuccess();
     };
+    this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
+        //Register various device bindings
+        var deviceBindings = [
+            {
+                bindingClass: 'LUA_RUN', 
+                template: 'LUA_RUN',   
+                binding: 'LUA_RUN',    
+                direction: 'read',  
+                format: '%d', 
+                iterationDelay: 9,
+                initialDelay: 0,
+                execCallback: true,
+                callback: function(data, onSuccess) {
+                    var val = data.value;
+                    var icon = $('#script-running-status');
+                    icon.attr('class',luaVariables.runStatus.icon[val]);
+                    icon.attr('title',luaVariables.runStatus.title[val]);
+                    onSuccess();
+                }
+            },
+            {
+                bindingClass: 'LUA_STARTUP_CONFIG', 
+                template: 'LUA_STARTUP_CONFIG',   
+                binding: 'LUA_STARTUP_CONFIG',    
+                direction: 'read',  
+                format: '%d', 
+                iterationDelay: 9,
+                initialDelay: 0,
+                execCallback: true,
+                callback: function(data, onSuccess) {
+                    var val = data.value;
+                    var icon = $('#startup-script-running-status');
+                    icon.attr('class',luaVariables.startupStatus.icon[val]);
+                    icon.attr('title',luaVariables.startupStatus.title[val]);
+                    onSuccess();
+                }
+            },
+            {
+                bindingClass: 'LUA_DEBUG_ENABLE', 
+                template: 'LUA_DEBUG_ENABLE',   
+                binding: 'LUA_DEBUG_ENABLE',    
+                direction: 'read',  
+                format: '%d', 
+                iterationDelay: 9,
+                initialDelay: 0
+            },
+            {
+                bindingClass: 'LUA_DEBUG_NUM_BYTES', 
+                template: 'LUA_DEBUG_NUM_BYTES',
+                binding: 'LUA_DEBUG_NUM_BYTES',    
+                direction: 'read',  
+                format: '%d', 
+                iterationDelay: 0,
+                execCallback: true,
+                callback: function(data, onSuccess) {
+                    // console.log(data.binding.binding, data.value)
+                    onSuccess();
+                }
+            },
+            {
+                // Define binding to handle run/pause button presses.
+                bindingClass: 'run-lua-script-button',  
+                template: 'run-lua-script-button', 
+                binding: 'run-lua-script-button-callback',  
+                direction: 'write', 
+                event: 'click',
+                execCallback: true,
+                callback: function(data, onSuccess) {
+                    console.log('run-pressed');
+                    onSuccess();
+                }
+            },
+            {
+                // Define binding to handle script-upload button presses.
+                bindingClass: 'upload-lua-script-to-device-button',  
+                template: 'upload-lua-script-to-device-button', 
+                binding: 'upload-lua-script-to-device-button-callback',  
+                direction: 'write', 
+                event: 'click',
+                execCallback: true,
+                callback: function(data, onSuccess) {
+                    console.log('upload-pressed');
+                    onSuccess();
+                }
+            },
+            {
+                // Define binding to handle enable at startup button presses.
+                bindingClass: 'enable-script-at-startup-button',  
+                template: 'enable-script-at-startup-button', 
+                binding: 'enable-script-at-startup-button-callback',  
+                direction: 'write', 
+                event: 'click',
+                execCallback: true,
+                callback: function(data, onSuccess) {
+                    console.log('enable-at-startup-pressed');
+                    onSuccess();
+                }
+            },
+        ];
+
+        // Save the bindings to the framework instance.
+        framework.putConfigBindings(deviceBindings);
+
+        var fileName = framework.moduleConstants.constants.editor.defaultScript;
+        var fileLocation;
+        var scripts = framework.moduleConstants.preBuiltScripts;
+        var scriptData;
+        scripts.some(function(script,index){
+            console.log(script);
+            if(script.name == fileName){
+                fileLocation = script.location;
+                return true;
+            }
+        });
+        console.log('fileLoc',fileLocation);
+        fs_facade.readModuleFile(
+            fileLocation,
+            function(err) {
+                console.log('Error loading script',err);
+            },
+            function(data) {
+                scriptData = data;
+                console.log('Successfully loaded script',data);
+                // Load a file & save to the module's context
+                moduleContext.luaScript = {
+                    "name": fileName,
+                    "code": scriptData
+                };
+                // save the custom context to the framework so it can be used when
+                // rendering the module's template.
+                framework.setCustomContext(moduleContext);
+                onSuccess();
+            }
+        );
+    }
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         //Initialize ace editor:
-        aceEditor = ace.edit("lua-code-editor");
-        aceEditor.setTheme("ace/theme/monokai");
-        aceEditor.getSession().setMode("ace/mode/lua");
+        luaEditor.setupEditor(
+            "lua-code-editor", 
+            "ace/theme/monokai", 
+            "ace/mode/lua"
+        );
+        debuggingLog.setupEditor(
+            "lua-console-log-editor", 
+            "ace/theme/monokai", 
+            "ace/mode/text"
+        );
 
         onSuccess();
     };

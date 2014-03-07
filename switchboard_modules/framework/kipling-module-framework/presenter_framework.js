@@ -27,6 +27,7 @@ var FADE_DURATION = 20;
 var DEFAULT_REFRESH_RATE = 1000;
 var CONFIGURING_DEVICE_TARGET = '#sd-ramework-configuring-device-display';
 var DEVICE_VIEW_TARGET = '#device-view';
+var CALLBACK_STRING_CONST = '-callback';
 
 function JQueryWrapper (origJQuery) {
     this.html = function (selector, newHTML) {
@@ -106,7 +107,10 @@ function cloneBindingInfo (original, bindingClass, binding, template) {
             event: original.event,
             format: original.format,
             customFormatFunc: original.customFormatFunc,
-            writeCallback: original.writeCallback
+            currentDelay: original.currentDelay,
+            iterationDelay: original.iterationDelay,
+            execCallback: original.execCallback,
+            callback: original.callback
         };
     } catch (err) {
         console.log('ERROR: ',err);
@@ -258,6 +262,7 @@ function Framework() {
     var moduleName = '';
     var moduleJsonFiles = [];
     var moduleInfoObj;
+    var moduleConstants;
 
     this.deviceSelectionListenersAttached = deviceSelectionListenersAttached;
     this.jquery = jquery;
@@ -280,6 +285,7 @@ function Framework() {
     this.moduleName = moduleName;
     this.moduleJsonFiles = moduleJsonFiles;
     this.moduleInfoObj = moduleInfoObj;
+    this.moduleConstants = moduleConstants;
 
     var self = this;
 
@@ -443,9 +449,11 @@ function Framework() {
     this.qExecOnModuleLoaded = function() {
         var innerDeferred = q.defer();
 
-        //Save module info
-        self.moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
-        moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
+        //Save module info if not already defined
+        if(self.moduleInfoObj === undefined) {
+            self.moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
+            moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
+        }
 
         //Fire onModuleLoaded function
         self.fire(
@@ -657,6 +665,10 @@ function Framework() {
             self.runLoop = shouldContinue;
         };
 
+        // ------------------------------------
+        // Begin checking for potential binding object related errors
+
+        // if bindingClass isn't defined execute onLoadError
         if (newBinding.bindingClass === undefined) {
             self.fire(
                 'onLoadError',
@@ -666,6 +678,7 @@ function Framework() {
             return;
         }
 
+        // if template isn't defined execute onLoadError
         if (newBinding.template === undefined) {
             self.fire(
                 'onLoadError',
@@ -675,6 +688,7 @@ function Framework() {
             return;
         }        
 
+        // if binding isn't defined execute onLoadError
         if (newBinding.binding === undefined) {
             self.fire(
                 'onLoadError',
@@ -684,6 +698,7 @@ function Framework() {
             return;
         }
 
+        // if direction isn't defined execute onLoadError
         if (newBinding.direction === undefined) {
             self.fire(
                 'onLoadError',
@@ -692,14 +707,26 @@ function Framework() {
             );
             return;
         }
+
+        // if iterationDelay isn't defined define it as 0
         if (newBinding.iterationDelay === undefined) {
             newBinding.iterationDelay = 0;
         }
-        newBinding.currentDelay = newBinding.iterationDelay;
+
+        // initially define the currentDelay as the desired iterationDelay
+        if (newBinding.initialDelay === undefined) {
+            newBinding.currentDelay = newBinding.iterationDelay;
+        } else {
+            newBinding.currentDelay = newBinding.initialDelay;
+        }
         
+        // if an output format isn't defined define the default
         if (newBinding.format === undefined) {
             newBinding.format = '%.4f';
         }
+
+        // if a customFormatFunc isn't defined define a dummy function 
+        // just incase
         if (newBinding.customFormatFunc === undefined) {
             newBinding.customFormatFunc = function(rawReading){
                 console.log('Here, val:',rawReading);
@@ -707,15 +734,22 @@ function Framework() {
                 return retStr;
             };
         }
-        if (newBinding.writeCallback === undefined) {
-            newBinding.writeCallback = function(binding, value, onSuccess){
-                console.log('Here, binding:',binding,', val: ', value);
-                var retStr = "'writeCallback' NotDefined";
+
+        if (newBinding.execCallback === undefined) {
+            newBinding.execCallback = false;
+        }
+
+        // if there is supposed to be a callback but it isn't defined define one
+        var isCallback = newBinding.execCallback == true;
+        if(isCallback && (newBinding.callback === undefined)) {
+            newBinding.callback = function(binding, data, onSuccess){
+                console.log('callback, binding:',binding,', data: ', data);
                 onSuccess();
             };
         }
 
-
+        // if adding a write binding and the desired event is undefined execute
+        // onLoadError
         var isWrite = newBinding.direction === 'write';
         if (isWrite && newBinding.event === undefined) {
             self.fire(
@@ -725,7 +759,11 @@ function Framework() {
             );
             return;
         }
-
+        // Finished checking for potential binding object related errors
+        // ------------------------------------
+        
+        // BEGIN:
+        // Code for recursively adding configBindings:
         var expandedBindings = expandBindingInfo(newBinding);
         var numBindings = expandedBindings.length;
         if (numBindings > 1) {
@@ -733,7 +771,10 @@ function Framework() {
                 putConfigBinding(expandedBindings[i]);
             return;
         }
-
+        // END:
+ 
+        // Code for adding individual bindings to the moduleTemplateBindings, 
+        // readBindings, writeBindings, and bindings objects
         try{
             if(self.moduleTemplateBindings[newBinding.bindingClass] === undefined) {
                 self.moduleTemplateBindings[newBinding.bindingClass] = [];
@@ -1143,25 +1184,43 @@ function Framework() {
 
         var performCallbacks = function(skipWrite) {
             var innerDeferred = q.defer();
-            var callbackString = '-callback';
+            var callbackString = CALLBACK_STRING_CONST;
             var baseStr = bindingInfo.binding;
             var searchIndex = baseStr.search(callbackString);
             if( searchIndex >= 0) {
                 if((baseStr.length - searchIndex - callbackString.length) === 0) {
-                    bindingInfo.writeCallback(
-                        {
-                            framework: self,
-                            device: self.getSelectedDevice(),
-                            binding: bindingInfo,
-                            value: newVal,
-                        },
-                        function() {
-                            innerDeferred.resolve(skipWrite, true);
-                        });
-                    return innerDeferred.promise;
+                    if(bindingInfo.execCallback) {
+                        bindingInfo.callback(
+                            {
+                                framework: self,
+                                device: self.getSelectedDevice(),
+                                binding: bindingInfo,
+                                value: newVal,
+                            },
+                            function() {
+                                innerDeferred.resolve(skipWrite, true);
+                            });
+                        return innerDeferred.promise;
+                    } else {
+                        innerDeferred.resolve(skipWrite, false);
+                    }
                 }
             } else {
-                innerDeferred.resolve(skipWrite, false);
+                if(bindingInfo.execCallback) {
+                        bindingInfo.callback(
+                            {
+                                framework: self,
+                                device: self.getSelectedDevice(),
+                                binding: bindingInfo,
+                                value: newVal,
+                            },
+                            function() {
+                                innerDeferred.resolve(skipWrite, false);
+                            });
+                        return innerDeferred.promise;
+                    } else {
+                        innerDeferred.resolve(skipWrite, false);
+                    }
             }
             return innerDeferred.promise;
         };
@@ -1543,13 +1602,19 @@ function Framework() {
         }
 
         var reportError = function (details) {
-            // TODO: Get register names from readBindings.
-            self.fire(
-                'onRefreshError',
-                [ self.readBindings , details ],
-                function (shouldContinue) { self.runLoop = shouldContinue; }
-            );
-            deferred.reject(details);
+            var innerDeferred = q.defer();
+            if(details !== 'delay') {
+                // TODO: Get register names from readBindings.
+                self.fire(
+                    'onRefreshError',
+                    [ self.readBindings , details ],
+                    function (shouldContinue) { self.runLoop = shouldContinue; }
+                );
+                deferred.reject(details);
+            } else {
+                innerDeferred.reject(details);
+            }
+            return innerDeferred.promise;
         };
 
         var getNeededAddresses = function () {
@@ -1559,19 +1624,46 @@ function Framework() {
             var customFormatFuncs = [];
             var bindings = [];
 
+            // Loop through all registered bindings and determine what should be
+            // done.
             self.readBindings.forEach(function (value, key) {
-                addresses.push(value.binding);
-                formats.push(value.format);
-                customFormatFuncs.push(value.customFormatFunc);
-                bindings.push(value);
-            });
+                // For each binding check to see if it should be executed by 
+                // checking its currentDelay.  If it equals zero than it needs 
+                // to be executed.  
+                if(value.currentDelay <= 0) {
+                    // Search bindings for custom bindings
+                    var callbackString = CALLBACK_STRING_CONST;
+                    var baseStr = value.binding;
+                    var searchIndex = baseStr.search(callbackString);
+                    if( searchIndex < 0) {
+                        // if the CALLBACK_STRING_CONST tag wasn't found then 
+                        // add the binding to the list of registers that needs 
+                        // to be queried from the device.
+                        addresses.push(value.binding);
+                        formats.push(value.format);
+                        customFormatFuncs.push(value.customFormatFunc);
+                    } else {}
+                    bindings.push(value);
 
-            innerDeferred.resolve({
-                addresses: addresses, 
-                formats: formats,
-                customFormatFuncs: customFormatFuncs,
-                bindings: bindings
+                    // Re-set the binding's delay with the new delay
+                    value.currentDelay = value.iterationDelay;
+                    self.readBindings.set(key, value);
+                } else {
+                    // Decrement the binding's delay
+                    value.currentDelay = value.currentDelay - 1;
+                    self.readBindings.set(key, value);
+                }
             });
+            if(addresses.length > 0) {
+                innerDeferred.resolve({
+                    addresses: addresses, 
+                    formats: formats,
+                    customFormatFuncs: customFormatFuncs,
+                    bindings: bindings
+                });
+            } else {
+                innerDeferred.reject('delay');
+            }
             return innerDeferred.promise;
         };
 
@@ -1638,25 +1730,71 @@ function Framework() {
             var customFormatFuncs = valuesInfo.customFormatFuncs;
             var numAddresses = addresses.length;
             var bindings = valuesInfo.bindings;
-            var retDict = dict();
+            var retDict = dict({});
+            
+            // Iterate through the bindings executed using the async library
+            var curDeviceIOIndex = 0;
+            async.eachSeries(
+                bindings,
+                function(binding, nextStep) {
+                    //Executed for each binding
+                    // Search binding string for callback bindings tag
+                    var callbackString = CALLBACK_STRING_CONST;
+                    var baseStr = binding.binding;
+                    var searchIndex = baseStr.search(callbackString);
+                    var stringVal;
+                    var curVal;
+                    if( searchIndex < 0) {
+                        //If the tag was not found then perform auto-formatting
+                        var index = curDeviceIOIndex;
+                        var curAddress = addresses[index];
+                        curValue = values[index];
+                        var curFormat = formats[index];
+                        var curCustomFormatFunc = customFormatFuncs[index];
+                        
+                        if(curFormat !== 'customFormat') {
+                            stringVal = sprintf(curFormat, curValue);
+                        } else {
+                            stringVal = curCustomFormatFunc({
+                                value: curValue,
+                                address: curAddress,
+                                binding: binding
+                                });
+                        }
+                        retDict.set(
+                            curAddress.toString(),
+                            stringVal
+                        );
 
-            for (var i=0; i<numAddresses; i++) {
-                var stringVal;
-                if(formats[i] !== 'customFormat') {
-                    stringVal = sprintf(formats[i], values[i]);
-                } else {
-                    stringVal = customFormatFuncs[i]({
-                        value: values[i],
-                        address: addresses[i],
-                        binding: bindings[i]
-                        });
-                }
-                retDict.set(
-                    addresses[i].toString(),
-                    stringVal
-                );
-            }
-            innerDeferred.resolve(retDict);
+                        //Increment current index
+                        curDeviceIOIndex += 1;
+                    }
+                    // If the current binding has a defined binding that 
+                    // needs to be executed execute it now
+                    if(binding.execCallback) {
+                        // Execute read-binding function callback
+                        binding.callback(
+                            {   //Data to be passed to callback function
+                                framework: self,
+                                device: self.getSelectedDevice(),
+                                binding: binding,
+                                value: curValue,
+                                stringVal: stringVal
+                            },
+                            function() {
+                                //Instruct async to perform the next step
+                                nextStep();
+                            });
+                    } else {
+                        //Instruct async to perform the next step
+                        nextStep();
+                    }
+
+                },
+                function(err) {
+                    //Executed when all bindings have been executed
+                    innerDeferred.resolve(retDict);
+                });
             return innerDeferred.promise;
         };
 
@@ -1677,6 +1815,15 @@ function Framework() {
             );
             return innerDeferred.promise;
         };
+        var handleDelayErr = function (details) {
+            var innerDeferred = q.defer();
+            if(details === 'delay') {
+                innerDeferred.resolve();
+            } else {
+                innerDeferred.reject();
+            }
+            return innerDeferred.promise;
+        };
 
         // var setTimeout = function () {
             
@@ -1688,7 +1835,7 @@ function Framework() {
         .then(processDeviceValues, reportError)
         .then(alertOn, reportError)
         .then(alertRefreshed, reportError)
-        .then(checkModuleStatus, reportError)
+        .then(checkModuleStatus, handleDelayErr)
         .then(self.qConfigureTimer, self.qExecOnUnloadModule)
         .then(deferred.resolve, deferred.reject);
 
@@ -1844,6 +1991,13 @@ function Framework() {
         showAlert('Error: '+err.toString());
     }
     var manageError = this.manageError;
+
+    this.saveModuleInfo = function (infoObj, constantsObj) {
+        self.moduleInfoObj = infoObj;
+        moduleInfoObj = infoObj;
+        self.moduleConstants = constantsObj;
+        moduleConstants = constantsObj;
+    }
 }
 
 var singleDeviceFramework = Framework;

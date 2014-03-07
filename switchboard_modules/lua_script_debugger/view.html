@@ -15,6 +15,9 @@
                     <button id="upload-lua-script-to-device-button" type="button" class="btn btn-default btn-lg">
                         <span class="icon-install">Upload</span>
                     </button>
+                    <button id="enable-script-at-startup-button" type="button" class="btn btn-default btn-lg">
+                        <span class="icon-install">Upload</span>
+                    </button>
                 </td>
                 <td>
                     <span id="script-running-status" class="icon-pause"/>
@@ -28,6 +31,7 @@
     <div id="lua-script-device-status">
         <h3>Lua Script Status</h3>
         <p>Script Status: <span id="LUA_RUN"></span></p>
+        <p>Startup Script Status: <span id="LUA_STARTUP_CONFIG"></span></p>
         <p>Debug Enabled: <span id="LUA_DEBUG_ENABLE"></span></p>
         <p>Num Bytes in Buffer: <span id="LUA_DEBUG_NUM_BYTES"></span></p>
     </div>
@@ -47,12 +51,14 @@
     </div>
     <div id="lua-script-window-views">
         <div id="lua-script-editor-view">
-            <div id="lua-code-editor">function foo(items) 
+            <div id="lua-code-editor">{{ custom.luaScript.code }}</div>
+<!--function foo(items) 
     x = "All this is syntax highlighted";
-        return x
-end</div>
+    return x
+end-->
         </div>
         <div id="lua-script-console-view" style="display:none">
+            <div id="lua-console-log-editor"></div>
         </div>
         <div id="lua-script-status-view" style="display:none">
         </div>
