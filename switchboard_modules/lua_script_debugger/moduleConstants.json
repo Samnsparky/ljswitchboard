@@ -1,29 +1,75 @@
 {
-	"constants": {
-		"editor": {
-			"defaultScript":"basicExample"
-		},
-		"console": {
-			"maxNumLines": 1000
-		},
-		"statusShownAtStartup": true,
-		"consoleShownAtStartup": true,
-		"editorShownAtStartup": true,
-		"defaultSaveLocation": "testDirectory"
-	},
-	"preBuiltScripts": [
-		{
-			"name": "basicExample",
-			"location":"lua_script_debugger/premade_scripts/basicExample.lua"
-		},
-		{
-			"name": "test1",
-			"location":"lua_script_debugger/premade_scripts/test1.lua"
-		},
-		{
-			"name": "test2",
-			"location":"lua_script_debugger/premade_scripts/test2.lua"
-		}
-	],
-	"scriptTemplates": []
+    "constants": {
+        "editor": {
+            "defaultScript": "basicExample"
+        },
+        "console": {
+            "maxNumLines": 1000
+        },
+        "deviceStatusShownAtStartup": true,
+        "luaEditorShownAtStartup": true,
+        "luaDebuggerShownAtStartup": true,
+        "defaultSaveLocation": "testDirectory"
+    },
+    "preBuiltScripts": [
+        {
+            "name": "basicExample",
+            "location": "lua_script_debugger/premade_scripts/basicExample.lua"
+        },
+        {
+            "name": "test1",
+            "location": "lua_script_debugger/premade_scripts/test1.lua"
+        },
+        {
+            "name": "test2",
+            "location": "lua_script_debugger/premade_scripts/test2.lua"
+        }
+    ],
+    "scriptTemplates": [],
+    "luaVariables": {
+        "runStatus": {
+            "icon": {
+                "0": "icon-pause",
+                "1": "icon-play"
+            },
+            "title": {
+                "0": "Script Stopped",
+                "1": "Script Running"
+            }
+        },
+        "startupStatus": {
+            "icon": {
+                "0": "icon-blocked-3",
+                "1": "icon-switch-3"
+            },
+            "title": {
+                "0": "Script will not run at startup",
+                "1": "Script will run at startup"
+            }
+        }
+    },
+    "viewData": {
+        "icon": {
+            "0": "icon-plus",
+            "1": "icon-minus"
+        },
+        "deviceStatus": {
+            "title": {
+                "0": "Show Device Status Window",
+                "1": "Hide Device Status Window"
+            }
+        },
+        "luaEditor": {
+            "title": {
+                "0": "Show Lua Editor Window",
+                "1": "Hide Lua Editor Window"
+            }
+        },
+        "luaDebugger": {
+            "title": {
+                "0": "Show Lua Debugger Window",
+                "1": "Hide Lua Debugger Window"
+            }
+        }
+    }
 }

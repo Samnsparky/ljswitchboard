@@ -119,10 +119,22 @@ $('#single-device-framework-obj').ready(function(){
     //gives access to device
     var keeper = device_controller.getDeviceKeeper();
     //list of devices
-    devices = keeper.getDevices();    
+    devices = keeper.getDevices(); 
 
-    // Run the framework
-    sdFramework.runFramework();
+    // Check for any load-errors
+    var loadErrors = fs_facade.getLoadErrors();
+    console.log('num Load Errors: ', loadErrors.length);
+    if(loadErrors.length > 0) {
+        loadErrors.forEach(function(data) {
+            console.log('Error Data: ', data);
+            showCriticalAlert(data);
+        });
+        var moduleName = LOADED_MODULE_INFO_OBJECT.name;
+        showCriticalAlert('Not Starting Module: ' + moduleName);
+    } else {
+        // Run the framework if there aren't any load errors
+        sdFramework.runFramework();
+    }
 });
 
 //End bracket for autoLinkToFramework

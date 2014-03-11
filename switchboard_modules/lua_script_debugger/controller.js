@@ -39,7 +39,7 @@ function textEditor() {
         self.editor = ace.edit(id);
         self.editor.setTheme(theme);
         self.editor.getSession().setMode(mode);
-    }
+    };
 
     var self = this;
 }
@@ -56,30 +56,10 @@ function module() {
 
     var moduleContext = {};
 
-    var luaVariables = 
-    {
-
-        "runStatus": {
-            "icon": {
-                0: 'icon-pause',
-                1: 'icon-play'
-            },
-            "title": {
-                0: 'Script Stopped',
-                1: 'Script Running' 
-            }
-        },
-        "startupStatus": {
-            "icon": {
-                0: 'icon-blocked-3',
-                1: 'icon-switch-3'
-            },
-            "title": {
-                0: 'Script will not run at startup',
-                1: 'Script will run at startup' 
-            }
-        },
-    };
+    var constants = {};
+    var preBuiltScripts = {};
+    var luaVariables = {};
+    var viewConstants = {};
 
     /**
      * Function is called once every time the module tab is selected, loads the module.
@@ -88,6 +68,12 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onModuleLoaded = function(framework, onError, onSuccess) {
+        //Save data from loaded moduleConstants.json file
+        constants = framework.moduleConstants.constants;
+        preBuiltScripts = framework.moduleConstants.preBuiltScripts;
+        luaVariables = framework.moduleConstants.luaVariables;
+        viewConstants = framework.moduleConstants.viewData;
+
         var setupBindings = [
             {bindingClass: 'LUA_RUN', binding: 'LUA_RUN', direction: 'read'},
             {bindingClass: 'LUA_DEBUG_ENABLE', binding: 'LUA_DEBUG_ENABLE', direction: 'read'},
@@ -219,26 +205,33 @@ function module() {
         // Save the bindings to the framework instance.
         framework.putConfigBindings(deviceBindings);
 
-        var fileName = framework.moduleConstants.constants.editor.defaultScript;
+        // Load configuration data & customize view
+        
+        // Load default startup script & complete function
+        var fileName = constants.editor.defaultScript;
         var fileLocation;
-        var scripts = framework.moduleConstants.preBuiltScripts;
+        var scripts = preBuiltScripts;
         var scriptData;
         scripts.some(function(script,index){
-            console.log(script);
             if(script.name == fileName){
                 fileLocation = script.location;
                 return true;
             }
         });
-        console.log('fileLoc',fileLocation);
         fs_facade.readModuleFile(
             fileLocation,
             function(err) {
                 console.log('Error loading script',err);
+                moduleContext.luaScript = {
+                    "name": "Failed to load file: " +fileName,
+                    "code": "Failed to load file: " +fileName
+                };
+                framework.setCustomContext(moduleContext);
+                onSuccess();
             },
             function(data) {
                 scriptData = data;
-                console.log('Successfully loaded script',data);
+                // console.log('Successfully loaded script',data);
                 // Load a file & save to the module's context
                 moduleContext.luaScript = {
                     "name": fileName,
@@ -250,7 +243,7 @@ function module() {
                 onSuccess();
             }
         );
-    }
+    };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         //Initialize ace editor:
@@ -305,7 +298,7 @@ function module() {
 
     this.getEditor = function() {
         return aceEditor;
-    }
+    };
     var self = this;
 }
 /*

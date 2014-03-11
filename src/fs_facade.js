@@ -23,6 +23,39 @@ var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
 
 var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
 
+var FS_FACADE_LoadErrors = [];
+
+var addLoadError = function(data) {
+    FS_FACADE_LoadErrors.push(data);
+}
+var safeJSONParse = function(filePath, contents) {
+    var constants = {};
+    try {
+        constants = JSON.parse(contents);
+    } catch (err) {
+        var pathArray = [];
+        var fileName = "";
+        if(filePath.split('/').length > 1) {
+            pathArray = filePath.split('/');
+            fileName = pathArray[pathArray.length-1];
+        } else {
+            pathArray = filePath.split('\\');
+            fileName = pathArray[pathArray.length-1];
+        }
+        var text = "Error parising JSON file: <strong>" + fileName + "</strong><br>";
+        text +=  "Full File Path: " + filePath + "<br>";
+        text +=  "Error: " + err.toString() + "<br>";
+        text +=  "Consider using <strong>http://pro.jsonlint.com/</strong> or <br>";
+        text +=  "Consider using <strong>http://jsonlint.com/</strong> for assistance <br>";
+        console.log('Error Parsing JSON file: ',filePath);
+        addLoadError(text);
+    }
+    return constants;
+}
+exports.getLoadErrors = function() {
+    return FS_FACADE_LoadErrors;
+}
+
 
 /**
  * Get the full location (URI) for a resource bundled with the application.
@@ -171,7 +204,9 @@ exports.getModuleInfo = function(name, onError, onSuccess)
                     if (error) {
                         onError(error);
                     } else {
-                        var moduleConstants = JSON.parse(contents);
+                        var filePath = modulesDescriptorSrc;
+                        var moduleConstants = safeJSONParse(filePath, contents);
+
                         moduleConstants.activePath = modulesDescriptorSrc;
                         onSuccess(moduleConstants);
                     }
@@ -199,7 +234,8 @@ exports.getModuleConstants = function(name, onError, onSuccess) {
                     if (error) {
                         onError(error);
                     } else {
-                        onSuccess(JSON.parse(contents));
+                        var filePath = modulesDescriptorSrc;
+                        onSuccess(safeJSONParse(filePath, contents));
                     }
                 }
             );
@@ -262,7 +298,8 @@ exports.getLoadedModulesInfo = function(onError, onSuccess)
                     }
                     else
                     {
-                        onSuccess(JSON.parse(contents));
+                        var filePath = modulesDescriptorSrc;
+                        onSuccess(safeJSONParse(filePath, contents));
                     }
                 }
             );
@@ -303,7 +340,8 @@ exports.getJSON = function(location, onError, onSuccess)
                     }
                     else
                     {
-                        onSuccess(JSON.parse(contents));
+                        var filePath = location;
+                        onSuccess(safeJSONParse(filePath, contents));
                     }
                 }
             );

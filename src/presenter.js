@@ -57,7 +57,6 @@ function showCriticalAlert(content) {
     }
     $('#premature-error-holder').slideDown();
     $('#global-load-image-holder').slideUp();
-    
 }
 function showPrematureAlert(content) {
     $('#premature-error-holder').html(content);
@@ -129,8 +128,8 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                     'Check console.log for more info.'+'<br>'+
                     'Consider using <strong>www.jshint.com</strong> to debug file'
                     );
-            };
-        }
+            }
+        };
         var cssHTML;
         var jsHTML;
 
@@ -154,11 +153,14 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                 onErr(new Error('Could not find ' + fileLoc + ' .'));
                 return;
             }
-
-            cssHTML = LATE_LOADED_CSS_TEMPLATE({
-                'href': fileLoc,
-                'type': safeDest
-            }); 
+            try {
+                cssHTML = LATE_LOADED_CSS_TEMPLATE({
+                    'href': fileLoc,
+                    'type': safeDest
+                }); 
+            } catch (err) {
+                console.log('Error compiling cssHTML presenter.js');
+            }
             // $('head').append(cssHTML);
             appendToHead(cssHTML, fileLoc);
         });
@@ -174,11 +176,14 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                 onErr(new Error('Could not find ' + fileLoc + ' .'));
                 return;
             }
-
-            jsHTML = LATE_LOADED_JS_TEMPLATE({
-                'href': fileLoc,
-                'type': safeDest
-            });
+            try {
+                jsHTML = LATE_LOADED_JS_TEMPLATE({
+                    'href': fileLoc,
+                    'type': safeDest
+                });
+            } catch (err) {
+                console.log('Error compiling jsHTML presenter.js');
+            }
             appendToHead(jsHTML, fileLoc);
         });
 

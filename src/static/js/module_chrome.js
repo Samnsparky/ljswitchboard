@@ -9,14 +9,14 @@
 
 
 var device_controller = require('./device_controller');
-var presenter = require('./presenter')
+var presenter = require('./presenter');
 var module_manager = require('./module_manager');
 
 var MODULE_TAB_CONTAINER = '#module-list';
 var MODULE_TAB_CLASS = 'module-tab';
 var MODULE_TAB_ID_POSTFIX = '-module-tab';
 var MODULE_LOADING_IMAGE_NAME = 'progress-indeterminate-ring-light.gif';
-var MODULE_LOADING_IMAGE_DIR = 'static/img/'
+var MODULE_LOADING_IMAGE_DIR = 'static/img/';
 var MODULE_LOADING_IMAGE_SRC = MODULE_LOADING_IMAGE_DIR +
     MODULE_LOADING_IMAGE_NAME;
 var CURRENT_DEVICE_INDEX = 0; // Device to start off as being selected
@@ -70,7 +70,7 @@ function selectModule(name)
     var src = name + '/view.html';
     var cssFile = name + '/style.css';
     var jsFile = name + '/controller.js';
-    var keeper = device_controller.getDeviceKeeper()
+    var keeper = device_controller.getDeviceKeeper();
     var devices = keeper.getDevices();
     var standardContext = {
         'devices': devices,
@@ -140,7 +140,7 @@ function selectModule(name)
             showAlert(err); 
         },
         function (moduleInfo) {
-            var moduleInfo = moduleInfo;
+
             // Save the module info object
             LOADED_MODULE_INFO_OBJECT = moduleInfo;
             var loadModule = function(moduleConstants) {
@@ -160,7 +160,7 @@ function selectModule(name)
                     //Perform a standard module-load
                     renderNoFrameworkModule();
                 }
-            }
+            };
             fs_facade.getModuleConstants(
                 name,
                 function (err) { 
@@ -170,7 +170,7 @@ function selectModule(name)
                 loadModule
             );
         }
-    )
+    );
 }
 
 
@@ -207,7 +207,7 @@ function addModuleTab(targetElement, module)
 **/
 function displayActiveModules(activeModules, onError, onSuccess)
 {
-    if(activeModules.length == 0)
+    if(activeModules.length === 0)
     {
         onSuccess();
         return;

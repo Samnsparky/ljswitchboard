@@ -5,6 +5,7 @@
 				<tr class="table-dataHeader">
 					<th>Controls</th>
 					<th>Status</th>
+					<th>Window</th>
 				</tr>
 			</thead>
 			<tbody style="background-color:transparent">
@@ -25,10 +26,21 @@
 							<span class="icon-disk"></span>
 						</button>
 						<button id="load-lua-script-button" type="button" class="btn btn-default btn-lg" title="Load File">
-							<span class=" icon-file-3"></span>
+							<span class="icon-file-3"></span>
 						</button>
 						<button id="load-example-lua-script-button" type="button" class="btn btn-default btn-lg" title="Load Example">
-							<span class=" icon-code-3"></span>
+							<span class="icon-code-3"></span>
+						</button>
+					</td>
+					<td>
+						<button id="manage-view-device-status-button" type="button" class="btn btn-default btn-lg" title="{{ custom.views.deviceStatus.title }}">
+							<span class="{{ custom.views.deviceStatus.icon }}"></span>
+						</button>
+						<button id="manage-view-lua-editor-button" type="button" class="btn btn-default btn-lg" title="{{ custom.views.luaEditor.title }}">
+							<span class="{{ custom.views.luaEditor.icon }}"></span>
+						</button>
+						<button id="manage-view-lua-debugger-button" type="button" class="btn btn-default btn-lg" title="{{ custom.views.luaDebugger.title }}">
+							<span class="{{ custom.views.luaDebugger.icon }}"></span>
 						</button>
 					</td>
 				</tr>
@@ -36,7 +48,7 @@
 		</table>
 	</div>
 	<div id="lua-script-module-body">
-		<div id="lua-script-module-status-bar">
+		<div id="lua-script-module-status-bar" class="span2">
 			<div id="lua-script-device-status">
 				<h3>Status</h3>
 				<p>Script Status:</p>
@@ -49,7 +61,7 @@
 				<p><span id="LUA_DEBUG_NUM_BYTES"></span></p>
 			</div>
 		</div>
-		<div id="lua-script-module-editor-bar">
+		<div id="lua-script-module-editor-bar" class="span10">
 			<div id="lua-script-window-views">
 				<div id="lua-script-code-editor-box">
 					<div id="lua-script-editor-view">

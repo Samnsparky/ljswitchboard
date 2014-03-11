@@ -10,12 +10,32 @@
 	width: 100%;
 	height: 500px;
 }
+#lua-script-module-body {
+	margin-left:0px;
+}
 /* Left portion of module */
 #lua-script-module-status-bar {
-
+	width:20%;
+	max-width:141px;
 }
 
 /* Right portion of module */
 #lua-script-module-editor-bar {
-	
+	width:80%;
+}
+bb
+
+@media screen and (min-width: 1000px) {
+	#lua-script-module-editor-bar {
+		position: absolute;
+		right: 20px;
+		left: 161px;
+		width: initial;
+	}
+}
+@media screen and (max-width: 999px) {
+	#lua-script-module-editor-bar {
+		position: inherit;
+        width:80%;
+	}
 }
