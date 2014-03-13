@@ -9,6 +9,7 @@
         "deviceStatusShownAtStartup": true,
         "luaEditorShownAtStartup": true,
         "luaDebuggerShownAtStartup": true,
+        "tableDescriptionsShownAtStartup": true,
         "defaultSaveLocation": "testDirectory"
     },
     "preBuiltScripts": [
@@ -69,6 +70,12 @@
             "title": {
                 "0": "Show Lua Debugger Window",
                 "1": "Hide Lua Debugger Window"
+            }
+        },
+        "tableDescriptions": {
+            "title": {
+                "0": "Show Button Descriptions",
+                "1": "Hide Button Descriptions"
             }
         }
     }

@@ -92,7 +92,8 @@ try {
             //Save loaded module data to the framework instance
             sdFramework.saveModuleInfo(
                 LOADED_MODULE_INFO_OBJECT,
-                LOADED_MODULE_CONSTANTS_OBJECT
+                LOADED_MODULE_CONSTANTS_OBJECT,
+                sdModule
             );
 
             // Start the framework
@@ -123,7 +124,6 @@ $('#single-device-framework-obj').ready(function(){
 
     // Check for any load-errors
     var loadErrors = fs_facade.getLoadErrors();
-    console.log('num Load Errors: ', loadErrors.length);
     if(loadErrors.length > 0) {
         loadErrors.forEach(function(data) {
             console.log('Error Data: ', data);

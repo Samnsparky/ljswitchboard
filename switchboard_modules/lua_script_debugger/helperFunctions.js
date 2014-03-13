@@ -55,17 +55,11 @@ function module() {
     this.debuggingLog = debuggingLog;
 
     var moduleContext = {};
-    this.moduleContext = moduleContext;
 
     var constants = {};
-    this.constants = constants;
     var preBuiltScripts = {};
-    this.preBuiltScripts = preBuiltScripts;
     var luaVariables = {};
-    this.luaVariables = luaVariables;
     var viewConstants = {};
-    this.viewConstants = viewConstants;
-
 
     /**
      * Function is called once every time the module tab is selected, loads the module.
@@ -75,10 +69,10 @@ function module() {
     **/
     this.onModuleLoaded = function(framework, onError, onSuccess) {
         //Save data from loaded moduleConstants.json file
-        self.constants = framework.moduleConstants.constants;
-        self.preBuiltScripts = framework.moduleConstants.preBuiltScripts;
-        self.luaVariables = framework.moduleConstants.luaVariables;
-        self.viewConstants = framework.moduleConstants.viewData;
+        constants = framework.moduleConstants.constants;
+        preBuiltScripts = framework.moduleConstants.preBuiltScripts;
+        luaVariables = framework.moduleConstants.luaVariables;
+        viewConstants = framework.moduleConstants.viewData;
 
         var setupBindings = [
             {bindingClass: 'LUA_RUN', binding: 'LUA_RUN', direction: 'read'},
@@ -123,8 +117,8 @@ function module() {
                 callback: function(data, onSuccess) {
                     var val = data.value;
                     var icon = $('#script-running-status');
-                    icon.attr('class',self.luaVariables.runStatus.icon[val]);
-                    icon.attr('title',self.luaVariables.runStatus.title[val]);
+                    icon.attr('class',luaVariables.runStatus.icon[val]);
+                    icon.attr('title',luaVariables.runStatus.title[val]);
                     onSuccess();
                 }
             },
@@ -140,8 +134,8 @@ function module() {
                 callback: function(data, onSuccess) {
                     var val = data.value;
                     var icon = $('#startup-script-running-status');
-                    icon.attr('class',self.luaVariables.startupStatus.icon[val]);
-                    icon.attr('title',self.luaVariables.startupStatus.title[val]);
+                    icon.attr('class',luaVariables.startupStatus.icon[val]);
+                    icon.attr('title',luaVariables.startupStatus.title[val]);
                     onSuccess();
                 }
             },
@@ -206,95 +200,17 @@ function module() {
                     onSuccess();
                 }
             },
-            {
-                // Define binding to handle show/hide deviceStatus button presses.
-                bindingClass: 'manage-view-device-status-button', 
-                template: 'manage-view-device-status-button', 
-                binding: 'manage-view-device-status-button-callback',  
-                direction: 'write', 
-                event: 'click',
-                execCallback: true,
-                callback: function(data, onSuccess) {
-                    console.log('deviceStatus-pressed');
-                    onSuccess();
-                }
-            },
-            {
-                // Define binding to handle  show/hide luaEditor button presses.
-                bindingClass: 'manage-view-lua-editor-button', 
-                template: 'manage-view-lua-editor-button', 
-                binding: 'manage-view-lua-editor-button-callback',  
-                direction: 'write', 
-                event: 'click',
-                execCallback: true,
-                callback: function(data, onSuccess) {
-                    console.log('luaEditor-pressed');
-                    onSuccess();
-                }
-            },
-            {
-                // Define binding to handle  show/hide luaDebugger button presses.
-                bindingClass: 'manage-view-lua-debugger-button', 
-                template: 'manage-view-lua-debugger-button', 
-                binding: 'manage-view-lua-debugger-button-callback',  
-                direction: 'write', 
-                event: 'click',
-                execCallback: true,
-                callback: function(data, onSuccess) {
-                    console.log('luaDebugger-pressed');
-                    onSuccess();
-                }
-            },
-            {
-                // Define binding to handle  show/hide tableDescriptions button presses.
-                bindingClass: 'manage-view-table-descriptions-button', 
-                template: 'manage-view-table-descriptions-button', 
-                binding: 'manage-view-table-descriptions-button-callback',  
-                direction: 'write', 
-                event: 'click',
-                execCallback: true,
-                callback: function(data, onSuccess) {
-                    console.log('tableDescriptions-pressed');
-                    onSuccess();
-                }
-            },
         ];
 
         // Save the bindings to the framework instance.
         framework.putConfigBindings(deviceBindings);
 
         // Load configuration data & customize view
-        var setViewData = function(classStr, isVisible) {
-            var title = "";
-            var icon = "";
-            var visibility = "";
-            var index = 0;
-            if(isVisible) {
-                index = 1;
-            } else {
-                index = 0;
-            }
-
-            title = self.viewConstants[classStr].title[index];
-            icon = self.viewConstants.icon[index];
-
-            self.moduleContext.views[classStr] = {};
-            self.moduleContext.views[classStr].title = title;
-            self.moduleContext.views[classStr].icon = icon;
-        }
-        // Clear any view data
-        self.moduleContext.views = {};
-
-        // Set View Data
-        setViewData('deviceStatus', self.constants.deviceStatusShownAtStartup);
-        setViewData('luaEditor', self.constants.luaEditorShownAtStartup);
-        setViewData('luaDebugger', self.constants.luaDebuggerShownAtStartup);
-        setViewData('tableDescriptions', self.constants.tableDescriptionsShownAtStartup);
         
         // Load default startup script & complete function
-        var fileName = self.constants.editor.defaultScript;
+        var fileName = constants.editor.defaultScript;
         var fileLocation;
-        var scripts = self.preBuiltScripts;
+        var scripts = preBuiltScripts;
         var scriptData;
         scripts.some(function(script,index){
             if(script.name == fileName){
@@ -306,24 +222,24 @@ function module() {
             fileLocation,
             function(err) {
                 console.log('Error loading script',err);
-                self.moduleContext.luaScript = {
+                moduleContext.luaScript = {
                     "name": "Failed to load file: " +fileName,
                     "code": "Failed to load file: " +fileName
                 };
-                framework.setCustomContext(self.moduleContext);
+                framework.setCustomContext(moduleContext);
                 onSuccess();
             },
             function(data) {
                 scriptData = data;
                 // console.log('Successfully loaded script',data);
                 // Load a file & save to the module's context
-                self.moduleContext.luaScript = {
+                moduleContext.luaScript = {
                     "name": fileName,
                     "code": scriptData
                 };
                 // save the custom context to the framework so it can be used when
                 // rendering the module's template.
-                framework.setCustomContext(self.moduleContext);
+                framework.setCustomContext(moduleContext);
                 onSuccess();
             }
         );
@@ -345,7 +261,6 @@ function module() {
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
-        // console.log('in onRegisterWrite',binding);
         onSuccess();
     };
     this.onRegisterWritten = function(framework, registerName, value, onError, onSuccess) {

@@ -263,6 +263,7 @@ function Framework() {
     var moduleJsonFiles = [];
     var moduleInfoObj;
     var moduleConstants;
+    var module;
 
     this.deviceSelectionListenersAttached = deviceSelectionListenersAttached;
     this.jquery = jquery;
@@ -286,6 +287,7 @@ function Framework() {
     this.moduleJsonFiles = moduleJsonFiles;
     this.moduleInfoObj = moduleInfoObj;
     this.moduleConstants = moduleConstants;
+    this.module;
 
     var self = this;
 
@@ -624,6 +626,34 @@ function Framework() {
     };
     var setConfigControls = this.setConfigControls;
 
+    this.qEstablishWriteBindings = function() {
+        var innerDeferred = q.defer();
+        self.establishWriteBindings(self.writeBindings);
+        innerDeferred.resolve();
+        return innerDeferred.promise;
+    };
+    var qEstablishWriteBindings = this.qEstablishWriteBindings;
+
+    this.establishWriteBindings = function(bindings) {
+        bindings.forEach(function(binding){
+            self.establishWriteBinding(binding)
+        });
+    };
+    var establishWriteBindings = this.establishWriteBindings;
+
+    this.establishWriteBinding = function(binding) {
+        // writeBindings.set(newBinding.template, newBinding);
+        var jquerySelector = '#' + binding.template;
+        jquery.unbind(jquerySelector,binding.event);
+        jquery.bind(
+            jquerySelector,
+            binding.event,
+            function () { 
+                self._writeToDevice(binding); 
+            }
+        );
+    };
+    var establishWriteBinding = this.establishWriteBinding;
     /**
      * Register a new configuration binding.
      *
@@ -791,12 +821,7 @@ function Framework() {
             readBindings.set(newBinding.template, newBinding);
         } else if (newBinding.direction === 'write') {
             writeBindings.set(newBinding.template, newBinding);
-            jquery.unbind(jquerySelector,newBinding.event);
-            jquery.bind(
-                jquerySelector,
-                newBinding.event,
-                function () { self._writeToDevice(newBinding); }
-            );
+            self.establishWriteBinding(newBinding);
         } else {
             self.fire(
                 'onLoadError',
@@ -1193,6 +1218,7 @@ function Framework() {
                         bindingInfo.callback(
                             {
                                 framework: self,
+                                module: self.module,
                                 device: self.getSelectedDevice(),
                                 binding: bindingInfo,
                                 value: newVal,
@@ -1210,6 +1236,7 @@ function Framework() {
                         bindingInfo.callback(
                             {
                                 framework: self,
+                                module: self.module,
                                 device: self.getSelectedDevice(),
                                 binding: bindingInfo,
                                 value: newVal,
@@ -1527,6 +1554,9 @@ function Framework() {
         // Display the module's template
         .then(self.qShowUserTemplate, self.qExecOnLoadError)
 
+        // Connect connect any established writeBindings to jquery events
+        .then(self.qEstablishWriteBindings, self.qExecOnLoadError)
+
         // Report that the module's template has been loaded
         .then(self.qExecOnTemplateLoaded, self.qExecOnLoadError)
 
@@ -1776,6 +1806,7 @@ function Framework() {
                         binding.callback(
                             {   //Data to be passed to callback function
                                 framework: self,
+                                module: self.module,
                                 device: self.getSelectedDevice(),
                                 binding: binding,
                                 value: curValue,
@@ -1962,6 +1993,9 @@ function Framework() {
         // Display the module's template
         .then(self.qShowUserTemplate, self.qExecOnLoadError)
 
+        // Connect connect any established writeBindings to jquery events
+        .then(self.qEstablishWriteBindings, self.qExecOnLoadError)
+
         // Report that the module's template has been loaded
         .then(self.qExecOnTemplateLoaded, self.qExecOnLoadError)
 
@@ -1992,11 +2026,13 @@ function Framework() {
     }
     var manageError = this.manageError;
 
-    this.saveModuleInfo = function (infoObj, constantsObj) {
+    this.saveModuleInfo = function (infoObj, constantsObj, moduleObj) {
         self.moduleInfoObj = infoObj;
         moduleInfoObj = infoObj;
         self.moduleConstants = constantsObj;
         moduleConstants = constantsObj;
+        self.module = moduleObj;
+        module = moduleObj;
     }
 }
 

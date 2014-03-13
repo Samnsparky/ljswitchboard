@@ -18,23 +18,34 @@
 	width:20%;
 	max-width:141px;
 }
-
-/* Right portion of module */
-#lua-script-module-editor-bar {
-	width:80%;
+#lua-script-device-status-info-short {
+	float: right;
 }
-bb
+.info-visibe {
+	display:inherit;
+}
+.info-invisible {
+	display:none;
+}
+
+/*#lua-script-module-editor-bar {
+    width:80%;
+}*/
+
+#lua-script-module-editor-bar .row {
+	margin-left:0px;
+}
 
 @media screen and (min-width: 1000px) {
 	#lua-script-module-editor-bar {
 		position: absolute;
-		right: 20px;
+		right: 5px;
 		left: 161px;
 		width: initial;
 	}
 }
 @media screen and (max-width: 999px) {
-	#lua-script-module-editor-bar {
+	#lua-script-module-editor-bar{
 		position: inherit;
         width:80%;
 	}
