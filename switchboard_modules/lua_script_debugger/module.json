@@ -2,10 +2,15 @@
     "name": "lua_script_debugger",
     "humanName": "Lua Script Debugger",
     "version": "0.0.1",
+    "devices": 
+        [
+            "T7"
+        ],
+    "minFirmware": 0,
     "framework":"singleDevice",
     "third_party_code":
     	[
-    		"ace-builds/src-noconflict/ace.js"
+    		"ace-builds-0.0.1/src-noconflict/ace.js"
     	],
     "third_party_code_unload":
     	[

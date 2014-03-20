@@ -1,7 +1,7 @@
 {
     "constants": {
         "editor": {
-            "defaultScript": "basicExample"
+            "defaultScript": "test2"
         },
         "console": {
             "maxNumLines": 1000
@@ -29,6 +29,8 @@
     "scriptTemplates": [],
     "luaVariables": {
         "runStatus": {
+            "buttonID": "run-lua-script-button",
+            "iconID": "script-running-status",
             "icon": {
                 "0": "icon-pause",
                 "1": "icon-play"
@@ -36,9 +38,19 @@
             "title": {
                 "0": "Script Stopped",
                 "1": "Script Running"
+            },
+            "buttonTitle": {
+                "0": "Run Script",
+                "1": "Stop Script"
+            },
+            "buttonIcon": {
+                "1": "icon-pause",
+                "0": "icon-play"
             }
         },
         "startupStatus": {
+            "buttonID": "enable-script-at-startup-button",
+            "iconID": "startup-script-running-status",
             "icon": {
                 "0": "icon-blocked-3",
                 "1": "icon-switch-3"
@@ -46,6 +58,14 @@
             "title": {
                 "0": "Script will not run at startup",
                 "1": "Script will run at startup"
+            },
+            "buttonTitle": {
+                "0": "Enable Script at startup",
+                "1": "Disable Script at startup"
+            },
+            "buttonIcon": {
+                "1": "icon-blocked-3",
+                "0": "icon-switch-3"
             }
         }
     },

@@ -171,7 +171,9 @@ function cloneSetupBindingInfo (original, bindingClass, binding) {
             bindingClass: bindingClass,
             binding: binding,
             direction: original.direction,
-            defaultVal: original.defaultVal
+            defaultVal: original.defaultVal,
+            execCallback: original.execCallback,
+            callback: original.callback
         };
     } catch (err) {
         console.log('ERROR: ',err);
@@ -250,6 +252,7 @@ function Framework() {
     var bindings = dict({});
     var readBindings = dict({});
     var writeBindings = dict({});
+    var smartBindings = dict({});
 
     var setupBindings = dict({});
     var readSetupBindings = dict({});
@@ -273,6 +276,7 @@ function Framework() {
     this.bindings = bindings;
     this.readBindings = readBindings;
     this.writeBindings = writeBindings;
+    this.smartBindings = smartBindings;
 
     this.setupBindings = setupBindings;
     this.readSetupBindings = readSetupBindings;
@@ -287,7 +291,7 @@ function Framework() {
     this.moduleJsonFiles = moduleJsonFiles;
     this.moduleInfoObj = moduleInfoObj;
     this.moduleConstants = moduleConstants;
-    this.module;
+    this.module = module;
 
     var self = this;
 
@@ -636,7 +640,7 @@ function Framework() {
 
     this.establishWriteBindings = function(bindings) {
         bindings.forEach(function(binding){
-            self.establishWriteBinding(binding)
+            self.establishWriteBinding(binding);
         });
     };
     var establishWriteBindings = this.establishWriteBindings;
@@ -770,7 +774,7 @@ function Framework() {
         }
 
         // if there is supposed to be a callback but it isn't defined define one
-        var isCallback = newBinding.execCallback == true;
+        var isCallback = newBinding.execCallback === true;
         if(isCallback && (newBinding.callback === undefined)) {
             newBinding.callback = function(binding, data, onSuccess){
                 console.log('callback, binding:',binding,', data: ', data);
@@ -840,6 +844,103 @@ function Framework() {
     };
     var putConfigBindings = this.putConfigBindings;
 
+    this.putSmartBinding = function(newSmartBinding) {
+        // if bindingName isn't defined execute onLoadError
+        if (newSmartBinding.bindingName === undefined) {
+            self.fire(
+                'onLoadError',
+                [ 'SmartBinding binding missing bindingName' ],
+                onErrorHandle
+            );
+            return;
+        }
+        // if smartName isn't defined execute onLoadError
+        if (newSmartBinding.smartName === undefined) {
+            self.fire(
+                'onLoadError',
+                [ 'SmartBinding binding missing smartName' ],
+                onErrorHandle
+            );
+            return;
+        }
+        
+        var bindingName = newSmartBinding.bindingName;
+        var smartName = newSmartBinding.smartName;
+        var binding = {};
+        var setupBinding = {};
+        var isValid = false;
+
+        // Add generic info to binding
+        binding.bindingClass = bindingName;
+        binding.template = bindingName;
+
+        // Add generic info to setupBinding
+        setupBinding.bindingClass = bindingName;
+
+        if(smartName === 'clickHandler') {
+            // Add information to binding object
+            binding.binding = bindingName+'-callback';
+            binding.direction = 'write';
+            binding.event = 'click';
+            binding.execCallback = true;
+            binding.callback = newSmartBinding.callback;
+
+            // Save binding to framework
+            self.putConfigBinding(binding);
+            isValid = true;
+        } else if (smartName === 'readRegister') {
+            // Add information to binding object
+            binding.binding = bindingName;
+            binding.direction = 'read';
+            binding.format = newSmartBinding.format;
+            binding.customFormatFunc = newSmartBinding.customFormatFunc;
+            binding.iterationDelay = newSmartBinding.iterationDelay;
+            binding.initialDelay = newSmartBinding.initialDelay;
+
+            if(typeof(newSmartBinding.periodicCallback) === 'function') {
+                binding.execCallback = true;
+            }
+            binding.callback = newSmartBinding.periodicCallback;
+
+            // Add information to setupBinding object
+            setupBinding.binding = bindingName;
+            setupBinding.direction = 'read';
+            setupBinding.callback = newSmartBinding.configCallback;
+            
+            if(typeof(newSmartBinding.configCallback) === 'function') {
+                setupBinding.execCallback = true;
+            }
+            setupBinding.callback = newSmartBinding.configCallback;
+
+            // Save binding to framework
+            self.putConfigBinding(binding);
+            self.putSetupBinding(setupBinding);
+            isValid = true;
+        }
+
+        if(isValid) {
+            self.smartBindings.set(newSmartBinding.bindingName, newSmartBinding);
+        }
+
+    };
+    var putSmartBinding = this.putSmartBinding;
+
+    this.putSmartBindings = function(newSmartBindings) {
+        newSmartBindings.forEach(function(newSmartBinding) {
+            self.putSmartBinding(newSmartBinding);
+        });
+    };
+    var putSmartBindings = this.putSmartBindings;
+
+    this.qUpdateSmartBindings = function() {
+        var deferred = q.defer();
+        self.smartBindings.forEach(function(smartBinding, key) {
+            self.putSmartBinding(smartBinding);
+        });
+        deferred.resolve();
+        return deferred.promise;
+    };
+
     /**
      * Function to add a single binding that gets read once upon device 
      * selection.
@@ -888,6 +989,16 @@ function Framework() {
                 onErrorHandle
             );
             return;
+        }
+
+        if(newBinding.execCallback === undefined) {
+            newBinding.execCallback = false;
+        }
+        if(newBinding.callback === undefined) {
+            newBinding.callback = function(data, onSuccess) {
+                console.log('SetupBinding requested a callback but is not defined');
+                onSuccess();
+            };
         }
         
 
@@ -975,7 +1086,29 @@ function Framework() {
             return innerDeferred.promise;
         };
 
+        // Function for executing user-callback
+        function executeCallback (binding, result) {
+            var callbackDeferred = q.defer();
+            if(binding.execCallback) {
+                binding.callback(
+                    {
+                        framework: self,
+                        module: self.module,
+                        device: self.getSelectedDevice(),
+                        binding: binding,
+                        value: result.result,
+                        result: result
+                    },
+                    function() {
+                        callbackDeferred.resolve();
+                    }
+                );
+            } else {
+                callbackDeferred.resolve();
+            }
+            return callbackDeferred.promise;
 
+        }
         // Function for saving successful write i/o attempts
         function createSuccessfulWriteFunc (ioDeferred, binding, results) {
             return function (value) {
@@ -985,7 +1118,8 @@ function Framework() {
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
-                ioDeferred.resolve();
+                executeCallback(binding,result)
+                .then(ioDeferred.resolve,ioDeferred.resolve);
             };
         }
 
@@ -998,7 +1132,9 @@ function Framework() {
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
-                ioDeferred.resolve();
+                executeCallback(binding,result)
+                .then(ioDeferred.resolve,ioDeferred.resolve);
+                // ioDeferred.resolve();
             };
         }
 
@@ -1012,7 +1148,9 @@ function Framework() {
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
-                ioDeferred.resolve();
+                executeCallback(binding,result)
+                .then(ioDeferred.resolve,ioDeferred.resolve);
+                // ioDeferred.resolve();
             };
         }
         
@@ -1026,7 +1164,9 @@ function Framework() {
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
-                ioDeferred.resolve();
+                executeCallback(binding,result)
+                .then(ioDeferred.resolve,ioDeferred.resolve);
+                // ioDeferred.resolve();
             };
         }
 
@@ -1381,6 +1521,22 @@ function Framework() {
         self.writeBindings = writeBindings;
         self.moduleTemplateBindings = moduleTemplateBindings;
     };
+    this.qClearConfigBindings = function() {
+        var deferred = q.defer();
+        var clearBindings = true;
+        if(typeof(DISABLE_AUTO_CLEAR_CONFIG_BINDINGS) === 'boolean') {
+            if(DISABLE_AUTO_CLEAR_CONFIG_BINDINGS) {
+                clearBindings = false;
+            }
+        }
+        if(clearBindings) {
+            self.clearConfigBindings();
+        }
+        deferred.resolve();
+        return deferred.promise;
+    };
+    var qClearConfigBindings = this.qClearConfigBindings;
+
     var deleteConfigBindings = this.deleteConfigBindings;
 
     /**
@@ -1541,6 +1697,12 @@ function Framework() {
 
         // Report that a new device has been selected
         .then(self.qExecOnDeviceSelected, self.qExecOnLoadError)
+
+        // Clear all config-bindings (if not disabled)
+        .then(self.qClearConfigBindings, self.qExecOnLoadError)
+
+        // Re-configure any smartBindings
+        .then(self.qUpdateSmartBindings, self.qExecOnLoadError)
 
         // Configure the device
         .then(self.executeSetupBindings, self.qExecOnLoadError)
@@ -1929,6 +2091,10 @@ function Framework() {
     this.tabClickHandler = function() {
         var visibleTabs = self.jquery.get('.module-tab');
         visibleTabs.off('click.sdFramework'+self.moduleName);
+
+        var manageDevicesLink = self.jquery.get('#manage-link');
+        visibleTabs.off('click.sdFramework'+self.moduleName);
+        
         self.qExecOnUnloadModule();
     };
     var tabClickHandler = this.tabClickHandler;
@@ -1936,6 +2102,9 @@ function Framework() {
     this.attachNavListeners = function() {
         var visibleTabs = self.jquery.get('.module-tab');
         visibleTabs.on('click.sdFramework'+getActiveTabID(),self.tabClickHandler);
+
+        var manageDevicesLink = self.jquery.get('#manage-link');
+        manageDevicesLink.on('click.sdFramework'+getActiveTabID(),self.tabClickHandler);
     };
     var attachNavListeners = this.attachNavListeners;
 
@@ -1981,6 +2150,12 @@ function Framework() {
         // Report that a new device has been selected
         .then(self.qExecOnDeviceSelected, self.qExecOnLoadError)
 
+        // Clear all config-bindings (if not disabled)
+        .then(self.qClearConfigBindings, self.qExecOnLoadError)
+
+        // Re-configure any smartBindings
+        .then(self.qUpdateSmartBindings, self.qExecOnLoadError)
+
         // Configure the device
         .then(self.executeSetupBindings, self.qExecOnLoadError)
 
@@ -2017,13 +2192,13 @@ function Framework() {
             showAlert('Current Device Firmware Version Not Supported By This Module');
             isHandled = true;
         }
-        return isHandled
-    }
+        return isHandled;
+    };
     var manageLJMError = this.manageLJMError;
 
     this.manageError = function(err) {
         showAlert('Error: '+err.toString());
-    }
+    };
     var manageError = this.manageError;
 
     this.saveModuleInfo = function (infoObj, constantsObj, moduleObj) {
@@ -2033,7 +2208,7 @@ function Framework() {
         moduleConstants = constantsObj;
         self.module = moduleObj;
         module = moduleObj;
-    }
+    };
 }
 
 var singleDeviceFramework = Framework;

@@ -14,14 +14,17 @@
 			<tbody style="background-color:transparent">
 				<tr>
 					<td>
-						<button id="run-lua-script-button" type="button" class="btn btn-default btn-lg" title="Run">
-							<span class="icon-play"></span>
+						<button id="run-lua-script-button" type="button" class="btn btn-default btn-lg" title="{{ custom.device.runStatus.buttonTitle }}">
+							<span class="{{ custom.device.runStatus.buttonIcon }}"></span>
 						</button>
 						<button id="upload-lua-script-to-device-button" type="button" class="btn btn-default btn-lg" title="Upload">
 							<span class="icon-install"></span>
 						</button>
-						<button id="enable-script-at-startup-button" type="button" class="btn btn-default btn-lg" title="Enable At Startup">
-							<span class="icon-switch-3"></span>
+						<button id="save-script-to-flash-button" type="button" class="btn btn-default btn-lg" title="Save Script to Flash">
+							<span class="icon-disk"></span>
+						</button>
+						<button id="enable-script-at-startup-button" type="button" class="btn btn-default btn-lg" title="{{ custom.device.startupStatus.buttonTitle }}">
+							<span class="{{ custom.device.startupStatus.buttonIcon }}"></span>
 						</button>
 					</td>
 					<td>
@@ -80,8 +83,8 @@
 					<div class="span12">
 						<div id="lua-script-device-status-info-short">
 							Device Status:
-							<span id="script-running-status" class="icon-pause"/>
-							<span id="startup-script-running-status" class="icon-pause"/>
+							<span id="script-running-status" class="{{ custom.device.runStatus.icon }}" title="{{ custom.device.runStatus.title }}"/>
+							<span id="startup-script-running-status" class="{{ custom.device.startupStatus.icon }}" title="{{ custom.device.startupStatus.title }}"/>
 							<span id="script-size-status" class="icon-pause"/>
 							<span id="debug-buffer-filled-status" class="icon-pause"/>
 						</div>

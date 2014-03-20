@@ -144,6 +144,10 @@ var Device = function (device, serial, connectionType, deviceType)
 
         return this.rwMany(addresses, directions, numValues, values);
     }
+    this.qWriteArray = function(address, values) {
+        // console.log('Writing Array:',values);
+        return this.writeArray(address, values);
+    }
 
     /**
      * This function writes an array of values to a single address.  It is 
@@ -173,6 +177,9 @@ var Device = function (device, serial, connectionType, deviceType)
         }
 
         return this.rwMany(addresses, directions, numValues, values);
+    }
+    this.qReadArray = function(address, numReads) {
+        return this.readArray(address, numReads);
     }
 
     this.rwA = function() {
