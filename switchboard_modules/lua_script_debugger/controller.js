@@ -67,8 +67,7 @@ function luaDeviceController() {
         if(self.DEBUG_START_EXECUTIONS) {
             console.log(data);
         }
-    }
-
+    };
     this.stopLuaScript = function() {
         // console.log('stopping script');
         var innerDeferred = q.defer();
@@ -94,7 +93,6 @@ function luaDeviceController() {
         return innerDeferred.promise;
     };
     this.writeLuaScript = function() {
-        // console.log('writing luaSource');
         var innerDeferred = q.defer();
         var numPackets = 0;
         var luaSource = self.codeEditorDoc.getValue();
@@ -130,23 +128,6 @@ function luaDeviceController() {
 
             // Get the data that should be sent
             srcData = luaSourceBuf.slice(0,subPacketSize);
-            // var msb, lsb;
-            // if((srcData.length % 2) === 0) {
-            //     for (j = 0; j < srcData.length; j+=2) {
-            //         msb = srcData.charCodeAt(j) << 8;
-            //         lsb = srcData.charCodeAt(j + 1);
-            //         binaryData.push(msb | lsb);
-            //     }
-            // } else {
-            //     for (j = 0; j < srcData.length-1; j+=2) {
-            //         msb = srcData.charCodeAt(j) << 8;
-            //         lsb = srcData.charCodeAt(j + 1);
-            //         binaryData.push(msb | lsb);
-            //     }
-            //     msb = srcData.charCodeAt(j) << 8;
-            //     lsb = 0;
-            //     binaryData.push(msb | lsb);
-            // }
             
             // Parse the string data into bytes
             for (j = 0; j < srcData.length; j++) {
@@ -174,7 +155,7 @@ function luaDeviceController() {
                     },
                     function(err) {
                         console.log('Error on SRC write',err);
-                        console.log('Check .json for "type" of UINT16');
+                        console.log('Check .json for "type" of BYTE');
                         callback(err);
                     }
                 );
@@ -189,18 +170,13 @@ function luaDeviceController() {
 
     };
     this.getAndAddDebugData = function(numBytes) {
-        console.log('Num Bytes',numBytes);
         var innerDeferred = q.defer();
         var numBytesInBuffer = numBytes;
         var numPackets = 0;
-        var numFullPackets = 0;
-        var luaSource = self.codeEditorDoc.getValue();
-        var luaSourceBuf = luaSource;
-        var luaSourceSize = luaSource.length;
         var maxPacketSize = MAX_ARRAY_PACKET_SIZE;
 
         var i,j;
-        var packetSizes[];
+        var packetSizes = [];
 
         // Determine how many chunks of data should be read
         numPackets = (numBytesInBuffer - (numBytesInBuffer % maxPacketSize));
@@ -211,31 +187,41 @@ function luaDeviceController() {
         }
 
         // Determine if an extra packet of a smaller size should be sent
-        if ((luaSourceSize % maxPacketSize) !== 0) {
+        if ((numBytesInBuffer % maxPacketSize) !== 0) {
             numPackets += 1;
-            packetSizes.push(luaSourceSize % maxPacketSize);
+            packetSizes.push(numBytesInBuffer % maxPacketSize);
         }
-
-
 
         // Synchronously read each packet of data to the device
         async.eachSeries(
             packetSizes,
             function(numBytes, callback) {
-                // console.log('length: ',data.length,', data to send:',data);
                 // Perform Device IO
-                // self.device.qWriteArray('LUA_SOURCE_WRITE',data)
-                // .then(
-                //     function(data) {
-                //         callback();
-                //     },
-                //     function(err) {
-                //         console.log('Error on SRC write',err);
-                //         console.log('Check .json for "type" of UINT16');
-                //         callback(err);
-                //     }
-                // );
-                console.log('reading...',numBytes);
+                self.device.qReadArray('LUA_DEBUG_DATA',numBytes)
+                .then(
+                    function(data) {
+                        var textData = "";
+                        data.forEach(function(newChar){
+                            textData += String.fromCharCode(newChar);
+                        });
+                        // Insert data into debug-log window
+                        // cDoc.insert({row:editor.session.getLength(),column:0},str)
+                        self.debuggingLogDoc.insert(
+                            {
+                                row: self.debuggingLogSession.getLength(),
+                                column:0
+                            },
+                            textData
+                        );
+                        console.log(textData);
+                        callback();
+                    },
+                    function(err) {
+                        console.log('Error on LUA_DEBUG_DATA',err);
+                        console.log('Check .json for "type" of BYTE');
+                        callback(err);
+                    }
+                );
                 callback();
             },
             function(err) {
@@ -270,7 +256,7 @@ function luaDeviceController() {
         .then(innerDeferred.resolve, innerDeferred.reject);
         return innerDeferred.promise;
 
-    }
+    };
     this.enableStartupLuaScript = function() {
         self.print('enabling lua startup script');
         var innerDeferred = q.defer();
@@ -343,7 +329,7 @@ function luaDeviceController() {
 
         // Return q instance
         return ioDeferred.promise;
-    }
+    };
     this.stopScript = function() {
         self.print('stopping Lua script');
         var ioDeferred = q.defer();
@@ -506,7 +492,7 @@ function module() {
                     onSuccess();
                 },self.handleIOError(onSuccess));
             }
-        }
+        };
         var runPauseLuaScript = function(data, onSuccess) {
             console.log('runPause button pressed');
 
@@ -559,14 +545,19 @@ function module() {
             onSuccess();
         };
         var numDebugBytes = function(data, onSuccess) {
-            self.luaController.getAndAddDebugData(data.value)
-            .then(function() {
-                // onSuccess
+            var val = data.value;
+            if(val > 0) {
+                self.luaController.getAndAddDebugData(val)
+                .then(function() {
+                    // onSuccess
+                    onSuccess();
+                }, function() {
+                    // onError
+                    onSuccess();
+                });
+            } else {
                 onSuccess();
-            }, function() {
-                // onError
-                onSuccess();
-            });
+            }
         };
         var smartBindings = [
             {
@@ -754,7 +745,7 @@ function module() {
             "ace/mode/lua"
         );
         debuggingLog.setupEditor(
-            "lua-console-log-editor", 
+            "lua-debugging-log-editor", 
             "ace/theme/monokai", 
             "ace/mode/text"
         );

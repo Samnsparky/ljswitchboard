@@ -6,9 +6,18 @@
 	width: 100%;
 	height: 500px;
 }
-#lua-console-log-editor { 
+#lua-script-device-status {
+	margin-bottom: 10px;
+}
+#lua-debugging-log-editor { 
 	width: 100%;
-	height: 500px;
+	height: 300px;
+}
+#lua-debugging-log-editor .ace_gutter {
+	display:none;
+}
+#lua-debugging-log-editor .ace_scroller {
+	left:5px;
 }
 #lua-script-module-body {
 	margin-left:0px;
@@ -27,10 +36,6 @@
 .info-invisible {
 	display:none;
 }
-
-/*#lua-script-module-editor-bar {
-    width:80%;
-}*/
 
 #lua-script-module-editor-bar .row {
 	margin-left:0px;
