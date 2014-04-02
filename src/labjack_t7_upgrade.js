@@ -1080,7 +1080,6 @@ exports.checkNewFirmware = function(bundle)
     return deferred.promise;
 };
 
-
 /**
  * Facade / entry point for the update firmware pipeline.
  *

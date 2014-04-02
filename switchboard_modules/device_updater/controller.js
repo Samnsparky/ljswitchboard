@@ -19,6 +19,8 @@ var labjack_t7_upgrade = require('./labjack_t7_upgrade');
 
 var selectedSerials = [];
 
+var DISABLE_WIFI_POWER = true;
+
 
 /**
  * A wrapper around a device to make device update operations easier.
@@ -244,6 +246,45 @@ function displayFirmwareListing(firmwareInfo)
     );
 }
 
+/**
+ * Disable old-firmware checking
+**/
+var disableOldFirmwareCheck = function(bundle) {
+    var deferred = q.defer();
+    device_controller.ljm_driver.writeLibrary(
+        "LJM_OLD_FIRMWARE_CHECK",           // Parameter
+        0,                                  // Value
+        function() {                        // onError
+            console.log('Error Disabling Firmware Check');
+            deferred.resolve(bundle);
+        },
+        function() {                        // onSuccess
+            console.log('Successfully Disabled Firmware Check');
+            deferred.resolve(bundle);
+        }
+    );
+    return deferred.promise;
+}
+/**
+ * Enable old-firmware checking
+**/
+var enableOldFirmwareCheck = function(bundle) {
+    var deferred = q.defer();
+    device_controller.ljm_driver.writeLibrary(
+        "LJM_OLD_FIRMWARE_CHECK",           // Parameter
+        1,                                  // Value
+        function() {                        // onError
+            console.log('Error Disabling Firmware Check');
+            deferred.resolve(bundle);
+        },
+        function() {                        // onSuccess
+            console.log('Successfully Disabled Firmware Check');
+            deferred.resolve(bundle);
+        }
+    );
+    return deferred.promise;
+}
+
 
 /**
  * Routine to update the firmware on the selected devices.
@@ -315,7 +356,7 @@ function updateFirmware (firmwareFileLocation) {
             };
 
             try {
-                if (device.getConnectionTypeStr() !== "LJM_ctWIFI" && device.read('POWER_WIFI') != 0) {
+                if (DISABLE_WIFI_POWER && device.getConnectionTypeStr() !== "LJM_ctWIFI" && device.read('POWER_WIFI') != 0) {
                     try{
                         device.write('POWER_WIFI', 0);
                         device.write('POWER_WIFI_DEFAULT', 0);
@@ -327,15 +368,20 @@ function updateFirmware (firmwareFileLocation) {
                     runUpgrade();
                 }
             } catch (e) {
-                callback(
-                    'Configuring WIFI failed. Please try upgrading again.'+e.toString()
-                );
+                if(e.message == 1307) {
+                    callback(e.message);
+                } else {
+                    callback(
+                        'Configuring WIFI failed. Please try upgrading again.'+e.toString()
+                    );
+                }
             }
             
         },
         function (err) {
             if (err) {
                 var errMsg;
+                // Check for wifi-error
                 if (err == 2358) {
                     $('#flash-notice').slideDown();
                     setTimeout(
@@ -347,18 +393,34 @@ function updateFirmware (firmwareFileLocation) {
                     );
                     return;
                 }
+                // Check for old-firmware error
+                if (err == 1307) {
+                    console.log('Updating device w/ old firmware');
+                    // disableOldFirmwareCheck()
+                    // .then(function() {
+                    //     updateFirmware(firmwareFileLocation);
+                    // },
+                    // function() {
+                    //     console.log('Issues disabling oldFirmwareCheck')
+                    // })
+                    DISABLE_WIFI_POWER = false;
+                    updateFirmware(firmwareFileLocation);
+                    return;
+                }
 
                 if (err.retError === undefined) {
                     errMsg = err.toString();
                 } else  {
                     errMsg = err.retError.toString();
                 }
-
+                console.log('Error..... bleh',err);
                 showAlert(
                     'Failed to update device firmware. Please try ' + 
                     'again. If the problem persists, please contact ' + 
                     'support@labjack.com. Error: ' + errMsg
                 );
+            } else {
+                DISABLE_WIFI_POWER = true;
             }
             $('.firmware-source-option').slideDown();
             $('#working-status-pane').slideUp();

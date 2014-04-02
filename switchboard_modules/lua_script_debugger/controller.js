@@ -239,6 +239,16 @@ function luaDeviceController() {
         .then(innerDeferred.resolve, innerDeferred.reject);
         return innerDeferred.promise;
     };
+    this.enableLuaDebuggingDefault = function() {
+        // console.log('setting enablingLuaDebugging');
+        var innerDeferred = q.defer();
+
+        // Perform Device IO
+        // self.device.qWrite('LUA_DEBUG_ENABLE_DEFAULT',1)
+        // .then(innerDeferred.resolve, innerDeferred.reject);
+        innerDeferred.resolve();
+        return innerDeferred.promise;
+    };
     this.enableLuaScript = function() {
         // console.log('starting Lua script');
         var innerDeferred = q.defer();
@@ -257,26 +267,32 @@ function luaDeviceController() {
         return innerDeferred.promise;
 
     };
-    this.enableStartupLuaScript = function() {
+    this.enableLuaRunDefault = function() {
         self.print('enabling lua startup script');
         var innerDeferred = q.defer();
 
         // Perform Device IO
-        self.device.qWrite('LUA_STARTUP_CONFIG',1)
-        .then(innerDeferred.resolve, self.handleNoScriptError)
+        self.device.qWrite('LUA_RUN_DEFAULT',1)
+        .then(function(){
+                console.log('here1');
+                innerDeferred.resolve();
+            }, self.handleNoScriptError)
         .then(innerDeferred.resolve, innerDeferred.reject);
         return innerDeferred.promise;
     };
-    this.disableStartupLuaScript = function() {
+    this.disableLuaRunDefault = function() {
         self.print('disabling lua startup script');
         var innerDeferred = q.defer();
 
         // Perform Device IO
-        self.device.qWrite('LUA_STARTUP_CONFIG',0)
-        .then(innerDeferred.resolve, innerDeferred.reject);
+        self.device.qWrite('LUA_RUN_DEFAULT',0)
+        .then(function(){
+                console.log('here2');
+                innerDeferred.resolve();
+            }, innerDeferred.reject);
         return innerDeferred.promise;
     };
-    this.saveScriptToFlash = function() {
+    this.saveEnableLuaSaveToFlash = function() {
         self.print('saving lua script to flash');
         var innerDeferred = q.defer();
 
@@ -284,6 +300,42 @@ function luaDeviceController() {
         self.device.qWrite('LUA_SAVE_TO_FLASH',1)
         .then(innerDeferred.resolve, innerDeferred.reject);
         return innerDeferred.promise;
+    };
+    this.saveScriptToFlash = function() {
+        var ioDeferred = q.defer();
+
+        // Disable the LUA script
+        self.stopLuaScript()
+
+        // Configure LUA_SAVE_TO_FLASH register
+        .then(self.saveEnableLuaSaveToFlash, self.catchError)
+
+        .then(innerDeferred.resolve, innerDeferred.reject);
+        return innerDeferred.promise;
+    };
+    this.enableStartupLuaScript = function() {
+        var ioDeferred = q.defer();
+
+        // Disable the LUA script
+        self.stopLuaScript()
+
+        // Configure LUA_RUN_DEFAULT register
+        .then(self.enableLuaRunDefault, self.catchError)
+
+        .then(ioDeferred.resolve, ioDeferred.reject);
+        return ioDeferred.promise;
+    };
+    this.disableStartupLuaScript = function() {
+        var ioDeferred = q.defer();
+
+        // Disable the LUA script
+        self.stopLuaScript()
+
+        // Configure LUA_RUN_DEFAULT register
+        .then(self.disableLuaRunDefault, self.catchError)
+
+        .then(ioDeferred.resolve, ioDeferred.reject);
+        return ioDeferred.promise;
     };
 
     this.loadAndStartScript = function() {
@@ -301,6 +353,9 @@ function luaDeviceController() {
         
         // Enable Debugging
         .then(self.enableLuaDebugging, self.catchError)
+
+        // Enable Debugging Default
+        .then(self.enableLuaDebuggingDefault, self.catchError)
 
         // Enable LUA script
         .then(self.enableLuaScript, self.catchError)
@@ -323,6 +378,12 @@ function luaDeviceController() {
 
         // Write the LUA script
         .then(self.writeLuaScript, self.catchError)
+
+        // Enable Debugging
+        .then(self.enableLuaDebugging, self.catchError)
+
+        // Enable Debugging Default
+        .then(self.enableLuaDebuggingDefault, self.catchError)
 
         // Handle errors & return
         .then(ioDeferred.resolve, ioDeferred.reject);
@@ -519,7 +580,10 @@ function module() {
                 constants,
                 self.luaController.enableStartupLuaScript,
                 self.luaController.disableStartupLuaScript,
-                onSuccess
+                function() {
+                    console.log('Finished Configuring LUA_RUN_DEFAULT')
+                    onSuccess();
+                }
             );
         };
         var saveScriptToFlash = function(data, onSuccess) {
@@ -559,6 +623,16 @@ function module() {
                 onSuccess();
             }
         };
+        var loadLuaFile = function(data, onSuccess) {
+            console.log('Loading file....');
+            var chooser = $('#file-dialog-hidden');
+            chooser.change(function(evt) {
+                var fileLoc = $(this).val();
+                console.log('Selected Lua File',fileLoc);
+                onSuccess();
+            });
+            chooser.trigger('click');
+        };
         var smartBindings = [
             {
                 bindingName: 'LUA_RUN', 
@@ -567,7 +641,7 @@ function module() {
                 configCallback: saveConfigRunStatus,
                 periodicCallback: isLuaRunning
             }, {
-                bindingName: 'LUA_STARTUP_CONFIG', 
+                bindingName: 'LUA_RUN_DEFAULT', 
                 smartName: 'readRegister',
                 iterationDelay: 9,
                 configCallback: saveConfigBootScriptStatus,
@@ -611,7 +685,7 @@ function module() {
                 // Define binding to handle loading user luaFile button presses.
                 bindingName: 'load-lua-script-button', 
                 smartName: 'clickHandler',
-                callback: genericButtonPress
+                callback: loadLuaFile
             }, {
                 // Define binding to handle loading luaExample button presses.
                 bindingName: 'load-example-lua-script-button', 
@@ -738,6 +812,16 @@ function module() {
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
+        $('#browse-link').click(function () {
+            var chooser = $('#file-dialog-hidden');
+            chooser.change(function(evt) {
+                var fileLoc = $(this).val();
+                console.log('FiileLoc',fileLoc);
+            });
+
+            chooser.trigger('click');
+            return false;
+        });
         // Initialize ace editor obj for luaEditor & debuggingLog:
         luaEditor.setupEditor(
             "lua-code-editor", 

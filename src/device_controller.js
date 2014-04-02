@@ -31,6 +31,7 @@ var DRIVER_CONNECTION_TYPE_NAMES = dict({
 });
 
 exports.driver_const = labjack_nodejs.driver_const;
+exports.ljm_driver = labjack_driver;
 
 /**
  * Object with information about a device.

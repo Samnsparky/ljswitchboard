@@ -57,13 +57,17 @@
 		</table>
 	</div>
 	<div id="lua-script-module-body" class="row">
+		{{!--<div>
+            <input type="text" id="file-loc-input" placeholder="Firmware location...">
+            <a id="browse-link" href="#" class="btn btn-link">browse for file >></a>
+        </div>--}}
 		<div id="lua-script-module-status-bar" class="span2 {{ custom.views.deviceStatus.visibility }}">
 			<div id="lua-script-device-status">
 				<h3>Status</h3>
 				<p>Script Status:</p>
 				<p><span id="LUA_RUN"></span></p>
 				<p>Startup Script Status:</p>
-				<p><span id="LUA_STARTUP_CONFIG"></span></p>
+				<p><span id="LUA_RUN_DEFAULT"></span></p>
 				<p>Debug Enabled:</p>
 				<p><span id="LUA_DEBUG_ENABLE"></span></p>
 				<p>Num Bytes in Buffer:</p>

@@ -1,5 +1,5 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "ljmDeviceParameters": 
     [
         {
@@ -15,17 +15,25 @@
             "connectionType":"Ethernet"
         },
         {
+            "serialNumber":"470010117",
+            "connectionType":"USB"
+        },
+        {
             "serialNumber":"470010604",
             "connectionType":"Ethernet"
         },
         {
             "serialNumber":"470010610",
             "connectionType":"USB"
+        },
+        {
+            "serialNumber":"470010548",
+            "connectionType":"USB"
         }
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "lua_script_debugger",
+    "moduleName": "device_updater",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }
