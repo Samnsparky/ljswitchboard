@@ -21,7 +21,7 @@
     </div>
 </div>
 <div id="register-matrix-body">
-    <table class="table">
+    <table id="register-matrix" class="table">
         <thead>
             <tr>
                 <th>address</th>
@@ -66,3 +66,18 @@
         </tbody>
     </table>
 </div>
+<script>
+$('#register-matrix-body').ready(function () {
+    var options = {
+        rowsPerPage : 10,
+        firstArrow : (new Image()).src="static/img/first.gif",
+        prevArrow : (new Image()).src="static/img/prev.gif",
+        lastArrow : (new Image()).src="static/img/last.gif",
+        nextArrow : (new Image()).src="static/img/next.gif",
+        ignoreRows : $('tbody tr:odd', $('#register-matrix')),
+        topNav : false
+    };
+
+    $('#register-matrix').tablePagination(options);
+});
+</script>

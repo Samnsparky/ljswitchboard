@@ -1,4 +1,4 @@
-var LABJACK_OVERVIEW_IMG_SRC = 'http://gleap.org/static/img/T7-cartoon.png';
+var LABJACK_OVERVIEW_IMG_SRC = '/static/img/T7-cartoon.png';
 var DEVICE_IMAGE_X_OFFSET = 150;
 var DEVICE_IMAGE_Y_OFFSET = 10;
 var VALUE_LABEL_X_OFFSET = -40;

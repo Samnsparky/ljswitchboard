@@ -15,25 +15,17 @@
             "connectionType":"Ethernet"
         },
         {
-            "serialNumber":"470010117",
-            "connectionType":"USB"
-        },
-        {
             "serialNumber":"470010604",
             "connectionType":"Ethernet"
         },
         {
             "serialNumber":"470010610",
             "connectionType":"USB"
-        },
-        {
-            "serialNumber":"470010548",
-            "connectionType":"USB"
         }
     ],
-    "displayDevTools": false,
+    "displayDevTools": true,
     "overrideAutoModuleLoad": true,
-    "moduleName": "device_updater",
+    "moduleName": "lua_script_debugger",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }
