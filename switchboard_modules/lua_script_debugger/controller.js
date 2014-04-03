@@ -52,7 +52,8 @@ function luaDeviceController() {
     var debuggingLog;
     var debuggingLogSession;
     var debuggingLogDoc;
-    this.DEBUG_START_EXECUTIONS = true;
+    this.DEBUG_START_EXECUTIONS = false;
+    this.DEBUG_HIGH_FREQ_START_EXECUTIONS = false;
     var MAX_ARRAY_PACKET_SIZE = 32; //Set packet size to be 32 bytes
 
     this.catchError = function(err) {
@@ -63,13 +64,18 @@ function luaDeviceController() {
         console.log('Num Lines',self.codeEditorDoc.getLength());
         console.log('Num Bytes',self.codeEditorDoc.getValue().length);
     };
+    this.printHighFreq = function(data) {
+        if(self.DEBUG_HIGH_FREQ_START_EXECUTIONS) {
+            self.print(data);
+        }
+    }
     this.print = function(data) {
         if(self.DEBUG_START_EXECUTIONS) {
             console.log(data);
         }
     };
     this.stopLuaScript = function() {
-        // console.log('stopping script');
+        self.print('disabling LUA_RUN');
         var innerDeferred = q.defer();
         // Disable the LUA script
         self.device.qWrite('LUA_RUN',0)
@@ -79,7 +85,7 @@ function luaDeviceController() {
         return innerDeferred.promise;
     };
     this.writeLuaSourceSize = function() {
-        // console.log('setting luaSourceSize');
+        self.print('setting LUA_SOURCE_SIZE');
         var innerDeferred = q.defer();
         var sourceSize = self.codeEditorDoc.getValue().length;
 
@@ -93,6 +99,7 @@ function luaDeviceController() {
         return innerDeferred.promise;
     };
     this.writeLuaScript = function() {
+        self.print('writing to LUA_SOURCE_WRITE');
         var innerDeferred = q.defer();
         var numPackets = 0;
         var luaSource = self.codeEditorDoc.getValue();
@@ -146,7 +153,6 @@ function luaDeviceController() {
         async.eachSeries(
             packetData,
             function(data, callback) {
-                // console.log('length: ',data.length,', data to send:',data);
                 // Perform Device IO
                 self.device.qWriteArray('LUA_SOURCE_WRITE',data)
                 .then(
@@ -161,6 +167,7 @@ function luaDeviceController() {
                 );
             },
             function(err) {
+                self.print('Finished writing to LUA_SOURCE_WRITE');
                 innerDeferred.resolve();
             }
         );
@@ -170,6 +177,7 @@ function luaDeviceController() {
 
     };
     this.getAndAddDebugData = function(numBytes) {
+        self.printHighFreq('reading & saving to LUA_DEBUG_DATA');
         var innerDeferred = q.defer();
         var numBytesInBuffer = numBytes;
         var numPackets = 0;
@@ -199,13 +207,17 @@ function luaDeviceController() {
                 // Perform Device IO
                 self.device.qReadArray('LUA_DEBUG_DATA',numBytes)
                 .then(
+                    // Handle successful reads
                     function(data) {
+                        // Define variable to save debug-data to
                         var textData = "";
+
+                        // Loop through read data & convert to ASCII text
                         data.forEach(function(newChar){
                             textData += String.fromCharCode(newChar);
                         });
+
                         // Insert data into debug-log window
-                        // cDoc.insert({row:editor.session.getLength(),column:0},str)
                         self.debuggingLogDoc.insert(
                             {
                                 row: self.debuggingLogSession.getLength(),
@@ -213,16 +225,20 @@ function luaDeviceController() {
                             },
                             textData
                         );
-                        console.log(textData);
+
+                        // Force async to go to next loop iteration
                         callback();
                     },
+                    // Handle read errors
                     function(err) {
+                        // Report that an error has occurred
                         console.log('Error on LUA_DEBUG_DATA',err);
                         console.log('Check .json for "type" of BYTE');
+
+                        // Force async to break out of the loop
                         callback(err);
                     }
                 );
-                callback();
             },
             function(err) {
                 innerDeferred.resolve();
@@ -231,7 +247,7 @@ function luaDeviceController() {
         return innerDeferred.promise;
     };
     this.enableLuaDebugging = function() {
-        // console.log('setting enablingLuaDebugging');
+        self.print('enabling LUA_DEBUG_ENABLE');
         var innerDeferred = q.defer();
 
         // Perform Device IO
@@ -240,17 +256,16 @@ function luaDeviceController() {
         return innerDeferred.promise;
     };
     this.enableLuaDebuggingDefault = function() {
-        // console.log('setting enablingLuaDebugging');
+        self.print('enabling LUA_DEBUG_ENABLE_DEFAULT');
         var innerDeferred = q.defer();
 
         // Perform Device IO
-        // self.device.qWrite('LUA_DEBUG_ENABLE_DEFAULT',1)
-        // .then(innerDeferred.resolve, innerDeferred.reject);
-        innerDeferred.resolve();
+        self.device.qWrite('LUA_DEBUG_ENABLE_DEFAULT',1)
+        .then(innerDeferred.resolve, innerDeferred.reject);
         return innerDeferred.promise;
     };
     this.enableLuaScript = function() {
-        // console.log('starting Lua script');
+        self.print('enabling LUA_RUN');
         var innerDeferred = q.defer();
 
         // Perform Device IO
@@ -268,32 +283,30 @@ function luaDeviceController() {
 
     };
     this.enableLuaRunDefault = function() {
-        self.print('enabling lua startup script');
+        self.print('enabling LUA_RUN_DEFAULT');
         var innerDeferred = q.defer();
 
         // Perform Device IO
         self.device.qWrite('LUA_RUN_DEFAULT',1)
         .then(function(){
-                console.log('here1');
                 innerDeferred.resolve();
             }, self.handleNoScriptError)
         .then(innerDeferred.resolve, innerDeferred.reject);
         return innerDeferred.promise;
     };
     this.disableLuaRunDefault = function() {
-        self.print('disabling lua startup script');
+        self.print('disabling LUA_RUN_DEFAULT');
         var innerDeferred = q.defer();
 
         // Perform Device IO
         self.device.qWrite('LUA_RUN_DEFAULT',0)
         .then(function(){
-                console.log('here2');
                 innerDeferred.resolve();
             }, innerDeferred.reject);
         return innerDeferred.promise;
     };
     this.saveEnableLuaSaveToFlash = function() {
-        self.print('saving lua script to flash');
+        self.print('saving LUA_SAVE_TO_FLASH');
         var innerDeferred = q.defer();
 
         // Perform Device IO
@@ -302,10 +315,17 @@ function luaDeviceController() {
         return innerDeferred.promise;
     };
     this.saveScriptToFlash = function() {
+        self.print('loading & saving lua script to flash');
         var ioDeferred = q.defer();
 
         // Disable the LUA script
         self.stopLuaScript()
+
+        // Set the LUA Source Size
+        .then(self.writeLuaSourceSize, self.catchError)
+
+        // Write the LUA script
+        .then(self.writeLuaScript, self.catchError)
 
         // Configure LUA_SAVE_TO_FLASH register
         .then(self.saveEnableLuaSaveToFlash, self.catchError)
@@ -314,6 +334,7 @@ function luaDeviceController() {
         return innerDeferred.promise;
     };
     this.enableStartupLuaScript = function() {
+        self.print('enabling startup script');
         var ioDeferred = q.defer();
 
         // Disable the LUA script
@@ -322,10 +343,14 @@ function luaDeviceController() {
         // Configure LUA_RUN_DEFAULT register
         .then(self.enableLuaRunDefault, self.catchError)
 
+        // Configure LUA_DEBUG_ENABLE_DEFAULT register
+        .then(self.enableLuaDebuggingDefault, self.catchError)
+
         .then(ioDeferred.resolve, ioDeferred.reject);
         return ioDeferred.promise;
     };
     this.disableStartupLuaScript = function() {
+        self.print('disabling startup script');
         var ioDeferred = q.defer();
 
         // Disable the LUA script
@@ -454,13 +479,34 @@ function module() {
     var numDebugBytes = 0;
     this.numDebugBytes = numDebugBytes;
 
-    var handleIOError = function(onSuccess) {
+    this.ENABLE_PRINTING_USER_DEBUG_INFO = true;
+
+    var handleIOSuccess = function(onSuccess, debugData) {
+        return function() {
+            if(debugData !== null) {
+                printUserDebugInfo(debugData);
+            }
+            onSuccess();
+        };
+    };
+    this.handleIOSuccess = handleIOSuccess;
+
+    var handleIOError = function(onSuccess, debugData) {
         return function(err) {
             console.log('LSD Error',err);
+            if(debugData !== null) {
+                console.log(debugData);
+            }
             onSuccess();
         };
     };
     this.handleIOError = handleIOError;
+
+    this.printUserDebugInfo = function(data) {
+        if(self.ENABLE_PRINTING_USER_DEBUG_INFO) {
+            console.log(data);
+        }
+    }
 
     /**
      * Function is called once every time the module tab is selected, loads the module.
@@ -480,8 +526,8 @@ function module() {
 
         var setDeviceData = function(classStr, result) {
             // Initialize variables
-            var title = "";
-            var icon = "";
+            var statusTitle = "";
+            var statusIcon = "";
             var buttonTitle = "";
             var buttonIcon = "";
             var index = 0;
@@ -492,14 +538,14 @@ function module() {
                 val = 1;
             }
 
-            title = self.luaVariables[classStr].title[val];
-            icon = self.luaVariables[classStr].icon[val];
+            statusTitle = self.luaVariables[classStr].statusTitle[val];
+            statusIcon = self.luaVariables[classStr].statusIcon[val];
             buttonTitle = self.luaVariables[classStr].buttonTitle[val];
             buttonIcon = self.luaVariables[classStr].buttonIcon[val];
 
             moduleContext.device[classStr] = {};
-            moduleContext.device[classStr].title = title;
-            moduleContext.device[classStr].icon = icon;
+            moduleContext.device[classStr].statusTitle = statusTitle;
+            moduleContext.device[classStr].statusIcon = statusIcon;
             moduleContext.device[classStr].buttonTitle = buttonTitle;
             moduleContext.device[classStr].buttonIcon = buttonIcon;
         };
@@ -531,7 +577,6 @@ function module() {
             var falseIcon = constants.buttonIcon[1];
 
             var execTrue = icon.hasClass(trueIcon);
-            console.log('execBranch',execTrue);
             if(execTrue) {
                 trueFunc()
                 .then(function(){
@@ -539,7 +584,6 @@ function module() {
                     icon.removeClass(trueIcon);
                     icon.addClass(falseIcon);
                     button.attr('title',falseTitle);
-                    console.log('finished executing true branch');
                     onSuccess();
                 },self.handleIOError(onSuccess));
             } else {
@@ -549,63 +593,76 @@ function module() {
                     icon.removeClass(falseIcon);
                     icon.addClass(trueIcon);
                     button.attr('title',trueTitle);
-                    console.log('finished executing false branch');
                     onSuccess();
                 },self.handleIOError(onSuccess));
             }
         };
         var runPauseLuaScript = function(data, onSuccess) {
-            console.log('runPause button pressed');
+            self.printUserDebugInfo('runPause button pressed');
 
             var constants = self.luaVariables.runStatus;
             conditionalExecution(
                 constants,
                 self.luaController.loadAndStartScript,
                 self.luaController.stopScript,
-                onSuccess
+                self.handleIOSuccess(onSuccess,'Configured LUA_RUN')
             );
         };
+        var saveScriptToFlash = function(data, onSuccess) {
+            self.printUserDebugInfo('saveScriptToFlash button pressed');
+            self.luaController.saveScriptToFlash()
+            .then(
+                self.handleIOSuccess(onSuccess,'Script Saved to Flash'),
+                self.handleIOError(onSuccess,'Err: Script Not Saved to Flash')
+            );
+        }
         var uploadLuaScript = function(data, onSuccess) {
+            self.printUserDebugInfo('uploadLuaScript button pressed');
             self.luaController.loadLuaScript()
-            .then(function(){
-                console.log('Script Loaded');
-                onSuccess();
-            },self.handleIOError(onSuccess));
+            .then(
+                self.handleIOSuccess(onSuccess,'Script Loaded'),
+                self.handleIOError(onSuccess,'Err: Script Not Loaded')
+            );
         };
         var enableStartupScript = function(data, onSuccess) {
-            console.log('enableStartupScript button pressed');
+            self.printUserDebugInfo('enableStartupScript button pressed');
 
             var constants = self.luaVariables.startupStatus;
             conditionalExecution(
                 constants,
                 self.luaController.enableStartupLuaScript,
                 self.luaController.disableStartupLuaScript,
-                function() {
-                    console.log('Finished Configuring LUA_RUN_DEFAULT')
-                    onSuccess();
-                }
+                self.handleIOSuccess(onSuccess,'Configured LUA_RUN_DEFAULT')
             );
         };
         var saveScriptToFlash = function(data, onSuccess) {
-            console.log('saveScriptToFlash button pressed');
+            self.printUserDebugInfo('saveScriptToFlash button pressed');
 
             self.luaController.saveScriptToFlash()
-            .then(function(){
-                console.log('Script Saved');
-                onSuccess();
-            },self.handleIOError(onSuccess));
+            .then(
+                self.handleIOSuccess(onSuccess,'Script Saved'),
+                self.handleIOError(onSuccess, 'Err: Script Not Saved')
+            );
         };
-        var setIconData = function(constants, val) {
-            var icon = $('#' + constants.iconID);
-            icon.attr('class', constants.icon[val]);
-            icon.attr('title', constants.title[val]);
+        var setButtonIcon = function(constants, val) {
+            var button = $('#' + constants.buttonID);
+            var icon = button.children();
+            icon.attr('class', constants.buttonIcon[val]);
+            icon.attr('title', constants.buttonTitle[val]);
+        };
+        var setStatusIcon = function(constants, val) {
+            var icon = $('#' + constants.statusID);
+            icon.attr('class', constants.statusIcon[val]);
+            icon.attr('title', constants.statusTitle[val]);
         };
         var isLuaRunning = function(data, onSuccess) {
-            setIconData(self.luaVariables.runStatus, data.value);
+            setStatusIcon(self.luaVariables.runStatus, data.value);
+            setButtonIcon(self.luaVariables.runStatus, data.value);
             onSuccess();
         };
         var isConfiguredForStartup = function(data, onSuccess) {
-            setIconData(self.luaVariables.startupStatus, data.value);
+            setStatusIcon(self.luaVariables.startupStatus, data.value);
+            setButtonIcon(self.luaVariables.startupStatus, data.value);
             onSuccess();
         };
         var numDebugBytes = function(data, onSuccess) {
@@ -662,15 +719,10 @@ function module() {
                 smartName: 'clickHandler',
                 callback: runPauseLuaScript
             }, {
-                // Define binding to handle script-upload button presses.
-                bindingName: 'upload-lua-script-to-device-button', 
-                smartName: 'clickHandler',
-                callback: uploadLuaScript
-            }, {
-                // Define binding to handle save-to-flash button presses.
+                // Define binding to handle save-script-to-flash button presses.
                 bindingName: 'save-script-to-flash-button', 
                 smartName: 'clickHandler',
-                callback: genericButtonPress
+                callback: saveScriptToFlash
             }, {
                 // Define binding to handle enable at startup button presses.
                 bindingName: 'enable-script-at-startup-button', 
@@ -797,7 +849,7 @@ function module() {
             },
             function(data) {
                 scriptData = data;
-                // console.log('Successfully loaded script',data);
+
                 // Load a file & save to the module's context
                 self.moduleContext.luaScript = {
                     "name": fileName,

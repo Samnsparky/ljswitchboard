@@ -3,6 +3,13 @@
     "ljmDeviceParameters": 
     [
         {
+            "serialNumber":"470010548",
+            "connectionType":"Ethernet"
+        }
+    ],
+    "Other-ljmDeviceParameters": 
+    [
+        {
             "serialNumber":"470010620",
             "connectionType":"Ethernet"
         },
@@ -33,7 +40,7 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "device_updater",
+    "moduleName": "lua_script_debugger",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }

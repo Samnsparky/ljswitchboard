@@ -30,12 +30,12 @@
     "luaVariables": {
         "runStatus": {
             "buttonID": "run-lua-script-button",
-            "iconID": "script-running-status",
-            "icon": {
+            "statusID": "script-running-status",
+            "statusIcon": {
                 "0": "icon-pause",
                 "1": "icon-play"
             },
-            "title": {
+            "statusTitle": {
                 "0": "Script Stopped",
                 "1": "Script Running"
             },
@@ -50,12 +50,12 @@
         },
         "startupStatus": {
             "buttonID": "enable-script-at-startup-button",
-            "iconID": "startup-script-running-status",
-            "icon": {
+            "statusID": "startup-script-running-status",
+            "statusIcon": {
                 "0": "icon-blocked-3",
                 "1": "icon-switch-3"
             },
-            "title": {
+            "statusTitle": {
                 "0": "Script will not run at startup",
                 "1": "Script will run at startup"
             },
