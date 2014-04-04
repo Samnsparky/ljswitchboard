@@ -26,6 +26,20 @@
             "location": "lua_script_debugger/premade_scripts/test2.lua"
         }
     ],
+    "scriptOptions": {
+        "types": [
+            "example",
+            "userScript"
+        ],
+        "example": {
+            "windowMessage": "Example",
+            "canSave": false
+        },
+        "userScript": {
+            "windowMessage": "",
+            "canSave": true
+        }
+    },
     "scriptTemplates": [],
     "luaVariables": {
         "runStatus": {
