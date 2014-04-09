@@ -512,7 +512,40 @@ function luaDeviceController() {
         } else {
             // The script is an example & can't be saved
             self.print('Can\'t save script to file, opening file dialog');
-            fileIODeferred.resolve();
+
+            var chooser = $(fs_facade.getFileSaveAsID());
+            chooser.attr('nwworkingdir',fs_facade.getDefaultFilePath());
+            var onChangedSaveToFile = function(event) {
+                console.log('onChangedSaveToFile Fired');
+                var fileLoc = $(fs_facade.getFileSaveAsID()).val();
+                var scriptData = self.codeEditorDoc.getValue();
+                console.log('Selected Lua File',fileLoc);
+
+                self.print('Saving Script to file');
+                fs_facade.saveDataToFile(
+                    fileLoc,
+                    scriptData,
+                    function(err) {
+                        // onError function
+                        console.log('Failed to Save Script to file', err);
+                        fileIODeferred.reject(err);
+                    },
+                    function() {
+                        // onSuccess function
+                        self.print('Successfuly Saved Script to File');
+                        
+                        // Update Internal Constants
+                        self.configureAsUserScript(fileLoc);
+
+                        fileIODeferred.resolve();
+                    }
+                );
+            };
+
+            chooser.unbind('change');
+            chooser.bind('change', onChangedSaveToFile);
+
+            chooser.trigger('click');
         }
 
         // Return q instance
@@ -755,12 +788,14 @@ function module() {
                 self.handleIOSuccess(onSuccess,'Script Saved'),
                 self.handleIOError(onSuccess, 'Err: Script Not Saved')
             );
+
+
         };
         var loadLuaFile = function(data, onSuccess) {
             console.log('Loading file....');
-            var chooser = $('#file-dialog-hidden');
+            var chooser = $(fs_facade.getFileLoadID());
             var onChangedFile = function(event) {
-                var fileLoc = $(this).val();
+                var fileLoc = $(fs_facade.getFileLoadID()).val();
                 console.log('Selected Lua File',fileLoc);
                 self.luaController.loadScriptFromFile(fileLoc)
                 .then(

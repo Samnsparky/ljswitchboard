@@ -5,9 +5,17 @@
         {
             "serialNumber":"470010548",
             "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010620",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010533",
+            "connectionType":"Ethernet"
         }
     ],
-    "Other-ljmDeviceParameters": 
+    "Boulder-T7s":
     [
         {
             "serialNumber":"470010620",
@@ -16,7 +24,10 @@
         {
             "serialNumber":"470010533",
             "connectionType":"Ethernet"
-        },
+        }
+    ],
+    "Other-ljmDeviceParameters": 
+    [
         {
             "serialNumber":"470010117",
             "connectionType":"Ethernet"

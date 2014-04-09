@@ -10,6 +10,7 @@ var fs = require('fs');
 var path = require('path');
 
 var handlebars = require('handlebars');
+var os = require('os');
 
 var MODULES_DIR = 'switchboard_modules';
 var MODULE_DESC_FILENAME = 'module.json';
@@ -22,6 +23,32 @@ var INTERNAL_JS_DIR = path.join(INTERNAL_STATIC_DIR, 'js');
 var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
 
 var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
+
+var fileSaveAsID = "#file-save-dialog-hidden";
+var getFileLoadID = "#file-dialog-hidden";
+
+var defaultFilePath = {
+    'linux': '/home/path',
+    'linux2': '/home/path',
+    'sunos': '/home/path',
+    'solaris': '/home/path',
+    'freebsd': '/home/path',
+    'openbsd': '/home/path',
+    'darwin': process.env.HOME,
+    'mac': process.env.HOME,
+    'win32': 'C:\\Windows',
+    'win64': 'C:\\Windows'
+}[process.platform]
+
+exports.getFileSaveAsID = function() {
+    return fileSaveAsID;
+};
+exports.getFileLoadID = function() {
+    return getFileLoadID;
+};
+exports.getDefaultFilePath = function() {
+    return defaultFilePath;
+}
 
 var FS_FACADE_LoadErrors = [];
 
