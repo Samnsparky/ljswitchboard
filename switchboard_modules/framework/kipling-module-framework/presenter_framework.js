@@ -652,8 +652,8 @@ function Framework() {
         jquery.bind(
             jquerySelector,
             binding.event,
-            function () { 
-                self._writeToDevice(binding); 
+            function (eventData) { 
+                self._writeToDevice(binding, eventData); 
             }
         );
     };
@@ -1329,7 +1329,7 @@ function Framework() {
         return deferred.promise;
     };
 
-    this._writeToDevice = function (bindingInfo) {
+    this._writeToDevice = function (bindingInfo, eventData) {
         var jquerySelector = '#' + bindingInfo.template;
         var newVal = self.jquery.val(jquerySelector);
 
@@ -1361,6 +1361,7 @@ function Framework() {
                                 module: self.module,
                                 device: self.getSelectedDevice(),
                                 binding: bindingInfo,
+                                eventData: eventData,
                                 value: newVal,
                             },
                             function() {
@@ -1379,6 +1380,7 @@ function Framework() {
                                 module: self.module,
                                 device: self.getSelectedDevice(),
                                 binding: bindingInfo,
+                                eventData: eventData,
                                 value: newVal,
                             },
                             function() {

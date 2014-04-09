@@ -57,7 +57,7 @@ function luaDeviceController() {
     var curScriptType = "";
     var curScriptOptions;
 
-    this.DEBUG_START_EXECUTIONS = true;
+    this.DEBUG_START_EXECUTIONS = false;
     this.DEBUG_HIGH_FREQ_START_EXECUTIONS = false;
     var MAX_ARRAY_PACKET_SIZE = 32; //Set packet size to be 32 bytes
 
@@ -464,24 +464,68 @@ function luaDeviceController() {
         // Update Internal Constants
         self.configureAsExample(filePath);
 
-        // // Load File
-        // fs_facade.loadFile(
-        //     filePath,
-        //     function(err) {
-        //         self.print('Error loading script',err);
-        //         ioDeferred.reject();
-        //     },
-        //     function(data) {
-        //         self.print('Successfully loaded script');
-        //         self.codeEditorDoc.setValue(data);
-        //         ioDeferred.resolve();
-        //     }
-        // );
-        
-        ioDeferred.resolve();
+        // Load Script File
+        fs_facade.readModuleFile(
+            filePath,
+            function(err) {
+                var scriptLoadErMessage = "Error loading example script: ";
+                scriptLoadErMessage += filePath + ". Error Message: ";
+                scriptLoadErMessage += err.toString();
+
+                console.log(scriptLoadErMessage,err);
+                self.codeEditorDoc.setValue(scriptLoadErMessage);
+                ioDeferred.reject();
+            },
+            function(data) {
+                self.print('Successfully loaded script');
+                self.codeEditorDoc.setValue(data);
+                ioDeferred.resolve();
+            }
+        );
+
         // Return q instance
         return ioDeferred.promise;
     };
+
+    this.saveLoadedScriptAs = function() {
+        self.print('Saving Lua Script as...');
+        var fileIODeferred = q.defer();
+
+        var chooser = $(fs_facade.getFileSaveAsID());
+        chooser.attr('nwworkingdir',fs_facade.getDefaultFilePath());
+        var onChangedSaveToFile = function(event) {
+            var fileLoc = $(fs_facade.getFileSaveAsID()).val();
+            var scriptData = self.codeEditorDoc.getValue();
+            self.print('Selected Lua File',fileLoc);
+
+            self.print('Saving Script to file');
+            fs_facade.saveDataToFile(
+                fileLoc,
+                scriptData,
+                function(err) {
+                    // onError function
+                    console.log('Failed to Save Script to file', err);
+                    fileIODeferred.reject(err);
+                },
+                function() {
+                    // onSuccess function
+                    self.print('Successfuly Saved Script to File');
+
+                    // Update Internal Constants
+                    self.configureAsUserScript(fileLoc);
+
+                    fileIODeferred.resolve();
+                }
+            );
+        };
+
+        chooser.unbind('change');
+        chooser.bind('change', onChangedSaveToFile);
+        chooser.trigger('click');
+
+        // Return q instance
+        return fileIODeferred.promise;
+    }
     this.saveLoadedScript = function() {
         self.print('Saving Lua Script');
         var fileIODeferred = q.defer();
@@ -516,10 +560,8 @@ function luaDeviceController() {
             var chooser = $(fs_facade.getFileSaveAsID());
             chooser.attr('nwworkingdir',fs_facade.getDefaultFilePath());
             var onChangedSaveToFile = function(event) {
-                console.log('onChangedSaveToFile Fired');
                 var fileLoc = $(fs_facade.getFileSaveAsID()).val();
                 var scriptData = self.codeEditorDoc.getValue();
-                console.log('Selected Lua File',fileLoc);
 
                 self.print('Saving Script to file');
                 fs_facade.saveDataToFile(
@@ -533,7 +575,7 @@ function luaDeviceController() {
                     function() {
                         // onSuccess function
                         self.print('Successfuly Saved Script to File');
-                        
+
                         // Update Internal Constants
                         self.configureAsUserScript(fileLoc);
 
@@ -622,7 +664,7 @@ function module() {
     var numDebugBytes = 0;
     this.numDebugBytes = numDebugBytes;
 
-    var ENABLE_PRINTING_USER_DEBUG_INFO = true;
+    var ENABLE_PRINTING_USER_DEBUG_INFO = false;
     this.ENABLE_PRINTING_USER_DEBUG_INFO = ENABLE_PRINTING_USER_DEBUG_INFO;
 
     var handleIOSuccess = function(onSuccess, debugData) {
@@ -710,7 +752,7 @@ function module() {
             onSuccess();
         };
         var genericButtonPress = function(data, onSuccess) {
-            console.log('Pressed: ',data.binding.bindingClass);
+            console.log('Pressed: ',data.binding.bindingClass, data.eventData);
             onSuccess();
         };
         var conditionalExecution = function(constants, trueFunc, falseFunc, onSuccess) {
@@ -788,15 +830,12 @@ function module() {
                 self.handleIOSuccess(onSuccess,'Script Saved'),
                 self.handleIOError(onSuccess, 'Err: Script Not Saved')
             );
-
-
         };
         var loadLuaFile = function(data, onSuccess) {
-            console.log('Loading file....');
+            self.printUserDebugInfo('Loading file....');
             var chooser = $(fs_facade.getFileLoadID());
             var onChangedFile = function(event) {
                 var fileLoc = $(fs_facade.getFileLoadID()).val();
-                console.log('Selected Lua File',fileLoc);
                 self.luaController.loadScriptFromFile(fileLoc)
                 .then(
                     self.handleIOSuccess(onSuccess,'Script File Loaded'),
@@ -807,14 +846,80 @@ function module() {
             chooser.bind('change', onChangedFile);
             chooser.trigger('click');
         };
+        var loadLuaExample = function(data, onSuccess) {
+            self.printUserDebugInfo('loadLuaExample button pressed');
+            var scriptName = data.eventData.toElement.id;
+            // var buttonGroup = $(data.binding.bindingClass);
+            // console.log(buttonGroup);
+
+            if(scriptName !== "") {
+                self.printUserDebugInfo("Loading Script: ",scriptName);
+                var fileLocation;
+                var scripts = self.preBuiltScripts;
+                scripts.some(function(script,index){
+                    if(script.name === scriptName){
+                        fileLocation = script.location;
+                        return true;
+                    }
+                });
+                
+                self.luaController.loadExampleScript(fileLocation)
+                .then(
+                    self.handleIOSuccess(onSuccess,'Script Example Loaded'),
+                    self.handleIOError(onSuccess,'Err: Script Example Not Loaded')
+                );
+            } else {
+                onSuccess();
+            }
+        };
+        var printActiveScriptInfo = function(onSuccess) {
+            return function() {
+                self.printUserDebugInfo(
+                    'Active Script Options:',
+                    self.luaController.curScriptOptions
+                );
+                self.printUserDebugInfo(
+                    'Active Script Type:',
+                    self.luaController.curScriptType
+                );
+                self.printUserDebugInfo(
+                    'Active Script FilePath:',
+                    self.luaController.curScriptFilePath
+                );
+                onSuccess();
+            }
+        };
         var saveLoadedScriptToFile = function(data, onSuccess) {
             self.printUserDebugInfo('saveLoadedScriptToFile button pressed');
+            var buttonType = data.eventData.toElement.id;
 
-            self.luaController.saveLoadedScript()
-            .then(
-                self.handleIOSuccess(onSuccess,'Script Saved to File'),
-                self.handleIOError(onSuccess, 'Err: Script Not Saved to File')
-            );
+            if (buttonType === "save-button") {
+                self.luaController.saveLoadedScript()
+                .then(
+                    self.handleIOSuccess(
+                        printActiveScriptInfo(onSuccess),
+                        'Script Saved to File (save)'
+                    ),
+                    self.handleIOError(
+                        printActiveScriptInfo(onSuccess),
+                        'Err: Script Not Saved to File (save)'
+                    )
+                );
+            } else if (buttonType === "saveAs-button") {
+                self.luaController.saveLoadedScriptAs()
+                .then(
+                    self.handleIOSuccess(
+                        printActiveScriptInfo(onSuccess),
+                        'Script Saved to File (saveAs)'
+                    ),
+                    self.handleIOError(
+                        printActiveScriptInfo(onSuccess),
+                        'Err: Script Not Saved to File (saveAs)'
+                    )
+                );
+            } else {
+                onSuccess();
+            }
         };
         var setButtonIcon = function(constants, val) {
             var button = $('#' + constants.buttonID);
@@ -904,7 +1009,7 @@ function module() {
                 // Define binding to handle loading luaExample button presses.
                 bindingName: 'load-example-lua-script-button', 
                 smartName: 'clickHandler',
-                callback: genericButtonPress
+                callback: loadLuaExample
             }, {
                 // Define binding to handle show/hide deviceStatus button presses.
                 bindingName: 'manage-view-device-status-button', 
@@ -998,6 +1103,9 @@ function module() {
                 return true;
             }
         });
+
+        // Consigure moduleContext to have the list of scripts
+        self.moduleContext.exampleScripts = scripts;
 
         var scriptType = self.scriptOptions.types[0];
         var scriptOptions = self.scriptOptions[scriptType];

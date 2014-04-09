@@ -28,15 +28,35 @@
 						</button>
 					</td>
 					<td>
-						<button id="save-lua-script-button" type="button" class="btn btn-default btn-lg" title="Save">
-							<span class="icon-disk"></span>
-						</button>
+						<div id="save-lua-script-button" class="btn-group">
+							<button id="save-button" type="button" class="btn btn-default btn-lg" title="Save">
+								<span id="save-button" class="icon-disk"></span>
+							</button>
+							<button class="btn dropdown-toggle btn-lg" data-toggle="dropdown">
+								<span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu">
+								<li><a id="save-button" >Save</a></li>
+								<li><a id="saveAs-button">Save As</a></li>
+							</ul>
+						</div>
+						
 						<button id="load-lua-script-button" type="button" class="btn btn-default btn-lg" title="Load File">
 							<span class="icon-file-3"></span>
 						</button>
-						<button id="load-example-lua-script-button" type="button" class="btn btn-default btn-lg" title="Load Example">
-							<span class="icon-code-3"></span>
-						</button>
+						<div id="load-example-lua-script-button" class="btn-group btn-lg">
+							<button class="btn dropdown-toggle" data-toggle="dropdown" title="Load Example">
+								<span class="icon-code-3"></span>
+								<span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu">
+								{{#each custom.exampleScripts}}
+								<li>
+									<a id="{{ name }}">{{ name }}</a>
+								</li>
+								{{/each}}
+							</ul>
+						</div>
 					</td>
 					<td>
 						<button id="manage-view-device-status-button" type="button" class="btn btn-default btn-lg" title="{{ custom.views.deviceStatus.title }}">

@@ -13,6 +13,10 @@
         {
             "serialNumber":"470010533",
             "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010117",
+            "connectionType":"Ethernet"
         }
     ],
     "Boulder-T7s":
