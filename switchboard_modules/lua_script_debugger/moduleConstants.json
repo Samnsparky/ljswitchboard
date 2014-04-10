@@ -7,9 +7,14 @@
             "maxNumLines": 1000
         },
         "deviceStatusShownAtStartup": true,
+        "deviceStatusID":"lua-script-module-status-bar",
+        "luaBodyBarID":"lua-script-module-editor-bar",
         "luaEditorShownAtStartup": true,
+        "luaEditorID":"lua-script-code-editor-box",
         "luaDebuggerShownAtStartup": true,
+        "luaDebuggerID":"lua-script-device-debugger-box",
         "tableDescriptionsShownAtStartup": true,
+        "tableDescriptionsID":"lua-editor-table-descriptions",
         "defaultSaveLocation": "testDirectory"
     },
     "preBuiltScripts": [
@@ -27,12 +32,14 @@
         }
     ],
     "scriptOptions": {
+        "scriptTypeID": "active-lua-script-type",
+        "scriptNameID":"active-lua-script-name",
         "types": [
             "example",
             "userScript"
         ],
         "example": {
-            "windowMessage": "Example",
+            "windowMessage": "Example ",
             "canSave": false
         },
         "userScript": {

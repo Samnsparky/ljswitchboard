@@ -1,7 +1,7 @@
 <div id="lua_script_debugger">
 	<div id="lua-script-device-and-file-io-controls">
 		<table class="table" id="All-device-config-options-table">
-			<thead id="lua-editor-table-descriptions" style="{{ custom.views.editorControlDescriptions.visibility }}">
+			<thead id="{{custom.constants.tableDescriptionsID}}" style="{{ custom.views.editorControlDescriptions.visibility }}">
 				<tr class="table-dataHeader">
 					<th>Controls:</th>
 				</tr>
@@ -33,7 +33,7 @@
 								<span id="save-button" class="icon-disk"></span>
 							</button>
 							<button class="btn dropdown-toggle btn-lg" data-toggle="dropdown">
-								<span class="caret"></span>
+								<span class="caret" style="margin-right: -8px;margin-left: -8px;"></span>
 							</button>
 							<ul class="dropdown-menu">
 								<li><a id="save-button" >Save</a></li>
@@ -47,7 +47,7 @@
 						<div id="load-example-lua-script-button" class="btn-group btn-lg">
 							<button class="btn dropdown-toggle" data-toggle="dropdown" title="Load Example">
 								<span class="icon-code-3"></span>
-								<span class="caret"></span>
+								<span class="caret" style="margin-right: -12px;margin-left: 4px;"></span>
 							</button>
 							<ul class="dropdown-menu">
 								{{#each custom.exampleScripts}}
@@ -81,9 +81,9 @@
             <input type="text" id="file-loc-input" placeholder="Firmware location...">
             <a id="browse-link" href="#" class="btn btn-link">browse for file >></a>
         </div>--}}
-		<div id="lua-script-module-status-bar" class="span2 {{ custom.views.deviceStatus.visibility }}">
+		<div id="{{custom.constants.deviceStatusID}}" class="span2 {{ custom.views.deviceStatus.visibility }}">
 			<div id="lua-script-device-status">
-				<h3>Status</h3>
+				<h3>Device Status</h3>
 				<p>Script Status:</p>
 				<p><span id="LUA_RUN"></span></p>
 				<p>Startup Script Status:</p>
@@ -94,9 +94,21 @@
 				<p><span id="LUA_DEBUG_NUM_BYTES"></span></p>
 			</div>
 		</div>
-		<div id="lua-script-module-editor-bar" class="span10">
+		<div id="{{custom.constants.luaBodyBarID}}" class="span10 deviceStatusBarVisible">
 			<div id="lua-script-window-views">
-				<div id="lua-script-code-editor-box" class="row">
+				<div id="{{custom.constants.luaEditorID}}">
+				<div id="lua-script-active-script-info" class="row">
+					<div class="span12 textRow">
+						<div>
+							<b>
+								<span id="{{ custom.scriptConstants.scriptTypeID }}">{{ custom.luaScript.windowMessage }}</span>
+							</b>
+							<b>Name: </b>
+							<span id="{{ custom.scriptConstants.scriptNameID }}">{{ custom.luaScript.name }}</span>
+						</div>
+					</div>
+				</div>
+				<div class="row">
 					<div class="span12 {{ custom.views.luaEditor.visibility }}">
 						<div id="lua-script-editor-view">
 							<div id="lua-code-editor">{{ custom.luaScript.code }}</div>
@@ -114,7 +126,8 @@
 						</div>
 					</div>
 				</div>
-				<div id="lua-script-device-debugger-box" class="row {{ custom.views.luaDebugger.visibility }}">
+				</div>
+				<div id="{{custom.constants.luaDebuggerID}}" class="row {{ custom.views.luaDebugger.visibility }}">
 					<div class="span12">
 						<div id="lua-script-device-debugger-buttons" class="row">
 							<div class="span12">

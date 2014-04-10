@@ -664,7 +664,16 @@ function module() {
     var numDebugBytes = 0;
     this.numDebugBytes = numDebugBytes;
 
-    var ENABLE_PRINTING_USER_DEBUG_INFO = false;
+    var isDeviceStatusBarHidden = false;
+    this.isDeviceStatusBarHidden = isDeviceStatusBarHidden;
+    var isLuaEditorHidden = false;
+    this.isLuaEditorHidden = isLuaEditorHidden;
+    var isLuaDebuggerHidden = false;
+    this.isLuaDebuggerHidden = isLuaDebuggerHidden;
+    var areTableDescriptionsHidden = false;
+    this.areTableDescriptionsHidden = areTableDescriptionsHidden;
+
+    var ENABLE_PRINTING_USER_DEBUG_INFO = true;
     this.ENABLE_PRINTING_USER_DEBUG_INFO = ENABLE_PRINTING_USER_DEBUG_INFO;
 
     var handleIOSuccess = function(onSuccess, debugData) {
@@ -707,6 +716,11 @@ function module() {
         self.scriptOptions = framework.moduleConstants.scriptOptions;
         self.luaVariables = framework.moduleConstants.luaVariables;
         self.viewConstants = framework.moduleConstants.viewData;
+
+        self.isDeviceStatusBarHidden = !self.constants.deviceStatusShownAtStartup;
+        self.isLuaEditorHidden = !self.constants.luaEditorShownAtStartup;
+        self.isLuaDebuggerHidden = !self.constants.luaDebuggerShownAtStartup;
+        self.areTableDescriptionsHidden = !self.constants.tableDescriptionsShownAtStartup;
 
         // Initialize Device module context obj
         moduleContext.device = {};
@@ -838,8 +852,14 @@ function module() {
                 var fileLoc = $(fs_facade.getFileLoadID()).val();
                 self.luaController.loadScriptFromFile(fileLoc)
                 .then(
-                    self.handleIOSuccess(onSuccess,'Script File Loaded'),
-                    self.handleIOError(onSuccess,'Err: Script File Not Loaded')
+                    self.handleIOSuccess(
+                        setActiveScriptInfo(onSuccess),
+                        'Script File Loaded'
+                    ),
+                    self.handleIOError(
+                        setActiveScriptInfo(onSuccess),
+                        'Err: Script File Not Loaded'
+                    )
                 );
             };
             chooser.unbind('change');
@@ -865,15 +885,37 @@ function module() {
                 
                 self.luaController.loadExampleScript(fileLocation)
                 .then(
-                    self.handleIOSuccess(onSuccess,'Script Example Loaded'),
-                    self.handleIOError(onSuccess,'Err: Script Example Not Loaded')
+                    self.handleIOSuccess(
+                        setActiveScriptInfo(onSuccess),
+                        'Script Example Loaded'
+                    ),
+                    self.handleIOError(
+                        setActiveScriptInfo(onSuccess),
+                        'Err: Script Example Not Loaded'
+                    )
                 );
             } else {
                 onSuccess();
             }
         };
-        var printActiveScriptInfo = function(onSuccess) {
+        var setActiveScriptInfo = function(onSuccess) {
             return function() {
+                var scriptTypeKey = self.luaController.curScriptType;
+                var scriptType = self.scriptOptions[scriptTypeKey].windowMessage;
+                var scriptLocation = self.luaController.curScriptFilePath;
+                var scriptName = "";
+                if(scriptTypeKey === self.scriptOptions.types[0]) {
+                    var scripts = self.preBuiltScripts;
+                    scripts.some(function(script,index){
+
+                        if(script.location === scriptLocation){
+                            scriptName = script.name;
+                            return true;
+                        }
+                    });
+                } else {
+                    scriptName = scriptLocation;
+                }
                 self.printUserDebugInfo(
                     'Active Script Options:',
                     self.luaController.curScriptOptions
@@ -886,6 +928,8 @@ function module() {
                     'Active Script FilePath:',
                     self.luaController.curScriptFilePath
                 );
+                $('#'+sdModule.scriptOptions.scriptTypeID).text(scriptType)
+                $('#'+sdModule.scriptOptions.scriptNameID).text(scriptName)
                 onSuccess();
             }
         };
@@ -897,11 +941,11 @@ function module() {
                 self.luaController.saveLoadedScript()
                 .then(
                     self.handleIOSuccess(
-                        printActiveScriptInfo(onSuccess),
+                        setActiveScriptInfo(onSuccess),
                         'Script Saved to File (save)'
                     ),
                     self.handleIOError(
-                        printActiveScriptInfo(onSuccess),
+                        setActiveScriptInfo(onSuccess),
                         'Err: Script Not Saved to File (save)'
                     )
                 );
@@ -909,11 +953,11 @@ function module() {
                 self.luaController.saveLoadedScriptAs()
                 .then(
                     self.handleIOSuccess(
-                        printActiveScriptInfo(onSuccess),
+                        setActiveScriptInfo(onSuccess),
                         'Script Saved to File (saveAs)'
                     ),
                     self.handleIOError(
-                        printActiveScriptInfo(onSuccess),
+                        setActiveScriptInfo(onSuccess),
                         'Err: Script Not Saved to File (saveAs)'
                     )
                 );
@@ -957,6 +1001,28 @@ function module() {
                 onSuccess();
             }
         };
+        var hideDeviceStatusBar = function(data, onSuccess) {
+            self.printUserDebugInfo('hideDeviceStatusBar button pressed');
+            var luaBodyBarEl = $('#'+ self.constants.luaBodyBarID);
+            var deviceStatusEl = $('#'+ self.constants.deviceStatusID);
+            if(self.isDeviceStatusBarHidden) {
+                // Show the DeviceStatusBar
+                luaBodyBarEl.addClass('deviceStatusBarVisible');
+                luaBodyBarEl.removeClass('deviceStatusBarHidden');
+                deviceStatusEl.show();
+                
+                self.isDeviceStatusBarHidden ^= true;
+                onSuccess();
+            } else {
+                // Hide the DeviceStatusBar
+                deviceStatusEl.hide();
+                luaBodyBarEl.addClass('deviceStatusBarHidden');
+                luaBodyBarEl.removeClass('deviceStatusBarVisible');
+                
+                self.isDeviceStatusBarHidden ^= true;
+                onSuccess();
+            }
+        }
         var smartBindings = [
             {
                 bindingName: 'LUA_RUN', 
@@ -1014,7 +1080,7 @@ function module() {
                 // Define binding to handle show/hide deviceStatus button presses.
                 bindingName: 'manage-view-device-status-button', 
                 smartName: 'clickHandler',
-                callback: genericButtonPress
+                callback: hideDeviceStatusBar
             }, {
                 // Define binding to handle  show/hide luaEditor button presses.
                 bindingName: 'manage-view-lua-editor-button', 
@@ -1115,7 +1181,8 @@ function module() {
             scriptOptions, 
             fileLocation
         );
-
+        self.moduleContext.scriptConstants = self.scriptOptions;
+        self.moduleContext.constants =self.constants;
         // Load Script File
         fs_facade.readModuleFile(
             fileLocation,
@@ -1123,7 +1190,8 @@ function module() {
                 console.log('Error loading script',err);
                 self.moduleContext.luaScript = {
                     "name": "Failed to load file: " +fileName,
-                    "code": "Failed to load file: " +fileName
+                    "code": "Failed to load file: " +fileName,
+                    "windowMessage": self.scriptOptions.example.windowMessage
                 };
                 framework.setCustomContext(self.moduleContext);
                 onSuccess();
@@ -1134,7 +1202,8 @@ function module() {
                 // Load a file & save to the module's context
                 self.moduleContext.luaScript = {
                     "name": fileName,
-                    "code": scriptData
+                    "code": scriptData,
+                    "windowMessage": self.scriptOptions.example.windowMessage
                 };
 
                 // save the custom context to the framework so it can be used when

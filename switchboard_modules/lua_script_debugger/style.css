@@ -41,17 +41,29 @@
 	margin-left:0px;
 }
 
+#lua-script-active-script-info .textRow {
+	min-height: 20px;
+}
+
 @media screen and (min-width: 1000px) {
-	#lua-script-module-editor-bar {
+	#lua-script-module-body .deviceStatusBarVisible{
 		position: absolute;
 		right: 5px;
 		left: 161px;
 		width: initial;
 	}
+	#lua-script-module-body .deviceStatusBarHidden{
+		position: inherit;
+        width:100%;
+	}
 }
 @media screen and (max-width: 999px) {
-	#lua-script-module-editor-bar{
+	#lua-script-module-body .deviceStatusBarVisible{
 		position: inherit;
         width:80%;
+	}
+	#lua-script-module-body .deviceStatusBarHidden{
+		position: inherit;
+        width:100%;
 	}
 }
