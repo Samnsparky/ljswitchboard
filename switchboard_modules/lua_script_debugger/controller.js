@@ -178,9 +178,6 @@ function luaDeviceController() {
         );
         return innerDeferred.promise;
     };
-    this.readDebugData = function() {
-
-    };
     this.getAndAddDebugData = function(numBytes) {
         self.printHighFreq('reading & saving to LUA_DEBUG_DATA');
         var innerDeferred = q.defer();
@@ -202,7 +199,7 @@ function luaDeviceController() {
         // Determine if an extra packet of a smaller size should be sent
         if ((numBytesInBuffer % maxPacketSize) !== 0) {
             numPackets += 1;
-            packetSizes.push(numBytesInBuffer % maxPacketSize);
+            packetSizes.push((numBytesInBuffer % maxPacketSize)+1);
         }
 
         // Synchronously read each packet of data to the device
@@ -216,10 +213,13 @@ function luaDeviceController() {
                     function(data) {
                         // Define variable to save debug-data to
                         var textData = "";
-
                         // Loop through read data & convert to ASCII text
                         data.forEach(function(newChar){
-                            textData += String.fromCharCode(newChar);
+                            if(newChar != 0) {
+                                textData += String.fromCharCode(newChar);
+                            } else {
+
+                            }
                         });
 
                         // Insert data into debug-log window
@@ -703,6 +703,10 @@ function module() {
         }
     }
 
+    this.moduleWindowResizeListener = function (moduleHeight) {
+        console.log('Module Height:', moduleHeight);
+    };
+
     /**
      * Function is called once every time the module tab is selected, loads the module.
      * @param  {[type]} framework   The active framework instance.
@@ -724,6 +728,12 @@ function module() {
 
         // Initialize Device module context obj
         moduleContext.device = {};
+
+        // Initialize moduleWindowResizeListner
+        addModuleWindowResizeListner(
+            framework.moduleName,
+            self.moduleWindowResizeListener
+        );
 
         var setDeviceData = function(classStr, result) {
             // Initialize variables
@@ -1001,8 +1011,10 @@ function module() {
                 onSuccess();
             }
         };
-        var hideDeviceStatusBar = function(data, onSuccess) {
-            self.printUserDebugInfo('hideDeviceStatusBar button pressed');
+        var manageDeviceStatusBarVisibility = function(data, onSuccess) {
+            self.printUserDebugInfo(
+                'manageDeviceStatusBarVisibility button pressed'
+            );
             var luaBodyBarEl = $('#'+ self.constants.luaBodyBarID);
             var deviceStatusEl = $('#'+ self.constants.deviceStatusID);
             if(self.isDeviceStatusBarHidden) {
@@ -1023,6 +1035,75 @@ function module() {
                 onSuccess();
             }
         }
+        var manageLuaEditorVisibility = function(data, onSuccess) {
+            self.printUserDebugInfo(
+                'manageLuaEditorVisibility button pressed'
+            );
+            // Get Window Element
+            var luaEditorEl = $('#'+self.constants.luaEditorID);
+
+            if(self.isLuaEditorHidden) {
+                // if element is hidden then show it:
+                luaEditorEl.show();
+
+                // Toggle visibility status                
+                self.isLuaEditorHidden ^= true;
+                onSuccess();
+            } else {
+                // if element is shown then hide it:
+                luaEditorEl.hide();
+
+                // Toggle visibility status
+                self.isLuaEditorHidden ^= true;
+                onSuccess();
+            }
+        };
+        var manageLuaDebuggerVisibility = function(data, onSuccess) {
+            self.printUserDebugInfo(
+                'manageLuaDebuggerVisibility button pressed'
+            );
+            // Get Window Element
+            var luaDebuggerEl = $('#'+self.constants.luaDebuggerID);
+
+            if(self.isLuaDebuggerHidden) {
+                // if element is hidden then show it:
+                luaDebuggerEl.show();
+
+                // Toggle visibility status                
+                self.isLuaDebuggerHidden ^= true;
+                onSuccess();
+            } else {
+                // if element is shown then hide it:
+                luaDebuggerEl.hide();
+
+                // Toggle visibility status
+                self.isLuaDebuggerHidden ^= true;
+                onSuccess();
+            }
+        };
+        var manageTableDescriptionsVisibility = function(data, onSuccess) {
+            self.printUserDebugInfo(
+                'manageButtonInfoVisibility button pressed'
+            );
+            // Get Window Element
+            var luaTableDescriptionsEl = $('#'+self.constants.tableDescriptionsID);
+
+            if(self.areTableDescriptionsHidden) {
+                // if element is hidden then show it:
+                luaTableDescriptionsEl.show();
+
+                // Toggle visibility status                
+                self.areTableDescriptionsHidden ^= true;
+                onSuccess();
+            } else {
+                // if element is shown then hide it:
+                luaTableDescriptionsEl.hide();
+
+                // Toggle visibility status
+                self.areTableDescriptionsHidden ^= true;
+                onSuccess();
+            }
+        };
         var smartBindings = [
             {
                 bindingName: 'LUA_RUN', 
@@ -1080,22 +1161,22 @@ function module() {
                 // Define binding to handle show/hide deviceStatus button presses.
                 bindingName: 'manage-view-device-status-button', 
                 smartName: 'clickHandler',
-                callback: hideDeviceStatusBar
+                callback: manageDeviceStatusBarVisibility
             }, {
                 // Define binding to handle  show/hide luaEditor button presses.
                 bindingName: 'manage-view-lua-editor-button', 
                 smartName: 'clickHandler',
-                callback: genericButtonPress
+                callback: manageLuaEditorVisibility
             }, {
                 // Define binding to handle  show/hide luaDebugger button presses.
                 bindingName: 'manage-view-lua-debugger-button', 
                 smartName: 'clickHandler',
-                callback: genericButtonPress
+                callback: manageLuaDebuggerVisibility
             }, {
                 // Define binding to handle  show/hide tableDescriptions button presses.
                 bindingName: 'manage-view-table-descriptions-button', 
                 smartName: 'clickHandler',
-                callback: genericButtonPress
+                callback: manageTableDescriptionsVisibility
             },
         ];
 
@@ -1264,6 +1345,10 @@ function module() {
         onSuccess();
     };
     this.onUnloadModule = function(framework, onError, onSuccess) {
+        // Remove moduleWindowResizeListner
+        removeModuleWindowResizeListner(
+            framework.moduleName
+        );
         aceEditor = undefined;
         luaEditor = undefined;
         debuggingLog = undefined;

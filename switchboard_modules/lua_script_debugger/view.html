@@ -97,35 +97,24 @@
 		<div id="{{custom.constants.luaBodyBarID}}" class="span10 deviceStatusBarVisible">
 			<div id="lua-script-window-views">
 				<div id="{{custom.constants.luaEditorID}}">
-				<div id="lua-script-active-script-info" class="row">
-					<div class="span12 textRow">
-						<div>
-							<b>
-								<span id="{{ custom.scriptConstants.scriptTypeID }}">{{ custom.luaScript.windowMessage }}</span>
-							</b>
-							<b>Name: </b>
-							<span id="{{ custom.scriptConstants.scriptNameID }}">{{ custom.luaScript.name }}</span>
+					<div id="lua-script-active-script-info" class="row">
+						<div class="span12 textRow">
+							<div>
+								<b>
+									<span id="{{ custom.scriptConstants.scriptTypeID }}">{{ custom.luaScript.windowMessage }}</span>
+								</b>
+								<b>Name: </b>
+								<span id="{{ custom.scriptConstants.scriptNameID }}">{{ custom.luaScript.name }}</span>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div class="row">
-					<div class="span12 {{ custom.views.luaEditor.visibility }}">
-						<div id="lua-script-editor-view">
-							<div id="lua-code-editor">{{ custom.luaScript.code }}</div>
+					<div class="row">
+						<div class="span12 {{ custom.views.luaEditor.visibility }}">
+							<div id="lua-script-editor-view">
+								<div id="lua-code-editor">{{ custom.luaScript.code }}</div>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="lua-script-device-status-icons" class="row">
-					<div class="span12">
-						<div id="lua-script-device-status-info-short">
-							Device Status:
-							<span id="script-running-status" class="{{ custom.device.runStatus.statusIcon }}" title="{{ custom.device.runStatus.statusTitle }}"/>
-							<span id="startup-script-running-status" class="{{ custom.device.startupStatus.statusIcon }}" title="{{ custom.device.startupStatus.statusTitle }}"/>
-							<span id="script-size-status" class="icon-pause"/>
-							<span id="debug-buffer-filled-status" class="icon-pause"/>
-						</div>
-					</div>
-				</div>
 				</div>
 				<div id="{{custom.constants.luaDebuggerID}}" class="row {{ custom.views.luaDebugger.visibility }}">
 					<div class="span12">
@@ -137,6 +126,15 @@
 								<button id="lua-script-status-button" type="button" class="btn btn-default btn-lg">
 									<span class="icon-stats-3">Status</span>
 								</button>
+								<div id="lua-script-device-status-icons">
+									<div id="lua-script-device-status-info-short">
+										Device Status:
+										<span id="script-running-status" class="{{ custom.device.runStatus.statusIcon }}" title="{{ custom.device.runStatus.statusTitle }}"/>
+										<span id="startup-script-running-status" class="{{ custom.device.startupStatus.statusIcon }}" title="{{ custom.device.startupStatus.statusTitle }}"/>
+										<span id="script-size-status" class="icon-pause"/>
+										<span id="debug-buffer-filled-status" class="icon-pause"/>
+									</div>
+								</div>
 							</div>
 						</div>
 						<div id="lua-script-device-status" class="row">

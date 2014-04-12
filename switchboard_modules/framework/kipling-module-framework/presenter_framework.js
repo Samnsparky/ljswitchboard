@@ -2204,6 +2204,7 @@ function Framework() {
     var manageError = this.manageError;
 
     this.saveModuleInfo = function (infoObj, constantsObj, moduleObj) {
+        self.saveModuleName();
         self.moduleInfoObj = infoObj;
         moduleInfoObj = infoObj;
         self.moduleConstants = constantsObj;

@@ -43,6 +43,8 @@ var LOADED_MODULE_INFO_OBJECT;
 var LOADED_MODULE_CONSTANTS_OBJECT;
 
 var MODULE_CONTENT_BOTTOM_BORDER_HEIGHT = 20;
+
+var MODULE_WINDOW_RESIZE_LISTNERS = [];
 /**
  * Switch the view to the given module.
  *
@@ -249,6 +251,49 @@ function displayActiveModulesWithEvents(activeModules, onError, onSuccess)
     });
 }
 
+function addModuleWindowResizeListner(keyStr, callbackFunc) {
+    if ((typeof(keyStr) === 'string') && (typeof(callbackFunc) === 'function')){
+        var origIndex = 0;
+        var addListener = MODULE_WINDOW_RESIZE_LISTNERS.every(function(listener,index) {
+            if (listener.key === keyStr) {
+                origIndex = index;
+                return false;
+            }
+            return true;
+        });
+        if (addListener) {
+            console.log('Adding Listener',keyStr, 'duh...');
+            MODULE_WINDOW_RESIZE_LISTNERS.push({key:keyStr,callback:callbackFunc});
+        } else {
+            console.log('Replacing Listener',origIndex);
+            MODULE_WINDOW_RESIZE_LISTNERS[origIndex] = {key:keyStr,callback:callbackFunc};
+        }
+    } else {
+            console.log('not Adding Listener');
+        }
+}
+function removeModuleWindowResizeListner(keyStr) {
+    if(typeof(keyStr) === 'string') {
+        var origIndex = 0;
+        var isFound = MODULE_WINDOW_RESIZE_LISTNERS.some(function(listener,index) {
+            if (listener.key === keyStr) {
+                origIndex = index;
+                return true;
+            }
+            return false;
+        });
+        if (isFound) {
+            console.log('Removing Listener');
+            MODULE_WINDOW_RESIZE_LISTNERS.splice(origIndex,1);
+        } else {
+            console.log('Not Removing Listener',keyStr);
+        }
+    }
+};
+
+function clearModuleWindowResizeListners() {
+    MODULE_WINDOW_RESIZE_LISTNERS = [];
+};
 /**
  * Callback that dyanmically handles window resizing.
 **/
@@ -265,16 +310,32 @@ function onResized()
         $('#close-nav-dock').slideUp();
     }
 
+    var moduleChromeContentsEl = $('#module-chrome-contents');
     var windowHeight = $(window).height();
     var contents_height = windowHeight - MODULE_CONTENT_BOTTOM_BORDER_HEIGHT;
-    if($('#module-chrome-contents').css('overflow') !== 'hidden') {
+    if(moduleChromeContentsEl.css('overflow') !== 'hidden') {
         $('#module-list').height((windowHeight - 75).toString() + 'px');
-        $('#module-chrome-contents').css(
+        moduleChromeContentsEl.css(
             {'height': contents_height.toString() + 'px'}
         );
     } else {
-        $('#module-chrome-contents').css({'height': '100%'});
+        moduleChromeContentsEl.css({'height': '100%'});
     }
+
+    MODULE_WINDOW_RESIZE_LISTNERS.forEach(function(listener) {
+        if(typeof(listener.callback) === 'function') {
+            var moduleHeight = moduleChromeContentsEl.height();
+            var topPadding = moduleChromeContentsEl.css('padding-top');
+            var bottomPadding = moduleChromeContentsEl.css('padding-bottom');
+
+            moduleHeight += parseInt(topPadding.slice(0,topPadding.search('px')));
+            moduleHeight += parseInt(bottomPadding.slice(0,bottomPadding.search('px')));
+            
+            listener.callback(moduleHeight);
+        } else {
+            console.log('Bad Window Resize Listener Found! (module_chrome.js)',listener);
+        }
+    });
     // var topPos = $('#module-chrome-contents').position().top;
     // var sidebar_height_diff = windowHeight - $('#module-list').height();
     // if ($('#module-chrome-contents').height() >= contents_height) {

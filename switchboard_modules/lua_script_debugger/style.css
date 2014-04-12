@@ -20,6 +20,7 @@
 	left:5px;
 }
 #lua-script-module-body {
+	margin-top: -10px;
 	margin-left:0px;
 }
 /* Left portion of module */
@@ -27,7 +28,7 @@
 	width:20%;
 	max-width:141px;
 }
-#lua-script-device-status-info-short {
+#lua-script-device-status-icons {
 	float: right;
 }
 .info-visibe {
@@ -36,7 +37,9 @@
 .info-invisible {
 	display:none;
 }
-
+#lua-script-device-debugger-box {
+	padding-top: 10px;
+}
 #lua-script-module-editor-bar .row {
 	margin-left:0px;
 }
