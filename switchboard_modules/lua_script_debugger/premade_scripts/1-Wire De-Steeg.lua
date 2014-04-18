@@ -63,16 +63,24 @@ count = 0
 MB.W(48005, 0, 1)        --Ensure analog is on
 LJ.IntervalConfig(0, 2000)
 
-SensPinNum = 10
-NumSensors = 5
---ROM0 = {[0] = 0x4800, [1] = 0x0000, [2] = 0x24AA, [3] = 0xC622}
---ROM1 = {[0] = 0xB600, [1] = 0x0000, [2] = 0x24B5, [3] = 0xF622}
-ROM0 = {[0] = 0xC100, [1] = 0x0004, [2] = 0xCD4F, [3] = 0xED28}
-ROM1 = {[0] = 0x5300, [1] = 0x0004, [2] = 0xCDF8, [3] = 0x2328}
-ROM2 = {[0] = 0xB900, [1] = 0x0004, [2] = 0xCE4B, [3] = 0xCE28}
-ROM3 = {[0] = 0x8700, [1] = 0x0004, [2] = 0xCD50, [3] = 0x8428}
-ROM4 = {[0] = 0xD800, [1] = 0x0004, [2] = 0xCE1B, [3] = 0xAF28}
-ROMs = {[0] = ROM0, [1] = ROM1, [2] = ROM2, [3] = ROM3, [4] = ROM4} 
+eioNum = 6
+ROMA = {[0] = 0xF100, [1] = 0x0802, [2] = 0xB082, [3] = 0x8010}
+ROMB = {[0] = 0x2200, [1] = 0x0802, [2] = 0xB009, [3] = 0xB710}
+ROMC = {[0] = 0x7400, [1] = 0x0802, [2] = 0xB012, [3] = 0x2210}
+ROMD = {[0] = 0x3200, [1] = 0x0802, [2] = 0xAFA7, [3] = 0x0810}
+ROMs = {[0] = ROMC}
+NumSensors = 1
+
+-- eioNum = 2
+-- ROM0 = {[0] = 0xC100, [1] = 0x0004, [2] = 0xCD4F, [3] = 0xED28}
+-- ROM1 = {[0] = 0x5300, [1] = 0x0004, [2] = 0xCDF8, [3] = 0x2328}
+-- ROM2 = {[0] = 0xB900, [1] = 0x0004, [2] = 0xCE4B, [3] = 0xCE28}
+-- ROM3 = {[0] = 0x8700, [1] = 0x0004, [2] = 0xCD50, [3] = 0x8428}
+-- ROM4 = {[0] = 0xD800, [1] = 0x0004, [2] = 0xCE1B, [3] = 0xAF28}
+-- ROMs = {[0] = ROM0, [1] = ROM1, [2] = ROM2, [3] = ROM3, [4] = ROM4} 
+-- NumSensors = 5
+
+SensPinNum = eioNum + 8
 MB.W(6006,1,NumSensors)              -- Enable some IO RAM
 temps = {}
 while true do

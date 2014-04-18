@@ -1457,6 +1457,9 @@ function Framework() {
         // Notify module that the write has finished
         .then(alertRegisterWritten, deferred.reject)
 
+        // Re-draw the window to prevent crazy-window issues
+        .then(qRunRedraw, deferred.reject)
+
         .then(deferred.resolve, deferred.reject);
         return deferred.promise;
     };

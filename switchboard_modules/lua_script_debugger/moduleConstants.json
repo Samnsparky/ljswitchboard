@@ -6,25 +6,38 @@
         "console": {
             "maxNumLines": 1000
         },
-        "deviceStatusShownAtStartup": true,
+        "deviceStatusShownAtStartup": false,
         "deviceStatusID":"lua-script-module-status-bar",
         "luaBodyBarID":"lua-script-module-editor-bar",
         "luaEditorShownAtStartup": true,
         "luaEditorID":"lua-script-code-editor-box",
         "luaDebuggerShownAtStartup": true,
-        "luaDebuggerID":"lua-script-device-debugger-box",
-        "tableDescriptionsShownAtStartup": true,
+        "luaDebuggerID":"lua-script-device-debugg-log",
+        "luaDebuggerButtonsID":"lua-script-device-debugger-buttons",
+        "tableDescriptionsShownAtStartup": false,
         "tableDescriptionsID":"lua-editor-table-descriptions",
         "defaultSaveLocation": "testDirectory"
     },
     "preBuiltScripts": [
         {
+            "name": "SPI Example",
+            "location": "lua_script_debugger/premade_scripts/SPI Example.lua"
+        },
+        {
+            "name": "1-Wire Read Ram ID",
+            "location": "lua_script_debugger/premade_scripts/1-Wire Read Ram ID.lua"
+        },
+        {
             "name": "1-Wire for DeSteeg",
-            "location": "lua_script_debugger/premade_scripts/1-wire_De-Steeg.lua"
+            "location": "lua_script_debugger/premade_scripts/1-Wire De-Steeg.lua"
         },
         {
             "name": "basicExample",
             "location": "lua_script_debugger/premade_scripts/basicExample.lua"
+        },
+        {
+            "name": "File IO",
+            "location": "lua_script_debugger/premade_scripts/File read and write_2014-01-21.lua"
         },
         {
             "name": "test1",
@@ -57,7 +70,7 @@
             "buttonID": "run-lua-script-button",
             "statusID": "script-running-status",
             "statusIcon": {
-                "0": "icon-pause",
+                "0": "icon-stop",
                 "1": "icon-play"
             },
             "statusTitle": {
@@ -69,7 +82,7 @@
                 "1": "Stop Script"
             },
             "buttonIcon": {
-                "1": "icon-pause",
+                "1": "icon-stop",
                 "0": "icon-play"
             }
         },
@@ -95,30 +108,46 @@
         }
     },
     "viewData": {
-        "icon": {
-            "0": "icon-plus",
-            "1": "icon-minus"
-        },
         "deviceStatus": {
-            "title": {
+            "buttonID": "manage-view-device-status-button",
+            "buttonIcon": {
+                "0": "icon-plus",
+                "1": "icon-minus"
+            },
+            "buttonTitle": {
                 "0": "Show Device Status Window",
                 "1": "Hide Device Status Window"
             }
         },
         "luaEditor": {
-            "title": {
+            "buttonID": "manage-view-lua-editor-button",
+            "buttonIcon": {
+                "0": "icon-plus",
+                "1": "icon-minus"
+            },
+            "buttonTitle": {
                 "0": "Show Lua Editor Window",
                 "1": "Hide Lua Editor Window"
             }
         },
         "luaDebugger": {
-            "title": {
+            "buttonID": "manage-view-lua-debugger-button",
+            "buttonIcon": {
+                "0": "icon-plus",
+                "1": "icon-minus"
+            },
+            "buttonTitle": {
                 "0": "Show Lua Debugger Window",
                 "1": "Hide Lua Debugger Window"
             }
         },
         "tableDescriptions": {
-            "title": {
+            "buttonID": "manage-view-table-descriptions-button",
+            "buttonIcon": {
+                "0": "icon-plus",
+                "1": "icon-minus"
+            },
+            "buttonTitle": {
                 "0": "Show Button Descriptions",
                 "1": "Hide Button Descriptions"
             }

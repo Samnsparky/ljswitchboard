@@ -1,7 +1,7 @@
 <div id="lua_script_debugger">
 	<div id="lua-script-device-and-file-io-controls">
 		<table class="table" id="All-device-config-options-table">
-			<thead id="{{custom.constants.tableDescriptionsID}}" style="{{ custom.views.editorControlDescriptions.visibility }}">
+			<thead id="{{custom.constants.tableDescriptionsID}}" style="{{ custom.views.tableDescriptions.visibility }}">
 				<tr class="table-dataHeader">
 					<th>Controls:</th>
 				</tr>
@@ -59,16 +59,16 @@
 						</div>
 					</td>
 					<td>
-						<button id="manage-view-device-status-button" type="button" class="btn btn-default btn-lg" title="{{ custom.views.deviceStatus.title }}">
+						<button id="{{ custom.views.deviceStatus.id }}" type="button" class="btn btn-default btn-lg" title="{{ custom.views.deviceStatus.title }}" style="display:none;">
 							<span class="{{ custom.views.deviceStatus.icon }}"></span>
 						</button>
-						<button id="manage-view-lua-editor-button" type="button" class="btn btn-default btn-lg" title="{{ custom.views.luaEditor.title }}">
+						<button id="{{ custom.views.luaEditor.id }}" type="button" class="btn btn-default btn-lg" title="{{ custom.views.luaEditor.title }}">
 							<span class="{{ custom.views.luaEditor.icon }}"></span>
 						</button>
-						<button id="manage-view-lua-debugger-button" type="button" class="btn btn-default btn-lg" title="{{ custom.views.luaDebugger.title }}">
+						<button id="{{ custom.views.luaDebugger.id }}" type="button" class="btn btn-default btn-lg" title="{{ custom.views.luaDebugger.title }}">
 							<span class="{{ custom.views.luaDebugger.icon }}"></span>
 						</button>
-						<button id="manage-view-table-descriptions-button" type="button" class="btn btn-default btn-lg" title="{{ custom.views.tableDescriptions.title }}">
+						<button id="{{ custom.views.tableDescriptions.id }}" type="button" class="btn btn-default btn-lg" title="{{ custom.views.tableDescriptions.title }}">
 							<span class="{{ custom.views.tableDescriptions.icon }}"></span>
 						</button>
 					</td>
@@ -81,7 +81,7 @@
             <input type="text" id="file-loc-input" placeholder="Firmware location...">
             <a id="browse-link" href="#" class="btn btn-link">browse for file >></a>
         </div>--}}
-		<div id="{{custom.constants.deviceStatusID}}" class="span2 {{ custom.views.deviceStatus.visibility }}">
+		<div id="{{custom.constants.deviceStatusID}}" class="span2" style="{{ custom.views.deviceStatus.visibility }}">
 			<div id="lua-script-device-status">
 				<h3>Device Status</h3>
 				<p>Script Status:</p>
@@ -94,9 +94,9 @@
 				<p><span id="LUA_DEBUG_NUM_BYTES"></span></p>
 			</div>
 		</div>
-		<div id="{{custom.constants.luaBodyBarID}}" class="span10 deviceStatusBarVisible">
+		<div id="{{custom.constants.luaBodyBarID}}" class="span10 {{#if custom.views.deviceStatus.isVisible}}deviceStatusBarVisible{{else}}deviceStatusBarHidden{{/if}}">
 			<div id="lua-script-window-views">
-				<div id="{{custom.constants.luaEditorID}}">
+				<div id="{{custom.constants.luaEditorID}}" style="{{ custom.views.luaEditor.visibility }}">
 					<div id="lua-script-active-script-info" class="row">
 						<div class="span12 textRow">
 							<div>
@@ -109,38 +109,42 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="span12 {{ custom.views.luaEditor.visibility }}">
+						<div class="span12">
 							<div id="lua-script-editor-view">
 								<div id="lua-code-editor">{{ custom.luaScript.code }}</div>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div id="{{custom.constants.luaDebuggerID}}" class="row {{ custom.views.luaDebugger.visibility }}">
+				<div id="lua-script-device-debugger-box" class="row">
 					<div class="span12">
-						<div id="lua-script-device-debugger-buttons" class="row">
+						<div class="row">
 							<div class="span12">
-								<button id="lua-script-console-button" type="button" class="btn btn-default btn-lg">
-									<span class="icon-console-2">Console</span>
-								</button>
-								<button id="lua-script-status-button" type="button" class="btn btn-default btn-lg">
-									<span class="icon-stats-3">Status</span>
-								</button>
 								<div id="lua-script-device-status-icons">
 									<div id="lua-script-device-status-info-short">
 										Device Status:
 										<span id="script-running-status" class="{{ custom.device.runStatus.statusIcon }}" title="{{ custom.device.runStatus.statusTitle }}"/>
 										<span id="startup-script-running-status" class="{{ custom.device.startupStatus.statusIcon }}" title="{{ custom.device.startupStatus.statusTitle }}"/>
-										<span id="script-size-status" class="icon-pause"/>
-										<span id="debug-buffer-filled-status" class="icon-pause"/>
+										<span id="script-size-status" class="icon-pause" style="display:none;"/>
+										<span id="debug-buffer-filled-status" class="icon-pause" style="display:none;"/>
 									</div>
+								</div>
+								<div id="{{custom.constants.luaDebuggerButtonsID}}" style="{{ custom.views.luaDebugger.visibility }}">
+									<button id="lua-script-console-button" type="button" class="btn btn-default btn-lg">
+										<span class="icon-console-2">Console</span>
+									</button>
+									{{!--<button id="lua-script-status-button" type="button" class="btn btn-default btn-lg">
+										<span class="icon-stats-3">Status</span>
+									</button>--}}
 								</div>
 							</div>
 						</div>
-						<div id="lua-script-device-status" class="row">
-							<div class="span12">
-								<div id="lua-debugging-log-view" style="">
-									<div id="lua-debugging-log-editor"></div>
+						<div id="{{custom.constants.luaDebuggerID}}" style="{{ custom.views.luaDebugger.visibility }}">
+							<div id="lua-script-device-status" class="row">
+								<div class="span12">
+									<div id="lua-debugging-log-view" style="">
+										<div id="lua-debugging-log-editor"></div>
+									</div>
 								</div>
 							</div>
 						</div>

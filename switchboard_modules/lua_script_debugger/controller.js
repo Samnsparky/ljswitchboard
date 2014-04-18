@@ -29,6 +29,7 @@ function textEditor() {
     var htmlID = '';
     var editorTheme = '';
     var editorMode = '';
+    var curHeight = -1;
 
     this.setupEditor = function(id, theme, mode) {
         self.htmlID = id;
@@ -39,6 +40,22 @@ function textEditor() {
         self.editor = ace.edit(id);
         self.editor.setTheme(theme);
         self.editor.getSession().setMode(mode);
+    };
+    this.setHeight = function(newHeight) {
+        if(newHeight != self.curHeight) {
+            if (typeof(newHeight) === 'number') {
+                $('#'+self.htmlID).height(newHeight.toString() + 'px');
+            } else if (typeof(newHeight) === 'string') {  
+                $('#'+self.htmlID).height(newHeight + 'px');
+            }
+        }
+        self.editor.resize(true);
+    };
+    this.getHeight = function() {
+        if(self.curHeight == -1) {
+            self.curHeight = $('#'+self.htmlID).height();
+        }
+        return self.curHeight;
     };
 
     var self = this;
@@ -56,6 +73,8 @@ function luaDeviceController() {
     var curScriptFilePath = "";
     var curScriptType = "";
     var curScriptOptions;
+    var codeEditorHeight = 0;
+    var debuggingLogHeight = 0;
 
     this.DEBUG_START_EXECUTIONS = false;
     this.DEBUG_HIGH_FREQ_START_EXECUTIONS = false;
@@ -73,7 +92,7 @@ function luaDeviceController() {
         if(self.DEBUG_HIGH_FREQ_START_EXECUTIONS) {
             self.print(data);
         }
-    }
+    };
     this.print = function(data) {
         if(self.DEBUG_START_EXECUTIONS) {
             console.log(data);
@@ -215,7 +234,7 @@ function luaDeviceController() {
                         var textData = "";
                         // Loop through read data & convert to ASCII text
                         data.forEach(function(newChar){
-                            if(newChar != 0) {
+                            if(newChar !== 0) {
                                 textData += String.fromCharCode(newChar);
                             } else {
 
@@ -525,7 +544,7 @@ function luaDeviceController() {
 
         // Return q instance
         return fileIODeferred.promise;
-    }
+    };
     this.saveLoadedScript = function() {
         self.print('Saving Lua Script');
         var fileIODeferred = q.defer();
@@ -616,6 +635,7 @@ function luaDeviceController() {
         self.debuggingLog = debuggingLog;
         self.debuggingLogSession = debuggingLog.editor.session;
         self.debuggingLogDoc = debuggingLog.editor.session.doc;
+        self.debuggingLog.editor.setReadOnly(true);
     };
     this.setScriptConstants = function(constants) {
         self.scriptConstants = constants;
@@ -633,6 +653,8 @@ function luaDeviceController() {
  * When using the 'singleDevice' framework it is instantiated as sdModule.
  */
 function module() {
+    var frameworkElement;
+    this.frameworkElement = frameworkElement;
     var luaEditor = new textEditor();
     this.luaEditor = luaEditor;
     var debuggingLog = new textEditor();
@@ -701,10 +723,74 @@ function module() {
         if(self.ENABLE_PRINTING_USER_DEBUG_INFO) {
             console.log(data);
         }
-    }
+    };
+    this.getModuleHeight = function() {
+        var moduleChromeContentsEl = $('#module-chrome-contents');
+        var moduleHeight = moduleChromeContentsEl.height();
+        var topPadding = moduleChromeContentsEl.css('padding-top');
+        var bottomPadding = moduleChromeContentsEl.css('padding-bottom');
+
+        moduleHeight += parseInt(topPadding.slice(0,topPadding.search('px')));
+        moduleHeight += parseInt(bottomPadding.slice(0,bottomPadding.search('px')));
+
+        return moduleHeight;
+    };
 
     this.moduleWindowResizeListener = function (moduleHeight) {
         console.log('Module Height:', moduleHeight);
+
+        // if only the LuaEditor is visible:
+        var adjustEditor = self.isLuaDebuggerHidden && (!self.isLuaEditorHidden);
+        var adjustDebugger = (!self.isLuaDebuggerHidden) && self.isLuaEditorHidden;
+
+        // Adjust inner-module div height for scrollbar prevention
+        var moduleHeightEl = $('#lua-script-window-views');
+        var controlsHeight = $('#lua-script-device-and-file-io-controls').height();
+        controlsHeight += 50;
+
+        var magicWindowHeight = 214;
+        var windowHeight = $(window).height();
+        var windowWidth = $(window).width();
+        var newModuleHeight = moduleHeight - controlsHeight;
+
+        if(newModuleHeight > (windowHeight - magicWindowHeight)) {
+            //Scroll bar is present
+            windowWidth += 15;
+        }
+
+        //Determine if window is in narrow mode
+        var isNarrow = ($('#content-holder').css('margin-right') === '-20px');
+        if(isNarrow) {
+            // if window width is narrow, subtract a magical amount...
+            newModuleHeight -= 510;
+        }
+        moduleHeightEl.height((newModuleHeight).toString()+'px');
+
+        var magicHeightVal = 193; 
+        var heightAdjust = magicHeightVal;
+        if(self.areTableDescriptionsHidden) {
+            heightAdjust -= 49;
+        }
+
+        var newHeight = moduleHeight - heightAdjust;
+        if (adjustEditor) {
+            console.log('adjustingHeight of editor');
+            self.luaController.codeEditor.setHeight(newHeight);
+        } else if(adjustDebugger) {
+            console.log('adjustingHeight of debugger');
+            if(isNarrow) {
+                newHeight += 10;
+            }
+            self.luaController.debuggingLog.setHeight(newHeight);
+        } else {
+            console.log('Setting to default height');
+            self.luaController.codeEditor.setHeight(500);
+            self.luaController.debuggingLog.setHeight(300);
+        }
+    };
+    this.refreshEditorHeights = function() {
+        var moduleHeight = self.getModuleHeight();
+        self.moduleWindowResizeListener(moduleHeight);
     };
 
     /**
@@ -826,7 +912,7 @@ function module() {
                 self.handleIOSuccess(onSuccess,'Script Saved to Flash'),
                 self.handleIOError(onSuccess,'Err: Script Not Saved to Flash')
             );
-        }
+        };
         var uploadLuaScript = function(data, onSuccess) {
             self.printUserDebugInfo('uploadLuaScript button pressed');
             self.luaController.loadLuaScript()
@@ -844,15 +930,6 @@ function module() {
                 self.luaController.enableStartupLuaScript,
                 self.luaController.disableStartupLuaScript,
                 self.handleIOSuccess(onSuccess,'Configured LUA_RUN_DEFAULT')
-            );
-        };
-        var saveScriptToFlash = function(data, onSuccess) {
-            self.printUserDebugInfo('saveScriptToFlash button pressed');
-
-            self.luaController.saveScriptToFlash()
-            .then(
-                self.handleIOSuccess(onSuccess,'Script Saved'),
-                self.handleIOError(onSuccess, 'Err: Script Not Saved')
             );
         };
         var loadLuaFile = function(data, onSuccess) {
@@ -938,10 +1015,10 @@ function module() {
                     'Active Script FilePath:',
                     self.luaController.curScriptFilePath
                 );
-                $('#'+sdModule.scriptOptions.scriptTypeID).text(scriptType)
-                $('#'+sdModule.scriptOptions.scriptNameID).text(scriptName)
+                $('#'+sdModule.scriptOptions.scriptTypeID).text(scriptType);
+                $('#'+sdModule.scriptOptions.scriptNameID).text(scriptName);
                 onSuccess();
-            }
+            };
         };
         var saveLoadedScriptToFile = function(data, onSuccess) {
             self.printUserDebugInfo('saveLoadedScriptToFile button pressed');
@@ -979,7 +1056,7 @@ function module() {
             var button = $('#' + constants.buttonID);
             var icon = button.children();
             icon.attr('class', constants.buttonIcon[val]);
-            icon.attr('title', constants.buttonTitle[val]);
+            button.attr('title', constants.buttonTitle[val]);
         };
         var setStatusIcon = function(constants, val) {
             var icon = $('#' + constants.statusID);
@@ -1022,8 +1099,10 @@ function module() {
                 luaBodyBarEl.addClass('deviceStatusBarVisible');
                 luaBodyBarEl.removeClass('deviceStatusBarHidden');
                 deviceStatusEl.show();
-                
+
+                setButtonIcon(self.viewConstants.deviceStatus, 1);
                 self.isDeviceStatusBarHidden ^= true;
+                self.refreshEditorHeights();
                 onSuccess();
             } else {
                 // Hide the DeviceStatusBar
@@ -1031,10 +1110,14 @@ function module() {
                 luaBodyBarEl.addClass('deviceStatusBarHidden');
                 luaBodyBarEl.removeClass('deviceStatusBarVisible');
                 
+                setButtonIcon(self.viewConstants.deviceStatus, 0);
                 self.isDeviceStatusBarHidden ^= true;
+                self.refreshEditorHeights();
                 onSuccess();
             }
-        }
+
+            
+        };
         var manageLuaEditorVisibility = function(data, onSuccess) {
             self.printUserDebugInfo(
                 'manageLuaEditorVisibility button pressed'
@@ -1046,15 +1129,23 @@ function module() {
                 // if element is hidden then show it:
                 luaEditorEl.show();
 
+                // Set button Icon & title
+                setButtonIcon(self.viewConstants.luaEditor, 1);
+
                 // Toggle visibility status                
                 self.isLuaEditorHidden ^= true;
+                self.refreshEditorHeights();
                 onSuccess();
             } else {
                 // if element is shown then hide it:
                 luaEditorEl.hide();
 
+                // Set button Icon & title
+                setButtonIcon(self.viewConstants.luaEditor, 0);
+
                 // Toggle visibility status
                 self.isLuaEditorHidden ^= true;
+                self.refreshEditorHeights();
                 onSuccess();
             }
         };
@@ -1064,20 +1155,31 @@ function module() {
             );
             // Get Window Element
             var luaDebuggerEl = $('#'+self.constants.luaDebuggerID);
+            var luaDebuggerButtonsEl = $('#'+self.constants.luaDebuggerButtonsID);
 
             if(self.isLuaDebuggerHidden) {
                 // if element is hidden then show it:
                 luaDebuggerEl.show();
+                luaDebuggerButtonsEl.show();
+
+                // Set button Icon & title
+                setButtonIcon(self.viewConstants.luaDebugger, 1);
 
                 // Toggle visibility status                
                 self.isLuaDebuggerHidden ^= true;
+                self.refreshEditorHeights();
                 onSuccess();
             } else {
                 // if element is shown then hide it:
                 luaDebuggerEl.hide();
+                luaDebuggerButtonsEl.hide();
+
+                // Set button Icon & title
+                setButtonIcon(self.viewConstants.luaDebugger, 0);
 
                 // Toggle visibility status
                 self.isLuaDebuggerHidden ^= true;
+                self.refreshEditorHeights();
                 onSuccess();
             }
         };
@@ -1092,15 +1194,23 @@ function module() {
                 // if element is hidden then show it:
                 luaTableDescriptionsEl.show();
 
+                // Set button Icon & title
+                setButtonIcon(self.viewConstants.tableDescriptions, 1);
+
                 // Toggle visibility status                
                 self.areTableDescriptionsHidden ^= true;
+                self.refreshEditorHeights();
                 onSuccess();
             } else {
                 // if element is shown then hide it:
                 luaTableDescriptionsEl.hide();
 
+                // Set button Icon & title
+                setButtonIcon(self.viewConstants.tableDescriptions, 0);
+
                 // Toggle visibility status
                 self.areTableDescriptionsHidden ^= true;
+                self.refreshEditorHeights();
                 onSuccess();
             }
         };
@@ -1211,6 +1321,7 @@ function module() {
             // Initialize variables
             var title = "";
             var icon = "";
+            var id = "";
             var visibility = "";
             var index = 0;
 
@@ -1219,16 +1330,22 @@ function module() {
                 index = 1;
             } else {
                 index = 0;
+                visibility = "display:none;";
             }
 
             // Get data from constants
-            title = self.viewConstants[classStr].title[index];
-            icon = self.viewConstants.icon[index];
+            title = self.viewConstants[classStr].buttonTitle[index];
+            icon = self.viewConstants[classStr].buttonIcon[index];
+            id = self.viewConstants[classStr].buttonID;
 
             //Save data to module's context
             self.moduleContext.views[classStr] = {};
+
             self.moduleContext.views[classStr].title = title;
             self.moduleContext.views[classStr].icon = icon;
+            self.moduleContext.views[classStr].id = id;
+            self.moduleContext.views[classStr].isVisible = isVisible;
+            self.moduleContext.views[classStr].visibility = visibility;
         };
         // Clear any view data
         self.moduleContext.views = {};
@@ -1421,4 +1538,185 @@ remove first two lines from document
 cDoc.removeLines(0,1)
  */
 
+var getFile = function(d,readType) {
+    var isFirstRead = readType === 'first';
+    var isFile;
+    if (isFirstRead){
+        isFile = d.read('FILE_IO_DIR_FIRST') === 0;
+    } else {
+        isFile = d.read('FILE_IO_DIR_NEXT') === 0;
+    }
+    if(isFile) {
+        console.log('FILE_IO_ATTRIBUTES',d.read('FILE_IO_ATTRIBUTES'));
+        console.log('FILE_IO_SIZE',d.read('FILE_IO_SIZE'));
+        d.readArray('FILE_IO_NAME_READ',d.read('FILE_IO_NAME_READ_LEN'))
+        .then(
+            function(data){
+                console.log('Data:',data);
+                data.forEach(function(value){
+                    console.log(String.fromCharCode(value));
+                });
+            },
+            function(err){
+                console.log('err:',err);
+            });
+    } else {
+        if(isFirstRead){
+            console.log('No Files');
+        } else {
+            console.log('No More Files');
+        }
+    }
+};
+var readRomId = function(d, eioNum) {
+    function dec2hex(i)
+    {
+      var result = "0000";
+      if      (i >= 0    && i <= 15)    { result = "000" + i.toString(16); }
+      else if (i >= 16   && i <= 255)   { result = "00"  + i.toString(16); }
+      else if (i >= 256  && i <= 4095)  { result = "0"   + i.toString(16); }
+      else if (i >= 4096 && i <= 65535) { result =         i.toString(16); }
+      return '0x'+result.toUpperCase();
+    }
+    // Functions:
+    // Search,  0xF0,   240
+    // Skip,    0xCC,   204
+    // Match,   0x55,   85
+    // Read,    0x33,   51
+    var oneWireFunctions = {
+        search: 0xF0,
+        skip: 0xCC,
+        match: 0x55,
+        read: 0x33
+    };
+    var txData = [];
+    var oneWireConfig = {
+        dq:eioNum+8,
+        dpu:0,
+        options:0,
+        func:oneWireFunctions.search,
+        numTx: txData.length,
+        numRx:0,
+        romH:0,
+        romL:0,
+        pathH:0,
+        pathL:0,
+        dataTx:txData,
+    };
+    var configOneWire = function(info) {
+        return function() {
+            var ioDeferred = q.defer();
+            var addresses = [
+                'ONEWIRE_DQ_DIONUM',
+                'ONEWIRE_DPU_DIONUM',
+                'ONEWIRE_OPTIONS',
+                'ONEWIRE_FUNCTION',
+                'ONEWIRE_NUM_BYTES_TX',
+                'ONEWIRE_NUM_BYTES_RX',
+                'ONEWIRE_ROM_MATCH_H',
+                'ONEWIRE_ROM_MATCH_L',
+                'ONEWIRE_PATH_H',
+                'ONEWIRE_PATH_L'
+            ];
+            var values = [
+                info.dq,
+                info.dpu,
+                info.options,
+                info.func,
+                info.numTx,
+                info.numRx,
+                info.romH,
+                info.romL,
+                info.pathH,
+                info.pathL
+            ];
+
+            // perform IO
+            d.writeMany(addresses,values)
+            .then(function(data){
+                ioDeferred.resolve();
+            },function(err){
+                console.log('Error on config',err);
+                ioDeferred.reject();
+            });
+            return ioDeferred.promise;
+        };
+    };
+    var oneWireGo = function() {
+        var ioDeferred = q.defer();
+        d.qWrite('ONEWIRE_GO',1)
+        .then(ioDeferred.resolve,ioDeferred.reject);
+        return ioDeferred.promise;
+    };
+    var getWriteDataFunc = function(info) {
+        return function() {
+            var ioDeferred = q.defer();
+            if(info.numTx > 0) {
+                d.qWriteArray('ONEWIRE_DATA_TX',info.dataTx)
+                .then(ioDeferred.resolve,ioDeferred.reject);
+            } else {
+                ioDeferred.resolve();
+            }
+            return ioDeferred.promise;
+        };
+    };
+    var readInfoFunc = function() {
+        var ioDeferred = q.defer();
+        var addresses = [
+            'ONEWIRE_ROM_BRANCHS_FOUND_H',
+            'ONEWIRE_ROM_BRANCHS_FOUND_L',
+            'ONEWIRE_SEARCH_RESULT_H',
+            'ONEWIRE_SEARCH_RESULT_L'
+        ];
+        d.readMany(addresses)
+        .then(
+            function(data){
+                ioDeferred.resolve(data);
+            },
+            function(err){
+                console.log('Error',err);
+                ioDeferred.reject();
+            }
+        );
+        return ioDeferred.promise;
+    };
+
+    var configFunc = configOneWire(oneWireConfig);
+    var writeDataFunc = getWriteDataFunc(oneWireConfig);
+
+    var dispErrors = function(err) {
+        var errDeferred = q.defer();
+        console.log('Error in 1-wire config',err);
+        if(typeof(err) === 'number') {
+            console.log(device_controller.ljm_driver.errToStrSync(err));
+        } else {
+            console.log('Typeof Err',typeof(err));
+        }
+        errDeferred.reject();
+        return errDeferred.promise;
+    };
+    configFunc()
+    .then(writeDataFunc,dispErrors)
+    .then(oneWireGo,dispErrors)
+    .then(readInfoFunc,dispErrors)
+    .then(
+        function(data) {
+            console.log('Success!',data);
+            var ramId = []
+            ramId[0] = dec2hex((data[2]>>16)&0xFFFF);
+            ramId[1] = dec2hex(data[2]&0xFFFF);
+            ramId[2] = dec2hex((data[3]>>16)&0xFFFF);
+            ramId[3] = dec2hex(data[3]&0xFFFF);
+            console.log('Ram Id:',ramId);
+        },
+        function(err) {
+            if(typeof(err) === 'number') {
+                console.log(device_controller.ljm_driver.errToStrSync(err));
+            } else {
+                console.log('Typeof Err',typeof(err));
+            }
+            console.log('Failed',err);
+        }
+    );
+};
 

@@ -11,6 +11,17 @@
             "connectionType":"Ethernet"
         },
         {
+            "serialNumber":"470010117",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010704",
+            "connectionType":"Ethernet"
+        }
+    ],
+    "Labjack-T7s":
+    [
+        {
             "serialNumber":"470010533",
             "connectionType":"Ethernet"
         },
