@@ -1,0 +1,62 @@
+{
+    "configOnlyRegisters": [
+        {"name":"ETHERNET_MAC","title":"","heading":"","id":"","type":""},
+        {"name":"WIFI_MAC","title":"","heading":"","id":"","type":""},
+        {"name":"WIFI_VERSION","title":"","heading":"","id":"","type":""}
+    ],
+    "ethernetRegisters": [
+        {"name":"POWER_ETHERNET","title":"","heading":"","id":"","type":"status"},
+        {"name":"ETHERNET_IP","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_SUBNET","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_GATEWAY","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_DNS","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_ALTDNS","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_DHCP_ENABLE","title":"","heading":"","id":"","type":"status"},
+        {"name":"POWER_ETHERNET_DEFAULT","title":"","heading":"","id":"","type":"status"},
+        {"name":"ETHERNET_IP_DEFAULT","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_SUBNET_DEFAULT","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_GATEWAY_DEFAULT","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_DNS_DEFAULT","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_ALTDNS_DEFAULT","title":"","heading":"","id":"","type":"ip"},
+        {"name":"ETHERNET_DHCP_ENABLE_DEFAULT","title":"","heading":"","id":"","type":"status"}
+    ],
+    "wifiRegisters": [
+        {"name":"POWER_WIFI","title":"","heading":"","id":"","type":"status"},
+        {"name":"WIFI_IP","title":"","heading":"","id":"","type":"ip"},
+        {"name":"WIFI_SUBNET","title":"","heading":"","id":"","type":"ip"},
+        {"name":"WIFI_GATEWAY","title":"","heading":"","id":"","type":"ip"},
+        {"name":"WIFI_DHCP_ENABLE","title":"","heading":"","id":"","type":"status"},
+        {"name":"POWER_WIFI_DEFAULT","title":"","heading":"","id":"","type":"status"},
+        {"name":"WIFI_IP_DEFAULT","title":"","heading":"","id":"","type":"ip"},
+        {"name":"WIFI_SUBNET_DEFAULT","title":"","heading":"","id":"","type":"ip"},
+        {"name":"WIFI_GATEWAY_DEFAULT","title":"","heading":"","id":"","type":"ip"},
+        {"name":"WIFI_DHCP_ENABLE_DEFAULT","title":"","heading":"","id":"","type":"status"},
+        {"name":"WIFI_STATUS","title":"","heading":"","id":"","type":"wifiStatus"},
+        {"name":"WIFI_RSSI","title":"","heading":"","id":"","type":"rssi"}
+    ]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

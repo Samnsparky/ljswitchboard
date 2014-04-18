@@ -916,6 +916,20 @@ function Framework() {
             self.putConfigBinding(binding);
             self.putSetupBinding(setupBinding);
             isValid = true;
+        } else if (smartName === 'setupOnlyRegister') {
+            // Add information to setupBinding object
+            setupBinding.binding = bindingName;
+            setupBinding.direction = 'read';
+            setupBinding.callback = newSmartBinding.configCallback;
+            
+            if(typeof(newSmartBinding.configCallback) === 'function') {
+                setupBinding.execCallback = true;
+            }
+            setupBinding.callback = newSmartBinding.configCallback;
+
+            // Save binding to framework
+            self.putSetupBinding(setupBinding);
+            isValid = true;
         }
 
         if(isValid) {
