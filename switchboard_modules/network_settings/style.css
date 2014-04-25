@@ -1,0 +1,68 @@
+#network_settings hr{
+	margin:0px;
+}
+.currentStatusInfo {
+	height:30px;
+}
+.powerButtonDiv {
+	float:right;
+}
+.dhcpSelectionButton {
+	width:250px;
+}
+.configSettingsDiv .dropdown-menu{
+	left: 114px;
+}
+.configSettingsTable {
+	width:278px;
+}
+.configSettingsTable .attribute {
+	width:25%;
+}
+.configSettingsTable .input {
+	width:75%;
+}
+.configSettingsTable .userFeedback {
+	width:10px;
+}
+.table {
+	margin-bottom: 0px;
+}
+.Auto_Value {
+	display:none;
+}
+.Manual_Value {
+}
+.Manual_Value input {
+	margin-bottom: 0px;
+}
+.networkSetting {
+}
+.networkSetting td {
+	line-height: 33px;
+}
+.networkSetting .alertCol {
+	position: absolute;
+}
+.networkSetting .alert {
+	margin-bottom: 0px;
+	padding: 0px;
+	display:none;
+}
+#ethernet_settings {
+	/*box-shadow: 1px 1px 5px black;
+	border: solid 1px black;
+	padding: 5px;*/
+}
+.ethAutoDHCPDivs {
+
+}
+.ethManualDHCPDivs {
+	
+}
+#wifi_settings {
+	/*box-shadow: 1px 1px 5px black;
+	border: solid 1px black;
+	padding: 5px;*/
+}
+

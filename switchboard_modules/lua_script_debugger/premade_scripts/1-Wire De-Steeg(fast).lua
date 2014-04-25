@@ -46,57 +46,55 @@ function DS18xx_Read(target_rom)
     MB.W(5310, 0, 1)       -- GO
 
     temp, error = MB.R(5370, 0, 1)        -- Read two bytes
-
+    
     lsb = temp / 256
     round(lsb, 0)
     msb = temp % 256
     msb = round(msb * 256, 0)
     temp = msb  + lsb
-    temp = temp * 0.0625 + 273.15
-
+    -- temp = temp * 0.0625 + 273.15
+    if(msb == 65280) then
+        temp = sensorNotFound
+    end
+    -- print("msb",msb,"lsb",lsb)
    return temp, error
 end
 
 
 print("Read and display the device temperature 10 times at 0.5 Hz.")
-count = 0
+sensorNotFound = 0
 MB.W(48005, 0, 1)        --Ensure analog is on
-LJ.IntervalConfig(0, 2000)
+LJ.IntervalConfig(0, 3000)
 
-eioNum = 6
-ROMA = {[0] = 0xF100, [1] = 0x0802, [2] = 0xB082, [3] = 0x8010}
-ROMB = {[0] = 0x2200, [1] = 0x0802, [2] = 0xB009, [3] = 0xB710}
-ROMC = {[0] = 0x7400, [1] = 0x0802, [2] = 0xB012, [3] = 0x2210}
-ROMD = {[0] = 0x3200, [1] = 0x0802, [2] = 0xAFA7, [3] = 0x0810}
-ROMs = {[0] = ROMC}
-NumSensors = 1
-
--- eioNum = 2
--- ROM0 = {[0] = 0xC100, [1] = 0x0004, [2] = 0xCD4F, [3] = 0xED28}
--- ROM1 = {[0] = 0x5300, [1] = 0x0004, [2] = 0xCDF8, [3] = 0x2328}
--- ROM2 = {[0] = 0xB900, [1] = 0x0004, [2] = 0xCE4B, [3] = 0xCE28}
--- ROM3 = {[0] = 0x8700, [1] = 0x0004, [2] = 0xCD50, [3] = 0x8428}
--- ROM4 = {[0] = 0xD800, [1] = 0x0004, [2] = 0xCE1B, [3] = 0xAF28}
--- ROMs = {[0] = ROM0, [1] = ROM1, [2] = ROM2, [3] = ROM3, [4] = ROM4} 
--- NumSensors = 5
+eioNum = 0
+FV0 = {[0] = 0xF100, [1] = 0x0802, [2] = 0xB082, [3] = 0x8010}
+FV1 = {[0] = 0x2200, [1] = 0x0802, [2] = 0xB009, [3] = 0xB710}
+FV2 = {[0] = 0x7400, [1] = 0x0802, [2] = 0xB012, [3] = 0x2210}
+FV3 = {[0] = 0x3200, [1] = 0x0802, [2] = 0xAFA7, [3] = 0x0810}
+FV4 = {[0] = 0xCB00, [1] = 0x0802, [2] = 0xB013, [3] = 0xD210}
+FV5 = {[0] = 0x8C00, [1] = 0x0802, [2] = 0xB07A, [3] = 0xFC10}
+FV6 = {[0] = 0x5A00, [1] = 0x0802, [2] = 0xB005, [3] = 0xB410}
+FV7 = {[0] = 0xAE00, [1] = 0x0802, [2] = 0xAFB6, [3] = 0xCE10}
+ROMs = {[0] = FV0, [1] = FV1, [2] = FV2, [3] = FV3, [4] = FV4, [5] = FV5, [6] = FV6, [7] = FV7} 
+NumSensors = 8
 
 SensPinNum = eioNum + 8
 MB.W(6006,1,NumSensors)              -- Enable some IO RAM
 temps = {}
 while true do
   if LJ.CheckInterval(0) then
-    
     print("Reading sensors:")
     for i=0, NumSensors - 1, 1 do
-
-      temp = DS18xx_Read(ROMs[i])
-      DS18xx_Start(ROMs[i])
-   
-      print(i, temp, "K")
-      temps[i] = temp
-      IOMEM.W(46000+i*2, temps[i])
+        temp = DS18xx_Read(ROMs[i])
+        DS18xx_Start(ROMs[i])
+        if(temp == sensorNotFound) then
+            print(i,"N/A")
+        else
+            print(i, temp, "K")
+        end
+        -- temps[i] = temp
+        -- IOMEM.W(46000+i*2, temps[i])
+        IOMEM.W(46000+i*2, temp)
     end
-    
-    count = count + 1
   end
 end

@@ -33,6 +33,23 @@ var DRIVER_CONNECTION_TYPE_NAMES = dict({
 exports.driver_const = labjack_nodejs.driver_const;
 exports.ljm_driver = labjack_driver;
 
+var GET_SUBCLASS_FUNCTIONS = {};
+
+GET_SUBCLASS_FUNCTIONS['T7'] = function (device) {
+    var subclass = null;
+    return function () {
+        if (subclass === null) {
+            if(device.read('HARDWARE_INSTALLED'))
+                subclass = 'Pro';
+            else
+                subclass = '';
+        }
+
+        return subclass;
+    }
+}
+
+
 /**
  * Object with information about a device.
  *
@@ -48,6 +65,9 @@ var Device = function (device, serial, connectionType, deviceType)
 {
     this.device = device;
     this.cachedName = null;
+    this.cachedFirmware = null;
+
+    this.getSubclass = GET_SUBCLASS_FUNCTIONS[DEVICE_TYPE_NAMES.get(deviceType.toString())](this);
 
     /**
      * Get the serial number for this device.
@@ -109,7 +129,9 @@ var Device = function (device, serial, connectionType, deviceType)
      * @throws Exceptions thrown from the labjack-nodejs and lower layers.
     **/
     this.getFirmwareVersion = function () {
-        return this.device.readSync('FIRMWARE_VERSION');
+        if (!this.cachedFirmware)
+            this.cachedFirmware = this.device.readSync('FIRMWARE_VERSION');
+        return this.cachedFirmware;
     };
 
     /**
@@ -447,6 +469,8 @@ var Device = function (device, serial, connectionType, deviceType)
         this.write('DEVICE_NAME_DEFAULT', newName);
         this.cachedName = newName;
     };
+
+    this.subclass = this.getSubclass();
 };
 
 

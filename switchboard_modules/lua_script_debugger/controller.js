@@ -200,12 +200,13 @@ function luaDeviceController() {
     this.getAndAddDebugData = function(numBytes) {
         self.printHighFreq('reading & saving to LUA_DEBUG_DATA');
         var innerDeferred = q.defer();
-        var numBytesInBuffer = numBytes;
+        var numBytesInBuffer = numBytes+1;
         var numPackets = 0;
         var maxPacketSize = MAX_ARRAY_PACKET_SIZE;
 
         var i,j;
         var packetSizes = [];
+        
 
         // Determine how many chunks of data should be read
         numPackets = (numBytesInBuffer - (numBytesInBuffer % maxPacketSize));
@@ -218,8 +219,20 @@ function luaDeviceController() {
         // Determine if an extra packet of a smaller size should be sent
         if ((numBytesInBuffer % maxPacketSize) !== 0) {
             numPackets += 1;
-            packetSizes.push((numBytesInBuffer % maxPacketSize)+1);
+            packetSizes.push((numBytesInBuffer % maxPacketSize));
         }
+        
+        // ------- Debugging Code ------
+        // var numBytesBeingRead = 0;
+        // for(i = 0; i < packetSizes.length; i++) {
+        //     numBytesBeingRead += packetSizes[i];
+        // }
+        // if(packetSizes.length > 1) {
+        //     console.log('Num Packets',packetSizes.length);
+        //     console.log('Num Bytes:',numBytes);
+        //     console.log('Check- Num Bytes',numBytesBeingRead);
+        // }
+        // ------- Debugging Code ------
 
         // Synchronously read each packet of data to the device
         async.eachSeries(
@@ -711,7 +724,13 @@ function module() {
     var handleIOError = function(onSuccess, debugData) {
         return function(err) {
             console.log('LSD Error',err);
-            if(debugData !== null) {
+            if (typeof(err) === "number") {
+                // Show Alert!
+                var errStr = "LS-Err-";
+                errStr += device_controller.ljm_driver.errToStrSync(err);
+                showAlert(errStr);
+            }
+            if (debugData !== null) {
                 console.log(debugData);
             }
             onSuccess();
@@ -1603,6 +1622,20 @@ var readRomId = function(d, eioNum) {
         pathL:0,
         dataTx:txData,
     };
+    var highResProbeTxData = [0x4E,0xFF,0x00,0x7F];
+    var highResProbeConfig = {
+        dq:eioNum+8,
+        dpu:0,
+        options:0,
+        func:oneWireFunctions.match,
+        numTx: highResProbeTxData.length,
+        numRx:0,
+        romH:0,
+        romL:0,
+        pathH:0,
+        pathL:0,
+        dataTx:highResProbeTxData,
+    };
     var configOneWire = function(info) {
         return function() {
             var ioDeferred = q.defer();
@@ -1630,6 +1663,7 @@ var readRomId = function(d, eioNum) {
                 info.pathH,
                 info.pathL
             ];
+            console.log('romH',info.romH,'romL',info.romL);
 
             // perform IO
             d.writeMany(addresses,values)
@@ -1683,6 +1717,8 @@ var readRomId = function(d, eioNum) {
 
     var configFunc = configOneWire(oneWireConfig);
     var writeDataFunc = getWriteDataFunc(oneWireConfig);
+    var configHighResProbeFunc = configOneWire(highResProbeConfig);
+    var writeHighResProbeDataFunc = getWriteDataFunc(highResProbeConfig);
 
     var dispErrors = function(err) {
         var errDeferred = q.defer();
@@ -1701,22 +1737,33 @@ var readRomId = function(d, eioNum) {
     .then(readInfoFunc,dispErrors)
     .then(
         function(data) {
+            var ioDeferred = q.defer();
             console.log('Success!',data);
             var ramId = []
             ramId[0] = dec2hex((data[2]>>16)&0xFFFF);
             ramId[1] = dec2hex(data[2]&0xFFFF);
             ramId[2] = dec2hex((data[3]>>16)&0xFFFF);
             ramId[3] = dec2hex(data[3]&0xFFFF);
+            highResProbeConfig.romH = data[2];
+            highResProbeConfig.romL = data[3];
             console.log('Ram Id:',ramId);
+            ioDeferred.resolve();
+            return ioDeferred.promise;
         },
         function(err) {
+            var ioDeferred = q.defer();
             if(typeof(err) === 'number') {
                 console.log(device_controller.ljm_driver.errToStrSync(err));
             } else {
                 console.log('Typeof Err',typeof(err));
             }
             console.log('Failed',err);
+            ioDeferred.resolve();
+            return ioDeferred.promise;
         }
-    );
+    )
+    .then(configHighResProbeFunc,dispErrors)
+    .then(writeHighResProbeDataFunc,dispErrors)
+    .then(oneWireGo,dispErrors)
 };
 

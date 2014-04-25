@@ -6,12 +6,12 @@
     ],
     "ethernetRegisters": [
         {"name":"POWER_ETHERNET","title":"","heading":"","id":"","type":"status"},
-        {"name":"ETHERNET_IP","title":"","heading":"","id":"","type":"ip"},
-        {"name":"ETHERNET_SUBNET","title":"","heading":"","id":"","type":"ip"},
-        {"name":"ETHERNET_GATEWAY","title":"","heading":"","id":"","type":"ip"},
-        {"name":"ETHERNET_DNS","title":"","heading":"","id":"","type":"ip"},
-        {"name":"ETHERNET_ALTDNS","title":"","heading":"","id":"","type":"ip"},
-        {"name":"ETHERNET_DHCP_ENABLE","title":"","heading":"","id":"","type":"status"},
+        {"name":"ETHERNET_IP","title":"","heading":"","id":"","type":"ip","isConfig":true},
+        {"name":"ETHERNET_SUBNET","title":"","heading":"","id":"","type":"ip","isConfig":true},
+        {"name":"ETHERNET_GATEWAY","title":"","heading":"","id":"","type":"ip","isConfig":true},
+        {"name":"ETHERNET_DNS","title":"","heading":"","id":"","type":"ip","isConfig":true},
+        {"name":"ETHERNET_ALTDNS","title":"","heading":"","id":"","type":"ip","isConfig":true},
+        {"name":"ETHERNET_DHCP_ENABLE","title":"","heading":"","id":"","type":"status","isConfig":true},
         {"name":"POWER_ETHERNET_DEFAULT","title":"","heading":"","id":"","type":"status"},
         {"name":"ETHERNET_IP_DEFAULT","title":"","heading":"","id":"","type":"ip"},
         {"name":"ETHERNET_SUBNET_DEFAULT","title":"","heading":"","id":"","type":"ip"},
@@ -35,28 +35,3 @@
         {"name":"WIFI_RSSI","title":"","heading":"","id":"","type":"rssi"}
     ]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

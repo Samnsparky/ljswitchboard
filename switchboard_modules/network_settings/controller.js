@@ -74,7 +74,7 @@ function module() {
             2904: 'Booting Up',
             2905: 'Could Not Start',
             2906: 'Applying Settings',
-            2907: 'Associated',
+            2907: 'DHCP Started',
             2908: 'Unknown',
             2909: 'Other'
         }[status];
@@ -83,6 +83,165 @@ function module() {
         }
         return statusString;
     };
+
+    this.ShowManualEthernetSettings = function() {
+        $('#ethernet_settings .Auto_Value').hide();
+        $('#ethernet_settings .Manual_Value').show();
+    }
+    this.ShowAutoEthernetSettings = function() {
+        $('#ethernet_settings .Manual_Value').hide();
+        $('#ethernet_settings .Auto_Value').show();
+    }
+    this.setEthernetSettings = function(mode) {
+        if(mode === 'auto') {
+            self.ShowAutoEthernetSettings();
+        } else {
+            self.ShowManualEthernetSettings();
+        }
+    }
+    this.toggleEthernetSettings = function() {
+        if($('#ethernet_settings .Manual_Value').css('display') === 'none') {
+            self.ShowManualEthernetSettings();
+        } else {
+            self.ShowAutoEthernetSettings();
+        }
+    }
+    this.ipAddressValidator = function(event) {
+        var settingID = event.target.parentElement.parentElement.parentElement.id;
+        var alertJQueryStr = '#'+settingID+' .alert';
+        var alertEl = $(alertJQueryStr);
+        var alertMessageJQueryStr = alertJQueryStr + ' .messageIcon';
+        var alertMessageEl = $(alertMessageJQueryStr);
+        var inputTextEl = $('#'+settingID+' input');
+        var inputText = event.target.value;
+        var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;  
+
+        var isValid = true;
+        if(inputText !== "") {
+            // Remove Existing styles 
+            alertMessageEl.removeClass('icon-checkmark-3');
+            alertEl.removeClass('alert-success');
+            alertMessageEl.removeClass('icon-close');
+            alertEl.removeClass('alert-block');
+            alertEl.removeAttr('title');
+            inputTextEl.removeClass('inputVerified');
+
+            // Add appropriate styles
+            if(inputText.match(ipformat))  {  
+                alertMessageEl.addClass('icon-checkmark-3');
+                alertEl.addClass('alert-success');
+                alertEl.attr('title',"Valid IP Address");
+                inputTextEl.addClass('inputVerified');
+                alertEl.show();
+                isValid = true;
+            } else {  
+                alertMessageEl.addClass('icon-close');
+                alertEl.addClass('alert-block');
+                alertEl.attr('title',"Invalid IP Address");
+                inputTextEl.removeClass('inputVerified');
+                alertEl.show(); 
+                isValid = false;
+            } 
+        } else {
+            alertEl.hide();
+            alertMessageEl.addClass('icon-checkmark-3');
+            alertEl.addClass('alert-success');
+            alertEl.attr('title',"Valid IP Address");
+            inputTextEl.removeClass('inputVerified');
+            isValid = true;
+        }
+        if (settingID.search('ETHERNET') >= 0 ) {
+            if(!isValid) {
+                $('#ethernetApplyButton').attr('disabled','disabled');
+            } else {
+                var numValid = $('#ethernet_settings .alert-success').length;
+                if(numValid >= 5) {
+                    $('#ethernetApplyButton').removeAttr('disabled');
+                }
+            }
+        } else {
+            console.log('Wifi Settings....');
+        }
+    }
+    this.buildJqueryIDStr = function(idStr) {
+        var jqueryStr = "";
+        if(idStr.search('#') === 0) {
+            jqueryStr = idStr;
+        } else {
+            jqueryStr = "#"+idStr;
+        }
+        return jqueryStr;
+    }
+    this.setAutoVal = function(settingID,val) {
+        var autoValEl = $(self.buildJqueryIDStr(settingID) + '.Auto_Value');
+        autoValEl.text(val);
+    }
+    this.getAutoVal = function(settingID) {
+        var autoValEl = $(self.buildJqueryIDStr(settingID) + '.Auto_Value');
+        return {value:autoValEl.text()};
+    }
+    this.setManualVal = function(settingID,val) {
+        var manStr = " .Manual_Value input";
+        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
+        manualValEl[0].placeholder = val;
+    }
+    this.getManualVal = function(settingID) {
+        var manStr = " .Manual_Value input";
+        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
+        var value = "";
+        var isNew = false;
+        if(manualValEl.hasClass('inputVerified')) {
+            value = manualValEl.val();
+            isNew = true;
+        } else {
+            value = manualValEl[0].placeholder;
+            isNew = false;
+        }
+        return {value:value, isNew:isNew};
+    }
+    this.clearManualVal = function(settingID) {
+        var manStr = " .Manual_Value input";
+        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
+        manualValEl.val('');
+        manualValEl.trigger('change');
+    }
+    this.getEthernetIPRegisterList = function() {
+        regList = [];
+        self.ethernetRegisters.forEach(function(reg) {
+            if((reg.type === 'ip') && (reg.isConfig)){
+                regList.push(reg.name);
+            }
+        });
+        return regList;
+    }
+    this.clearNewEthernetSettings = function() {
+        self.getEthernetIPRegisterList().forEach(function(regName){
+            var configData = self.clearManualVal(regName+'_VAL');
+        });
+    }
+    this.getNewEthernetSettings = function() {
+        var newEthernetSettingRegs = [];
+        var newEthernetSettingVals = [];
+        self.getEthernetIPRegisterList().forEach(function(regName){
+            var configData = self.getManualVal(regName+'_VAL');
+            if(configData.isNew) {
+                newEthernetSettingRegs.push(regName);
+                newEthernetSettingVals.push(configData.value);
+            }
+        });
+        return {
+            registers: newEthernetSettingRegs, 
+            values: newEthernetSettingVals
+        };
+    }
+    this.attachIPInputValidators = function() {
+        var inputElements = $('.networkSetting input');
+        console.log('attaching validators',inputElements);
+        inputElements.bind('change',self.ipAddressValidator);
+    }
+    this.attachInputValidators = function() {
+        self.attachIPInputValidators();
+    }
 
     /**
      * Function is called once every time the module tab is selected, loads the module.
@@ -176,6 +335,7 @@ function module() {
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
+        self.attachInputValidators();
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
@@ -212,5 +372,13 @@ function module() {
     };
 
     var self = this;
+}
+function ValidateIPaddress(inputText)  {  
+    var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;  
+    if(inputText.value.match(ipformat))  {  
+        console.log('Valid IP Address',inputText);
+    } else {  
+        console.log('Invalid IP Address',inputText); 
+    }  
 }
 

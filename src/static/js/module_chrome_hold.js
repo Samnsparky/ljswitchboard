@@ -143,21 +143,6 @@ function selectModule(name)
         },
         function (moduleInfo) {
 
-            // Look for the devices that should be provided to the module.
-            var deviceMatchers = devices.map(function (device) {
-                return {
-                    matcher: module_manager.createDeviceMatcher(device),
-                    device: device
-                };
-            });
-            deviceMatchers = deviceMatchers.filter(function (matcherInfo) {
-                return matcherInfo.matcher.matches(moduleInfo);
-            });
-            devices = deviceMatchers.map( function (x) { return x.device; });
-
-            // Save matching devices back to the module context
-            standardContext.devices = devices;
-
             // Save the module info object
             LOADED_MODULE_INFO_OBJECT = moduleInfo;
             var loadModule = function(moduleConstants) {
@@ -289,7 +274,6 @@ function addModuleWindowResizeListner(keyStr, callbackFunc) {
             console.log('not Adding Listener');
         }
 }
-
 function removeModuleWindowResizeListner(keyStr) {
     if(typeof(keyStr) === 'string') {
         var origIndex = 0;
@@ -307,12 +291,11 @@ function removeModuleWindowResizeListner(keyStr) {
             console.log('Not Removing Listener',keyStr);
         }
     }
-}
+};
 
 function clearModuleWindowResizeListners() {
     MODULE_WINDOW_RESIZE_LISTNERS = [];
-}
-
+};
 /**
  * Callback that dyanmically handles window resizing.
 **/
@@ -463,7 +446,7 @@ $('#module-chrome').ready(function(){
         $('#module-chrome-contents').css({'height': '100%'});
     }
 
-    var devices = device_controller.getDeviceKeeper().getDevices();
+    var devices = device_controller.getDeviceKeeper().getDevices()
     
     module_manager.getActiveModules(
         genericErrorHandler,

@@ -7,12 +7,28 @@
             "connectionType":"Ethernet"
         },
         {
-            "serialNumber":"470010620",
+            "serialNumber":"470010868",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470011064",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010604",
             "connectionType":"Ethernet"
         },
         {
             "serialNumber":"470010117",
             "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010704",
+            "connectionType":"Wifi"
+        },
+        {
+            "serialNumber":"470010704",
+            "connectionType":"USB"
         },
         {
             "serialNumber":"470010704",
@@ -65,7 +81,7 @@
         }
     ],
     "displayDevTools": false,
-    "overrideAutoModuleLoad": true,
+    "overrideAutoModuleLoad": false,
     "moduleName": "network_settings",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
