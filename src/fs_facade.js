@@ -38,8 +38,10 @@ var defaultFilePath = {
     'mac': process.env.HOME,
     'win32': 'C:\\Windows',
     'win64': 'C:\\Windows'
-}[process.platform]
-
+}[process.platform];
+exports.testFunction = function() {
+    return "testing..."
+};
 exports.getFileSaveAsID = function() {
     return fileSaveAsID;
 };
@@ -48,7 +50,7 @@ exports.getFileLoadID = function() {
 };
 exports.getDefaultFilePath = function() {
     return defaultFilePath;
-}
+};
 
 var FS_FACADE_LoadErrors = [];
 
