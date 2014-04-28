@@ -5,12 +5,11 @@
   "main": "index.html",
   "window": {
     "title": "Kiplingv3",
-    "icon": "Kiplingv3_Icon2.png",
+    "icon": "Kipling.ico",
     "toolbar": true,
     "width": 870,
     "height": 730,
-    "min_width":535,
-    "icon":"Kiplingv3_Icon2.png"
+    "min_width":535
   },
   "nodejs": true,
   "dependencies": {
