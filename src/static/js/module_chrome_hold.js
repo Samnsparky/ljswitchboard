@@ -32,7 +32,7 @@ var SINGLE_DEVICE_FRAMEWORK_CONNECTOR = SINGLE_DEVICE_FRAMEWORK_DIR + '/framewor
 var SINGLE_DEVICE_FRAMEWORK_CSS = SINGLE_DEVICE_FRAMEWORK_DIR + '/style.css';
 var SINGLE_DEVICE_FRAMEWORK_DEVICE_CONSTANTS = SINGLE_DEVICE_FRAMEWORK_DIR + '/device_constants.js';
 
-// var OPERATION_FAIL_MESSAGE = handlebars.compile(
+// var OPERATION_FAIL_MESaSAGE = handlebars.compile(
 //     'Sorry, Kipling encountered an error. Please try again or contact ' + 
 //     'support@labjack.com. Error: {{.}}');
 var OPERATION_FAIL_MESSAGE = handlebars.compile(

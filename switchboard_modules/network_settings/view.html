@@ -37,76 +37,22 @@
 						<th class="userFeedback"/>
 					</thead>
 					<tbody style="background-color:transparent">
-						<tr id="ETHERNET_IP_VAL" class="networkSetting">
-							<td>IP:</td>
-							<td>
-								<span class="Auto_Value">0.0.0.0</span>
-								<div class="Manual_Value">
-									<input class="ipAddress" type="text" name="IP Address" placeholder="0.0.0.0">
-								</div>
-							</td>
-							<td class="alertCol">
-								<div class="alert alert-success">
-									<span class="messageIcon icon-checkmark-3"></span>
-								</div>
-							</td>
-						</tr>
-						<tr id="ETHERNET_SUBNET_VAL" class="networkSetting">
-							<td>Subnet:</td>
-							<td>
-								<span class="Auto_Value">0.0.0.0</span>
-								<div class="Manual_Value">
-									<input class="ipAddress" type="text" name="Subnet" placeholder="0.0.0.0">
-								</div>
-							</td>
-							<td class="alertCol">
-								<div class="alert alert-success">
-									<span class="messageIcon icon-checkmark-3"></span>
-								</div>
-							</td>
-						</tr>
-						<tr id="ETHERNET_GATEWAY_VAL" class="networkSetting">
-							<td>Gateway:</td>
-							<td>
-								<span class="Auto_Value">0.0.0.0</span>
-								<div class="Manual_Value">
-									<input class="ipAddress" type="text" name="Gateway" placeholder="0.0.0.0" checked>
-								</div>
-							</td>
-							<td class="alertCol">
-								<div class="alert alert-success">
-									<span class="messageIcon icon-checkmark-3"></span>
-								</div>
-							</td>
-						</tr>
-						<tr id="ETHERNET_DNS_VAL" class="networkSetting">
-							<td>DNS:</td>
-							<td>
-								<span class="Auto_Value">0.0.0.0</span>
-								<div class="Manual_Value">
-									<input class="ipAddress" type="text" name="DNS" placeholder="0.0.0.0">
-								</div>
-							</td>
-							<td class="alertCol">
-								<div class="alert alert-success">
-									<span class="messageIcon icon-checkmark-3"></span>
-								</div>
-							</td>
-						</tr>
-						<tr id="ETHERNET_ALTDNS_VAL" class="networkSetting">
-							<td>Alt-DNS:</td>
-							<td>
-								<span class="Auto_Value">0.0.0.0</span>
-								<div class="Manual_Value">
-									<input class="ipAddress" type="text" name="Alt-DNS" placeholder="0.0.0.0">
-								</div>
-							</td>
-							<td class="alertCol">
-								<div class="alert alert-success">
-									<span class="messageIcon icon-checkmark-3"></span>
-								</div>
-							</td>
-						</tr>
+						{{#each custom.ethernetIPRegisters}}
+							<tr id="{{name}}_VAL" class="networkSetting">
+									<td>{{humanName}}:</td>
+									<td>
+										<span class="Auto_Value">0.0.0.0</span>
+										<div class="Manual_Value">
+											<input class="ipAddress" type="text" name="{{humanName}}" placeholder="0.0.0.0">
+										</div>
+									</td>
+									<td class="alertCol">
+										<div class="alert alert-success">
+											<span class="messageIcon icon-checkmark-3"></span>
+										</div>
+									</td>
+								</tr>
+						{{/each}}
 					</tbody>
 				</table>
 				<div class="applyAndCancelButtons">

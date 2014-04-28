@@ -205,14 +205,24 @@ function module() {
         manualValEl.val('');
         manualValEl.trigger('change');
     }
-    this.getEthernetIPRegisterList = function() {
-        regList = [];
-        self.ethernetRegisters.forEach(function(reg) {
-            if((reg.type === 'ip') && (reg.isConfig)){
-                regList.push(reg.name);
+    this.getIPRegisters = function(constList, attribute) {
+        var regList = [];
+        constList.forEach(function(reg) {
+            if ((reg.type === 'ip') && (reg.isConfig)){
+                if ((attribute === '')||(typeof(attribute) === 'undefined')) {
+                    regList.push(reg);
+                } else {
+                    regList.push(reg[attribute]);
+                }
             }
         });
         return regList;
+    }
+    this.getWiFiIPRegisterList = function() {
+        return self.getIPRegisterList(self.wifiRegisters,'name');
+    }
+    this.getEthernetIPRegisterList = function() {
+        return self.getIPRegisterList(self.ethernetRegisters,'name');
     }
     this.clearNewEthernetSettings = function() {
         self.getEthernetIPRegisterList().forEach(function(regName){
@@ -329,7 +339,17 @@ function module() {
         onSuccess();
     };
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
+        setupBindings.forEach(function(setupBinding){
+            console.log('Addr',setupBinding.address,'Status',setupBinding.status,'Val',setupBinding.result);
+        });
+        
         // Load configuration data & customize view
+        self.moduleContext.ethernetIPRegisters = {}
+
+        // Get and save ethernetIPRegisterList
+        var ethernetIPRegisters = self.getIPRegisters(self.ethernetRegisters);
+        self.moduleContext.ethernetIPRegisters = ethernetIPRegisters;
+
         framework.setCustomContext(self.moduleContext);
         onSuccess();
     };
