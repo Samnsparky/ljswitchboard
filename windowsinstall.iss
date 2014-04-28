@@ -36,7 +36,7 @@ Source: "C:\Users\Rory\Desktop\rob_kipling_build\ljswitchboard\deploy\*"; DestDi
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{pf32}\{#MyAppName}\Kiplingv3_Icon2.ico"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{pf32}\{#MyAppName}\Kipling.ico"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{pf32}\{#MyAppName}\Kiplingv3_Icon2.ico"
 
 [Run]
