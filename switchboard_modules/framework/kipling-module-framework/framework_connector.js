@@ -125,19 +125,18 @@ $('#single-device-framework-obj').ready(function(){
     devices = keeper.getDevices(); 
 
     // Check for any load-errors
-    console.log('Not Starting...',fs_facade);
-    // var loadErrors = fs_facade.getLoadErrors();
-    // if(loadErrors.length > 0) {
-    //     loadErrors.forEach(function(data) {
-    //         console.log('Error Data: ', data);
-    //         showCriticalAlert(data);
-    //     });
-    //     var moduleName = LOADED_MODULE_INFO_OBJECT.name;
-    //     showCriticalAlert('Not Starting Module: ' + moduleName);
-    // } else {
-    //     // Run the framework if there aren't any load errors
-    //     sdFramework.runFramework();
-    // }
+    var loadErrors = fs_facade.getLoadErrors();
+    if(loadErrors.length > 0) {
+        loadErrors.forEach(function(data) {
+            console.log('Error Data: ', data);
+            showCriticalAlert(data);
+        });
+        var moduleName = LOADED_MODULE_INFO_OBJECT.name;
+        showCriticalAlert('Not Starting Module: ' + moduleName);
+    } else {
+        // Run the framework if there aren't any load errors
+        sdFramework.runFramework();
+    }
 });
 
 //End bracket for autoLinkToFramework
