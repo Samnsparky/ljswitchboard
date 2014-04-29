@@ -15,7 +15,8 @@ var labjack_driver = new labjack_nodejs.driver();
 
 var LJM_DT_T7 = labjack_nodejs.driver_const.LJM_DT_T7.toString();
 var DEVICE_TYPE_NAMES = dict({
-    '7': 'T7'
+    '7': 'T7',
+    '200': 'Digit'
 });
 
 var CONNECT_TYPE_USB = 1;
@@ -47,7 +48,23 @@ GET_SUBCLASS_FUNCTIONS['T7'] = function (device) {
 
         return subclass;
     }
+};
+GET_SUBCLASS_FUNCTIONS['Digit'] = function (device) {
+    var subclass = null;
+    return function () {
+        if (subclass === null) {
+            var digitHardware = device.read('HARDWARE_INSTALLED');
+            console.log('Digit HARDWARE_INSTALLED',digitHardware)
+            if(digitHardware)
+                subclass = 'YES';
+            else
+                subclass = 'idk';
+        }
+
+        return subclass;
+    }
 }
+
 
 
 /**
@@ -971,7 +988,12 @@ exports.getDevices = function (onError, onSuccess)
             async.eachSeries(
                 driverListing,
                 function (deviceInfo, callback) {
-                    finishDeviceRecord(listingDict, deviceInfo, callback);
+                    console.log('Found Device',deviceInfo);
+                    if(deviceInfo.deviceType == 7) {
+                        finishDeviceRecord(listingDict, deviceInfo, callback);
+                    } else {
+                        callback();
+                    }
                 },
                 function (err) {
                     if (err) {

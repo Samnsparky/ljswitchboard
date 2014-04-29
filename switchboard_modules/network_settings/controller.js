@@ -36,6 +36,8 @@ function module() {
 
     this.moduleContext = {};
 
+    this.activeDevice;
+
     this.formatIPAddress = function(info) {
         var ipAddress = info.value;
         var ipString = "";
@@ -291,8 +293,11 @@ function module() {
         });
 
         var addSmartBinding = function(regInfo) {
+            var binding = {};
             var format = undefined;
             var customFormatFunc = undefined;
+            var isPeriodic = (typeof(regInfo.isPeriodic) === 'boolean');
+            isPeriodic &= (regInfo.isPeriodic);
             if (regInfo.type === 'ip') {
                 format = 'customFormat';
                 customFormatFunc = self.formatIPAddress; 
@@ -306,14 +311,20 @@ function module() {
                 format = 'customFormat';
                 customFormatFunc = self.formatWifiStatus;
             }
-            smartBindings.push({
-                bindingName: regInfo.name, 
-                smartName: 'readRegister',
-                configCallback: genericConfigCallback,
-                periodicCallback: genericPeriodicCallback,
-                format: format,
-                customFormatFunc: customFormatFunc
-            });
+            
+            binding.bindingName = regInfo.name;
+            binding.format = format;
+            binding.customFormatFunc = customFormatFunc;
+            
+            if (isPeriodic) {
+                binding.smartName = 'readRegister';
+                binding.periodicCallback = genericPeriodicCallback;
+            } else {
+                binding.smartName = 'setupOnlyRegister';
+            }
+            binding.configCallback = genericConfigCallback;
+            smartBindings.push(binding);
+
         };
 
         // Add Ethernet readRegisters
@@ -335,6 +346,7 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
+        self.activeDevice = device;
         framework.clearConfigBindings();
         onSuccess();
     };
@@ -350,6 +362,11 @@ function module() {
         var ethernetIPRegisters = self.getIPRegisters(self.ethernetRegisters);
         self.moduleContext.ethernetIPRegisters = ethernetIPRegisters;
 
+        self.moduleContext.isPro = null;
+        if (self.activeDevice.getSubclass()) {
+            self.moduleContext.isPro = true
+        }
+        console.log('Device Selected:',self.activeDevice.getSubclass());
         framework.setCustomContext(self.moduleContext);
         onSuccess();
     };
@@ -392,13 +409,5 @@ function module() {
     };
 
     var self = this;
-}
-function ValidateIPaddress(inputText)  {  
-    var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;  
-    if(inputText.value.match(ipformat))  {  
-        console.log('Valid IP Address',inputText);
-    } else {  
-        console.log('Invalid IP Address',inputText); 
-    }  
 }
 
