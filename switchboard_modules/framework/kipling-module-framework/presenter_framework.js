@@ -267,6 +267,8 @@ function Framework() {
     var moduleInfoObj;
     var moduleConstants;
     var module;
+
+    //Constants for auto-debugging on slow DAQ loops
     var iterationTime;
     var ljmDriverLogEnabled = false;
 
@@ -295,19 +297,69 @@ function Framework() {
     this.moduleConstants = moduleConstants;
     this.module = module;
 
+    //Constants for auto-debugging on slow DAQ loops
     var moduleStartTimeObj = new Date();
     this.iterationTime = iterationTime;
     this.iterationTime = moduleStartTimeObj.valueOf();
     this.ljmDriverLogEnabled = ljmDriverLogEnabled;
-
     this.sdFrameworkDebug = true;
+    this.sdFrameworkDebugLoopErrors = false;
+    this.sdFrameworkDebugTiming = false;
+    this.sdFrameworkDebugDAQLoopMonitor = true;
+    this.numContinuousRegLoopIterations = 0;
+    this.loopErrorEncountered = false;
+    this.loopErrors = [];
+    this.daqLoopFinished = false;
+    this.daqLoopMonitorTimer;
+    this.daqLoopStatus = 'un-initialized';
 
     var self = this;
-    this.print = function(functionName,info) {
+    this.enableTimingAnalysis = function() {
+        self.sdFrameworkDebugTiming = true;
+    };
+    this.disableLoopTimingAnalysis = function() {
+        self.sdFrameworkDebugTiming = true;
+    };
+    this.enableLoopErrorAnalysis = function() {
+        self.sdFrameworkDebugTiming = true;
+    };
+    this.disableLoopErrorAnalysis = function() {
+        self.sdFrameworkDebugTiming = false;
+    };
+    this.print = function(functionName,info,errName) {
+        if(typeof(errName) === 'undefined') {
+            errName = 'sdFrameworkDebug';
+        }
         if(self.sdFrameworkDebug) {
-            console.log('sdFrameworkDebug',self.moduleName,functionName,info);
+            var fnDefined = (typeof(functionName) !== 'undefined');
+            var infoDefined = (typeof(info) !== 'undefined');
+            if(fnDefined && infoDefined) {
+                console.log(errName,self.moduleName,functionName,info);
+            } else if (!fnDefined && infoDefined) {
+                console.log(errName,self.moduleName,info);
+            } else if (fnDefined && !infoDefined) {
+                console.log(errName,self.moduleName,functionName);
+            } else {
+                console.log(errName,self.moduleName);
+            }
+            
+        }
+    };
+    this.printDAQLoopInfo = function(functionName,info) {
+        if(self.sdFrameworkDebugDAQLoopMonitor) {
+            self.print(functionName,info,'sdFrameworkDebugTiming');
         }
     }
+    this.printTimingInfo = function(functionName,info) {
+        if(self.sdFrameworkDebugTiming) {
+            self.print(functionName,info,'sdFrameworkDebugTiming');
+        }
+    }
+    this.printLoopErrors = function(functionName,info) {
+        if(self.sdFrameworkDebugLoopErrors) {
+            self.print(functionName,info,'sdFrameworkDebugLoopErrors');
+        }
+    };
 
     this._SetJQuery = function(newJQuery) {
         jquery = newJQuery;
@@ -1853,18 +1905,27 @@ function Framework() {
     this.printCurTime = function(message) {
         var d = new Date();
         console.log(message,d.valueOf() - self.iterationTime - self.refreshRate);
+    };
+    this.daqMonitor = function() {
+        if(!self.daqLoopFinished) {
+            self.printDAQLoopInfo('DAQ-Loop-Lock-Detected',self.daqLoopStatus);
+        }
     }
     this.qConfigureTimer = function() {
         var innerDeferred = q.defer();
         var d = new Date();
         var curTime = d.valueOf();
         var elapsedTime = curTime - self.iterationTime - self.refreshRate;
-        console.log('elapsedTime',elapsedTime);
+        self.printTimingInfo('elapsedTime',elapsedTime);
         var delayTime = self.refreshRate;
 
         if ((self.refreshRate - elapsedTime) < 0) {
-            console.log('sdFramework DAQ Loop is slow...',elapsedTime);
-            device_controller.ljm_driver.readLibrarySync('LJM_DEBUG_LOG_MODE')
+            if(self.loopErrorEncountered) {
+                console.log('sdFramework DAQ Loop is slow (Due to error)...',elapsedTime);
+            } else {
+                console.log('sdFramework DAQ Loop is slow (Not due to error)...',elapsedTime);
+            }
+            device_controller.ljm_driver.readLibrarySync('LJM_DEBUG_LOG_MODE');
             if(!self.ljmDriverLogEnabled) {
                 console.log('enabling LJM-log');
                 self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',2);
@@ -1873,15 +1934,40 @@ function Framework() {
                 self.ljmDriver.logSSync(2,'initDebug: Slow DAQ Loop: '+elapsedTime.toString());
                 self.ljmDriver.logSSync(2,self.moduleName);
                 self.ljmDriver.logSSync(2,'TCP_SEND_RECEIVE_TIMEOUT: '+confTimeout.toString());
+                
                 self.ljmDriverLogEnabled = true;
+                self.numContinuousRegLoopIterations = 0;
             } else {
                 self.ljmDriver.logSSync(2,'Slow DAQ Loop: '+elapsedTime.toString());
-
+                self.numContinuousRegLoopIterations = 0;
             }
             delayTime = 10;
+        } else {
+            if(self.ljmDriverLogEnabled) {
+                console.log('sdFramework DAQ Loop is running normally...',elapsedTime);
+                if(self.numContinuousRegLoopIterations > 5) {
+                    var numIt = self.numContinuousRegLoopIterations;
+                    console.log('disabling LJM-log,  loop is running smoothly again');
+                    self.ljmDriver.logSSync(2,'Slow DAQ Loop (RESOLVED) after: '+numIt.toString());
+                    self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',1);
+                    self.numContinuousRegLoopIterations = 0;
+                    self.ljmDriverLogEnabled = false;
+                } else {
+                    self.numContinuousRegLoopIterations += 1;
+                }
+            }
         }
-        self.print('configuring timer',elapsedTime);
         self.iterationTime = curTime;
+
+        if(self.loopErrorEncountered) {
+            self.loopErrors.forEach(function(error){
+                self.printLoopErrors('Loop Errors',error);
+            });
+        }
+        // Clear loop errors
+        self.loopErrorEncountered = false;
+        self.loopErrors = [];
+        self.daqLoopStatus = 'timerConfigured';
         setTimeout(self.loopIteration, self.refreshRate);
         innerDeferred.resolve();
         return innerDeferred.promise;
@@ -1896,23 +1982,59 @@ function Framework() {
     **/
     this.loopIteration = function () {
         var deferred = q.defer();
+        self.daqLoopStatus = 'startingLoop';
+        self.daqLoopFinished = false;
+        self.daqLoopMonitorTimer = setTimeout(self.daqMonitor, 1000);
 
         if (!self.runLoop) {
             deferred.reject('Loop not running.');
             return deferred.promise;
         }
-
+        var handleIOError = function(details) {
+            var innerDeferred = q.defer();
+            if(details !== 'delay') {
+                self.daqLoopStatus = 'handleIOError';
+                self.fire(
+                    'onRefreshError',
+                    [ self.readBindings , details ],
+                    function (shouldContinue) { 
+                        self.loopErrorEncountered = true;
+                        self.loopErrors.push({details:details,func:'handleIOError'});
+                        self.runLoop = shouldContinue; 
+                        if(shouldContinue) {
+                            self.printLoopErrors(
+                                'onRefreshError b/c loopIteration.handleIOError',
+                                details
+                            );
+                            innerDeferred.resolve();
+                        } else {
+                            innerDeferred.reject();
+                        }
+                    }
+                );
+            } else {
+                console.log('in handleIOError', details);
+                innerDeferred.reject(details);
+            }
+            return innerDeferred.promise;
+        };
         var reportError = function (details) {
             var innerDeferred = q.defer();
             if(details !== 'delay') {
+                self.daqLoopStatus = 'reportError';
                 // TODO: Get register names from readBindings.
                 self.fire(
                     'onRefreshError',
                     [ self.readBindings , details ],
                     function (shouldContinue) { 
+                        self.loopErrorEncountered = true;
+                        self.loopErrors.push({details:details,func:'reportError'});
                         self.runLoop = shouldContinue; 
                         if(shouldContinue) {
-                            self.print('onRefreshError',details);
+                            self.printLoopErrors(
+                                'onRefreshError b/c loopIteration.reportError',
+                                details
+                            );
                             innerDeferred.resolve();
                         } else {
                             innerDeferred.reject();
@@ -1927,6 +2049,7 @@ function Framework() {
 
         var getNeededAddresses = function () {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'getNeededAddresses';
             var addresses = [];
             var formats = [];
             var customFormatFuncs = [];
@@ -1977,6 +2100,7 @@ function Framework() {
 
         var alertRefresh = function (bindingsInfo) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'alertRefresh';
             self.fire(
                 'onRefresh',
                 [ bindingsInfo ],
@@ -1987,6 +2111,9 @@ function Framework() {
         };
         var checkModuleStatus = function(bindingsInfo) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'checkModuleStatus';
+            self.daqLoopFinished = true;
+            clearTimeout(self.daqLoopMonitorTimer);
             if(self.moduleName === getActiveTabID()) {
                 innerDeferred.resolve(bindingsInfo);
             } else {
@@ -1997,6 +2124,7 @@ function Framework() {
 
         var requestDeviceValues = function (bindingsInfo) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'requestDeviceValues';
             var device = self.getSelectedDevice();
             var addresses = bindingsInfo.addresses;
             var formats = bindingsInfo.formats;
@@ -2032,6 +2160,7 @@ function Framework() {
 
         var processDeviceValues = function (valuesInfo) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'processDeviceValues';
             var values = valuesInfo.values;
             var addresses = valuesInfo.addresses;
             var formats = valuesInfo.formats;
@@ -2109,6 +2238,7 @@ function Framework() {
 
         var alertOn = function (valuesDict) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'alertOn';
             self._OnRead(valuesDict);
             innerDeferred.resolve(valuesDict);
             return innerDeferred.promise;
@@ -2116,6 +2246,7 @@ function Framework() {
 
         var alertRefreshed = function (valuesDict) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'alertRefreshed';
             self.fire(
                 'onRefreshed',
                 [ valuesDict ],
@@ -2126,6 +2257,7 @@ function Framework() {
         };
         var handleDelayErr = function (details) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'handleDelayErr';
             if(details === 'delay') {
                 innerDeferred.resolve();
             } else {
@@ -2140,7 +2272,7 @@ function Framework() {
         //checkModuleStatus()
         getNeededAddresses()
         .then(alertRefresh, reportError)
-        .then(requestDeviceValues, reportError)
+        .then(requestDeviceValues, handleIOError)
         .then(processDeviceValues, reportError)
         .then(alertOn, reportError)
         .then(alertRefreshed, reportError)
