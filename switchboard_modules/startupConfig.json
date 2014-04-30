@@ -58,7 +58,7 @@
     ],
     "displayDevTools": true,
     "overrideAutoModuleLoad": true,
-    "moduleName": "network_settings",
+    "moduleName": "analog_inputs_fw",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }

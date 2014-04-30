@@ -1852,32 +1852,37 @@ function Framework() {
     var startLoop = this.startLoop;
     this.printCurTime = function(message) {
         var d = new Date();
-        console.log(message,d.valueOf() - self.iterationTime);
+        console.log(message,d.valueOf() - self.iterationTime - self.refreshRate);
     }
     this.qConfigureTimer = function() {
         var innerDeferred = q.defer();
         var d = new Date();
         var curTime = d.valueOf();
-        var elapsedTime = curTime - self.iterationTime;
-        var delayTime = self.refreshRate - elapsedTime;
+        var elapsedTime = curTime - self.iterationTime - self.refreshRate;
+        console.log('elapsedTime',elapsedTime);
+        var delayTime = self.refreshRate;
 
-        if (delayTime < 10) {
+        if ((self.refreshRate - elapsedTime) < 0) {
             console.log('sdFramework DAQ Loop is slow...',elapsedTime);
             device_controller.ljm_driver.readLibrarySync('LJM_DEBUG_LOG_MODE')
             if(!self.ljmDriverLogEnabled) {
                 console.log('enabling LJM-log');
                 self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',2);
                 self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_LEVEL',2);
+                var confTimeout = self.ljmDriver.readLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS');
                 self.ljmDriver.logSSync(2,'initDebug: Slow DAQ Loop: '+elapsedTime.toString());
+                self.ljmDriver.logSSync(2,self.moduleName);
+                self.ljmDriver.logSSync(2,'TCP_SEND_RECEIVE_TIMEOUT: '+confTimeout.toString());
                 self.ljmDriverLogEnabled = true;
             } else {
                 self.ljmDriver.logSSync(2,'Slow DAQ Loop: '+elapsedTime.toString());
+
             }
             delayTime = 10;
         }
-        // console.log('configuring timer',delayTime);
+        self.print('configuring timer',elapsedTime);
         self.iterationTime = curTime;
-        setTimeout(self.loopIteration, delayTime);
+        setTimeout(self.loopIteration, self.refreshRate);
         innerDeferred.resolve();
         return innerDeferred.promise;
     };
