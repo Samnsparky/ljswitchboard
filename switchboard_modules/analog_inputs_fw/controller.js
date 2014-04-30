@@ -130,7 +130,8 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onModuleLoaded = function(framework, onError, onSuccess) {
-        framework.enableTimingAnalysis();
+        framework.enableLoopTimingAnalysis();
+        framework.enableLoopMonitorAnalysis();
         // Define the module's setupBindings
         var setupBindings = [
             {bindingClass: baseReg+'_EF_TYPE', binding: baseReg+'_EF_TYPE', direction: 'read'},

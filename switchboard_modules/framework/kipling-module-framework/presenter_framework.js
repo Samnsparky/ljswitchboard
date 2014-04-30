@@ -314,7 +314,7 @@ function Framework() {
     this.daqLoopStatus = 'un-initialized';
 
     var self = this;
-    this.enableTimingAnalysis = function() {
+    this.enableLoopTimingAnalysis = function() {
         self.sdFrameworkDebugTiming = true;
     };
     this.disableLoopTimingAnalysis = function() {
@@ -325,6 +325,12 @@ function Framework() {
     };
     this.disableLoopErrorAnalysis = function() {
         self.sdFrameworkDebugTiming = false;
+    };
+    this.enableLoopMonitorAnalysis = function() {
+        self.sdFrameworkDebugDAQLoopMonitor = true;
+    };
+    this.disableLoopMonitorAnalysis = function() {
+        self.sdFrameworkDebugDAQLoopMonitor = false;
     };
     this.print = function(functionName,info,errName) {
         if(typeof(errName) === 'undefined') {
@@ -347,7 +353,7 @@ function Framework() {
     };
     this.printDAQLoopInfo = function(functionName,info) {
         if(self.sdFrameworkDebugDAQLoopMonitor) {
-            self.print(functionName,info,'sdFrameworkDebugTiming');
+            self.print(functionName,info,'sdFrameworkDebugDAQLoopMonitor');
         }
     }
     this.printTimingInfo = function(functionName,info) {
