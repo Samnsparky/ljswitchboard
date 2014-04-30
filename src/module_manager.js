@@ -42,10 +42,8 @@ function createDeviceMatcher (device) {
 
 			var hasSubclass = spec.subclass === undefined;
 			hasSubclass = hasSubclass || spec.subclass.some(function (subclass){
-				console.log(selector.subclasses);
 				return selector.subclasses.indexOf(subclass) != -1;
 			});
-			console.log('type', matchesType,'fw', hasMinFirmware,'subClass', hasSubclass);
 			return matchesType && hasMinFirmware && hasSubclass;
 		});
 	};
@@ -96,7 +94,7 @@ exports.getActiveModules = function(onError, onSuccess)
 {
     fs_facade.getLoadedModulesInfo(onError, function(modules)
     {
-    	console.log(modules);
+    	// console.log(modules);
         var activeModules = modules.filter(function(e) {return e.active;});
         onSuccess(activeModules);
     });

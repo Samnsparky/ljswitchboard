@@ -1,5 +1,5 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "ljmDeviceParameters": 
     [
         {
@@ -7,31 +7,7 @@
             "connectionType":"Ethernet"
         },
         {
-            "serialNumber":"470010868",
-            "connectionType":"Ethernet"
-        },
-        {
-            "serialNumber":"470011064",
-            "connectionType":"Ethernet"
-        },
-        {
-            "serialNumber":"470010604",
-            "connectionType":"Ethernet"
-        },
-        {
-            "serialNumber":"470010117",
-            "connectionType":"Ethernet"
-        },
-        {
-            "serialNumber":"470010704",
-            "connectionType":"Wifi"
-        },
-        {
-            "serialNumber":"470010704",
-            "connectionType":"USB"
-        },
-        {
-            "serialNumber":"470010704",
+            "serialNumber":"470010414",
             "connectionType":"Ethernet"
         }
     ],
@@ -80,7 +56,7 @@
             "connectionType":"USB"
         }
     ],
-    "displayDevTools": false,
+    "displayDevTools": true,
     "overrideAutoModuleLoad": true,
     "moduleName": "network_settings",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"

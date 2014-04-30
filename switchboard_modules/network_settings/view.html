@@ -20,15 +20,22 @@
 			</div>
 			<hr>
 			<div class="configSettingsDiv">
-				<div class="btn-group">
-					<a class="btn dropdown-toggle dhcpSelectionButton" data-toggle="dropdown" href="#">
-						<span class="btnText">DHCP Auto</span>
-						<span class="caret"></span>
-					</a>
-					<ul class="dropdown-menu">
-						<li><a><span id="DHCP_Auto">DHCP Auto</span></a></li>
-						<li><a><span id="DHCP_Manual">DHCP Manual</span></a></li>
-					</ul>
+				<div id="ethernetDHCPSelect" class="row dhcpSelectRow">
+					<div id="ethernet-DHCP-Select-Toggle" class="btn-group span11 dhcpSelectSpan">
+						<a class="btn dropdown-toggle dhcpSelectionButton" data-toggle="dropdown" href="#">
+							<span class="btnText">DHCP Auto</span>
+							<span class="caret"></span>
+						</a>
+						<ul class="dropdown-menu">
+							<li><a><span id="DHCP_Auto">DHCP Auto</span></a></li>
+							<li><a><span id="DHCP_Manual">DHCP Manual</span></a></li>
+						</ul>
+					</div>
+					<div class="dhcpAlert span1">
+						<div class="alert alert-success">
+							<span class="messageIcon icon-checkmark-3"></span>
+						</div>
+					</div>
 				</div>
 				<table class="table table-non-striped configSettingsTable">
 					<thead>
@@ -39,19 +46,19 @@
 					<tbody style="background-color:transparent">
 						{{#each custom.ethernetIPRegisters}}
 							<tr id="{{name}}_VAL" class="networkSetting">
-									<td>{{humanName}}:</td>
-									<td>
-										<span class="Auto_Value">0.0.0.0</span>
-										<div class="Manual_Value">
-											<input class="ipAddress" type="text" name="{{humanName}}" placeholder="0.0.0.0">
-										</div>
-									</td>
-									<td class="alertCol">
-										<div class="alert alert-success">
-											<span class="messageIcon icon-checkmark-3"></span>
-										</div>
-									</td>
-								</tr>
+								<td>{{humanName}}:</td>
+								<td>
+									<span class="Auto_Value {{name}}_AUTO_VAL">0.0.0.0</span>
+									<div class="Manual_Value">
+										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="0.0.0.0">
+									</div>
+								</td>
+								<td class="alertCol">
+									<div class="alert alert-success">
+										<span class="messageIcon icon-checkmark-3"></span>
+									</div>
+								</td>
+							</tr>
 						{{/each}}
 					</tbody>
 				</table>
@@ -74,6 +81,107 @@
 		<h3>WiFi</h3>
 		<hr>
 		<div id="wifi_settings">
+			<div class="settingsTopDiv">
+				<div class="currentStatusInfo">
+					<b><span>Connection Status: </span><span id="wifi_connection_status">Connected</span></b>
+					<div class="powerButtonDiv">
+						<div class="btn-group">
+							<button id="wifiPowerButton" class="btn" title="Turn WiFi Off">
+								<span class="buttonText">Turn WiFi Off</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="connectionStatusMessage">
+					<span id="ethernetStatusMessage">WiFi is connected to AAA and has theIP address 192.168.1.153.<span>
+				</div>
+			</div>
+			<hr>
+			<div class="configSettingsDiv">
+				<table class="table table-non-striped configSettingsTable">
+					<thead>
+						<th class="attribute"/>
+						<th class="input"/>
+						<th class="userFeedback"/>
+					</thead>
+					<tbody style="background-color:transparent">
+						<tr id="WIFI_SSID_DEFAULT_VAL" class="networkSetting">
+							<td>Network Name:</td>
+							<td>
+								<input class="WIFI_SSID_DEFAULT_AUTO_VAL" type="text" name="Network Name" placeholder="">
+							</td>
+							<td class="alertCol">
+								<div class="alert alert-success">
+									<span class="messageIcon icon-checkmark-3"></span>
+								</div>
+							</td>
+						</tr>
+						<tr id="WIFI_PASSWORD_DEFAULT_VAL" class="networkSetting">
+							<td>Password:</td>
+							<td>
+								<input class="WIFI_PASSWORD_DEFAULT_AUTO_VAL" type="text" name="{{humanName}}" placeholder="********">
+							</td>
+							<td class="alertCol">
+								<div class="alert alert-success">
+									<span class="messageIcon icon-checkmark-3"></span>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<div id="wifiDHCPSelect" class="row dhcpSelectRow">
+					<div id="wifi-DHCP-Select-Toggle" class="btn-group span11 dhcpSelectSpan">
+						<a class="btn dropdown-toggle dhcpSelectionButton" data-toggle="dropdown" href="#">
+							<span class="btnText">DHCP Auto</span>
+							<span class="caret"></span>
+						</a>
+						<ul class="dropdown-menu">
+							<li><a><span id="DHCP_Auto">DHCP Auto</span></a></li>
+							<li><a><span id="DHCP_Manual">DHCP Manual</span></a></li>
+						</ul>
+					</div>
+					<div class="dhcpAlert span1">
+						<div class="alert alert-success">
+							<span class="messageIcon icon-checkmark-3"></span>
+						</div>
+					</div>
+				</div>
+				<table class="table table-non-striped configSettingsTable">
+					<thead>
+						<th class="attribute"/>
+						<th class="input"/>
+						<th class="userFeedback"/>
+					</thead>
+					<tbody style="background-color:transparent">
+						{{#each custom.wifiIPRegisters}}
+							<tr id="{{name}}_VAL" class="networkSetting">
+								<td>{{humanName}}:</td>
+								<td>
+									<span class="Auto_Value {{name}}_AUTO_VAL">0.0.0.0</span>
+									<div class="Manual_Value">
+										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="0.0.0.0">
+									</div>
+								</td>
+								<td class="alertCol">
+									<div class="alert alert-success">
+										<span class="messageIcon icon-checkmark-3"></span>
+									</div>
+								</td>
+							</tr>
+						{{/each}}
+					</tbody>
+				</table>
+				<div class="applyAndCancelButtons">
+						<div class="btn-group">
+							<button id="wifiApplyButton" class="btn" title="Apply Changes">
+								<span class="buttonText">Apply</span>
+							</button>
+							<button id="wifiCancelButton" class="btn" title="Cancel Changes">
+								<span class="buttonText">Cancel</span>
+							</button>
+						</div>
+					</div>
+			</div>
 		</div>
 	</div>
 	{{/if}}

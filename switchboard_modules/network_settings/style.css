@@ -8,22 +8,29 @@
 	float:right;
 }
 .dhcpSelectionButton {
-	width:250px;
+	width:286px;
+}
+.dhcpSelectRow {
+	width:364px;
 }
 .configSettingsDiv .dropdown-menu{
 	left: 114px;
 }
+.configSettingsDiv .row {
+	margin-left:0px;
+}
 .configSettingsTable {
-	width:278px;
+	width:350px;
 }
 .configSettingsTable .attribute {
-	width:25%;
+	width: 133px;
 }
 .configSettingsTable .input {
-	width:75%;
+	/*width:75%;*/
 }
 .configSettingsTable .userFeedback {
-	width:10px;
+	min-width: 30px;
+	width:30px;
 }
 .table {
 	margin-bottom: 0px;
@@ -39,15 +46,28 @@
 .networkSetting {
 }
 .networkSetting td {
-	line-height: 33px;
+	line-height: 34px;
 }
 .networkSetting .alertCol {
-	position: absolute;
+	/*position: absolute;*/
 }
 .networkSetting .alert {
-	margin-bottom: 0px;
+	margin-bottom: -2px;
 	padding: 0px;
+	width: 15px;
+	left:15px;
 	display:none;
+}
+.configSettingsDiv .dhcpAlert {
+	margin-bottom: -2px;
+	padding: 0px;
+	width: 17px;
+	left:15px;
+	height: 33px;
+	/*display:none;*/
+}
+.configSettingsDiv .dhcpAlert .alert{
+	padding:5px 1px 5px 1px;
 }
 #ethernet_settings {
 	/*box-shadow: 1px 1px 5px black;

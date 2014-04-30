@@ -22,9 +22,9 @@
     ],
     "wifiRegisters": [
         {"name":"POWER_WIFI","title":"","heading":"","id":"","type":"status"},
-        {"name":"WIFI_IP","title":"","heading":"","id":"","type":"ip","isConfig":true},
-        {"name":"WIFI_SUBNET","title":"","heading":"","id":"","type":"ip","isConfig":true},
-        {"name":"WIFI_GATEWAY","title":"","heading":"","id":"","type":"ip","isConfig":true},
+        {"name":"WIFI_IP","title":"","humanName":"IP","heading":"","id":"","type":"ip","isConfig":true},
+        {"name":"WIFI_SUBNET","title":"","humanName":"Subnet","heading":"","id":"","type":"ip","isConfig":true},
+        {"name":"WIFI_GATEWAY","title":"","humanName":"Gateway","heading":"","id":"","type":"ip","isConfig":true},
         {"name":"WIFI_DHCP_ENABLE","title":"","heading":"","id":"","type":"status","isConfig":true},
         {"name":"POWER_WIFI_DEFAULT","title":"","heading":"","id":"","type":"status"},
         {"name":"WIFI_IP_DEFAULT","title":"","heading":"","id":"","type":"ip"},

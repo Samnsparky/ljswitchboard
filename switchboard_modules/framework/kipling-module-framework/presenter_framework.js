@@ -267,6 +267,8 @@ function Framework() {
     var moduleInfoObj;
     var moduleConstants;
     var module;
+    var iterationTime;
+    var ljmDriverLogEnabled = false;
 
     this.deviceSelectionListenersAttached = deviceSelectionListenersAttached;
     this.jquery = jquery;
@@ -293,7 +295,19 @@ function Framework() {
     this.moduleConstants = moduleConstants;
     this.module = module;
 
+    var moduleStartTimeObj = new Date();
+    this.iterationTime = iterationTime;
+    this.iterationTime = moduleStartTimeObj.valueOf();
+    this.ljmDriverLogEnabled = ljmDriverLogEnabled;
+
+    this.sdFrameworkDebug = true;
+
     var self = this;
+    this.print = function(functionName,info) {
+        if(self.sdFrameworkDebug) {
+            console.log('sdFrameworkDebug',self.moduleName,functionName,info);
+        }
+    }
 
     this._SetJQuery = function(newJQuery) {
         jquery = newJQuery;
@@ -551,6 +565,15 @@ function Framework() {
 
         //clean up module's third party libraries
         self.unloadModuleLibraries(self.moduleInfoObj.third_party_code_unload);
+
+        //If LJM's debug log was enabled, disable it
+        if(self.ljmDriverLogEnabled) {
+            console.log('disabling LJM-log');
+            console.log('File:',self.ljmDriver.readLibrarySync('LJM_DEBUG_LOG_FILE'));
+            self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',1);
+            self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_LEVEL',10);
+            self.ljmDriverLogEnabled = false;
+        }
 
         //Inform the module that it has been unloaded.
         self.fire(
@@ -906,6 +929,8 @@ function Framework() {
             setupBinding.binding = bindingName;
             setupBinding.direction = 'read';
             setupBinding.callback = newSmartBinding.configCallback;
+            setupBinding.format = newSmartBinding.format;
+            setupBinding.formatFunc = newSmartBinding.customFormatFunc;
             
             if(typeof(newSmartBinding.configCallback) === 'function') {
                 setupBinding.execCallback = true;
@@ -921,6 +946,8 @@ function Framework() {
             setupBinding.binding = bindingName;
             setupBinding.direction = 'read';
             setupBinding.callback = newSmartBinding.configCallback;
+            setupBinding.format = newSmartBinding.format;
+            setupBinding.formatFunc = newSmartBinding.customFormatFunc;
             
             if(typeof(newSmartBinding.configCallback) === 'function') {
                 setupBinding.execCallback = true;
@@ -993,6 +1020,19 @@ function Framework() {
                 onErrorHandle
             );
             return;
+        }
+        // if an output format isn't defined define the default
+        if (newBinding.format === undefined) {
+            newBinding.format = '%.4f';
+        }
+
+        // if a customFormatFunc isn't defined define a dummy function 
+        if (newBinding.formatFunc === undefined) {
+            newBinding.formatFunc = function(rawReading){
+                console.log('Here, val:',rawReading);
+                var retStr = "'customFormatFunc' NotDefined";
+                return retStr;
+            };
         }
 
         var isWrite = newBinding.direction === 'write';
@@ -1085,6 +1125,8 @@ function Framework() {
         var saveSetupBindings = function(setupInfo) {
             var innerDeferred = q.defer();
             self.setupBindings.forEach(function(binding, index){
+                setupInfo.formats.push(binding.format);
+                setupInfo.formatFuncs.push(binding.formatFunc);
                 setupInfo.bindingClasses.push(binding.bindingClass);
                 setupInfo.addresses.push(binding.binding);
                 setupInfo.numValues.push(1);
@@ -1129,6 +1171,7 @@ function Framework() {
                 var result = {
                     status: 'success',
                     result: -1,
+                    formattedResult: '-1',
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
@@ -1143,6 +1186,7 @@ function Framework() {
                 var result = {
                     status: 'error',
                     result: error,
+                    formattedResult: null,
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
@@ -1156,9 +1200,25 @@ function Framework() {
         function createSuccessfulReadFunc (ioDeferred, binding, results) {
             return function (value) {
                 // console.log('Successful Read',value);
+                var formattedValue = '';
+                var curFormat = binding.format;
+                if(typeof(value) === 'number') {
+                    if(curFormat !== 'customFormat') {
+                        formattedValue = sprintf(curFormat, value);
+                    } else {
+                        formattedValue = binding.formatFunc({
+                            value: value,
+                            address: binding.binding,
+                            binding: binding
+                        });
+                    }
+                } else {
+                    formattedValue = value;
+                }
                 var result = {
                     status: 'success',
                     result: value,
+                    formattedResult: formattedValue,
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
@@ -1175,6 +1235,7 @@ function Framework() {
                 var result = {
                     status: 'error',
                     result: error,
+                    formattedResult: null,
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
@@ -1789,10 +1850,34 @@ function Framework() {
         self.loopIteration();
     };
     var startLoop = this.startLoop;
-
+    this.printCurTime = function(message) {
+        var d = new Date();
+        console.log(message,d.valueOf() - self.iterationTime);
+    }
     this.qConfigureTimer = function() {
         var innerDeferred = q.defer();
-        setTimeout(self.loopIteration, self.refreshRate);
+        var d = new Date();
+        var curTime = d.valueOf();
+        var elapsedTime = curTime - self.iterationTime;
+        var delayTime = self.refreshRate - elapsedTime;
+
+        if (delayTime < 10) {
+            console.log('sdFramework DAQ Loop is slow...',elapsedTime);
+            device_controller.ljm_driver.readLibrarySync('LJM_DEBUG_LOG_MODE')
+            if(!self.ljmDriverLogEnabled) {
+                console.log('enabling LJM-log');
+                self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',2);
+                self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_LEVEL',2);
+                self.ljmDriver.logSSync(2,'initDebug: Slow DAQ Loop: '+elapsedTime.toString());
+                self.ljmDriverLogEnabled = true;
+            } else {
+                self.ljmDriver.logSSync(2,'Slow DAQ Loop: '+elapsedTime.toString());
+            }
+            delayTime = 10;
+        }
+        // console.log('configuring timer',delayTime);
+        self.iterationTime = curTime;
+        setTimeout(self.loopIteration, delayTime);
         innerDeferred.resolve();
         return innerDeferred.promise;
     };
@@ -1819,9 +1904,16 @@ function Framework() {
                 self.fire(
                     'onRefreshError',
                     [ self.readBindings , details ],
-                    function (shouldContinue) { self.runLoop = shouldContinue; }
+                    function (shouldContinue) { 
+                        self.runLoop = shouldContinue; 
+                        if(shouldContinue) {
+                            self.print('onRefreshError',details);
+                            innerDeferred.resolve();
+                        } else {
+                            innerDeferred.reject();
+                        }
+                    }
                 );
-                deferred.reject(details);
             } else {
                 innerDeferred.reject(details);
             }
@@ -2032,7 +2124,7 @@ function Framework() {
             if(details === 'delay') {
                 innerDeferred.resolve();
             } else {
-                innerDeferred.reject();
+                innerDeferred.resolve();
             }
             return innerDeferred.promise;
         };
@@ -2067,22 +2159,24 @@ function Framework() {
 
     this._OnRead = function (valueReadFromDevice) {
         var jquery = self.jquery;
-        self.readBindings.forEach(function (bindingInfo, template) {
-            var bindingName = bindingInfo.binding;
-            var valRead = valueReadFromDevice.get(bindingName.toString());
-            if (valRead !== undefined) {
-                var jquerySelector = '#' + bindingInfo.template;
-                jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
-            }
-        });
+        if(valueReadFromDevice !== undefined) {
+            self.readBindings.forEach(function (bindingInfo, template) {
+                var bindingName = bindingInfo.binding;
+                var valRead = valueReadFromDevice.get(bindingName.toString());
+                if (valRead !== undefined) {
+                    var jquerySelector = '#' + bindingInfo.template;
+                    jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
+                }
+            });
+        }
     };
-    var _OnRead = _OnRead;
+    var _OnRead = this._OnRead;
 
     this._OnConfigControlEvent = function (event) {
         self.fire('onRegisterWrite', [event]);
         self.fire('onRegisterWritten', [event]);
     };
-    var _OnConfigControlEvent = _OnConfigControlEvent;
+    var _OnConfigControlEvent = this._OnConfigControlEvent;
 
     this.configFramework = function(viewLoc) {
         userViewFile = viewLoc;
@@ -2241,3 +2335,4 @@ try {
 // console.log('initializing framework & module');
 // Initialize the framework
 var sdFramework = new Framework();
+sdFramework.ljmDriver = device_controller.ljm_driver;

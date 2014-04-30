@@ -473,14 +473,14 @@ function module() {
                 format: 'customFormat', 
                 customFormatFunc: self.ainResultUpdate
             },
-            {
-                // Define binding to automatically read AINx_BINARY Registers.
-                bindingClass: baseReg+'_BINARY', 
-                template: baseReg+'_BINARY',   
-                binding: baseReg+'_BINARY',    
-                direction: 'read',  
-                format: '%d'
-            },
+            // {
+            //     // Define binding to automatically read AINx_BINARY Registers.
+            //     bindingClass: baseReg+'_BINARY', 
+            //     template: baseReg+'_BINARY',   
+            //     binding: baseReg+'_BINARY',    
+            //     direction: 'read',  
+            //     format: '%d'
+            // },
             {
                 // Define binding to handle AIN_ALL_RANGE user inputs.
                 bindingClass: 'all-ain-range-select',  
@@ -619,6 +619,7 @@ function module() {
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
+        // console.log('Refreshed!',framework.moduleName);
         onSuccess();
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
@@ -637,7 +638,7 @@ function module() {
         onHandle(true);
     };
     this.onRefreshError = function(framework, registerNames, description, onHandle) {
-        console.log('in onRefreshError', description);
+        console.log('in onRefreshError', description,framework.moduleName);
         onHandle(true);
     };
 

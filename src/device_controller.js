@@ -988,7 +988,6 @@ exports.getDevices = function (onError, onSuccess)
             async.eachSeries(
                 driverListing,
                 function (deviceInfo, callback) {
-                    console.log('Found Device',deviceInfo);
                     if(deviceInfo.deviceType == 7) {
                         finishDeviceRecord(listingDict, deviceInfo, callback);
                     } else {
