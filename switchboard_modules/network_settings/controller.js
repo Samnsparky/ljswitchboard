@@ -791,7 +791,16 @@ function module() {
             }
             return ioDeferred.promise;
         };
-        if(networkPassword.isew) {
+        //var performWrites = networkPassword.isNew;
+        
+        var performWrites;
+        // try {
+            performWrites = isew;
+        // } catch (e) {
+        //     console.log('e',e);
+        //     performWrites = false;
+        // }
+        if(performWrites) {
             writeSettings()
             .then(writeNetworkName,ioError)
             .then(writeNetworkPassword,ioError)

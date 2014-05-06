@@ -314,6 +314,28 @@ function Framework() {
     this.daqLoopStatus = 'un-initialized';
 
     var self = this;
+    this.reportSyntaxError = function(location, err) {
+        console.log('Error in:',location);
+        console.log('Error obj',err,err.message);
+        console.log('Error Str',err.toString());
+        var stackSplit = err.stack.split("\n");
+        var caller_line = err.stack.split("\n")[4];
+        var index = caller_line.indexOf("at ");
+        var clean = caller_line.slice(index+2, caller_line.length);
+        // console.log('other output:',err.stack);
+        console.log('stackSplit',stackSplit);
+        // console.log('Stack Dump');
+        // stackSplit.forEach(function(stackStr,i){
+        //     var str = "";
+        //     str += stackStr
+        //     console.log(i.toString()+'.',str);
+        // });
+        // console.log('line:',err.line);
+        // console.log('caller',caller_line);
+        // console.log('index',index);
+        // console.log('clean',clean);
+        showCriticalAlert(err.toString());
+    }
     this.enableLoopTimingAnalysis = function() {
         self.sdFrameworkDebugTiming = true;
     };
@@ -1499,13 +1521,14 @@ function Framework() {
                                     value: newVal,
                                 },
                                 function(err) {
-                                    if(arguments.length > 0) {
-                                        console.log('Error in write-callback',err);
-                                    }
                                     innerDeferred.resolve(skipWrite, true);
                                 });
                         } catch (e) {
-                            console.log('_writeToDevice error caught',binding.bindingName,e);
+                            self.reportSyntaxError(
+                                {
+                                    'location':'_writeToDevice.performCallbacks',
+                                    data: {binding: bindingInfo, eventData: eventData}
+                                },e);
                             innerDeferred.resolve(skipWrite, true);
                         }
                         return innerDeferred.promise;
@@ -1515,18 +1538,27 @@ function Framework() {
                 }
             } else {
                 if(bindingInfo.execCallback) {
-                        bindingInfo.callback(
-                            {
-                                framework: self,
-                                module: self.module,
-                                device: self.getSelectedDevice(),
-                                binding: bindingInfo,
-                                eventData: eventData,
-                                value: newVal,
-                            },
-                            function() {
-                                innerDeferred.resolve(skipWrite, false);
-                            });
+                        try {
+                            bindingInfo.callback(
+                                {
+                                    framework: self,
+                                    module: self.module,
+                                    device: self.getSelectedDevice(),
+                                    binding: bindingInfo,
+                                    eventData: eventData,
+                                    value: newVal,
+                                },
+                                function() {
+                                    innerDeferred.resolve(skipWrite, false);
+                                });
+                        } catch (e) {
+                            self.reportSyntaxError(
+                                {
+                                    'location':'_writeToDevice.performCallbacks(2)',
+                                    data: {binding: bindingInfo, eventData: eventData}
+                                },e);
+                            innerDeferred.resolve(skipWrite, false);
+                        }
                         return innerDeferred.promise;
                     } else {
                         innerDeferred.resolve(skipWrite, false);
@@ -2239,7 +2271,11 @@ function Framework() {
                                     nextStep();
                                 });
                         } catch (e) {
-                            console.log('Error in Callback',binding.bindingName,e);
+                            self.reportSyntaxError(
+                                {
+                                    'location':'loopIteration.processDeviceValues',
+                                    data: {binding: binding,value:curValue,stringVal:stringVal}
+                                },e);
                             nextStep();
                         }
                     } else {
