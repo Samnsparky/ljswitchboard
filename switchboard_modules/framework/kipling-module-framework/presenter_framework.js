@@ -305,7 +305,7 @@ function Framework() {
     this.sdFrameworkDebug = true;
     this.sdFrameworkDebugLoopErrors = false;
     this.sdFrameworkDebugTiming = false;
-    this.sdFrameworkDebugDAQLoopMonitor = true;
+    this.sdFrameworkDebugDAQLoopMonitor = false;
     this.numContinuousRegLoopIterations = 0;
     this.loopErrorEncountered = false;
     this.loopErrors = [];
@@ -1488,18 +1488,26 @@ function Framework() {
             if( searchIndex >= 0) {
                 if((baseStr.length - searchIndex - callbackString.length) === 0) {
                     if(bindingInfo.execCallback) {
-                        bindingInfo.callback(
-                            {
-                                framework: self,
-                                module: self.module,
-                                device: self.getSelectedDevice(),
-                                binding: bindingInfo,
-                                eventData: eventData,
-                                value: newVal,
-                            },
-                            function() {
-                                innerDeferred.resolve(skipWrite, true);
-                            });
+                        try {
+                            bindingInfo.callback(
+                                {
+                                    framework: self,
+                                    module: self.module,
+                                    device: self.getSelectedDevice(),
+                                    binding: bindingInfo,
+                                    eventData: eventData,
+                                    value: newVal,
+                                },
+                                function(err) {
+                                    if(arguments.length > 0) {
+                                        console.log('Error in write-callback',err);
+                                    }
+                                    innerDeferred.resolve(skipWrite, true);
+                                });
+                        } catch (e) {
+                            console.log('_writeToDevice error caught',binding.bindingName,e);
+                            innerDeferred.resolve(skipWrite, true);
+                        }
                         return innerDeferred.promise;
                     } else {
                         innerDeferred.resolve(skipWrite, false);
@@ -1927,9 +1935,9 @@ function Framework() {
 
         if ((self.refreshRate - elapsedTime) < 0) {
             if(self.loopErrorEncountered) {
-                console.log('sdFramework DAQ Loop is slow (Due to error)...',elapsedTime);
+                self.printDAQLoopInfo('sdFramework DAQ Loop is slow (Due to error)...',elapsedTime);
             } else {
-                console.log('sdFramework DAQ Loop is slow (Not due to error)...',elapsedTime);
+                self.printDAQLoopInfo('sdFramework DAQ Loop is slow (Not due to error)...',elapsedTime);
             }
             device_controller.ljm_driver.readLibrarySync('LJM_DEBUG_LOG_MODE');
             if(!self.ljmDriverLogEnabled) {
@@ -2216,19 +2224,24 @@ function Framework() {
                     // needs to be executed execute it now
                     if(binding.execCallback) {
                         // Execute read-binding function callback
-                        binding.callback(
-                            {   //Data to be passed to callback function
-                                framework: self,
-                                module: self.module,
-                                device: self.getSelectedDevice(),
-                                binding: binding,
-                                value: curValue,
-                                stringVal: stringVal
-                            },
-                            function() {
-                                //Instruct async to perform the next step
-                                nextStep();
-                            });
+                        try {
+                            binding.callback(
+                                {   //Data to be passed to callback function
+                                    framework: self,
+                                    module: self.module,
+                                    device: self.getSelectedDevice(),
+                                    binding: binding,
+                                    value: curValue,
+                                    stringVal: stringVal
+                                },
+                                function() {
+                                    //Instruct async to perform the next step
+                                    nextStep();
+                                });
+                        } catch (e) {
+                            console.log('Error in Callback',binding.bindingName,e);
+                            nextStep();
+                        }
                     } else {
                         //Instruct async to perform the next step
                         nextStep();

@@ -8,8 +8,8 @@
 					<b><span>Connection Status: </span><span id="ethernet_connection_status">Connected</span></b>
 					<div class="powerButtonDiv">
 						<div class="btn-group">
-							<button id="ethernetPowerButton" class="btn" title="Turn Ethernet Off">
-								<span class="buttonText">Turn Ethernet Off</span>
+							<button id="ethernetPowerButton" class="btn" title="{{ custom.ethernetPowerButtonString }}">
+								<span class="buttonText">{{ custom.ethernetPowerButtonString }}</span>
 							</button>
 						</div>
 					</div>
@@ -23,12 +23,12 @@
 				<div id="ethernetDHCPSelect" class="row dhcpSelectRow">
 					<div id="ethernet-DHCP-Select-Toggle" class="btn-group span11 dhcpSelectSpan">
 						<a class="btn dropdown-toggle dhcpSelectionButton" data-toggle="dropdown" href="#">
-							<span class="btnText">DHCP Auto</span>
+							<span class="btnText">{{custom.ethernetDHCPStatusString}}</span>
 							<span class="caret"></span>
 						</a>
 						<ul class="dropdown-menu">
-							<li><a><span id="DHCP_Auto">DHCP Auto</span></a></li>
-							<li><a><span id="DHCP_Manual">DHCP Manual</span></a></li>
+							<li><a id="Ethernet_DHCP_Auto">DHCP Auto</a></li>
+							<li><a id="Ethernet_DHCP_Manual">DHCP Manual</a></li>
 						</ul>
 					</div>
 					<div class="dhcpAlert span1">
@@ -46,11 +46,11 @@
 					<tbody style="background-color:transparent">
 						{{#each custom.ethernetIPRegisters}}
 							<tr id="{{name}}_VAL" class="networkSetting">
-								<td>{{humanName}}:</td>
+								<td>{{humanName}}: </td>
 								<td>
-									<span class="Auto_Value {{name}}_AUTO_VAL">0.0.0.0</span>
-									<div class="Manual_Value">
-										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="0.0.0.0">
+									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless ../ethernetDHCPStatus}}display:inline;{{/unless}}">{{ initVal }}</span>
+									<div class="Manual_Value" style="{{#if ../ethernetDHCPStatus}}display:none;{{/if}}">
+										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
 									</div>
 								</td>
 								<td class="alertCol">
@@ -83,11 +83,11 @@
 		<div id="wifi_settings">
 			<div class="settingsTopDiv">
 				<div class="currentStatusInfo">
-					<b><span>Connection Status: </span><span id="wifi_connection_status">Connected</span></b>
+					<b><span>Connection Status: </span><span id="WIFI_STATUS">Connected</span></b>
 					<div class="powerButtonDiv">
 						<div class="btn-group">
-							<button id="wifiPowerButton" class="btn" title="Turn WiFi Off">
-								<span class="buttonText">Turn WiFi Off</span>
+							<button id="wifiPowerButton" class="btn" title="{{ custom.wifiPowerButtonString }}">
+								<span class="buttonText">{{ custom.wifiPowerButtonString }}</span>
 							</button>
 						</div>
 					</div>
@@ -108,7 +108,7 @@
 						<tr id="WIFI_SSID_DEFAULT_VAL" class="networkSetting">
 							<td>Network Name:</td>
 							<td>
-								<input class="WIFI_SSID_DEFAULT_AUTO_VAL" type="text" name="Network Name" placeholder="">
+								<input class="WIFI_SSID_DEFAULT_AUTO_VAL" type="text" name="Network Name" placeholder="{{ custom.wifiNetworkName }}">
 							</td>
 							<td class="alertCol">
 								<div class="alert alert-success">
@@ -132,12 +132,12 @@
 				<div id="wifiDHCPSelect" class="row dhcpSelectRow">
 					<div id="wifi-DHCP-Select-Toggle" class="btn-group span11 dhcpSelectSpan">
 						<a class="btn dropdown-toggle dhcpSelectionButton" data-toggle="dropdown" href="#">
-							<span class="btnText">DHCP Auto</span>
+							<span class="btnText">{{custom.wifiDHCPStatusString}}</span>
 							<span class="caret"></span>
 						</a>
 						<ul class="dropdown-menu">
-							<li><a><span id="DHCP_Auto">DHCP Auto</span></a></li>
-							<li><a><span id="DHCP_Manual">DHCP Manual</span></a></li>
+							<li><a id="WiFi_DHCP_Auto">DHCP Auto</a></li>
+							<li><a id="WiFi_DHCP_Manual">DHCP Manual</a></li>
 						</ul>
 					</div>
 					<div class="dhcpAlert span1">
@@ -146,7 +146,7 @@
 						</div>
 					</div>
 				</div>
-				<table class="table table-non-striped configSettingsTable">
+				<table class="table table-non-striped configSettingsTable wifiConfigSettingsTable">
 					<thead>
 						<th class="attribute"/>
 						<th class="input"/>
@@ -157,9 +157,9 @@
 							<tr id="{{name}}_VAL" class="networkSetting">
 								<td>{{humanName}}:</td>
 								<td>
-									<span class="Auto_Value {{name}}_AUTO_VAL">0.0.0.0</span>
-									<div class="Manual_Value">
-										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="0.0.0.0">
+									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless ../wifiDHCPStatus}}display:none;{{/unless}}">{{ initVal }}</span>
+									<div class="Manual_Value" style="{{#if ../wifiDHCPStatus}}display:none;{{/if}}">
+										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
 									</div>
 								</td>
 								<td class="alertCol">

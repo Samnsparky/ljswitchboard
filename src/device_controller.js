@@ -15,18 +15,32 @@ var labjack_driver = new labjack_nodejs.driver();
 
 var LJM_DT_T7 = labjack_nodejs.driver_const.LJM_DT_T7.toString();
 var DEVICE_TYPE_NAMES = dict({
+    '3': 'U3',
+    '6': 'U6',
     '7': 'T7',
+    '9': 'UE9',
     '200': 'Digit'
+});
+var DRIVER_DEVICE_TYPE_NAMES = dict({
+    '3': 'LJM_dtU3',
+    '6': 'LJM_dtU6',
+    '7': 'LJM_dtT7',
+    '9': 'LJM_dtUE9',
+    '200': 'LJM_LJM_dtDIGIT'
 });
 
 var CONNECT_TYPE_USB = 1;
 var CONNECTION_TYPE_NAMES = dict({
+    '0': 'Any',
     '1': 'USB',
+    '2': 'TCP',
     '3': 'Ethernet',
     '4': 'Wifi'
 });
 var DRIVER_CONNECTION_TYPE_NAMES = dict({
+    '0': 'LJM_ctANY',
     '1': 'LJM_ctUSB',
+    '2': 'LJM_ctTCP',
     '3': 'LJM_ctETHERNET',
     '4': 'LJM_ctWIFI'
 });
@@ -797,17 +811,30 @@ function createDeviceListingRecord (device, name, specText, specImageSuffix)
 {
     var connectionType = CONNECTION_TYPE_NAMES.get(
         String(device.connectionType), 'other');
+    var ljmConnectionType = DRIVER_CONNECTION_TYPE_NAMES.get(
+        String(device.connectionType), 'other');
     var deviceType = DEVICE_TYPE_NAMES.get(String(device.deviceType), 'other');
+    console.log('Found Connection Option:',device.serialNumber,device.connectionType,device.ipAddress);
+
+    var safeIP = device.ipAddress.replace(/\./g, '_');
+    var ct = device.connectionType;
+    var ip = device.ipAddress;
+    var ctString = connectionType;
+    var ljmDt = DRIVER_DEVICE_TYPE_NAMES.get(String(device.connectionType), 'other');
 
     return {
         'serial': device.serialNumber,
+        'connections': [{type:ct,typeStr:connectionType,ljmTypeStr:ljmConnectionType,ipAddress:ip,ipSafe:safeIP}],
         'connectionTypes': [connectionType],
-        'origConnectionType': device.connectionType,
+        'origConnectionType': connectionType,
         'origDeviceType': device.deviceType,
         'type': deviceType,
+        'ljmDeviceType': ljmDt,
         'name': name,
-        'ipAddress': device.ipAddress,
-        'ipSafe': device.ipAddress.replace(/\./g, '_'),
+        'ipAddress': ip,
+        'ipAddresses': [ip],
+        'ipSafe': safeIP,
+        'ipSafeAddresses': [safeIP],
         'origDevice': device,
         'specialText': specText,
         'specialImageSuffix': specImageSuffix
@@ -869,6 +896,7 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
         deviceInfo,
         deviceInfo.connectionType,
         function (err) {
+            console.log('device_controller.js error, finishDeviceRecord',err);
             record = createDeviceListingRecord(
                 deviceInfo,
                 '[ could not read name ]',
@@ -954,6 +982,18 @@ var consolidateDevices = function (listing) {
                 newDevice.connectionTypes,
                 existingDevice.connectionTypes
             );
+            newDevice.ipAddresses.push.apply(
+                newDevice.ipAddresses,
+                existingDevice.ipAddresses
+            );
+            newDevice.ipSafeAddresses.push.apply(
+                newDevice.ipSafeAddresses,
+                existingDevice.ipSafeAddresses
+            );
+            newDevice.connections.push.apply(
+                newDevice.connections,
+                existingDevice.connections
+            );
         }
         deviceListing.set(newDevice.serial.toString(), newDevice);
     }
@@ -1004,10 +1044,11 @@ exports.getDevices = function (onError, onSuccess)
                     listingDict.forEach(function (value, key) {
                         listing.push(value);
                     });
-
+                    console.log('Listing obj...',listing);
+                    // listing = consolidateDevices(listing[0]);
                     for (var i=0; i<listing.length; i++)
                         consolidateDevices(listing[i]);
-                    
+                    console.log('Listing obj(shrunken)',listing);
                     markConnectedDevices(listing, onSuccess, onError);
                 }
             );

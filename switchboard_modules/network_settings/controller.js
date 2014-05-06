@@ -36,7 +36,10 @@ function module() {
 
     this.moduleContext = {};
 
-    this.activeDevice;
+    this.activeDevice = undefined;
+
+    this.isEthernetConnected = false;
+    this.isWifiConnected = false;
 
     this.currentValues = dict();
     this.saveConfigResult = function(address, value, status) {
@@ -45,15 +48,18 @@ function module() {
                 if(value !== '') {
                     self.currentValues.set(address,value);
                 } else {
-                    self.currentValues.set(address,null);
+                    self.currentValues.set(address,{val:null,fVal:null});
                 }
             } else {
                 self.currentValues.set(address,value);
             }
         } else {
-            self.currentValues.set(address,null);
+            self.currentValues.set(address,{val:null,fVal:null});
         }
-    }
+    };
+    this.saveCurrentValue = function(address,value,formattedVal) {
+        self.currentValues.set(address,{val:value,fVal:formattedVal});
+    };
 
     this.formatIPAddress = function(info) {
         var ipAddress = info.value;
@@ -67,6 +73,20 @@ function module() {
         ipString += ((ipAddress)&0xFF).toString();
         return ipString;
     };
+    this.unformatIPAddress = function(ipString) {
+        var value = 0;
+        var stringArray = ipString.split('.');
+        value += stringArray[0] << 24;
+        value += stringArray[1] << 16;
+        value += stringArray[2] << 8;
+        value += stringArray[3];
+        return value;
+    };
+    this.dot2num = function(dot) 
+    {
+        var d = dot.split('.');
+        return ((((((+d[0])*256)+(+d[1]))*256)+(+d[2]))*256)+(+d[3]);
+    }
     this.formatStatus = function(info) {
         var status = info.value;
         var statusString = "";
@@ -97,54 +117,79 @@ function module() {
             2908: 'Unknown',
             2909: 'Other'
         }[status];
-        if (statusString == undefined) {
+        if (statusString === undefined) {
             statusString = "Status Unknown";
         }
         return statusString;
     };
-
-    this.ShowManualEthernetSettings = function() {
+    this.hideEthernetAlerts = function() {
+        $('#ethernet_settings .configSettingsTable .alert').hide();
+    };
+    this.selectivelyShowEthernetAlerts = function() {
+        var elements = $('#ethernet_settings .configSettingsTable .networkSetting input');
+        elements.trigger('change');
+    };
+    this.showManualEthernetSettings = function() {
         $('#ethernet_settings .Auto_Value').hide();
         $('#ethernet_settings .Manual_Value').show();
+        var dhcpToggleEl = $('#ethernet-DHCP-Select-Toggle .btnText');
+        dhcpToggleEl.text($('#ethernet-DHCP-Select-Toggle #Ethernet_DHCP_Manual').text());
+        self.selectivelyShowEthernetAlerts();
     };
-    this.ShowAutoEthernetSettings = function() {
+    this.showAutoEthernetSettings = function() {
         $('#ethernet_settings .Manual_Value').hide();
         $('#ethernet_settings .Auto_Value').show();
+        var dhcpToggleEl = $('#ethernet-DHCP-Select-Toggle .btnText');
+        dhcpToggleEl.text($('#ethernet-DHCP-Select-Toggle #Ethernet_DHCP_Auto').text());
+        self.hideEthernetAlerts();
     };
     this.setEthernetSettings = function(mode) {
         if(mode === 'auto') {
-            self.ShowAutoEthernetSettings();
+            self.showAutoEthernetSettings();
         } else {
-            self.ShowManualEthernetSettings();
+            self.showManualEthernetSettings();
         }
     };
     this.toggleEthernetSettings = function() {
         if($('#ethernet_settings .Manual_Value').css('display') === 'none') {
-            self.ShowManualEthernetSettings();
+            self.showManualEthernetSettings();
         } else {
-            self.ShowAutoEthernetSettings();
+            self.showAutoEthernetSettings();
         }
     };
-    this.ShowManualWifiSettings = function() {
+    this.hideWifiAlerts = function() {
+        $('#wifi_settings .wifiConfigSettingsTable .alert').hide();
+    };
+    this.selectivelyShowWifiAlerts = function() {
+        var elements = $('#wifi_settings .configSettingsTable .networkSetting input');
+        elements.trigger('change');
+    };
+    this.showManualWifiSettings = function() {
         $('#wifi_settings .Auto_Value').hide();
         $('#wifi_settings .Manual_Value').show();
+        var dhcpToggleEl = $('#wifi-DHCP-Select-Toggle .btnText');
+        dhcpToggleEl.text($('#wifi-DHCP-Select-Toggle #WiFi_DHCP_Manual').text());
+        self.selectivelyShowWifiAlerts();
     };
-    this.ShowAutoWifiSettings = function() {
+    this.showAutoWifiSettings = function() {
         $('#wifi_settings .Manual_Value').hide();
         $('#wifi_settings .Auto_Value').show();
+        var dhcpToggleEl = $('#wifi-DHCP-Select-Toggle .btnText');
+        dhcpToggleEl.text($('#wifi-DHCP-Select-Toggle #WiFi_DHCP_Auto').text());
+        self.hideWifiAlerts();
     };
     this.setWifiSettings = function(mode) {
         if(mode === 'auto') {
-            self.ShowAutoWifiSettings();
+            self.showAutoWifiSettings();
         } else {
-            self.ShowManualWifiSettings();
+            self.showManualWifiSettings();
         }
     };
     this.toggleWifiSettings = function() {
         if($('#wifi_settings .Manual_Value').css('display') === 'none') {
-            self.ShowManualWifiSettings();
+            self.showManualWifiSettings();
         } else {
-            self.ShowAutoWifiSettings();
+            self.showAutoWifiSettings();
         }
     };
     this.buildJqueryIDStr = function(idStr) {
@@ -183,6 +228,65 @@ function module() {
         }
         return {value:value, isNew:isNew};
     };
+    this.getDHCPVal = function(settingID) {
+        var manStr = " .btnText";
+        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
+        var dhcpValues = {
+            'DHCP Manual':0,
+            'DHCP Auto':1,
+        };
+        var strVal = manualValEl.text();
+        var value = "";
+        var isNew = false;
+
+        if(manualValEl.hasClass('inputVerified')) {
+            value = dhcpValues[strVal];
+            isNew = true;
+        } else {
+            value = dhcpValues[strVal];
+            isNew = false;
+        }
+        return {value:value, isNew:isNew};
+    };
+    this.getToggleVal = function(settingID) {
+        var manStr = " input";
+        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
+        var value = "";
+        var isNew = false;
+        if(manualValEl.hasClass('inputVerified')) {
+            value = manualValEl.val();
+            isNew = true;
+        } else {
+            value = manualValEl[0].placeholder;
+            isNew = false;
+        }
+        return {value:value, isNew:isNew};
+    };
+    this.getInputVal = function(settingID) {
+        var manStr = " input";
+        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
+        var value = "";
+        var isNew = false;
+        if(manualValEl.hasClass('inputVerified')) {
+            value = manualValEl.val();
+            isNew = true;
+        } else {
+            value = manualValEl[0].placeholder;
+            isNew = false;
+        }
+        return {value:value, isNew:isNew};
+    };
+    this.setInputVal = function(settingID,val) {
+        var manStr = " input";
+        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
+        manualValEl.val(val);
+    }
+    this.setNetworkName = function(networkName) {
+        self.setInputVal('#WIFI_SSID_DEFAULT_VAL',networkName);
+    }
+    this.setWifiPassword = function(password) {
+        self.setInputVal('#WIFI_PASSWORD_DEFAULT_VAL',password);
+    }
     this.clearManualVal = function(settingID) {
         var manStr = " .Manual_Value input";
         var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
@@ -192,6 +296,11 @@ function module() {
     this.getIPRegisters = function(constList, attribute) {
         var regList = [];
         constList.forEach(function(reg) {
+            
+            var initValObj = self.currentValues.get(reg.name);
+            if(initValObj !== null) {
+                reg.initVal = initValObj.fVal;
+            }
             if ((reg.type === 'ip') && (reg.isConfig)){
                 if ((attribute === '')||(typeof(attribute) === 'undefined')) {
                     regList.push(reg);
@@ -203,30 +312,116 @@ function module() {
         return regList;
     };
     this.getWiFiIPRegisterList = function() {
-        return self.getIPRegisterList(self.wifiRegisters,'name');
+        return self.getIPRegisters(self.wifiRegisters,'name');
     };
     this.getEthernetIPRegisterList = function() {
-        return self.getIPRegisterList(self.ethernetRegisters,'name');
+        return self.getIPRegisters(self.ethernetRegisters,'name');
     };
     this.clearNewEthernetSettings = function() {
         self.getEthernetIPRegisterList().forEach(function(regName){
             var configData = self.clearManualVal(regName+'_VAL');
         });
     };
+
     this.getNewEthernetSettings = function() {
         var newEthernetSettingRegs = [];
         var newEthernetSettingVals = [];
+        var ethernetSettingRegs = [];
+        var ethernetSettingVals = [];
         self.getEthernetIPRegisterList().forEach(function(regName){
             var configData = self.getManualVal(regName+'_VAL');
+            var ipVal = parseInt(self.dot2num(configData.value));
             if(configData.isNew) {
-                newEthernetSettingRegs.push(regName);
-                newEthernetSettingVals.push(configData.value);
+                newEthernetSettingRegs.push(regName+'_DEFAULT');
+                newEthernetSettingVals.push(ipVal);
             }
+            ethernetSettingRegs.push(regName+'_DEFAULT');
+            ethernetSettingVals.push(ipVal);
         });
+        var dhcpSetting = self.getDHCPVal('#ethernetDHCPSelect');
+        if(dhcpSetting.isNew) {
+            newEthernetSettingRegs.push('ETHERNET_DHCP_ENABLE_DEFAULT');
+            newEthernetSettingVals.push(dhcpSetting.value);
+        }
+        ethernetSettingRegs.push('ETHERNET_DHCP_ENABLE_DEFAULT');
+        ethernetSettingVals.push(dhcpSetting.value);
         return {
-            registers: newEthernetSettingRegs, 
-            values: newEthernetSettingVals
+            newRegisters: newEthernetSettingRegs, 
+            newValues: newEthernetSettingVals,
+            registers: ethernetSettingRegs,
+            values: ethernetSettingVals
         };
+    };
+    this.getNewWifiSettings = function() {
+        var newWifiSettingRegs = [];
+        var newWifiSettingVals = [];
+        var wifiSettingRegs = [];
+        var wifiSettingVals = [];
+        self.getWiFiIPRegisterList().forEach(function(regName){
+            var configData = self.getManualVal(regName+'_VAL');
+            var ipVal = parseInt(self.dot2num(configData.value));
+            if(configData.isNew) {
+                newWifiSettingRegs.push(regName+'_DEFAULT');
+                newWifiSettingVals.push(ipVal);
+            }
+            wifiSettingRegs.push(regName+'_DEFAULT');
+            wifiSettingVals.push(ipVal);
+        });
+        var dhcpSetting = self.getDHCPVal('#wifiDHCPSelect');
+        if(dhcpSetting.isNew) {
+            newWifiSettingRegs.push('WIFI_DHCP_ENABLE_DEFAULT');
+            newWifiSettingVals.push(dhcpSetting.value);
+        }
+        wifiSettingRegs.push('WIFI_DHCP_ENABLE_DEFAULT');
+        wifiSettingVals.push(dhcpSetting.value);
+        return {
+            newRegisters: newWifiSettingRegs, 
+            newValues: newWifiSettingVals,
+            registers: wifiSettingRegs,
+            values: wifiSettingVals
+        };
+    };
+    this.resetAlertIcon = function(alertEl,inputTextEl) {
+        var alertMessageEl = alertEl.find('.messageIcon');
+        alertEl.hide();
+        alertMessageEl.removeClass('icon-close');
+        alertMessageEl.addClass('icon-checkmark-3');
+        alertEl.removeClass('alert-block');
+        alertEl.addClass('alert-success');
+        alertEl.attr('title',"Valid IP Address");
+        inputTextEl.removeClass('inputVerified');
+    };
+    this.showInvalidAlertIcon = function(alertEl,inputTextEl) {
+        var alertMessageEl = alertEl.find('.messageIcon');
+        alertMessageEl.addClass('icon-close');
+        alertEl.addClass('alert-block');
+        alertEl.attr('title',"Invalid IP Address");
+        inputTextEl.removeClass('inputVerified');
+        alertEl.show(); 
+    };
+    this.showValidAlertIcon = function(alertEl,inputTextEl) {
+        var alertMessageEl = alertEl.find('.messageIcon');
+        alertMessageEl.addClass('icon-checkmark-3');
+        alertEl.addClass('alert-success');
+        alertEl.attr('title',"Valid IP Address");
+        inputTextEl.addClass('inputVerified');
+        alertEl.show();
+    };
+    this.updateValidationStatus = function(isValid,classId,applyButtonId) {
+        if(isValid) {
+            var numInvalid = $('#'+classId+' .alert-block').length;
+            var numNew = $('#'+classId+' .inputVerified').length;
+            if((numInvalid === 0) && (numNew > 0)) {
+                $('#'+applyButtonId+'').removeAttr('disabled');
+            } else {
+                $('#'+applyButtonId+'').attr('disabled','disabled');
+            }
+        } else {
+            $('#'+applyButtonId+'').attr('disabled','disabled');
+        }
+    };
+    this.updateWifiValidationStatus = function(isValid) {
+        self.updateValidationStatus(isValid,'wifi_settings','wifiApplyButton');
     };
     this.ipAddressValidator = function(event) {
         var settingID = event.target.parentElement.parentElement.parentElement.id;
@@ -249,51 +444,24 @@ function module() {
             inputTextEl.removeClass('inputVerified');
 
             // Add appropriate styles
-            if(inputText.match(ipformat))  {  
-                alertMessageEl.addClass('icon-checkmark-3');
-                alertEl.addClass('alert-success');
-                alertEl.attr('title',"Valid IP Address");
-                inputTextEl.addClass('inputVerified');
-                alertEl.show();
+            if(inputText.match(ipformat))  {
+                self.showValidAlertIcon(alertEl,inputTextEl);
                 isValid = true;
-            } else {  
-                alertMessageEl.addClass('icon-close');
-                alertEl.addClass('alert-block');
-                alertEl.attr('title',"Invalid IP Address");
-                inputTextEl.removeClass('inputVerified');
-                alertEl.show(); 
+            } else {
+                self.showInvalidAlertIcon(alertEl,inputTextEl);
                 isValid = false;
             } 
         } else {
-            alertEl.hide();
-            alertMessageEl.addClass('icon-checkmark-3');
-            alertEl.addClass('alert-success');
-            alertEl.attr('title',"Valid IP Address");
-            inputTextEl.removeClass('inputVerified');
+            self.resetAlertIcon(alertEl,inputTextEl);
             isValid = true;
         }
         if (settingID.search('ETHERNET') >= 0 ) {
-            if(!isValid) {
-                $('#ethernetApplyButton').attr('disabled','disabled');
-            } else {
-                var numValid = $('#ethernet_settings .alert-success').length;
-                if(numValid >= 5) {
-                    $('#ethernetApplyButton').removeAttr('disabled');
-                }
-            }
+            self.updateValidationStatus(isValid,'ethernet_settings','ethernetApplyButton');
         } else {
-            if(!isValid) {
-                $('#wifiApplyButton').attr('disabled','disabled');
-            } else {
-                var numValid = $('#wifi_settings .alert-success').length;
-                if(numValid >= 3) {
-                    $('#wifiApplyButton').removeAttr('disabled');
-                }
-            }
+            self.updateWifiValidationStatus(isValid);
         }
     };
     this.networkNameValidator = function(event) {
-        // console.log('in networkNameValidator', event);
         var settingID = event.target.parentElement.parentElement.id;
         var alertJQueryStr = '#'+settingID+' .alert';
         var alertEl = $(alertJQueryStr);
@@ -302,9 +470,12 @@ function module() {
         var inputTextEl = $('#'+settingID+' input');
         var inputText = event.target.value;
         var isValid = false;
+        inputTextEl.removeClass('inputVerified');
         if(inputText !== "") {
             if(true) {
+                alertMessageEl.removeClass('icon-close');
                 alertMessageEl.addClass('icon-checkmark-3');
+                alertEl.removeClass('alert-block');
                 alertEl.addClass('alert-success');
                 alertEl.attr('title','Valid Input');
                 inputTextEl.addClass('inputVerified');
@@ -313,15 +484,17 @@ function module() {
             isValid = true;
         } else {
             alertEl.hide();
-            alertMessageEl.addClass('icon-checkmark-3');
+            alertMessageEl.removeClass('icon-checkmark-3');
+            alertMessageEl.addClass('icon-close');
             alertEl.addClass('alert-success');
+            // alertEl.removeClass('alert-block');
             alertEl.attr('title','Valid Input');
             inputTextEl.removeClass('inputVerified');
             isValid = true;
         }
+        self.updateWifiValidationStatus(isValid);
     };
     this.networkPasswordValidator = function(event) {
-        // console.log('in networkPasswordValidator', event);
         var settingID = event.target.parentElement.parentElement.id;
         var alertJQueryStr = '#'+settingID+' .alert';
         var alertEl = $(alertJQueryStr);
@@ -330,23 +503,29 @@ function module() {
         var inputTextEl = $('#'+settingID+' input');
         var inputText = event.target.value;
         var isValid = false;
+        inputTextEl.removeClass('inputVerified');
         if(inputText !== "") {
             if(true) {
+                alertMessageEl.removeClass('icon-close');
                 alertMessageEl.addClass('icon-checkmark-3');
+                alertEl.removeClass('alert-block');
                 alertEl.addClass('alert-success');
-                alertEl.attr('title','Valid Input');
+                alertEl.attr('title','Valid Password');
                 inputTextEl.addClass('inputVerified');
                 alertEl.show();
             }
             isValid = true;
         } else {
-            alertEl.hide();
-            alertMessageEl.addClass('icon-checkmark-3');
-            alertEl.addClass('alert-success');
-            alertEl.attr('title','Valid Input');
+            alertMessageEl.removeClass('icon-checkmark-3');
+            alertMessageEl.addClass('icon-close');
+            alertEl.removeClass('alert-success');
+            alertEl.addClass('alert-block');
+            alertEl.attr('title','Password Required');
             inputTextEl.removeClass('inputVerified');
-            isValid = true;
+            alertEl.show();
+            isValid = false;
         }
+        self.updateWifiValidationStatus(isValid);
     };
     this.attachIPInputValidators = function() {
         var inputElements = $('.networkSetting .ipAddress');
@@ -362,7 +541,7 @@ function module() {
         var networkPasswordEl = $('#WIFI_PASSWORD_DEFAULT_VAL input');
         // console.log('attaching validator...',networkPasswordEl);
         networkPasswordEl.bind('change',self.networkPasswordValidator);
-    }
+    };
     this.attachInputValidators = function() {
         self.attachIPInputValidators();
         self.attachNetworkNameValidator();
@@ -372,35 +551,262 @@ function module() {
         console.log('in ethernetPowerButton listener');
         onSuccess();
     };
+    this.showEthernetDHCPChanged = function() {
+        $('#ethernetDHCPSelect .dhcpAlert').show();
+    };
+    this.hideEthernetDHCPChanged = function() {
+        $('#ethernetDHCPSelect .dhcpAlert').hide();
+    };
+    this.showWifiDHCPChanged = function() {
+        $('#wifiDHCPSelect .dhcpAlert').show();
+    };
+    this.hideWifiDHCPChanged = function() {
+        $('#wifiDHCPSelect .dhcpAlert').hide();
+    };
+    this.toggleDHCP = function() {
+        var isEthernet = $('#ethernetDHCPSelect .dhcpAlert').css('display');
+        var isWifi = $('#wifiDHCPSelect .dhcpAlert').css('display');
+        if(isEthernet === 'none') {
+            self.showEthernetDHCPChanged();
+        } else {
+            self.hideEthernetDHCPChanged();
+        }
+        if(isWifi === 'none') {
+            self.showWifiDHCPChanged();
+        } else {
+            self.hideWifiDHCPChanged();
+        }
+    };
     this.ethernetDHCPSelect = function(data, onSuccess) {
-        console.log('in ethernetDHCPSelect listener',data.eventData);
-        var dhcpOption = data.eventData.target.id
-        if (dhcpOption === 'DHCP_Auto') {
+        // console.log('in ethernetDHCPSelect listener',data.eventData);
+        var dhcpOption = data.eventData.toElement.id;
+        var dhcpTextId;
+        var dhcpTextEl;
 
-        } else if (dhcpOption === 'DHCP_Manual') {
-
+        if (dhcpOption === 'Ethernet_DHCP_Auto') {
+            dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
+            dhcpTextEl = $('#'+dhcpTextId+' .btnText');
+            self.showAutoEthernetSettings();
+            if(self.currentValues.get('WIFI_DHCP_ENABLE').val === 0) {
+                self.showEthernetDHCPChanged();
+                dhcpTextEl.addClass('inputVerified');
+            } else {
+                self.hideEthernetDHCPChanged();
+                dhcpTextEl.removeClass('inputVerified');
+            }
+            self.updateValidationStatus(true,'ethernet_settings','ethernetApplyButton');
+        } else if (dhcpOption === 'Ethernet_DHCP_Manual') {
+            dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
+            dhcpTextEl = $('#'+dhcpTextId+' .btnText');
+            self.showManualEthernetSettings();
+            if(self.currentValues.get('WIFI_DHCP_ENABLE').val === 0) {
+                self.hideEthernetDHCPChanged();
+                dhcpTextEl.removeClass('inputVerified');
+            } else {
+                self.showEthernetDHCPChanged();
+                dhcpTextEl.addClass('inputVerified');
+            }
+            self.updateValidationStatus(true,'ethernet_settings','ethernetApplyButton');
         }
         onSuccess();
     };
     this.ethernetApplyButton = function(data, onSuccess) {
         console.log('in ethernetApplyButton listener');
-        onSuccess();
+        var configData = getNewEthernetSettings();
+        var newNames = configData.newRegisters;
+        var newVals = configData.newVals;
+        var names = configData.registers;
+        var vals = configData.values;
+        var ioError = function(err) {
+            var ioDeferred = q.defer();
+            if(typeof(err) === 'number') {
+                console.log(self.ljmDriver.errToStrSync(err));
+            } else {
+                console.log('Ethernet Applying Settings Error',err);
+            }
+            ioDeferred.resolve();
+            return ioDeferred.promise;
+        };
+        var writeSettings = function() {
+            var ioDeferred = q.defer();
+            if(newNames > 0) {
+                applySettings = true;
+                self.activeDevice.writeMany(newNames,newVals)
+                .then(ioDeferred.resolve,ioDeferred.reject);
+            } else {
+                ioDeferred.resolve();
+            }
+            return ioDeferred.promise;
+        };
+        var applySettings = function() {
+
+        };
+        self.activeDevice.writeMany(newNames,newVals)
+        .then(onSuccess,function(err) {
+            console.log('Error Applying Ethernet Settings',err);
+        });
     };
     this.ethernetCancelButton = function(data, onSuccess) {
         console.log('in ethernetCancelButton listener');
         onSuccess();
     };
     this.wifiPowerButton = function(data, onSuccess) {
-        console.log('in wifiPowerButton listener');
-        onSuccess();
+        var getWifiResFunc = function(val,type) {
+            var messages = [
+                {'success':'disable wifi success','err':'disable wifi error'},
+                {'success':'enable wifi success','err':'enable wifi error'}
+            ];
+            var fValStr = ['Disabled','Enabled'];
+            var btnText = ['Turn WiFi On','Turn WiFi Off'];
+            return function(result) {
+                console.log(messages[val][type],result);
+                self.saveCurrentValue('POWER_WIFI',val,fValStr[val]);
+                self.saveCurrentValue('POWER_WIFI_DEFAULT',val,fValStr[val]);
+                $('#wifiPowerButton .buttonText').text(btnText[val]);
+                onSuccess();
+            };
+        };
+        var curStatus = sdModule.currentValues.get('POWER_WIFI').val;
+        if(curStatus === 0) {
+            self.activeDevice.writeMany(
+                ['POWER_WIFI','POWER_WIFI_DEFAULT'],
+                [1,1]
+            )
+            .then(getWifiResFunc(1,'success'),getWifiResFunc(1,'err'));
+        } else {
+            self.activeDevice.writeMany(
+                ['POWER_WIFI','POWER_WIFI_DEFAULT'],
+                [0,0]
+            )
+            .then(getWifiResFunc(0,'success'),getWifiResFunc(0,'err'));
+        }
+    };
+    this.readWifiStatus = function(onSuccess) {
+        self.activeDevice.readMany(
+            ['POWER_WIFI','POWER_WIFI_DEFAULT']
+            )
+        .then(function(data){
+                console.log(data);
+                onSuccess(data);
+            },function(err){
+                console.log(err);
+            }
+        );
     };
     this.wifiDHCPSelect = function(data, onSuccess) {
-        console.log('in wifiDHCPSelect listener');
+        // console.log('in wifiDHCPSelect listener');
+        var dhcpOption = data.eventData.toElement.id;
+        var dhcpTextId;
+        var dhcpTextEl;
+
+        if (dhcpOption === 'WiFi_DHCP_Auto') {
+            dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
+            dhcpTextEl = $('#'+dhcpTextId+' .btnText');
+            self.showAutoWifiSettings();
+            if(self.currentValues.get('WIFI_DHCP_ENABLE').val === 0) {
+                self.showWifiDHCPChanged();
+                dhcpTextEl.addClass('inputVerified');
+            } else {
+                self.hideWifiDHCPChanged();
+                dhcpTextEl.removeClass('inputVerified');
+            }
+        } else if (dhcpOption === 'WiFi_DHCP_Manual') {
+            dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
+            dhcpTextEl = $('#'+dhcpTextId+' .btnText');
+            self.showManualWifiSettings();
+            if(self.currentValues.get('WIFI_DHCP_ENABLE').val === 0) {
+                self.hideWifiDHCPChanged();
+                dhcpTextEl.removeClass('inputVerified');
+            } else {
+                self.showWifiDHCPChanged();
+                dhcpTextEl.addClass('inputVerified');
+            }
+        }
+        self.updateWifiValidationStatus(true);
         onSuccess();
     };
     this.wifiApplyButton = function(data, onSuccess) {
-        console.log('in wifiApplyButton listener');
-        onSuccess();
+        var configData = self.getNewWifiSettings();
+        var newNames = configData.newRegisters;
+        var newVals = configData.newVals;
+        var names = configData.registers;
+        var vals = configData.values;
+        var networkName = self.getInputVal('WIFI_SSID_DEFAULT_VAL');
+        var networkPassword = self.getInputVal('WIFI_PASSWORD_DEFAULT_VAL');
+
+        var applySettings = false;
+
+        var ioError = function(err) {
+            var ioDeferred = q.defer();
+            if(typeof(err) === 'number') {
+                console.log(self.ljmDriver.errToStrSync(err));
+            } else {
+                console.log('Wifi Applying Settings Error',err);
+            }
+            ioDeferred.resolve();
+            return ioDeferred.promise;
+        };
+        var writeSettings = function() {
+            var ioDeferred = q.defer();
+            if(newNames.length > 0) {
+                applySettings = true;
+                console.log('Writing',names,vals);
+                self.activeDevice.writeMany(names,vals)
+                .then(ioDeferred.resolve,ioDeferred.reject);
+            } else {
+                ioDeferred.resolve();
+            }
+            return ioDeferred.promise;
+        };
+        var writeNetworkName = function() {
+            var ioDeferred = q.defer();
+            if(networkName.isNew) {
+                applySettings = true;
+                self.activeDevice.qWrite('WIFI_SSID_DEFAULT',networkName.value)
+                .then(ioDeferred.resolve,ioDeferred.reject);
+            } else {
+                ioDeferred.resolve();
+            }
+            return ioDeferred.promise;
+        };
+        var writeNetworkPassword = function() {
+            var ioDeferred = q.defer();
+            if(networkPassword.isNew) {
+                applySettings = true;
+                self.activeDevice.qWrite('WIFI_PASSWORD_DEFAULT',networkPassword.value)
+                .then(ioDeferred.resolve,ioDeferred.reject);
+            } else {
+                ioDeferred.resolve();
+            }
+            return ioDeferred.promise;
+        };
+        var applyWifiSettings = function() {
+            var ioDeferred = q.defer();
+            if(applySettings) {
+                self.activeDevice.qWrite('WIFI_APPLY_SETTINGS',1)
+                .then(ioDeferred.resolve,ioDeferred.reject);
+            } else {
+                console.log('Not Applying Wifi Settings');
+                ioDeferred.resolve();
+            }
+            return ioDeferred.promise;
+        };
+        if(networkPassword.isew) {
+            writeSettings()
+            .then(writeNetworkName,ioError)
+            .then(writeNetworkPassword,ioError)
+            .then(applyWifiSettings,ioError)
+            .then(function() {
+                    console.log('Successfully Applied Wifi Settings');
+                    onSuccess();
+                },function(err) {
+                    console.log('Error Applying Wifi Settings',err);
+                    onSuccess();
+            });
+        } else {
+            console.log('Must Enter a Network Password before applying settings');
+            onSuccess();
+        }
     };
     this.wifiCancelButton = function(data, onSuccess) {
         console.log('in wifiCancelButton listener');
@@ -422,11 +828,36 @@ function module() {
         self.wifiRegisters = framework.moduleConstants.wifiRegisters;
 
         var genericConfigCallback = function(data, onSuccess) {
-            console.log('genericConfigCallback');
+            // console.log('genericConfigCallback');
             onSuccess();
         };
         var genericPeriodicCallback = function(data, onSuccess) {
             // console.log('genericPeriodicCallback');
+            onSuccess();
+        };
+        var ethernetStatusListner = function(data, onSuccess) {
+            onSuccess();
+        };
+        var wifiStatusListner = function(data, onSuccess) {
+            var currentStatus = self.currentValues.get('WIFI_STATUS').val;
+            var newStatus = data.value;
+            if(currentStatus == newStatus) {
+                if (newStatus == 2903 ) {
+                    self.saveCurrentValue('POWER_WIFI',0,'Disabled');
+                    $('#wifiPowerButton .buttonText').text('Turn WiFi On');
+                }
+            } else {
+                // console.log('WiFi Status has changed',data.value,data.stringVal);
+                self.saveCurrentValue('WIFI_STATUS',data.value,data.stringVal);
+                if( newStatus == 2900 ) {
+                    self.isWifiConnected = true;
+                    // console.log('Wifi Connected!');
+                } else {
+                    self.isWifiConnected = false;
+                    // console.log('Wifi Disconnected!');
+                }
+            }
+
             onSuccess();
         };
         var genericCallback = function(data, onSuccess) {
@@ -447,8 +878,8 @@ function module() {
 
         var addSmartBinding = function(regInfo) {
             var binding = {};
-            var format = undefined;
-            var customFormatFunc = undefined;
+            var format;
+            var customFormatFunc;
             var isPeriodic = (typeof(regInfo.isPeriodic) === 'boolean');
             isPeriodic &= (regInfo.isPeriodic);
             if (regInfo.type === 'ip') {
@@ -471,7 +902,13 @@ function module() {
             
             if (isPeriodic) {
                 binding.smartName = 'readRegister';
-                binding.periodicCallback = genericPeriodicCallback;
+                if (regInfo.name === 'ETHERNET_IP') {
+                    binding.periodicCallback = ethernetStatusListner;
+                } else if (regInfo.name === 'WIFI_STATUS') {
+                    binding.periodicCallback = wifiStatusListner;
+                } else {
+                    binding.periodicCallback = genericPeriodicCallback;
+                }
             } else {
                 binding.smartName = 'setupOnlyRegister';
             }
@@ -527,7 +964,7 @@ function module() {
                 smartName: 'clickHandler',
                 callback: self.wifiCancelButton
             }
-        ]
+        ];
         // Save the smartBindings to the framework instance.
         framework.putSmartBindings(smartBindings);
         // Save the customSmartBindings to the framework instance.
@@ -551,16 +988,16 @@ function module() {
         console.log('in onDeviceConfigured');
         setupBindings.forEach(function(setupBinding){
             // console.log('Addr',setupBinding.address,'Status',setupBinding.status,'Val',setupBinding.result);
-            console.log('Addr',setupBinding.address,':',setupBinding.formattedResult);
+            console.log('Addr',setupBinding.address,':',setupBinding.formattedResult,setupBinding.result,setupBinding.status);
             self.saveConfigResult(
                 setupBinding.address,
-                setupBinding.result,
+                {val:setupBinding.result,fVal:setupBinding.formattedResult},
                 setupBinding.status
             );
         });
         
         // Load configuration data & customize view
-        self.moduleContext.ethernetIPRegisters = {}
+        self.moduleContext.ethernetIPRegisters = {};
 
         // Get and save ethernetIPRegisterList
         var ethernetIPRegisters = self.getIPRegisters(self.ethernetRegisters);
@@ -570,17 +1007,84 @@ function module() {
         var wifiIPRegisters = self.getIPRegisters(self.wifiRegisters);
         self.moduleContext.wifiIPRegisters = wifiIPRegisters;
 
+        // Get and save wifiNetworkName
+        var networkNameDefault = self.currentValues.get('WIFI_SSID').fVal;
+        self.moduleContext.wifiNetworkName = networkNameDefault;
+
+        // Get and save ethernetPowerStatus
+        var isEthernetPowered = self.currentValues.get('POWER_ETHERNET').val;
+        if(isEthernetPowered === 0) {
+            self.moduleContext.isEthernetPowered = false;
+            self.moduleContext.ethernetPowerButtonString = 'Turn Ethernet On';
+        } else {
+            self.moduleContext.isEthernetPowered = true;
+            self.moduleContext.ethernetPowerButtonString = 'Turn Ethernet Off';
+        }
+
+        // Get and save wifiPowerStatus
+        var isWifiPowered = self.currentValues.get('POWER_WIFI').val;
+        if(isWifiPowered === 0) {
+            self.moduleContext.isWifiPowered = false;
+            self.saveCurrentValue('POWER_WIFI',0,'Disabled');
+            self.moduleContext.wifiPowerButtonString = 'Turn WiFi On';
+        } else {
+            self.moduleContext.isWifiPowered = true;
+            self.saveCurrentValue('POWER_WIFI',1,'Enabled');
+            self.moduleContext.wifiPowerButtonString = 'Turn WiFi Off';
+        }
+
         self.moduleContext.isPro = null;
         if (self.activeDevice.getSubclass()) {
-            self.moduleContext.isPro = true
+            self.moduleContext.isPro = true;
         }
-        console.log('Device Selected:',self.activeDevice.getSubclass());
+
+        var initialEthernetDHCPStatus = self.currentValues.get('ETHERNET_DHCP_ENABLE');
+        if (initialEthernetDHCPStatus.val === 0) {
+            self.moduleContext.ethernetDHCPStatus = false;
+            self.moduleContext.ethernetDHCPStatusString = "DHCP Manual";
+        } else {
+            self.moduleContext.ethernetDHCPStatus = true;
+            self.moduleContext.ethernetDHCPStatusString = "DHCP Auto";
+        }
+        var initialWifiDHCPStatus = self.currentValues.get('WIFI_DHCP_ENABLE');
+        if (initialWifiDHCPStatus.val === 0) {
+            self.moduleContext.wifiDHCPStatus = false;
+            self.moduleContext.wifiDHCPStatusString = "DHCP Manual";
+        } else {
+            self.moduleContext.wifiDHCPStatus = true;
+            self.moduleContext.wifiDHCPStatusString = "DHCP Auto";
+        }
+        console.log('WIfi DHCP',initialWifiDHCPStatus,self.moduleContext.wifiDHCPStatus,self.moduleContext.wifiDHCPStatusString);
+
+
+        var initialEthernetIP = self.currentValues.get('ETHERNET_IP').val;
+        if(initialEthernetIP === 0) {
+            self.isEthernetConnected = false;
+        } else {
+            self.isEthernetConnected = true;
+        }
+        var initialWifiStatus = self.currentValues.get('WIFI_STATUS').val;
+        if (initialWifiStatus === 2900) {
+            self.isWifiConnected = true;
+        } else {
+            self.isWifiConnected = false;
+        }
+
+        // console.log('Device Selected:',self.activeDevice.getSubclass());
+        console.log('Init context',self.moduleContext);
         framework.setCustomContext(self.moduleContext);
         onSuccess();
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         self.attachInputValidators();
+
+        self.setNetworkName('5PoundBass');
+        self.setWifiPassword('smgmtbmb3cmtbc');
+
+        // force validations to occur
+        self.selectivelyShowEthernetAlerts();
+        self.selectivelyShowWifiAlerts();
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
@@ -613,7 +1117,7 @@ function module() {
         onHandle(true);
     };
     this.onRefreshError = function(framework, registerNames, description, onHandle) {
-        console.log('in onRefreshError', description);
+        // console.log('in onRefreshError', description);
         if(typeof(description.retError) === 'number') {
             console.log(device_controller.ljm_driver.errToStrSync(description.retError));
         } else {

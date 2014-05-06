@@ -75,6 +75,8 @@ function connectNewDevice(event)
     var connectionType = parseInt(deviceInfo[4]);
     var deviceType = parseInt(deviceInfo[5]);
 
+    console.log(serial,ipAddress,connectionType,deviceType);
+
     var info = $(jqueryID).parents('#info-holder').children('#info');
     info.children('.device-load-progress').show();
     info.children('#show-connect-button-holder').hide();
@@ -216,6 +218,7 @@ function refreshDevices()
     $('#content-holder').html('');
     var onDevicesLoaded = function(devices) {
         var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+        console.log('List All Screen Context',context);
         if (devices.length === 0)
             context.noDevices = true;
         $('#device-search-msg').hide();

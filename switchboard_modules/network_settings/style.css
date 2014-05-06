@@ -36,7 +36,7 @@
 	margin-bottom: 0px;
 }
 .Auto_Value {
-	display:none;
+	/*display:none;*/
 }
 .Manual_Value {
 }
@@ -59,12 +59,12 @@
 	display:none;
 }
 .configSettingsDiv .dhcpAlert {
-	margin-bottom: -2px;
+	margin-bottom: -3px;
 	padding: 0px;
 	width: 17px;
 	left:15px;
 	height: 33px;
-	/*display:none;*/
+	display:none;
 }
 .configSettingsDiv .dhcpAlert .alert{
 	padding:5px 1px 5px 1px;
