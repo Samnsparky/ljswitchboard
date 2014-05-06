@@ -9,6 +9,10 @@
         {
             "serialNumber":"470010620",
             "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010548",
+            "connectionType":"USB"
         }
     ],
     "Labjack-T7s":

@@ -736,16 +736,44 @@ function module() {
 
         var applySettings = false;
 
-        var ioError = function(err) {
-            var ioDeferred = q.defer();
-            if(typeof(err) === 'number') {
-                console.log(self.ljmDriver.errToStrSync(err));
-            } else {
-                console.log('Wifi Applying Settings Error',err);
+        var getIOError = function(message) {
+            return function(err) {
+                var ioDeferred = q.defer();
+                console.log('POWER_WIFI',self.activeDevice.read('POWER_WIFI'));
+                if(typeof(err) === 'number') {
+                    console.log(message,self.ljmDriver.errToStrSync(err));
+                } else {
+                    console.log('Wifi Applying Settings Error',message,err);
+                }
+                ioDeferred.resolve();
+                return ioDeferred.promise;
+            };
+        };
+        var getDelay = function(time,resolve) {
+            var timoutFunc = function() {
+                console.log('timer expired');
+                resolve();
             }
-            ioDeferred.resolve();
+            var execFunc = function() {
+                setTimeout(resolve,time);
+            }
+            return execFunc;
+        }
+        var disableWifi = function() {
+            console.log('disableWifi');
+            var ioDeferred = q.defer();
+            self.activeDevice.qWrite('POWER_WIFI',0)
+            .then(getDelay(1000,ioDeferred.resolve),ioDeferred.reject);
             return ioDeferred.promise;
         };
+        var enableWifi = function() {
+            console.log('enableWifi');
+            var ioDeferred = q.defer();
+            self.activeDevice.qWrite('POWER_WIFI',1)
+            .then(getDelay(1000,ioDeferred.resolve),ioDeferred.reject);
+            return ioDeferred.promise;
+        };
+
         var writeSettings = function() {
             var ioDeferred = q.defer();
             if(newNames.length > 0) {
@@ -791,20 +819,14 @@ function module() {
             }
             return ioDeferred.promise;
         };
-        //var performWrites = networkPassword.isNew;
-        
-        var performWrites;
-        // try {
-            performWrites = isew;
-        // } catch (e) {
-        //     console.log('e',e);
-        //     performWrites = false;
-        // }
+        var performWrites = networkPassword.isNew;
         if(performWrites) {
-            writeSettings()
-            .then(writeNetworkName,ioError)
-            .then(writeNetworkPassword,ioError)
-            .then(applyWifiSettings,ioError)
+            disableWifi()
+            .then(writeSettings,getIOError('disableWifi'))
+            .then(writeNetworkName,getIOError('writeSettings'))
+            .then(writeNetworkPassword,getIOError('writeNetworkName'))
+            .then(enableWifi,getIOError('writeNetworkPassword'))
+            .then(applyWifiSettings,getIOError('enableWifi'))
             .then(function() {
                     console.log('Successfully Applied Wifi Settings');
                     onSuccess();
@@ -1088,7 +1110,8 @@ function module() {
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         self.attachInputValidators();
 
-        self.setNetworkName('5PoundBass');
+        // self.setNetworkName('5PoundBass');
+        self.setNetworkName('- DEN Airport Free WiFi');
         self.setWifiPassword('smgmtbmb3cmtbc');
 
         // force validations to occur
@@ -1128,7 +1151,7 @@ function module() {
     this.onRefreshError = function(framework, registerNames, description, onHandle) {
         // console.log('in onRefreshError', description);
         if(typeof(description.retError) === 'number') {
-            console.log(device_controller.ljm_driver.errToStrSync(description.retError));
+            console.log('in onRefreshError',device_controller.ljm_driver.errToStrSync(description.retError));
         } else {
             console.log('Type of error',typeof(description.retError),description.retError);
         }

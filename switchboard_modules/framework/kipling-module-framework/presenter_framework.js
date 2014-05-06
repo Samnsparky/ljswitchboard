@@ -313,6 +313,10 @@ function Framework() {
     this.daqLoopMonitorTimer;
     this.daqLoopStatus = 'un-initialized';
 
+    this.pauseDAQLoop = false;
+    this.isDAQLoopPaused = false;
+    this.hasNotifiedUserOfPause = false;
+
     var self = this;
     this.reportSyntaxError = function(location, err) {
         console.log('Error in:',location);
@@ -335,7 +339,7 @@ function Framework() {
         // console.log('index',index);
         // console.log('clean',clean);
         showCriticalAlert(err.toString());
-    }
+    };
     this.enableLoopTimingAnalysis = function() {
         self.sdFrameworkDebugTiming = true;
     };
@@ -377,12 +381,12 @@ function Framework() {
         if(self.sdFrameworkDebugDAQLoopMonitor) {
             self.print(functionName,info,'sdFrameworkDebugDAQLoopMonitor');
         }
-    }
+    };
     this.printTimingInfo = function(functionName,info) {
         if(self.sdFrameworkDebugTiming) {
             self.print(functionName,info,'sdFrameworkDebugTiming');
         }
-    }
+    };
     this.printLoopErrors = function(functionName,info) {
         if(self.sdFrameworkDebugLoopErrors) {
             self.print(functionName,info,'sdFrameworkDebugLoopErrors');
@@ -1956,7 +1960,7 @@ function Framework() {
         if(!self.daqLoopFinished) {
             self.printDAQLoopInfo('DAQ-Loop-Lock-Detected',self.daqLoopStatus);
         }
-    }
+    };
     this.qConfigureTimer = function() {
         var innerDeferred = q.defer();
         var d = new Date();
@@ -2019,6 +2023,27 @@ function Framework() {
         return innerDeferred.promise;
     };
     var qConfigureTimer = this.qConfigureTimer;
+
+    this.unpauseFramework = function() {
+        self.isDAQLoopPaused = false;
+    }
+    var unpauseFramework = this.unpauseFramework;
+    this.pauseFramework = function(pauseNotification) {
+        self.pauseDAQLoop = true;
+        self.isPausedListenerFunc = pauseNotification;
+        return function() {
+            self.isDAQLoopPaused = false;
+        }
+    }
+    var pauseFramework = this.pauseFramework;
+    this.testPauseFramework = function() {
+        self.pauseFramework(
+            function() {
+                console.log('Framework is paused!');
+                self.unpauseFramework();
+            }
+        );
+    }
     /**
      * Function to run a single iteration of the module's refresh loop.
      *
@@ -2028,10 +2053,47 @@ function Framework() {
     **/
     this.loopIteration = function () {
         var deferred = q.defer();
-        self.daqLoopStatus = 'startingLoop';
         self.daqLoopFinished = false;
-        self.daqLoopMonitorTimer = setTimeout(self.daqMonitor, 1000);
+        self.daqLoopStatus = 'startingLoop';
+        var getIsPausedChecker = function(unPauseLoop) {
+            var isPausedChecker = function() {
+                if(self.isDAQLoopPaused) {
+                    if(!self.hasNotifiedUserOfPause) {
+                        self.isPausedListenerFunc();
+                        self.hasNotifiedUserOfPause = true;
+                    }
+                    console.log('DAQ Loop is still paused');
+                    setTimeout(isPausedChecker,100);
+                } else {
+                    self.pauseDAQLoop = false;
+                    self.hasNotifiedUserOfPause = false;
+                    console.log('Resuming DAQ Loop');
+                    self.daqLoopStatus = 'loopResuming';
+                    unPauseLoop();
+                }
+            };
+            return isPausedChecker;
+        };
 
+        var pauseLoop = function() {
+            var innerDeferred = q.defer();
+            if (self.pauseDAQLoop) {
+                // DAQ loop is paused
+                self.isDAQLoopPaused = true;
+                self.daqLoopStatus = 'loopPaused';
+                setTimeout(getIsPausedChecker(innerDeferred.resolve),100);
+            } else {
+                innerDeferred.resolve();
+            }
+            return innerDeferred.promise;
+        };
+        var initLoopTimer = function() {
+            var innerDeferred = q.defer();
+            self.daqLoopStatus = 'startingLoopMonitorTimer';
+            self.daqLoopMonitorTimer = setTimeout(self.daqMonitor, 1000);
+            innerDeferred.resolve();
+            return innerDeferred.promise;
+        };
         if (!self.runLoop) {
             deferred.reject('Loop not running.');
             return deferred.promise;
@@ -2325,7 +2387,9 @@ function Framework() {
             
         // };
         //checkModuleStatus()
-        getNeededAddresses()
+        pauseLoop()
+        .then(initLoopTimer, reportError)
+        .then(getNeededAddresses, reportError)
         .then(alertRefresh, reportError)
         .then(requestDeviceValues, handleIOError)
         .then(processDeviceValues, reportError)
