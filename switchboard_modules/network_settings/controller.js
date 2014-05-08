@@ -610,6 +610,22 @@ function module() {
         }
         onSuccess();
     };
+    this.qPowerCycleEthernet = function() {
+        var ioDeferred = q.defer();
+        self.activeDevice.writeMany(
+            ['POWER_ETHERNET','POWER_ETHERNET'],
+            [0,1])
+        ioDeferred.resolve();
+        return ioDeferred.promise;
+    };
+    this.powerCycleEthernet = function() {
+        self.qPowerCycleEthernet()
+        .then(function() {
+            console.log('Success!');
+        }, function(err) {
+            console.log('err',err);
+        })
+    };
     this.ethernetApplyButton = function(data, onSuccess) {
         console.log('in ethernetApplyButton listener');
         var configData = getNewEthernetSettings();
@@ -755,7 +771,7 @@ function module() {
                 resolve();
             }
             var execFunc = function() {
-                setTimeout(resolve,time);
+                setTimeout(timoutFunc,time);
             }
             return execFunc;
         }
@@ -773,6 +789,48 @@ function module() {
             .then(getDelay(1000,ioDeferred.resolve),ioDeferred.reject);
             return ioDeferred.promise;
         };
+        var waitForWifi = function() {
+            var ioDeferred = q.defer();
+            var checkWifiStatus = function() {
+                var innerIODeferred = q.defer();
+                // console.log('Reading Wifi Status (reg)');
+                self.activeDevice.qRead('WIFI_STATUS')
+                .then(function(result) {
+                    if(result != 2904) {
+                        innerIODeferred.resolve();
+                    } else {
+                        innerIODeferred.reject();
+                    }
+                },innerIODeferred.reject);
+                return innerIODeferred.promise;
+            }
+            var getDelayAndCheck = function(iteration) {
+                var timerDeferred = q.defer();
+                var configureTimer = function() {
+                    setTimeout(delayedCheckWifiStatus,500);
+                }
+                var delayedCheckWifiStatus = function() {
+                    // console.log('Reading Wifi Status (delay)',iteration);
+                    self.activeDevice.qRead('WIFI_STATUS')
+                    .then(function(result) {
+                        if(result != 2904) {
+                            timerDeferred.resolve();
+                        } else {
+                            iteration += 1;
+                            configureTimer();
+                        }
+                    },timerDeferred.reject);
+                }
+                configureTimer();
+                return function() {
+                    return timerDeferred.promise;
+                }
+            }
+            checkWifiStatus()
+            .then(ioDeferred.resolve,getDelayAndCheck(0))
+            .then(ioDeferred.resolve,ioDeferred.reject);
+            return ioDeferred.promise;
+        }
 
         var writeSettings = function() {
             var ioDeferred = q.defer();
@@ -821,12 +879,11 @@ function module() {
         };
         var performWrites = networkPassword.isNew;
         if(performWrites) {
-            disableWifi()
+            waitForWifi()
             .then(writeSettings,getIOError('disableWifi'))
             .then(writeNetworkName,getIOError('writeSettings'))
             .then(writeNetworkPassword,getIOError('writeNetworkName'))
-            .then(enableWifi,getIOError('writeNetworkPassword'))
-            .then(applyWifiSettings,getIOError('enableWifi'))
+            .then(applyWifiSettings,getIOError('writeNetworkPassword'))
             .then(function() {
                     console.log('Successfully Applied Wifi Settings');
                     onSuccess();
@@ -1111,7 +1168,8 @@ function module() {
         self.attachInputValidators();
 
         // self.setNetworkName('5PoundBass');
-        self.setNetworkName('- DEN Airport Free WiFi');
+        // self.setNetworkName('- DEN Airport Free WiFi');
+        self.setNetworkName('Courtyard_GUEST');
         self.setWifiPassword('smgmtbmb3cmtbc');
 
         // force validations to occur
