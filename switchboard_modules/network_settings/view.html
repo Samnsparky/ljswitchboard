@@ -44,12 +44,13 @@
 						<th class="userFeedback"/>
 					</thead>
 					<tbody style="background-color:transparent">
+						{{#if custom.poop}}++{{else}}--{{/if}}
 						{{#each custom.ethernetIPRegisters}}
 							<tr id="{{name}}_VAL" class="networkSetting">
-								<td>{{humanName}}: </td>
+								<td>{{humanName}}: {{#if ./ethernetDHCPStatusBool}}++{{else}}--{{/if}}</td>
 								<td>
-									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless ../ethernetDHCPStatus}}display:none;{{/unless}}">{{ initVal }}</span>
-									<div class="Manual_Value" style="{{#if ../ethernetDHCPStatus}}display:none;{{/if}}">
+									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless ./ethernetDHCPStatusBool}}display:none;{{/unless}}">{{ initVal }}</span>
+									<div class="Manual_Value" style="{{#if ./ethernetDHCPStatusBool}}display:none;{{/if}}">
 										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
 									</div>
 								</td>
@@ -93,7 +94,7 @@
 					</div>
 				</div>
 				<div class="connectionStatusMessage">
-					<span id="ethernetStatusMessage">WiFi is connected to AAA and has theIP address 192.168.1.153.<span>
+					<span id="wifiStatusMessage">WiFi is connected to AAA and has theIP address 192.168.1.153.<span>
 				</div>
 			</div>
 			<hr>
