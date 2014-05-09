@@ -70,6 +70,10 @@
     {
         "name": "data_logger",
         "active": false
+    },
+    {
+        "name": "network_settings",
+        "active": true
     }
 
 ]

@@ -5,6 +5,7 @@
  * Switchboard desktop utilities platform.
  *
  * @author A. Samuel Pottinger (LabJack, 2013)
+ * @contributor Chris Johnson (LabJack, 2013)
 **/
 
 var async = require('async');

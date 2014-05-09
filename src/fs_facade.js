@@ -10,6 +10,7 @@ var fs = require('fs');
 var path = require('path');
 
 var handlebars = require('handlebars');
+var os = require('os');
 
 var MODULES_DIR = 'switchboard_modules';
 var MODULE_DESC_FILENAME = 'module.json';
@@ -23,11 +24,39 @@ var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
 
 var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
 
+var fileSaveAsID = "#file-save-dialog-hidden";
+var getFileLoadID = "#file-dialog-hidden";
+
+var defaultFilePath = {
+    'linux': '/home/path',
+    'linux2': '/home/path',
+    'sunos': '/home/path',
+    'solaris': '/home/path',
+    'freebsd': '/home/path',
+    'openbsd': '/home/path',
+    'darwin': process.env.HOME,
+    'mac': process.env.HOME,
+    'win32': 'C:\\Windows',
+    'win64': 'C:\\Windows'
+}[process.platform];
+exports.testFunction = function() {
+    return "testing..."
+};
+exports.getFileSaveAsID = function() {
+    return fileSaveAsID;
+};
+exports.getFileLoadID = function() {
+    return getFileLoadID;
+};
+exports.getDefaultFilePath = function() {
+    return defaultFilePath;
+};
+
 var FS_FACADE_LoadErrors = [];
 
 var addLoadError = function(data) {
     FS_FACADE_LoadErrors.push(data);
-}
+};
 var safeJSONParse = function(filePath, contents) {
     var constants = {};
     try {
@@ -35,7 +64,7 @@ var safeJSONParse = function(filePath, contents) {
     } catch (err) {
         var pathArray = [];
         var fileName = "";
-        if(filePath.split('/').length > 1) {
+        if (filePath.split('/').length > 1) {
             pathArray = filePath.split('/');
             fileName = pathArray[pathArray.length-1];
         } else {
@@ -51,10 +80,10 @@ var safeJSONParse = function(filePath, contents) {
         addLoadError(text);
     }
     return constants;
-}
+};
 exports.getLoadErrors = function() {
     return FS_FACADE_LoadErrors;
-}
+};
 
 
 /**
@@ -67,24 +96,16 @@ exports.getLoadErrors = function() {
  *      for.
  * @return {String} The fully resolved URI or null if it could not be resolved.
 **/
-exports.getInternalURI = function(resourceName)
-{
+exports.getInternalURI = function(resourceName) {
     var extension = path.extname(resourceName);
 
-    if(extension === '.html')
-    {
+    if (extension === '.html') {
         return path.join(__dirname, INTERNAL_TEMPLATES_DIR, resourceName);
-    }
-    else if(extension === '.js')
-    {
+    } else if (extension === '.js') {
         return path.join(__dirname, INTERNAL_JS_DIR, resourceName);
-    }
-    else if(extension === '.css')
-    {
+    } else if (extension === '.css') {
         return path.join(__dirname, INTERNAL_CSS_DIR, resourceName);
-    }
-    else
-    {
+    } else {
         return null;
     }
 };
@@ -99,8 +120,7 @@ exports.getInternalURI = function(resourceName)
  * @param {String} fullResourceName The name of the resource to resolve.
  * @return {String} The fully resolved URI or null if it could not be resolved.
 **/
-exports.getExternalURI = function(fullResourceName)
-{
+exports.getExternalURI = function(fullResourceName) {
     var resourceNamePieces = fullResourceName.split('/');
     var moduleName = "";
     var resourceName = resourceNamePieces[(resourceNamePieces.length - 1)];
@@ -121,18 +141,16 @@ exports.getExternalURI = function(fullResourceName)
  * @return {string} The full path to the directory that this executable is being
  *      run out of.
 **/
-exports.getParentDir = function()
-{
+exports.getParentDir = function() {
     var pathPieces = path.dirname(process.execPath).split(path.sep);
     
     var cutIndex;
     var numPieces = pathPieces.length;
-    for(cutIndex=0; cutIndex<numPieces; cutIndex++)
-    {
-        if(pathPieces[cutIndex].indexOf('.app') != -1)
+    for (cutIndex=0; cutIndex<numPieces; cutIndex++) {
+        if (pathPieces[cutIndex].indexOf('.app') != -1) {
             break;
+        }
     }
-
     return pathPieces.slice(0, cutIndex).join(path.sep);
 };
 
@@ -149,28 +167,19 @@ exports.getParentDir = function()
  *      successfully rendered. Should take a single argument which would
  *      be the String rendred html.
 **/
-exports.renderTemplate = function(location, context, onError, onSuccess)
-{
-    fs.exists(location, function(exists)
-    {
-        if(exists)
-        {
+exports.renderTemplate = function(location, context, onError, onSuccess) {
+    fs.exists(location, function(exists) {
+        if (exists) {
             fs.readFile(location, 'utf8',
-                function (error, template)
-                {
-                    if (error)
-                    {
+                function (error, template) {
+                    if (error) {
                         onError(error);
-                    }
-                    else
-                    {
+                    } else {
                         onSuccess(handlebars.compile(template)(context));
                     }
                 }
             );
-        }
-        else
-        {
+        } else {
             onError(new Error('Template ' + location + ' could not be found.'));
         }
     });
@@ -189,18 +198,15 @@ exports.renderTemplate = function(location, context, onError, onSuccess)
  * @param {function} onSuccess The function to call with the module information
  *      after it is loaded.
 **/
-exports.getModuleInfo = function(name, onError, onSuccess)
-{
+exports.getModuleInfo = function(name, onError, onSuccess) {
     var moduleDir = path.join(exports.getParentDir(), MODULES_DIR);
     var modulesDescriptorSrc = path.join(moduleDir, name,
         MODULE_DESC_FILENAME);
 
-    fs.exists(modulesDescriptorSrc, function(exists)
-    {
-        if(exists) {
+    fs.exists(modulesDescriptorSrc, function(exists) {
+        if (exists) {
             fs.readFile(modulesDescriptorSrc, 'utf8',
-                function (error, contents)
-                {
+                function (error, contents) {
                     if (error) {
                         onError(error);
                     } else {
@@ -227,10 +233,9 @@ exports.getModuleConstants = function(name, onError, onSuccess) {
         MODULE_CONST_FILENAME);
 
     fs.exists(modulesDescriptorSrc, function(exists) {
-        if(exists) {
+        if (exists) {
             fs.readFile(modulesDescriptorSrc, 'utf8',
-                function (error, contents)
-                {
+                function (error, contents) {
                     if (error) {
                         onError(error);
                     } else {
@@ -245,15 +250,14 @@ exports.getModuleConstants = function(name, onError, onSuccess) {
             onSuccess(constants);
         }
     });
-}
+};
 
 exports.readModuleFile = function(filePath, onError, onSuccess) {
     var fullPath = exports.getExternalURI(filePath);
     fs.exists(fullPath, function(exists) {
-        if(exists) {
+        if (exists) {
             fs.readFile(fullPath, 'utf8',
-                function (error, contents)
-                {
+                function (error, contents) {
                     if (error) {
                         onError(error);
                     } else {
@@ -268,7 +272,7 @@ exports.readModuleFile = function(filePath, onError, onSuccess) {
             onError(error);
         }
     });
-}
+};
 
 // TODO: Move to module manager
 /**
@@ -280,32 +284,23 @@ exports.readModuleFile = function(filePath, onError, onSuccess) {
  *      is loaded. Should take one argument: an Array of Object with module
  *      information.
 **/
-exports.getLoadedModulesInfo = function(onError, onSuccess)
-{
+exports.getLoadedModulesInfo = function(onError, onSuccess) {
     var moduleDir = path.join(exports.getParentDir(), MODULES_DIR);
     var modulesDescriptorSrc = path.join(moduleDir, MODULES_DESC_FILENAME);
 
-    fs.exists(modulesDescriptorSrc, function(exists)
-    {
-        if(exists)
-        {
+    fs.exists(modulesDescriptorSrc, function(exists) {
+        if (exists) {
             fs.readFile(modulesDescriptorSrc, 'utf8',
-                function (error, contents)
-                {
-                    if (error)
-                    {
+                function (error, contents) {
+                    if (error) {
                         onError(error);
-                    }
-                    else
-                    {
+                    } else {
                         var filePath = modulesDescriptorSrc;
                         onSuccess(safeJSONParse(filePath, contents));
                     }
                 }
             );
-        }
-        else
-        {
+        } else {
             var error = new Error(
                 'Could not find modules info at ' + modulesDescriptorSrc + '.'
             );
@@ -314,6 +309,40 @@ exports.getLoadedModulesInfo = function(onError, onSuccess)
     });
 };
 
+exports.saveDataToFile = function(location, data, onError, onSuccess) {
+    fs.exists(location, function(exists) {
+        fs.writeFile(
+            location, 
+            data, 
+            function (err) {
+                if (err) {
+                    onError(err);
+                } else {
+                    onSuccess();
+                }
+            }
+        );
+    });
+};
+
+exports.loadFile = function(location, onError, onSuccess) {
+    fs.exists(location, function(exists) {
+        if (exists) {
+            fs.readFile(location, 'utf8',
+                function (error, contents) {
+                    if (error) {
+                        onError(error);
+                    } else {
+                        onSuccess(contents);
+                    }
+                }
+            );
+        } else {
+            var error = new Error('Could not find File at ' + location + '.');
+            onError(error);
+        }
+    });
+};
 
 /**
  * Convienence function to get and decode a JSON file.
@@ -325,29 +354,20 @@ exports.getLoadedModulesInfo = function(onError, onSuccess)
  *      successfully loaded. The only function parameter should be for the Array
  *      or Object loaded.
 **/
-exports.getJSON = function(location, onError, onSuccess)
-{
-    fs.exists(location, function(exists)
-    {
-        if(exists)
-        {
+exports.getJSON = function(location, onError, onSuccess) {
+    fs.exists(location, function(exists) {
+        if (exists) {
             fs.readFile(location, 'utf8',
-                function (error, contents)
-                {
-                    if (error)
-                    {
+                function (error, contents) {
+                    if (error) {
                         onError(error);
-                    }
-                    else
-                    {
+                    } else {
                         var filePath = location;
                         onSuccess(safeJSONParse(filePath, contents));
                     }
                 }
             );
-        }
-        else
-        {
+        } else {
             var error = new Error(
                 'Could not find JSON at ' + location + '.'
             );

@@ -268,6 +268,10 @@ function Framework() {
     var moduleConstants;
     var module;
 
+    //Constants for auto-debugging on slow DAQ loops
+    var iterationTime;
+    var ljmDriverLogEnabled = false;
+
     this.deviceSelectionListenersAttached = deviceSelectionListenersAttached;
     this.jquery = jquery;
     this.refreshRate = refreshRate;
@@ -293,7 +297,101 @@ function Framework() {
     this.moduleConstants = moduleConstants;
     this.module = module;
 
+    //Constants for auto-debugging on slow DAQ loops
+    var moduleStartTimeObj = new Date();
+    this.iterationTime = iterationTime;
+    this.iterationTime = moduleStartTimeObj.valueOf();
+    this.ljmDriverLogEnabled = ljmDriverLogEnabled;
+    this.sdFrameworkDebug = true;
+    this.sdFrameworkDebugLoopErrors = false;
+    this.sdFrameworkDebugTiming = false;
+    this.sdFrameworkDebugDAQLoopMonitor = false;
+    this.numContinuousRegLoopIterations = 0;
+    this.loopErrorEncountered = false;
+    this.loopErrors = [];
+    this.daqLoopFinished = false;
+    this.daqLoopMonitorTimer;
+    this.daqLoopStatus = 'un-initialized';
+
+    this.pauseDAQLoop = false;
+    this.isDAQLoopPaused = false;
+    this.hasNotifiedUserOfPause = false;
+
     var self = this;
+    this.reportSyntaxError = function(location, err) {
+        console.log('Error in:',location);
+        console.log('Error obj',err,err.message);
+        console.log('Error Str',err.toString());
+        var stackSplit = err.stack.split("\n");
+        var caller_line = err.stack.split("\n")[4];
+        var index = caller_line.indexOf("at ");
+        var clean = caller_line.slice(index+2, caller_line.length);
+        // console.log('other output:',err.stack);
+        console.log('stackSplit',stackSplit);
+        // console.log('Stack Dump');
+        // stackSplit.forEach(function(stackStr,i){
+        //     var str = "";
+        //     str += stackStr
+        //     console.log(i.toString()+'.',str);
+        // });
+        // console.log('line:',err.line);
+        // console.log('caller',caller_line);
+        // console.log('index',index);
+        // console.log('clean',clean);
+        showCriticalAlert(err.toString());
+    };
+    this.enableLoopTimingAnalysis = function() {
+        self.sdFrameworkDebugTiming = true;
+    };
+    this.disableLoopTimingAnalysis = function() {
+        self.sdFrameworkDebugTiming = true;
+    };
+    this.enableLoopErrorAnalysis = function() {
+        self.sdFrameworkDebugTiming = true;
+    };
+    this.disableLoopErrorAnalysis = function() {
+        self.sdFrameworkDebugTiming = false;
+    };
+    this.enableLoopMonitorAnalysis = function() {
+        self.sdFrameworkDebugDAQLoopMonitor = true;
+    };
+    this.disableLoopMonitorAnalysis = function() {
+        self.sdFrameworkDebugDAQLoopMonitor = false;
+    };
+    this.print = function(functionName,info,errName) {
+        if(typeof(errName) === 'undefined') {
+            errName = 'sdFrameworkDebug';
+        }
+        if(self.sdFrameworkDebug) {
+            var fnDefined = (typeof(functionName) !== 'undefined');
+            var infoDefined = (typeof(info) !== 'undefined');
+            if(fnDefined && infoDefined) {
+                console.log(errName,self.moduleName,functionName,info);
+            } else if (!fnDefined && infoDefined) {
+                console.log(errName,self.moduleName,info);
+            } else if (fnDefined && !infoDefined) {
+                console.log(errName,self.moduleName,functionName);
+            } else {
+                console.log(errName,self.moduleName);
+            }
+            
+        }
+    };
+    this.printDAQLoopInfo = function(functionName,info) {
+        if(self.sdFrameworkDebugDAQLoopMonitor) {
+            self.print(functionName,info,'sdFrameworkDebugDAQLoopMonitor');
+        }
+    };
+    this.printTimingInfo = function(functionName,info) {
+        if(self.sdFrameworkDebugTiming) {
+            self.print(functionName,info,'sdFrameworkDebugTiming');
+        }
+    };
+    this.printLoopErrors = function(functionName,info) {
+        if(self.sdFrameworkDebugLoopErrors) {
+            self.print(functionName,info,'sdFrameworkDebugLoopErrors');
+        }
+    };
 
     this._SetJQuery = function(newJQuery) {
         jquery = newJQuery;
@@ -552,6 +650,15 @@ function Framework() {
         //clean up module's third party libraries
         self.unloadModuleLibraries(self.moduleInfoObj.third_party_code_unload);
 
+        //If LJM's debug log was enabled, disable it
+        if(self.ljmDriverLogEnabled) {
+            console.log('disabling LJM-log');
+            console.log('File:',self.ljmDriver.readLibrarySync('LJM_DEBUG_LOG_FILE'));
+            self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',1);
+            self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_LEVEL',10);
+            self.ljmDriverLogEnabled = false;
+        }
+
         //Inform the module that it has been unloaded.
         self.fire(
             'onUnloadModule',
@@ -652,8 +759,8 @@ function Framework() {
         jquery.bind(
             jquerySelector,
             binding.event,
-            function () { 
-                self._writeToDevice(binding); 
+            function (eventData) { 
+                self._writeToDevice(binding, eventData); 
             }
         );
     };
@@ -906,6 +1013,8 @@ function Framework() {
             setupBinding.binding = bindingName;
             setupBinding.direction = 'read';
             setupBinding.callback = newSmartBinding.configCallback;
+            setupBinding.format = newSmartBinding.format;
+            setupBinding.formatFunc = newSmartBinding.customFormatFunc;
             
             if(typeof(newSmartBinding.configCallback) === 'function') {
                 setupBinding.execCallback = true;
@@ -914,6 +1023,22 @@ function Framework() {
 
             // Save binding to framework
             self.putConfigBinding(binding);
+            self.putSetupBinding(setupBinding);
+            isValid = true;
+        } else if (smartName === 'setupOnlyRegister') {
+            // Add information to setupBinding object
+            setupBinding.binding = bindingName;
+            setupBinding.direction = 'read';
+            setupBinding.callback = newSmartBinding.configCallback;
+            setupBinding.format = newSmartBinding.format;
+            setupBinding.formatFunc = newSmartBinding.customFormatFunc;
+            
+            if(typeof(newSmartBinding.configCallback) === 'function') {
+                setupBinding.execCallback = true;
+            }
+            setupBinding.callback = newSmartBinding.configCallback;
+
+            // Save binding to framework
             self.putSetupBinding(setupBinding);
             isValid = true;
         }
@@ -979,6 +1104,19 @@ function Framework() {
                 onErrorHandle
             );
             return;
+        }
+        // if an output format isn't defined define the default
+        if (newBinding.format === undefined) {
+            newBinding.format = '%.4f';
+        }
+
+        // if a customFormatFunc isn't defined define a dummy function 
+        if (newBinding.formatFunc === undefined) {
+            newBinding.formatFunc = function(rawReading){
+                console.log('Here, val:',rawReading);
+                var retStr = "'customFormatFunc' NotDefined";
+                return retStr;
+            };
         }
 
         var isWrite = newBinding.direction === 'write';
@@ -1071,6 +1209,8 @@ function Framework() {
         var saveSetupBindings = function(setupInfo) {
             var innerDeferred = q.defer();
             self.setupBindings.forEach(function(binding, index){
+                setupInfo.formats.push(binding.format);
+                setupInfo.formatFuncs.push(binding.formatFunc);
                 setupInfo.bindingClasses.push(binding.bindingClass);
                 setupInfo.addresses.push(binding.binding);
                 setupInfo.numValues.push(1);
@@ -1115,6 +1255,7 @@ function Framework() {
                 var result = {
                     status: 'success',
                     result: -1,
+                    formattedResult: '-1',
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
@@ -1129,6 +1270,7 @@ function Framework() {
                 var result = {
                     status: 'error',
                     result: error,
+                    formattedResult: null,
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
@@ -1142,9 +1284,25 @@ function Framework() {
         function createSuccessfulReadFunc (ioDeferred, binding, results) {
             return function (value) {
                 // console.log('Successful Read',value);
+                var formattedValue = '';
+                var curFormat = binding.format;
+                if(typeof(value) === 'number') {
+                    if(curFormat !== 'customFormat') {
+                        formattedValue = sprintf(curFormat, value);
+                    } else {
+                        formattedValue = binding.formatFunc({
+                            value: value,
+                            address: binding.binding,
+                            binding: binding
+                        });
+                    }
+                } else {
+                    formattedValue = value;
+                }
                 var result = {
                     status: 'success',
                     result: value,
+                    formattedResult: formattedValue,
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
@@ -1161,6 +1319,7 @@ function Framework() {
                 var result = {
                     status: 'error',
                     result: error,
+                    formattedResult: null,
                     address: binding.binding
                 };
                 results.set(binding.bindingClass, result);
@@ -1329,7 +1488,7 @@ function Framework() {
         return deferred.promise;
     };
 
-    this._writeToDevice = function (bindingInfo) {
+    this._writeToDevice = function (bindingInfo, eventData) {
         var jquerySelector = '#' + bindingInfo.template;
         var newVal = self.jquery.val(jquerySelector);
 
@@ -1355,17 +1514,27 @@ function Framework() {
             if( searchIndex >= 0) {
                 if((baseStr.length - searchIndex - callbackString.length) === 0) {
                     if(bindingInfo.execCallback) {
-                        bindingInfo.callback(
-                            {
-                                framework: self,
-                                module: self.module,
-                                device: self.getSelectedDevice(),
-                                binding: bindingInfo,
-                                value: newVal,
-                            },
-                            function() {
-                                innerDeferred.resolve(skipWrite, true);
-                            });
+                        try {
+                            bindingInfo.callback(
+                                {
+                                    framework: self,
+                                    module: self.module,
+                                    device: self.getSelectedDevice(),
+                                    binding: bindingInfo,
+                                    eventData: eventData,
+                                    value: newVal,
+                                },
+                                function(err) {
+                                    innerDeferred.resolve(skipWrite, true);
+                                });
+                        } catch (e) {
+                            self.reportSyntaxError(
+                                {
+                                    'location':'_writeToDevice.performCallbacks',
+                                    data: {binding: bindingInfo, eventData: eventData}
+                                },e);
+                            innerDeferred.resolve(skipWrite, true);
+                        }
                         return innerDeferred.promise;
                     } else {
                         innerDeferred.resolve(skipWrite, false);
@@ -1373,17 +1542,27 @@ function Framework() {
                 }
             } else {
                 if(bindingInfo.execCallback) {
-                        bindingInfo.callback(
-                            {
-                                framework: self,
-                                module: self.module,
-                                device: self.getSelectedDevice(),
-                                binding: bindingInfo,
-                                value: newVal,
-                            },
-                            function() {
-                                innerDeferred.resolve(skipWrite, false);
-                            });
+                        try {
+                            bindingInfo.callback(
+                                {
+                                    framework: self,
+                                    module: self.module,
+                                    device: self.getSelectedDevice(),
+                                    binding: bindingInfo,
+                                    eventData: eventData,
+                                    value: newVal,
+                                },
+                                function() {
+                                    innerDeferred.resolve(skipWrite, false);
+                                });
+                        } catch (e) {
+                            self.reportSyntaxError(
+                                {
+                                    'location':'_writeToDevice.performCallbacks(2)',
+                                    data: {binding: bindingInfo, eventData: eventData}
+                                },e);
+                            innerDeferred.resolve(skipWrite, false);
+                        }
                         return innerDeferred.promise;
                     } else {
                         innerDeferred.resolve(skipWrite, false);
@@ -1454,6 +1633,9 @@ function Framework() {
 
         // Notify module that the write has finished
         .then(alertRegisterWritten, deferred.reject)
+
+        // Re-draw the window to prevent crazy-window issues
+        .then(qRunRedraw, deferred.reject)
 
         .then(deferred.resolve, deferred.reject);
         return deferred.promise;
@@ -1770,14 +1952,98 @@ function Framework() {
         self.loopIteration();
     };
     var startLoop = this.startLoop;
-
+    this.printCurTime = function(message) {
+        var d = new Date();
+        console.log(message,d.valueOf() - self.iterationTime - self.refreshRate);
+    };
+    this.daqMonitor = function() {
+        if(!self.daqLoopFinished) {
+            self.printDAQLoopInfo('DAQ-Loop-Lock-Detected',self.daqLoopStatus);
+        }
+    };
     this.qConfigureTimer = function() {
         var innerDeferred = q.defer();
+        var d = new Date();
+        var curTime = d.valueOf();
+        var elapsedTime = curTime - self.iterationTime - self.refreshRate;
+        self.printTimingInfo('elapsedTime',elapsedTime);
+        var delayTime = self.refreshRate;
+
+        if ((self.refreshRate - elapsedTime) < 0) {
+            if(self.loopErrorEncountered) {
+                self.printDAQLoopInfo('sdFramework DAQ Loop is slow (Due to error)...',elapsedTime);
+            } else {
+                self.printDAQLoopInfo('sdFramework DAQ Loop is slow (Not due to error)...',elapsedTime);
+            }
+            device_controller.ljm_driver.readLibrarySync('LJM_DEBUG_LOG_MODE');
+            if(!self.ljmDriverLogEnabled) {
+                console.log('enabling LJM-log');
+                self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',2);
+                self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_LEVEL',2);
+                var confTimeout = self.ljmDriver.readLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS');
+                self.ljmDriver.logSSync(2,'initDebug: Slow DAQ Loop: '+elapsedTime.toString());
+                self.ljmDriver.logSSync(2,self.moduleName);
+                self.ljmDriver.logSSync(2,'TCP_SEND_RECEIVE_TIMEOUT: '+confTimeout.toString());
+                
+                self.ljmDriverLogEnabled = true;
+                self.numContinuousRegLoopIterations = 0;
+            } else {
+                self.ljmDriver.logSSync(2,'Slow DAQ Loop: '+elapsedTime.toString());
+                self.numContinuousRegLoopIterations = 0;
+            }
+            delayTime = 10;
+        } else {
+            if(self.ljmDriverLogEnabled) {
+                console.log('sdFramework DAQ Loop is running normally...',elapsedTime);
+                if(self.numContinuousRegLoopIterations > 5) {
+                    var numIt = self.numContinuousRegLoopIterations;
+                    console.log('disabling LJM-log,  loop is running smoothly again');
+                    self.ljmDriver.logSSync(2,'Slow DAQ Loop (RESOLVED) after: '+numIt.toString());
+                    self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',1);
+                    self.numContinuousRegLoopIterations = 0;
+                    self.ljmDriverLogEnabled = false;
+                } else {
+                    self.numContinuousRegLoopIterations += 1;
+                }
+            }
+        }
+        self.iterationTime = curTime;
+
+        if(self.loopErrorEncountered) {
+            self.loopErrors.forEach(function(error){
+                self.printLoopErrors('Loop Errors',error);
+            });
+        }
+        // Clear loop errors
+        self.loopErrorEncountered = false;
+        self.loopErrors = [];
+        self.daqLoopStatus = 'timerConfigured';
         setTimeout(self.loopIteration, self.refreshRate);
         innerDeferred.resolve();
         return innerDeferred.promise;
     };
     var qConfigureTimer = this.qConfigureTimer;
+
+    this.unpauseFramework = function() {
+        self.isDAQLoopPaused = false;
+    }
+    var unpauseFramework = this.unpauseFramework;
+    this.pauseFramework = function(pauseNotification) {
+        self.pauseDAQLoop = true;
+        self.isPausedListenerFunc = pauseNotification;
+        return function() {
+            self.isDAQLoopPaused = false;
+        }
+    }
+    var pauseFramework = this.pauseFramework;
+    this.testPauseFramework = function() {
+        self.pauseFramework(
+            function() {
+                console.log('Framework is paused!');
+                self.unpauseFramework();
+            }
+        );
+    }
     /**
      * Function to run a single iteration of the module's refresh loop.
      *
@@ -1787,22 +2053,102 @@ function Framework() {
     **/
     this.loopIteration = function () {
         var deferred = q.defer();
+        self.daqLoopFinished = false;
+        self.daqLoopStatus = 'startingLoop';
+        var getIsPausedChecker = function(unPauseLoop) {
+            var isPausedChecker = function() {
+                if(self.isDAQLoopPaused) {
+                    if(!self.hasNotifiedUserOfPause) {
+                        self.isPausedListenerFunc();
+                        self.hasNotifiedUserOfPause = true;
+                    }
+                    console.log('DAQ Loop is still paused');
+                    setTimeout(isPausedChecker,100);
+                } else {
+                    self.pauseDAQLoop = false;
+                    self.hasNotifiedUserOfPause = false;
+                    console.log('Resuming DAQ Loop');
+                    self.daqLoopStatus = 'loopResuming';
+                    unPauseLoop();
+                }
+            };
+            return isPausedChecker;
+        };
 
+        var pauseLoop = function() {
+            var innerDeferred = q.defer();
+            if (self.pauseDAQLoop) {
+                // DAQ loop is paused
+                self.isDAQLoopPaused = true;
+                self.daqLoopStatus = 'loopPaused';
+                setTimeout(getIsPausedChecker(innerDeferred.resolve),100);
+            } else {
+                innerDeferred.resolve();
+            }
+            return innerDeferred.promise;
+        };
+        var initLoopTimer = function() {
+            var innerDeferred = q.defer();
+            self.daqLoopStatus = 'startingLoopMonitorTimer';
+            self.daqLoopMonitorTimer = setTimeout(self.daqMonitor, 1000);
+            innerDeferred.resolve();
+            return innerDeferred.promise;
+        };
         if (!self.runLoop) {
             deferred.reject('Loop not running.');
             return deferred.promise;
         }
-
+        var handleIOError = function(details) {
+            var innerDeferred = q.defer();
+            if(details !== 'delay') {
+                self.daqLoopStatus = 'handleIOError';
+                self.fire(
+                    'onRefreshError',
+                    [ self.readBindings , details ],
+                    function (shouldContinue) { 
+                        self.loopErrorEncountered = true;
+                        self.loopErrors.push({details:details,func:'handleIOError'});
+                        self.runLoop = shouldContinue; 
+                        if(shouldContinue) {
+                            self.printLoopErrors(
+                                'onRefreshError b/c loopIteration.handleIOError',
+                                details
+                            );
+                            innerDeferred.resolve();
+                        } else {
+                            innerDeferred.reject();
+                        }
+                    }
+                );
+            } else {
+                console.log('in handleIOError', details);
+                innerDeferred.reject(details);
+            }
+            return innerDeferred.promise;
+        };
         var reportError = function (details) {
             var innerDeferred = q.defer();
             if(details !== 'delay') {
+                self.daqLoopStatus = 'reportError';
                 // TODO: Get register names from readBindings.
                 self.fire(
                     'onRefreshError',
                     [ self.readBindings , details ],
-                    function (shouldContinue) { self.runLoop = shouldContinue; }
+                    function (shouldContinue) { 
+                        self.loopErrorEncountered = true;
+                        self.loopErrors.push({details:details,func:'reportError'});
+                        self.runLoop = shouldContinue; 
+                        if(shouldContinue) {
+                            self.printLoopErrors(
+                                'onRefreshError b/c loopIteration.reportError',
+                                details
+                            );
+                            innerDeferred.resolve();
+                        } else {
+                            innerDeferred.reject();
+                        }
+                    }
                 );
-                deferred.reject(details);
             } else {
                 innerDeferred.reject(details);
             }
@@ -1811,6 +2157,7 @@ function Framework() {
 
         var getNeededAddresses = function () {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'getNeededAddresses';
             var addresses = [];
             var formats = [];
             var customFormatFuncs = [];
@@ -1861,6 +2208,7 @@ function Framework() {
 
         var alertRefresh = function (bindingsInfo) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'alertRefresh';
             self.fire(
                 'onRefresh',
                 [ bindingsInfo ],
@@ -1871,6 +2219,9 @@ function Framework() {
         };
         var checkModuleStatus = function(bindingsInfo) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'checkModuleStatus';
+            self.daqLoopFinished = true;
+            clearTimeout(self.daqLoopMonitorTimer);
             if(self.moduleName === getActiveTabID()) {
                 innerDeferred.resolve(bindingsInfo);
             } else {
@@ -1881,6 +2232,7 @@ function Framework() {
 
         var requestDeviceValues = function (bindingsInfo) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'requestDeviceValues';
             var device = self.getSelectedDevice();
             var addresses = bindingsInfo.addresses;
             var formats = bindingsInfo.formats;
@@ -1916,6 +2268,7 @@ function Framework() {
 
         var processDeviceValues = function (valuesInfo) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'processDeviceValues';
             var values = valuesInfo.values;
             var addresses = valuesInfo.addresses;
             var formats = valuesInfo.formats;
@@ -1965,19 +2318,28 @@ function Framework() {
                     // needs to be executed execute it now
                     if(binding.execCallback) {
                         // Execute read-binding function callback
-                        binding.callback(
-                            {   //Data to be passed to callback function
-                                framework: self,
-                                module: self.module,
-                                device: self.getSelectedDevice(),
-                                binding: binding,
-                                value: curValue,
-                                stringVal: stringVal
-                            },
-                            function() {
-                                //Instruct async to perform the next step
-                                nextStep();
-                            });
+                        try {
+                            binding.callback(
+                                {   //Data to be passed to callback function
+                                    framework: self,
+                                    module: self.module,
+                                    device: self.getSelectedDevice(),
+                                    binding: binding,
+                                    value: curValue,
+                                    stringVal: stringVal
+                                },
+                                function() {
+                                    //Instruct async to perform the next step
+                                    nextStep();
+                                });
+                        } catch (e) {
+                            self.reportSyntaxError(
+                                {
+                                    'location':'loopIteration.processDeviceValues',
+                                    data: {binding: binding,value:curValue,stringVal:stringVal}
+                                },e);
+                            nextStep();
+                        }
                     } else {
                         //Instruct async to perform the next step
                         nextStep();
@@ -1993,6 +2355,7 @@ function Framework() {
 
         var alertOn = function (valuesDict) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'alertOn';
             self._OnRead(valuesDict);
             innerDeferred.resolve(valuesDict);
             return innerDeferred.promise;
@@ -2000,6 +2363,7 @@ function Framework() {
 
         var alertRefreshed = function (valuesDict) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'alertRefreshed';
             self.fire(
                 'onRefreshed',
                 [ valuesDict ],
@@ -2010,10 +2374,11 @@ function Framework() {
         };
         var handleDelayErr = function (details) {
             var innerDeferred = q.defer();
+            self.daqLoopStatus = 'handleDelayErr';
             if(details === 'delay') {
                 innerDeferred.resolve();
             } else {
-                innerDeferred.reject();
+                innerDeferred.resolve();
             }
             return innerDeferred.promise;
         };
@@ -2022,9 +2387,11 @@ function Framework() {
             
         // };
         //checkModuleStatus()
-        getNeededAddresses()
+        pauseLoop()
+        .then(initLoopTimer, reportError)
+        .then(getNeededAddresses, reportError)
         .then(alertRefresh, reportError)
-        .then(requestDeviceValues, reportError)
+        .then(requestDeviceValues, handleIOError)
         .then(processDeviceValues, reportError)
         .then(alertOn, reportError)
         .then(alertRefreshed, reportError)
@@ -2048,22 +2415,24 @@ function Framework() {
 
     this._OnRead = function (valueReadFromDevice) {
         var jquery = self.jquery;
-        self.readBindings.forEach(function (bindingInfo, template) {
-            var bindingName = bindingInfo.binding;
-            var valRead = valueReadFromDevice.get(bindingName.toString());
-            if (valRead !== undefined) {
-                var jquerySelector = '#' + bindingInfo.template;
-                jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
-            }
-        });
+        if(valueReadFromDevice !== undefined) {
+            self.readBindings.forEach(function (bindingInfo, template) {
+                var bindingName = bindingInfo.binding;
+                var valRead = valueReadFromDevice.get(bindingName.toString());
+                if (valRead !== undefined) {
+                    var jquerySelector = '#' + bindingInfo.template;
+                    jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
+                }
+            });
+        }
     };
-    var _OnRead = _OnRead;
+    var _OnRead = this._OnRead;
 
     this._OnConfigControlEvent = function (event) {
         self.fire('onRegisterWrite', [event]);
         self.fire('onRegisterWritten', [event]);
     };
-    var _OnConfigControlEvent = _OnConfigControlEvent;
+    var _OnConfigControlEvent = this._OnConfigControlEvent;
 
     this.configFramework = function(viewLoc) {
         userViewFile = viewLoc;
@@ -2202,6 +2571,7 @@ function Framework() {
     var manageError = this.manageError;
 
     this.saveModuleInfo = function (infoObj, constantsObj, moduleObj) {
+        self.saveModuleName();
         self.moduleInfoObj = infoObj;
         moduleInfoObj = infoObj;
         self.moduleConstants = constantsObj;
@@ -2221,3 +2591,4 @@ try {
 // console.log('initializing framework & module');
 // Initialize the framework
 var sdFramework = new Framework();
+sdFramework.ljmDriver = device_controller.ljm_driver;

@@ -32,7 +32,7 @@ var SINGLE_DEVICE_FRAMEWORK_CONNECTOR = SINGLE_DEVICE_FRAMEWORK_DIR + '/framewor
 var SINGLE_DEVICE_FRAMEWORK_CSS = SINGLE_DEVICE_FRAMEWORK_DIR + '/style.css';
 var SINGLE_DEVICE_FRAMEWORK_DEVICE_CONSTANTS = SINGLE_DEVICE_FRAMEWORK_DIR + '/device_constants.js';
 
-// var OPERATION_FAIL_MESSAGE = handlebars.compile(
+// var OPERATION_FAIL_MESaSAGE = handlebars.compile(
 //     'Sorry, Kipling encountered an error. Please try again or contact ' + 
 //     'support@labjack.com. Error: {{.}}');
 var OPERATION_FAIL_MESSAGE = handlebars.compile(
@@ -81,19 +81,10 @@ function selectModule(name)
     };
 
     //Function that performs a standard load-module
-    var renderNoFrameworkModule = function (thirdPartyJSList) {
-        var jsFiles = [jsFile];
-
-        // Add third party js files (if they are defined)
-        if(thirdPartyJSList !== undefined) {
-            thirdPartyJSList.forEach(function(element, index, array){
-                jsFiles.push('third_party_code/'+element);
-            });
-        }
-
+    var renderNoFrameworkModule = function () {
         //Renders the module, function lives in 'ljswitchboard/src/presenter.js'
         renderTemplate(src, standardContext, MODULE_CONTENTS_ELEMENT, false,
-            [cssFile], jsFiles, genericErrorHandler);
+            [cssFile], [jsFile], genericErrorHandler);
     };
 
     //Function that loads a module with the singleDevice framework
@@ -152,21 +143,6 @@ function selectModule(name)
         },
         function (moduleInfo) {
 
-            // Look for the devices that should be provided to the module.
-            var deviceMatchers = devices.map(function (device) {
-                return {
-                    matcher: module_manager.createDeviceMatcher(device),
-                    device: device
-                };
-            });
-            deviceMatchers = deviceMatchers.filter(function (matcherInfo) {
-                return matcherInfo.matcher.matches(moduleInfo);
-            });
-            devices = deviceMatchers.map( function (x) { return x.device; });
-
-            // Save matching devices back to the module context
-            standardContext.devices = devices;
-
             // Save the module info object
             LOADED_MODULE_INFO_OBJECT = moduleInfo;
             var loadModule = function(moduleConstants) {
@@ -180,11 +156,11 @@ function selectModule(name)
                     } else {
                         //if no appropriate framework was found, load as if there 
                         //  was no framework requested
-                        renderNoFrameworkModule(moduleInfo.third_party_code);
+                        renderNoFrameworkModule();
                     }
                 } else {
                     //Perform a standard module-load
-                    renderNoFrameworkModule(moduleInfo.third_party_code);
+                    renderNoFrameworkModule();
                 }
             };
             fs_facade.getModuleConstants(
@@ -298,7 +274,6 @@ function addModuleWindowResizeListner(keyStr, callbackFunc) {
             console.log('not Adding Listener');
         }
 }
-
 function removeModuleWindowResizeListner(keyStr) {
     if(typeof(keyStr) === 'string') {
         var origIndex = 0;
@@ -316,12 +291,11 @@ function removeModuleWindowResizeListner(keyStr) {
             console.log('Not Removing Listener',keyStr);
         }
     }
-}
+};
 
 function clearModuleWindowResizeListners() {
     MODULE_WINDOW_RESIZE_LISTNERS = [];
-}
-
+};
 /**
  * Callback that dyanmically handles window resizing.
 **/
@@ -472,7 +446,7 @@ $('#module-chrome').ready(function(){
         $('#module-chrome-contents').css({'height': '100%'});
     }
 
-    var devices = device_controller.getDeviceKeeper().getDevices();
+    var devices = device_controller.getDeviceKeeper().getDevices()
     
     module_manager.getActiveModules(
         genericErrorHandler,

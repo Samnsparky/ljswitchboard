@@ -25,6 +25,9 @@ try {
     // try and create an instance of the user's module, if it doesn't exist
     // catch the error & produce an error message via 'showAlert'
     sdModule = new module();
+    sdFramework.deviceKeeper = device_controller.getDeviceKeeper();
+    sdModule.deviceKeeper = device_controller.getDeviceKeeper();
+    sdModule.ljmDriver = device_controller.ljm_driver;
 
     try {
         // Try and link the framework to the various implemented functions, 
