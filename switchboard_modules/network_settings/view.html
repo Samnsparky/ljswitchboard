@@ -44,13 +44,12 @@
 						<th class="userFeedback"/>
 					</thead>
 					<tbody style="background-color:transparent">
-						{{#if custom.poop}}++{{else}}--{{/if}}
 						{{#each custom.ethernetIPRegisters}}
 							<tr id="{{name}}_VAL" class="networkSetting">
-								<td>{{humanName}}: {{#if ./ethernetDHCPStatusBool}}++{{else}}--{{/if}}</td>
+								<td>{{humanName}}: </td>
 								<td>
-									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless ./ethernetDHCPStatusBool}}display:none;{{/unless}}">{{ initVal }}</span>
-									<div class="Manual_Value" style="{{#if ./ethernetDHCPStatusBool}}display:none;{{/if}}">
+									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless isDHCPAuto}}display:none;{{/unless}}">{{ initVal }}</span>
+									<div class="Manual_Value" style="{{#if isDHCPAuto}}display:none;{{/if}}">
 										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
 									</div>
 								</td>
@@ -158,8 +157,8 @@
 							<tr id="{{name}}_VAL" class="networkSetting">
 								<td>{{humanName}}:</td>
 								<td>
-									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless ../wifiDHCPStatus}}display:none;{{/unless}}">{{ initVal }}</span>
-									<div class="Manual_Value" style="{{#if ../wifiDHCPStatus}}display:none;{{/if}}">
+									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless isDHCPAuto}}display:none;{{/unless}}">{{ initVal }}</span>
+									<div class="Manual_Value" style="{{#if isDHCPAuto}}display:none;{{/if}}">
 										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
 									</div>
 								</td>

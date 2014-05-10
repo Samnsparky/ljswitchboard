@@ -67,6 +67,9 @@ function JQueryWrapper (origJQuery) {
     this.checkFirstDeviceRadioButton = function() {
         return $('.device-selection-radio').first().prop('checked', true);
     };
+    this.text = function(selector,text) {
+        return $(selector).text(text);
+    };
     this.get = function(selector) {
         return $(selector);
     };
@@ -392,7 +395,11 @@ function Framework() {
             self.print(functionName,info,'sdFrameworkDebugLoopErrors');
         }
     };
-
+    this.setStartupMessage = function(message) {
+        console.log('Configuring Message');
+        var idString = '#single-device-framework-loading-message';
+        $(idString).text(message);
+    };
     this._SetJQuery = function(newJQuery) {
         jquery = newJQuery;
         this.jquery = newJQuery;

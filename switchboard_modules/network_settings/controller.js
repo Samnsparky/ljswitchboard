@@ -587,7 +587,7 @@ function module() {
             dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
             dhcpTextEl = $('#'+dhcpTextId+' .btnText');
             self.showAutoEthernetSettings();
-            if(self.currentValues.get('WIFI_DHCP_ENABLE').val === 0) {
+            if(self.currentValues.get('ETHERNET_DHCP_ENABLE_DEFAULT').val === 0) {
                 self.showEthernetDHCPChanged();
                 dhcpTextEl.addClass('inputVerified');
             } else {
@@ -599,7 +599,7 @@ function module() {
             dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
             dhcpTextEl = $('#'+dhcpTextId+' .btnText');
             self.showManualEthernetSettings();
-            if(self.currentValues.get('WIFI_DHCP_ENABLE').val === 0) {
+            if(self.currentValues.get('ETHERNET_DHCP_ENABLE_DEFAULT').val === 0) {
                 self.hideEthernetDHCPChanged();
                 dhcpTextEl.removeClass('inputVerified');
             } else {
@@ -609,6 +609,39 @@ function module() {
             self.updateValidationStatus(true,'ethernet_settings','ethernetApplyButton');
         }
         onSuccess();
+
+        //WIFI CODE
+        // console.log('in wifiDHCPSelect listener');
+        var dhcpOption = data.eventData.toElement.id;
+        var dhcpTextId;
+        var dhcpTextEl;
+
+        if (dhcpOption === 'WiFi_DHCP_Auto') {
+            dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
+            dhcpTextEl = $('#'+dhcpTextId+' .btnText');
+            self.showAutoWifiSettings();
+            if(self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val === 0) {
+                self.showWifiDHCPChanged();
+                dhcpTextEl.addClass('inputVerified');
+            } else {
+                self.hideWifiDHCPChanged();
+                dhcpTextEl.removeClass('inputVerified');
+            }
+        } else if (dhcpOption === 'WiFi_DHCP_Manual') {
+            dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
+            dhcpTextEl = $('#'+dhcpTextId+' .btnText');
+            self.showManualWifiSettings();
+            if(self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val === 0) {
+                self.hideWifiDHCPChanged();
+                dhcpTextEl.removeClass('inputVerified');
+            } else {
+                self.showWifiDHCPChanged();
+                dhcpTextEl.addClass('inputVerified');
+            }
+        }
+        self.updateWifiValidationStatus(true);
+        onSuccess();
+        //WIFI CODE
     };
     this.qPowerCycleEthernet = function() {
         var ioDeferred = q.defer();
@@ -665,12 +698,25 @@ function module() {
             return ioDeferred.promise;
         };
         var applyEthernetSettings = function() {
-
+            var ioDeferred = q.defer();
+            self.activeDevice.writeMany(
+                ['POWER_ETHERNET','POWER_ETHERNET'],
+                [0,1])
+            .then(function(){
+                console.log('Successfully configured ethernet');
+                ioDeferred.resolve();
+            },function(err){
+                console.log('Error configuring Ethernet...',err);
+                ioDeferred.reject(err);
+            })
+            return ioDeferred.promise;
         };
         writeSettings()
+        .then(applyEthernetSettings,ioError)
         // self.activeDevice.writeMany(newNames,newVals)
         .then(onSuccess,function(err) {
             console.log('Error Applying Ethernet Settings',err);
+            onSuccess();
         });
     };
     this.ethernetCancelButton = function(data, onSuccess) {
@@ -730,7 +776,7 @@ function module() {
             dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
             dhcpTextEl = $('#'+dhcpTextId+' .btnText');
             self.showAutoWifiSettings();
-            if(self.currentValues.get('WIFI_DHCP_ENABLE').val === 0) {
+            if(self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val === 0) {
                 self.showWifiDHCPChanged();
                 dhcpTextEl.addClass('inputVerified');
             } else {
@@ -741,7 +787,7 @@ function module() {
             dhcpTextId = data.eventData.toElement.parentElement.parentElement.parentElement.id;
             dhcpTextEl = $('#'+dhcpTextId+' .btnText');
             self.showManualWifiSettings();
-            if(self.currentValues.get('WIFI_DHCP_ENABLE').val === 0) {
+            if(self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val === 0) {
                 self.hideWifiDHCPChanged();
                 dhcpTextEl.removeClass('inputVerified');
             } else {
@@ -757,10 +803,11 @@ function module() {
         var ioDeferred = q.defer();
         var checkWifiStatus = function() {
             var innerIODeferred = q.defer();
-            // console.log('Reading Wifi Status (reg)');
+            console.log('Reading Wifi Status (reg)');
             self.activeDevice.qRead('WIFI_STATUS')
             .then(function(result) {
-                if((result != 2904) && 2902) {
+                console.log('Wifi status (reg)',result);
+                if((result != 2904) && (result != 2902)) {
                     innerIODeferred.resolve();
                 } else {
                     innerIODeferred.reject();
@@ -769,15 +816,18 @@ function module() {
             return innerIODeferred.promise;
         };
         var getDelayAndCheck = function(iteration) {
+            var iteration = 0;
             var timerDeferred = q.defer();
             var configureTimer = function() {
+                console.log('configuring wifi status timer');
                 setTimeout(delayedCheckWifiStatus,500);
             };
             var delayedCheckWifiStatus = function() {
-                // console.log('Reading Wifi Status (delay)',iteration);
+                console.log('Reading Wifi Status (delay)',iteration);
                 self.activeDevice.qRead('WIFI_STATUS')
                 .then(function(result) {
-                    if(result != 2904) {
+                    console.log('Wifi status (delay)',result,iteration);
+                    if((result != 2904) && (result != 2902)) {
                         timerDeferred.resolve();
                     } else {
                         iteration += 1;
@@ -786,13 +836,14 @@ function module() {
                 },timerDeferred.reject);
             };
             configureTimer();
-            return function() {
-                return timerDeferred.promise;
-            };
+            return timerDeferred.promise;
         };
         checkWifiStatus()
-        .then(ioDeferred.resolve,getDelayAndCheck(0))
-        .then(ioDeferred.resolve,ioDeferred.reject);
+        .then(ioDeferred.resolve,getDelayAndCheck)
+        .then(ioDeferred.resolve,function(err){
+            console.log('Failed to wait for WIFI_STATUS',err);
+            ioDeferred.reject();
+        });
         return ioDeferred.promise;
     };
     this.wifiApplyButton = function(data, onSuccess) {
@@ -1098,36 +1149,23 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
+        console.log('in onDeviceSelected');
         self.activeDevice = device;
         framework.clearConfigBindings();
-        onSuccess();
+        framework.setStartupMessage('Waiting for Wifi Module to start');
+        self.waitForWifiNotBlocking()
+        .then(function(){
+            console.log('Successfully delayed start');
+            onSuccess();
+        },function(err) {
+            console.log('Error Delaying',err);
+            onSuccess();
+        })
     };
-    this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
-        console.log('in onDeviceConfigured');
-        var isConfigError = false;
-        setupBindings.forEach(function(setupBinding){
-            // console.log('Addr',setupBinding.address,'Status',setupBinding.status,'Val',setupBinding.result);
-            console.log('Addr',setupBinding.address,':',setupBinding.formattedResult,setupBinding.result,setupBinding.status);
-            if(setupBinding.status === 'error') {
-                isConfigError = true;
-            }
-            self.saveConfigResult(
-                setupBinding.address,
-                {val:setupBinding.result,fVal:setupBinding.formattedResult,status:setupBinding.status},
-                setupBinding.status
-            );
-        });
-        
+    this.configureModuleContext = function(framework) {
         // Load configuration data & customize view
-        self.moduleContext.ethernetIPRegisters = {};
-
-        // Get and save ethernetIPRegisterList
-        var ethernetIPRegisters = self.getIPRegisters(self.ethernetRegisters);
-        self.moduleContext.ethernetIPRegisters = ethernetIPRegisters;
-
-        // Get and save wifiIPRegisterList
-        var wifiIPRegisters = self.getIPRegisters(self.wifiRegisters);
-        self.moduleContext.wifiIPRegisters = wifiIPRegisters;
+        // self.moduleContext.ethernetIPRegisters = [];
+        // self.moduleContext.wifiIPRegisters = [];
 
         // Get and save wifiNetworkName
         var networkNameDefault = self.currentValues.get('WIFI_SSID').fVal;
@@ -1160,7 +1198,7 @@ function module() {
             self.moduleContext.isPro = true;
         }
 
-        var initialEthernetDHCPStatus = self.currentValues.get('ETHERNET_DHCP_ENABLE');
+        var initialEthernetDHCPStatus = self.currentValues.get('ETHERNET_DHCP_ENABLE_DEFAULT');
         if (initialEthernetDHCPStatus.val === 0) {
             self.moduleContext.ethernetDHCPStatusBool = false;
             self.moduleContext.ethernetDHCPStatusString = "DHCP Manual";
@@ -1169,19 +1207,18 @@ function module() {
             self.moduleContext.ethernetDHCPStatusString = "DHCP Auto";
         }
 
-        var initialWifiDHCPStatus = self.currentValues.get('WIFI_DHCP_ENABLE');
+        var initialWifiDHCPStatus = self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT');
         if (initialWifiDHCPStatus.val === 0) {
-            self.moduleContext.wifiDHCPStatus = false;
+            self.moduleContext.wifiDHCPStatusBool = false;
             self.moduleContext.wifiDHCPStatusString = "DHCP Manual";
         } else {
-            self.moduleContext.wifiDHCPStatus = true;
+            self.moduleContext.wifiDHCPStatusBool = true;
             self.moduleContext.wifiDHCPStatusString = "DHCP Auto";
         }
-        console.log('Ethernet DHCP',
-            initialEthernetDHCPStatus,
-            self.moduleContext.ethernetDHCPStatusBool,
-            self.moduleContext.ethernetDHCPStatusString);
-        self.moduleContext.poop = true;
+        // console.log('Ethernet DHCP',
+        //     initialEthernetDHCPStatus,
+        //     self.moduleContext.ethernetDHCPStatusBool,
+        //     self.moduleContext.ethernetDHCPStatusString);
 
         var initialEthernetIP = self.currentValues.get('ETHERNET_IP').val;
         if(initialEthernetIP === 0) {
@@ -1196,68 +1233,48 @@ function module() {
             self.isWifiConnected = false;
         }
 
+        var i;
+        var dhcpStatus;
+        // Get and save ethernetIPRegisterList
+        var ethernetIPRegisters = self.getIPRegisters(self.ethernetRegisters);
+        //Add the isDHCPAuto flag
+        for(i=0;i<ethernetIPRegisters.length;i++){
+            dhcpStatus = self.moduleContext.ethernetDHCPStatusBool;
+            ethernetIPRegisters[i].isDHCPAuto = dhcpStatus;
+        }
+        self.moduleContext.ethernetIPRegisters = ethernetIPRegisters;
+
+        // Get and save wifiIPRegisterList
+        var wifiIPRegisters = self.getIPRegisters(self.wifiRegisters);
+        //Add the isDHCPAuto flag
+        for(i=0;i<wifiIPRegisters.length;i++){
+            dhcpStatus = self.moduleContext.wifiDHCPStatusBool;
+            wifiIPRegisters[i].isDHCPAuto = dhcpStatus;
+        }
+        self.moduleContext.wifiIPRegisters = wifiIPRegisters;
+
         console.log('Device Selected:',self.activeDevice.getSubclass());
         console.log('Init context',self.moduleContext);
         framework.setCustomContext(self.moduleContext);
+    }
+    this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
+        console.log('in onDeviceConfigured');
+        var isConfigError = false;
+        setupBindings.forEach(function(setupBinding){
+            // console.log('Addr',setupBinding.address,'Status',setupBinding.status,'Val',setupBinding.result);
+            console.log('Addr',setupBinding.address,':',setupBinding.formattedResult,setupBinding.result,setupBinding.status);
+            if(setupBinding.status === 'error') {
+                isConfigError = true;
+            }
+            self.saveConfigResult(
+                setupBinding.address,
+                {val:setupBinding.result,fVal:setupBinding.formattedResult,status:setupBinding.status},
+                setupBinding.status
+            );
+        });
 
-        // Check to see if there were any _DEFAULT read errors in loading the
-        // module.
-        var failedAddresses = [];
-        var isError = false;
-        self.currentValues.forEach(function(valObj,indexKey){
-            console.log('valObj status...',valObj.status);
-            if(valObj.status === 'error' && (indexKey !== 'ETHERNET_MAC') && (indexKey !== 'WIFI_MAC')) {
-                if((indexKey !== 'WIFI_SSID_DEFAULT') && (indexKey !== 'WIFI_PASSWORD_DEFAULT')){
-                    failedAddresses.push(indexKey);
-                }
-            }
-        });
-        console.log('Failed addresses',failedAddresses);
-        var handleErrors = function(err) {
-            console.log('Loading Device Setup Error',err);
-            
-            var innerIODeferred = q.defer();
-            self.activeDevice.readMany(failedAddresses);
-            return innerIODeferred.promise;
-        };
-        var updateDefaultSettings = function() {
-            var innerIODeferred = q.defer();
-            if(failedAddresses.length > 0) {
-            console.log('Reading more addresses...',failedAddresses);
-                self.activeDevice.readMany(failedAddresses)
-                .then(function(results) {
-                    console.log('RANDO Results...',results);
-                    innerIODeferred.resolve();
-                },innerIODeferred.reject);
-            } else {
-                innerIODeferred.resolve();
-            }
-            return innerIODeferred.promise;
-        };
-        var updateSSIDDefaultSettings = function() {
-            var innerIODeferred = q.defer();
-            if(failedAddresses.length > 0) {
-                self.activeDevice.qRead('WIFI_SSID_DEFAULT')
-                .then(function(results) {
-                    console.log('SSID Results...',results);
-                    innerIODeferred.resolve();
-                },innerIODeferred.reject);
-            } else {
-                innerIODeferred.resolve();
-            }
-            return innerIODeferred.promise;
-        };
-        //If there are any errors
-        self.waitForWifiNotBlocking()
-        .then(updateSSIDDefaultSettings,handleErrors)
-        .then(updateDefaultSettings,handleErrors)
-        .then(function() {
-            console.log('Successfully Loaded device w/o errors');
-            onSuccess();
-        },function(err) {
-            console.log('Failed to Loaded device w/o errors',err);
-            onSuccess();
-        });
+        self.configureModuleContext(framework);
+        onSuccess();
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
@@ -1265,12 +1282,15 @@ function module() {
 
         // self.setNetworkName('5PoundBass');
         // self.setNetworkName('- DEN Airport Free WiFi');
-        self.setNetworkName('Courtyard_GUEST');
-        self.setWifiPassword('smgmtbmb3cmtbc');
+        // self.setNetworkName('Courtyard_GUEST');
+        // self.setWifiPassword('smgmtbmb3cmtbc');
+        self.setNetworkName('AAA');
+        self.setWifiPassword('timmarychriskevin');
 
         // force validations to occur
         self.selectivelyShowEthernetAlerts();
         self.selectivelyShowWifiAlerts();
+        
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {

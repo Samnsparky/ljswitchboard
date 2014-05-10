@@ -3,11 +3,11 @@
     "ljmDeviceParameters": 
     [
         {
-            "serialNumber":"470010604",
+            "serialNumber":"1-470010604",
             "connectionType":"Ethernet"
         },
         {
-            "serialNumber":"470010620",
+            "serialNumber":"1-470010620",
             "connectionType":"Ethernet"
         },
         {

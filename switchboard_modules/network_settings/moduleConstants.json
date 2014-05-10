@@ -21,6 +21,7 @@
         {"name":"ETHERNET_DHCP_ENABLE_DEFAULT","title":"","heading":"","id":"","type":"status"}
     ],
     "wifiRegisters": [
+        {"name":"WIFI_STATUS","title":"","heading":"","id":"","type":"wifiStatus","isPeriodic":true},
         {"name":"POWER_WIFI","title":"","heading":"","id":"","type":"status"},
         {"name":"WIFI_IP","title":"","humanName":"IP","heading":"","id":"","type":"ip","isConfig":true},
         {"name":"WIFI_SUBNET","title":"","humanName":"Subnet","heading":"","id":"","type":"ip","isConfig":true},
@@ -31,7 +32,6 @@
         {"name":"WIFI_SUBNET_DEFAULT","title":"","heading":"","id":"","type":"ip"},
         {"name":"WIFI_GATEWAY_DEFAULT","title":"","heading":"","id":"","type":"ip"},
         {"name":"WIFI_DHCP_ENABLE_DEFAULT","title":"","heading":"","id":"","type":"status"},
-        {"name":"WIFI_STATUS","title":"","heading":"","id":"","type":"wifiStatus","isPeriodic":true},
         {"name":"WIFI_RSSI","title":"","heading":"","id":"","type":"rssi"},
         {"name":"WIFI_SSID","title":"","heading":"","id":"","type":"networkName"},
         {"name":"WIFI_SSID_DEFAULT","title":"","heading":"","id":"","type":"networkName","isConfig":true},
