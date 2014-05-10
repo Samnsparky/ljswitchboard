@@ -81,10 +81,19 @@ function selectModule(name)
     };
 
     //Function that performs a standard load-module
-    var renderNoFrameworkModule = function () {
+    var renderNoFrameworkModule = function (thirdPartyJSList) {
+        var jsFiles = [jsFile];
+
+        // Add third party js files (if they are defined)
+        if(thirdPartyJSList !== undefined) {
+            thirdPartyJSList.forEach(function(element, index, array){
+                jsFiles.push('third_party_code/'+element);
+            });
+        }
+
         //Renders the module, function lives in 'ljswitchboard/src/presenter.js'
         renderTemplate(src, standardContext, MODULE_CONTENTS_ELEMENT, false,
-            [cssFile], [jsFile], genericErrorHandler);
+            [cssFile], jsFiles, genericErrorHandler);
     };
 
     //Function that loads a module with the singleDevice framework
@@ -171,11 +180,11 @@ function selectModule(name)
                     } else {
                         //if no appropriate framework was found, load as if there 
                         //  was no framework requested
-                        renderNoFrameworkModule();
+                        renderNoFrameworkModule(moduleInfo.third_party_code);
                     }
                 } else {
                     //Perform a standard module-load
-                    renderNoFrameworkModule();
+                    renderNoFrameworkModule(moduleInfo.third_party_code);
                 }
             };
             fs_facade.getModuleConstants(
