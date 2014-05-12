@@ -25,9 +25,12 @@
                                 <div id="connection-types">{{#connectionTypes}}{{ . }} {{/connectionTypes}}</div>
                                 <div id="type">{{type}}{{specialText}}</div>
                                 <div id="name">{{name}}</div>
-                                <div id="ethernet-ip-address">{{ethernetIPAddress}}</div>
-                                <div id="wifi-ip-address">{{wifiIPAddress}}</div>
-                                <div id="ip-address">{{ipAddress}}</div>
+                                {{#if ethernetIPAddress}}
+                                <div id="ethernet-ip-address">Ethernet: {{../ethernetIPAddress}}</div>
+                                {{/if}}
+                                {{#if wifiIPAddress}}
+                                <div id="wifi-ip-address">WiFi: {{../wifiIPAddress}}</div>
+                                {{/if}}
                                 <div id="disconnect-button-holder" class="{{^connected}}hidden-button-holder{{/connected}}">
                                     <button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
                                         disconnect

@@ -80,7 +80,6 @@ GET_SUBCLASS_FUNCTIONS['Digit'] = function (device) {
 }
 
 
-
 /**
  * Object with information about a device.
  *
@@ -931,6 +930,19 @@ function getListingEntry (listingDict, device)
 }
 
 
+function formatAsIP(ipAddress) {
+    var ipString = "";
+    ipString += ((ipAddress>>24)&0xFF).toString();
+    ipString += ".";
+    ipString += ((ipAddress>>16)&0xFF).toString();
+    ipString += ".";
+    ipString += ((ipAddress>>8)&0xFF).toString();
+    ipString += ".";
+    ipString += ((ipAddress)&0xFF).toString();
+    return ipString;
+}
+
+
 /**
  * Create a record of a device that is available to be opened.
  *
@@ -952,7 +964,7 @@ function getListingEntry (listingDict, device)
  *      referred to as a device info structure elsewhere in device_controller
  *      but is not used outside of the device selection functionality.
 **/
-function createDeviceListingRecord (device, name, specText, specImageSuffix)
+function createDeviceListingRecord (device, name, specText, specImageSuffix, ethernetIP, wifiIP)
 {
     var connectionType = CONNECTION_TYPE_NAMES.get(
         String(device.connectionType), 'other');
@@ -978,6 +990,8 @@ function createDeviceListingRecord (device, name, specText, specImageSuffix)
         'name': name,
         'ipAddress': ip,
         'ipAddresses': [ip],
+        'ethernetIPAddress': ethernetIP,
+        'wifiIPAddress': wifiIP,
         'ipSafe': safeIP,
         'ipSafeAddresses': [safeIP],
         'origDevice': device,
@@ -1058,6 +1072,8 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
                 // TODO: This needs to change when rwMany can handle multiple types.
                 var name = device.readSync('DEVICE_NAME_DEFAULT');
                 var hardwareInstalled = device.readSync('HARDWARE_INSTALLED');
+                var ethernetIP = formatAsIP(device.readSync('ETHERNET_IP'));
+                var wifiIP = formatAsIP(device.readSync('WIFI_IP'));
 
                 if (deviceInfo.deviceType == 7) {
                     hardwareInstalled = hardwareInstalled !== 0;
@@ -1070,7 +1086,9 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
                         deviceInfo,
                         name,
                         ' Pro',
-                        '-pro'
+                        '-pro',
+                        ethernetIP,
+                        wifiIP
                     );
                 } else {
                     record = createDeviceListingRecord(
