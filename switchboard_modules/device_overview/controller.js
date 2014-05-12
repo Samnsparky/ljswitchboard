@@ -1,29 +1,76 @@
-var LABJACK_OVERVIEW_IMG_SRC = '/static/img/T7-cartoon.png';
+var LABJACK_OVERVIEW_IMG_SRC = './static/img/T7-cartoon.png';
+var CONNECTOR_OVERVIEW_IMG_SRC = './static/img/T7-DB-cartoon.png';
 var DEVICE_IMAGE_X_OFFSET = 150;
 var DEVICE_IMAGE_Y_OFFSET = 10;
-var VALUE_LABEL_X_OFFSET = -40;
+var VALUE_LABEL_X_OFFSET = {left: -40, right: 30}; // Switch for sides
 var DEVICE_IMG_WIDTH = 225;
 var DEVICE_IMG_HEIGHT = 525;
-var VALUE_TEXT_X_OFFSET = -50;
+var VALUE_TEXT_X_OFFSET = {left: -50, right: 100}; // Switch for sides
 var VALUE_TEXT_Y_OFFSET = -6;
-var EDIT_RECT_X_OFFSET = -30;
+var EDIT_RECT_X_OFFSET = {left: -35, right: 65}; // Switch for sides
+var VALUE_TEXT_PAD_OFFSET = {left: -1, right: 10};
+var LINE_START_X = {left: 0, right: 108};
 var EDIT_RECT_Y_OFFSET = 0;
 var EDIT_RECT_WIDTH = 27;
 var EDIT_RECT_HEIGHT = 12;
 var EDIT_TEXT_X_OFFSET = 3;
 var EDIT_TEXT_Y_OFFSET = 0;
 
+var CONNECTOR_IMAGE_X_OFFSET = 150;
+var CONNECTOR_IMAGE_Y_OFFSET = 540;
+var CONNECTOR_IMG_WIDTH = 112;
+var CONNECTOR_IMG_HEIGHT = 500;
+
 var TEST_OVERLAY_SPEC = [
-    {register: 'AIN0', yLocation: 0.783, type: null},
-    {register: 'AIN1', yLocation: 0.757, type: null},
-    {register: 'AIN2', yLocation: 0.664, type: null},
-    {register: 'AIN3', yLocation: 0.639, type: null},
-    {register: 'DAC0', yLocation: 0.545, type: 'dac'},
-    {register: 'DAC1', yLocation: 0.519, type: 'dac'},
-    {register: 'FIO0', yLocation: 0.426, type: 'fio'},
-    {register: 'FIO1', yLocation: 0.403, type: 'fio'},
-    {register: 'FIO2', yLocation: 0.308, type: 'fio'},
-    {register: 'FIO3', yLocation: 0.283, type: 'fio'}
+    {register: 'AIN0', yLocation: 0.783, type: null, board: 'device', side: 'left'},
+    {register: 'AIN1', yLocation: 0.757, type: null, board: 'device', side: 'left'},
+    {register: 'AIN2', yLocation: 0.664, type: null, board: 'device', side: 'left'},
+    {register: 'AIN3', yLocation: 0.639, type: null, board: 'device', side: 'left'},
+    {register: 'DAC0', yLocation: 0.545, type: 'dac', board: 'device', side: 'left'},
+    {register: 'DAC1', yLocation: 0.519, type: 'dac', board: 'device', side: 'left'},
+    {register: 'FIO0', yLocation: 0.426, type: 'fio', board: 'device', side: 'left'},
+    {register: 'FIO1', yLocation: 0.403, type: 'fio', board: 'device', side: 'left'},
+    {register: 'FIO2', yLocation: 0.308, type: 'fio', board: 'device', side: 'left'},
+    {register: 'FIO3', yLocation: 0.283, type: 'fio', board: 'device', side: 'left'},
+    {register: 'AIN1', yLocation: 0.900-0.01, type: null, board: 'connector', side: 'left'},
+    {register: 'AIN3', yLocation: 0.875-0.01, type: null, board: 'connector', side: 'left'},
+    {register: 'AIN5', yLocation: 0.850-0.01, type: null, board: 'connector', side: 'left'},
+    {register: 'AIN7', yLocation: 0.825-0.01, type: null, board: 'connector', side: 'left'},
+    {register: 'AIN9', yLocation: 0.800-0.01, type: null, board: 'connector', side: 'left'},
+    {register: 'AIN11', yLocation: 0.775-0.01, type: null, board: 'connector', side: 'left'},
+    {register: 'AIN13', yLocation: 0.750-0.01, type: null, board: 'connector', side: 'left'},
+    {register: 'DAC0', yLocation: 0.725-0.01, type: 'dac', board: 'connector', side: 'left'},
+    {register: 'MIO1', yLocation: 0.625-0.015, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'FIO0', yLocation: 0.600-0.015, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'FIO2', yLocation: 0.575-0.015, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'FIO4', yLocation: 0.550-0.015, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'FIO6', yLocation: 0.525-0.015, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'EIO6', yLocation: 0.275+0.020, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'EIO4', yLocation: 0.250+0.020, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'EIO2', yLocation: 0.225+0.020, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'EIO0', yLocation: 0.200+0.020, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'CIO1', yLocation: 0.175+0.020, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'CIO3', yLocation: 0.150+0.020, type: 'fio', board: 'connector', side: 'left'},
+    {register: 'AIN0', yLocation: 0.900 + 0.005, type: null, board: 'connector', side: 'right'},
+    {register: 'AIN2', yLocation: 0.875 + 0.005, type: null, board: 'connector', side: 'right'},
+    {register: 'AIN4', yLocation: 0.850 + 0.005, type: null, board: 'connector', side: 'right'},
+    {register: 'AIN6', yLocation: 0.825 + 0.005, type: null, board: 'connector', side: 'right'},
+    {register: 'AIN8', yLocation: 0.800 + 0.003, type: null, board: 'connector', side: 'right'},
+    {register: 'AIN10', yLocation: 0.775 + 0.003, type: null, board: 'connector', side: 'right'},
+    {register: 'AIN12', yLocation: 0.750 + 0.003, type: null, board: 'connector', side: 'right'},
+    {register: 'DAC1', yLocation: 0.700, type: 'dac', board: 'connector', side: 'right'},
+    {register: 'MIO2', yLocation: 0.625, type: 'dac', board: 'connector', side: 'right'},
+    {register: 'MIO0', yLocation: 0.600, type: 'dac', board: 'connector', side: 'right'},
+    {register: 'FIO1', yLocation: 0.575, type: 'dac', board: 'connector', side: 'right'},
+    {register: 'FIO3', yLocation: 0.550, type: 'dac', board: 'connector', side: 'right'},
+    {register: 'FIO5', yLocation: 0.525, type: 'dac', board: 'connector', side: 'right'},
+    {register: 'FIO7', yLocation: 0.500, type: 'dac', board: 'connector', side: 'right'},
+    {register: 'EIO7', yLocation: 0.300+0.010, type: 'fio', board: 'connector', side: 'right'},
+    {register: 'EIO5', yLocation: 0.275+0.010, type: 'fio', board: 'connector', side: 'right'},
+    {register: 'EIO3', yLocation: 0.250+0.010, type: 'fio', board: 'connector', side: 'right'},
+    {register: 'EIO1', yLocation: 0.225+0.010, type: 'fio', board: 'connector', side: 'right'},
+    {register: 'CIO2', yLocation: 0.175+0.010, type: 'fio', board: 'connector', side: 'right'},
+    {register: 'CIO0', yLocation: 0.150+0.010, type: 'fio', board: 'connector', side: 'right'}
 ];
 
 var INITIALIZATION_STRATEGIES = {
@@ -59,24 +106,45 @@ var writing = false;
 var selectedDevice = device_controller.getDeviceKeeper().getDevices()[0];
 var currentDeviceSelection = 0;
 var tabID = getActiveTabID();
+var switchFuncs = [];
 
 
 function formatNum(target) {
-    return parseFloat(Math.round(target * 100000) / 100000).toFixed(5);
+    if (target >= 10 || target <= -10)
+        return parseFloat(Math.round(target * 100000) / 100000).toFixed(4);
+    else
+        return parseFloat(Math.round(target * 100000) / 100000).toFixed(5);
 }
 
 
-function getOverlayElementYPos(yElementOffset) {
-    return DEVICE_IMAGE_Y_OFFSET + yElementOffset * DEVICE_IMG_HEIGHT;
+function createGetOverlayElementYPos(offset, imageHeight) {
+    return function (yElementOffset) {
+        return offset + yElementOffset * imageHeight;
+    };
 }
 
 
-function createOverlayLinePoints(yElementOffset) {
+function createOverlayLinePoints(spec) {
+    var yElementOffset = spec.yLocation;
+    var overlayFunc;
+
+    if (spec.board === 'device') {
+        overlayFunc = createGetOverlayElementYPos(
+            DEVICE_IMAGE_Y_OFFSET,
+            DEVICE_IMG_HEIGHT
+        );
+    } else {
+        overlayFunc = createGetOverlayElementYPos(
+            CONNECTOR_IMAGE_Y_OFFSET,
+            CONNECTOR_IMG_HEIGHT
+        );
+    }
+
     return [
-        DEVICE_IMAGE_X_OFFSET,             
-        getOverlayElementYPos(yElementOffset),
-        DEVICE_IMAGE_X_OFFSET + VALUE_LABEL_X_OFFSET,
-        getOverlayElementYPos(yElementOffset)
+        DEVICE_IMAGE_X_OFFSET + LINE_START_X[spec.side],             
+        overlayFunc(yElementOffset),
+        DEVICE_IMAGE_X_OFFSET + LINE_START_X[spec.side] + VALUE_LABEL_X_OFFSET[spec.side],
+        overlayFunc(yElementOffset)
     ];
 }
 
@@ -94,16 +162,31 @@ function createOverlayElement(layer, overlayElementSpec) {
     var state;
     var updateFunction;
     var writeFunction;
+    var getOverlayElementYPos;
+    var self = this;
 
-    textXPos = VALUE_LABEL_X_OFFSET + DEVICE_IMAGE_X_OFFSET;
-    textXPos += VALUE_TEXT_X_OFFSET; 
+    if (overlayElementSpec.board === 'device') {
+        getOverlayElementYPos = createGetOverlayElementYPos(
+            DEVICE_IMAGE_Y_OFFSET,
+            DEVICE_IMG_HEIGHT
+        );
+    } else {
+        getOverlayElementYPos = createGetOverlayElementYPos(
+            CONNECTOR_IMAGE_Y_OFFSET,
+            CONNECTOR_IMG_HEIGHT
+        );
+    }
+
+    textXPos = VALUE_LABEL_X_OFFSET[overlayElementSpec.side];
+    textXPos += DEVICE_IMAGE_X_OFFSET;
+    textXPos += VALUE_TEXT_X_OFFSET[overlayElementSpec.side];
     textYPos = getOverlayElementYPos(overlayElementSpec.yLocation);
     textYPos += VALUE_TEXT_Y_OFFSET;
-    editCtrlXOffset = textXPos + EDIT_RECT_X_OFFSET;
+    editCtrlXOffset = textXPos + EDIT_RECT_X_OFFSET[overlayElementSpec.side];
     editCtrlYOffset = textYPos + EDIT_RECT_Y_OFFSET;
 
     connectingLine = new Kinetic.Line({
-        points: createOverlayLinePoints(overlayElementSpec.yLocation),
+        points: createOverlayLinePoints(overlayElementSpec),
         stroke: '#A0A0A0',
         strokeWidth: 1,
         lineCap: 'round',
@@ -111,7 +194,7 @@ function createOverlayElement(layer, overlayElementSpec) {
     });
 
     valueText = new Kinetic.Text({
-        x: textXPos,
+        x: textXPos + VALUE_TEXT_PAD_OFFSET[overlayElementSpec.side],
         y: textYPos,
         text: 'wait...',
         fontSize: 13,
@@ -125,6 +208,12 @@ function createOverlayElement(layer, overlayElementSpec) {
 
     layer.add(connectingLine);
     layer.add(valueText);
+
+    writeFunction = function (value) {
+        writing = true;
+        valueText.setText(formatNum(value));
+        writing = false;
+    };
 
     if (overlayElementSpec.type !== null) {
         editCtrl = new Kinetic.Group({
@@ -161,17 +250,45 @@ function createOverlayElement(layer, overlayElementSpec) {
             layer.draw();
         });
 
-        editCtrl.on('mousedown', function() {
+        var switchToRead = function () {
+            state.isEditing = false;
+            layer.add(editCtrl);
+            layer.draw();
+        };
+
+        var switchToWrite = function () {
             state.isEditing = true;
             editCtrl.remove();
             layer.draw();
+        };
+
+        switchFuncs.push({
+            register: overlayElementSpec.register,
+            switchToWrite: switchToWrite,
+            switchToRead: switchToRead,
+            writeFunction: writeFunction
+        });
+
+        editCtrl.on('mousedown', function () {
+            switchFuncs.forEach(function (switchSpec) {
+                if (switchSpec.register == overlayElementSpec.register)
+                    switchSpec.switchToWrite();
+            });
+
             showEditControls(
                 overlayElementSpec.register,
-                writeFunction,
+                function (value) {
+                    switchFuncs.forEach(function (switchSpec) {
+                        if (switchSpec.register == overlayElementSpec.register)
+                            switchSpec.writeFunction(value);
+                    });
+                    selectedDevice.write(overlayElementSpec.register, value);
+                },
                 function () {
-                    state.isEditing = false;
-                    layer.add(editCtrl);
-                    layer.draw();
+                    switchFuncs.forEach(function (switchSpec) {
+                        if (switchSpec.register == overlayElementSpec.register)
+                            switchSpec.switchToRead();
+                    });
                 }
             );
         });
@@ -189,13 +306,6 @@ function createOverlayElement(layer, overlayElementSpec) {
         return function (result) {
             valueText.setText(formatNum(result));
         };
-    };
-
-    writeFunction = function (value) {
-        writing = true;
-        selectedDevice.write(overlayElementSpec.register, value);
-        valueText.setText(formatNum(value));
-        writing = false;
     };
 
     return updateFunction;
@@ -230,13 +340,14 @@ function createDrawing (overlaySpec, onFinish) {
     var stage;
     var layer;
     var deviceImageObj;
+      var connectorImageObj;
     var updateFunctions;
 
     // Create containing structures
     stage = new Kinetic.Stage({
         container: 'container',
         width: 400,
-        height: 550
+        height: 1040
     });
     layer = new Kinetic.Layer();
 
@@ -255,6 +366,22 @@ function createDrawing (overlaySpec, onFinish) {
             if (onFinish) { onFinish(); }
         };
         deviceImageObj.src = LABJACK_OVERVIEW_IMG_SRC;
+    };
+
+    var createConnectorImage = function (onFinish) {
+        connectorImageObj = new Image();
+        connectorImageObj.onload = function() {
+            var deviceImage = new Kinetic.Image({
+                x: CONNECTOR_IMAGE_X_OFFSET,
+                y: CONNECTOR_IMAGE_Y_OFFSET,
+                image: connectorImageObj,
+                width: CONNECTOR_IMG_WIDTH,
+                height: CONNECTOR_IMG_HEIGHT
+            });
+            layer.add(deviceImage);
+            if (onFinish) { onFinish(); }
+        };
+        connectorImageObj.src = CONNECTOR_OVERVIEW_IMG_SRC;
     };
 
     // Create overlay graphical elements
@@ -276,9 +403,11 @@ function createDrawing (overlaySpec, onFinish) {
     };
 
     createDeviceImage(function () {
-        createOverlayElements(function () {
-            addLayerToStage(function () {
-                onFinish(refreshFunction, updateFunctions);
+        createConnectorImage(function () {
+            createOverlayElements(function () {
+                addLayerToStage(function () {
+                    onFinish(refreshFunction, updateFunctions);
+                });
             });
         });
     });
@@ -320,6 +449,11 @@ function readDeviceValues (refreshFunction, updateFunctions, deviceSelection) {
             return func !== null;
         });
 
+        registersToRead = registersToRead.filter(function(elem, pos) {
+            var curIndex = registersToRead.indexOf(elem);
+            return true;
+        });
+
         selectedDevice.readMany(registersToRead)
         .then(
             function (values) {
@@ -333,7 +467,7 @@ function readDeviceValues (refreshFunction, updateFunctions, deviceSelection) {
             function (err) {
                 showError(err);
             }
-        )
+        );
         
         refreshFunction();
 
