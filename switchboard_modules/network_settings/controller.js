@@ -641,7 +641,6 @@ function module() {
         }
         self.updateWifiValidationStatus(true);
         onSuccess();
-        //WIFI CODE
     };
     this.qPowerCycleEthernet = function() {
         var ioDeferred = q.defer();
@@ -649,6 +648,7 @@ function module() {
             ['POWER_ETHERNET','POWER_ETHERNET'],
             [0,1]
         );
+        
         ioDeferred.resolve();
         return ioDeferred.promise;
     };
@@ -708,7 +708,7 @@ function module() {
             },function(err){
                 console.log('Error configuring Ethernet...',err);
                 ioDeferred.reject(err);
-            })
+            });
             return ioDeferred.promise;
         };
         writeSettings()
@@ -860,7 +860,6 @@ function module() {
         var getIOError = function(message) {
             return function(err) {
                 var ioDeferred = q.defer();
-                console.log('POWER_WIFI',self.activeDevice.read('POWER_WIFI'));
                 if(typeof(err) === 'number') {
                     console.log(message,self.ljmDriver.errToStrSync(err));
                 } else {
@@ -1151,16 +1150,24 @@ function module() {
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
         console.log('in onDeviceSelected');
         self.activeDevice = device;
+        // self.activeDevice.setDebugFlashErr(true);
+
         framework.clearConfigBindings();
         framework.setStartupMessage('Waiting for Wifi Module to start');
-        self.waitForWifiNotBlocking()
+        var dummyQ = function() {
+            var deferred = q.defer();
+            deferred.resolve();
+            return deferred.promise;
+        };
+        // self.waitForWifiNotBlocking()
+        dummyQ()
         .then(function(){
             console.log('Successfully delayed start');
             onSuccess();
         },function(err) {
             console.log('Error Delaying',err);
             onSuccess();
-        })
+        });
     };
     this.configureModuleContext = function(framework) {
         // Load configuration data & customize view
@@ -1253,18 +1260,29 @@ function module() {
         }
         self.moduleContext.wifiIPRegisters = wifiIPRegisters;
 
-        console.log('Device Selected:',self.activeDevice.getSubclass());
-        console.log('Init context',self.moduleContext);
+        // console.log('Init context',self.moduleContext);
         framework.setCustomContext(self.moduleContext);
-    }
+    };
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
         console.log('in onDeviceConfigured');
         var isConfigError = false;
+        var errorAddresses = [];
+        var errorBindings = dict();
         setupBindings.forEach(function(setupBinding){
             // console.log('Addr',setupBinding.address,'Status',setupBinding.status,'Val',setupBinding.result);
             console.log('Addr',setupBinding.address,':',setupBinding.formattedResult,setupBinding.result,setupBinding.status);
             if(setupBinding.status === 'error') {
                 isConfigError = true;
+                var addr = setupBinding.address;
+                var dnrAddr = [
+                    'WIFI_MAC',
+                    'ETHERNET_MAC',
+                    'WIFI_PASSWORD_DEFAULT'
+                ];
+                if(dnrAddr.indexOf(addr) < 0) {
+                    errorAddresses.push(addr);
+                    errorBindings.set(addr,framework.setupBindings.get(addr));
+                }
             }
             self.saveConfigResult(
                 setupBinding.address,
@@ -1272,9 +1290,43 @@ function module() {
                 setupBinding.status
             );
         });
-
-        self.configureModuleContext(framework);
-        onSuccess();
+        console.log('Addresses Failed to Read:',errorAddresses);
+        async.eachSeries(
+            errorAddresses,
+            function( addr, callback) {
+                // console.log('Failed to read:',addr,);
+                var binding = errorBindings.get(addr);
+                self.activeDevice.qRead(addr)
+                .then(function(result){
+                    var strRes = "";
+                    if(binding.format === 'customFormat') {
+                        strRes = binding.formatFunc({value:result});
+                    } else {
+                        strRes = result;
+                    }
+                    console.log('re-read-success',addr,result,strRes);
+                    callback();
+                }, function(err) {
+                    console.log('re-read-err',addr,err);
+                    showAlert('Issues Loading Module'+err.toString());
+                    callback();
+                });
+            }, function(err){
+                // if any of the file processing produced an error, err would equal that error
+                if( err ) {
+                  // One of the iterations produced an error.
+                  // All processing will now stop.
+                  console.log('An Addresses failed to process');
+                } else {
+                  console.log('All Addresses have been processed successfully');
+                }
+                self.configureModuleContext(framework);
+                onSuccess();
+            });
+        // console.log('errorBindings:')
+        // errorBindings.forEach(function(b,name){
+        //     console.log(name,b);
+        // });
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
@@ -1309,6 +1361,7 @@ function module() {
         onSuccess();
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
+        // self.activeDevice.setDebugFlashErr(false);
         onSuccess();
     };
     this.onUnloadModule = function(framework, onError, onSuccess) {

@@ -10,7 +10,7 @@
  *  3. Accept user input to Configure AINx Channels
  *  
  * Read Device Information:
- *  1. Read AINx_EF_TYPE register to determine if configuring a channel will 
+ *  1. Read AINx_EF_INDEX register to determine if configuring a channel will 
  *     potentially have negative effects elsewhere.
  *  2. Read AINx_RANGE
  *  3. Read AINx_RESOLUTION_INDEX
@@ -134,7 +134,7 @@ function module() {
         framework.enableLoopMonitorAnalysis();
         // Define the module's setupBindings
         var setupBindings = [
-            {bindingClass: baseReg+'_EF_TYPE', binding: baseReg+'_EF_TYPE', direction: 'read'},
+            {bindingClass: baseReg+'_EF_INDEX', binding: baseReg+'_EF_INDEX', direction: 'read'},
             {bindingClass: baseReg+'_RANGE', binding: baseReg+'_RANGE', direction: 'read'},
             {bindingClass: baseReg+'_RESOLUTION_INDEX', binding: baseReg+'_RESOLUTION_INDEX', direction: 'read'},
             {bindingClass: baseReg+'_SETTLING_US', binding: baseReg+'_SETTLING_US', direction: 'read'},
@@ -187,13 +187,13 @@ function module() {
         //Loop through results and save them appropriately.  
         setupBindings.forEach(function(binding, key){
             // console.log('key',key,'Address',binding.address,', Result: ',binding.result);
-            if (key.search('_EF_TYPE') > 0) {
+            if (key.search('_EF_INDEX') > 0) {
                 if (binding.status === 'success') {
-                    // Read was successful, save AINx_EF_TYPE state
+                    // Read was successful, save AINx_EF_INDEX state
                     configuredEFType.push(binding.result);
                 } else {
                     // Read was not successful, on old devices this means 
-                    // AINx_EF_TYPE is un-configured
+                    // AINx_EF_INDEX is un-configured
                     configuredEFType.push(0);
                 }
             } else if (binding.status === 'success') {

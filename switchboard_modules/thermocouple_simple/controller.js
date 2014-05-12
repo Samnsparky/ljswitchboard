@@ -10,7 +10,7 @@
  *  3. Accept user input to configure the device
  *  
  * Read Device Information:
- *  1. Read AINx_EF_TYPE register to determine what type is currently selected
+ *  1. Read AINx_EF_INDEX register to determine what type is currently selected
  *  2. Read AINx_EF_CONFIG_A to determine temperature metric
  *
  * Periodically Sample:
@@ -19,9 +19,9 @@
  *      more relevant channel information.
  *
  * Configure AINx Channel for Thermocouple Reading:
- *  1. Write 0 to AINx_EF_TYPE in order to re-set all EF config values
+ *  1. Write 0 to AINx_EF_INDEX in order to re-set all EF config values
  *  2. Write 0.1 to AINx_RANGE register to configure AINx gain settings
- *  3. Configure AINx_EF_TYPE to the proper thermocouple constant:
+ *  3. Configure AINx_EF_INDEX to the proper thermocouple constant:
         20: typeE
         21: typeJ
         22: typeK
@@ -62,7 +62,7 @@ function module() {
 
     var INITIALIZED_CLICK_HANDLERS = false;
 
-    var AIN_EF_SETUP_CONFIG_STR = '_EF_TYPE';
+    var AIN_EF_SETUP_CONFIG_STR = '_EF_INDEX';
 
     /**
      * Function to handle thermocouple reading formatting & add conditional

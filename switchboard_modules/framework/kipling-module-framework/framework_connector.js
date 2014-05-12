@@ -28,6 +28,7 @@ try {
     sdFramework.deviceKeeper = device_controller.getDeviceKeeper();
     sdModule.deviceKeeper = device_controller.getDeviceKeeper();
     sdModule.ljmDriver = device_controller.ljm_driver;
+    sdModule.sdFramework = sdFramework;
 
     try {
         // Try and link the framework to the various implemented functions, 

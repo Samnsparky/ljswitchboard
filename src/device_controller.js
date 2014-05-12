@@ -290,6 +290,12 @@ var Device = function (device, serial, connectionType, deviceType)
      *      written. Will reject on error from lower layers.
     **/
     this.rwMany = function(addresses, directions, numValues, values) {
+        var qDeferred = q.defer();
+        this.rqControl('rwMany',addresses, directions, numValues, values)
+        .then(qDeferred.resolve,qDeferred.reject);
+        return qDeferred.promise;
+    }
+    this.drwMany = function(addresses, directions, numValues, values) {
         var deferred = q.defer();
         this.device.rwMany(
             addresses,
@@ -339,7 +345,13 @@ var Device = function (device, serial, connectionType, deviceType)
      * @return {q.promise} Promise that resolves to the values and addresses
      *      written. Will reject on error from lower layers.
     **/
-    this.writeMany = function (addresses, values) {
+    this.writeMany = function(addresses, values) {
+        var qDeferred = q.defer();
+        this.rqControl('writeMany',addresses, values)
+        .then(qDeferred.resolve,qDeferred.reject);
+        return qDeferred.promise;
+    }
+    this.dwriteMany = function (addresses, values) {
         var deferred = q.defer();
 
         this.device.writeMany(
@@ -365,7 +377,13 @@ var Device = function (device, serial, connectionType, deviceType)
      *      the device, values corresponding to the addresses array passed.
      *      Rejects on error from a lower layer.
     **/
-    this.readMany = function (addresses) {
+    this.readMany = function(addresses) {
+        var qDeferred = q.defer();
+        this.rqControl('readMany',addresses)
+        .then(qDeferred.resolve,qDeferred.reject);
+        return qDeferred.promise;
+    }
+    this.dreadMany = function (addresses) {
         var deferred = q.defer();
 
         this.device.readMany(
@@ -415,6 +433,12 @@ var Device = function (device, serial, connectionType, deviceType)
      *      register. Rejects on error at the lower levels.
     **/
     this.qWrite = function(address, value) {
+        var qDeferred = q.defer();
+        this.rqControl('qWrite',address, value)
+        .then(qDeferred.resolve,qDeferred.reject);
+        return qDeferred.promise;
+    }
+    this.dqWrite = function(address, value) {
         var deferred = q.defer();
         this.device.write(
             address,
@@ -458,7 +482,13 @@ var Device = function (device, serial, connectionType, deviceType)
      * @return {q.promise} Promise that resovles to the value read from this
      *      register. Rejects on error at the lower levels.
     **/
-    this.qRead = function(address, value) {
+    this.qRead = function(address) {
+        var qDeferred = q.defer();
+        this.rqControl('qRead',address)
+        .then(qDeferred.resolve,qDeferred.reject);
+        return qDeferred.promise;
+    }
+    this.dqRead = function(address) {
         var deferred = q.defer();
         this.device.read(
             address,
@@ -476,6 +506,121 @@ var Device = function (device, serial, connectionType, deviceType)
         this.device.read(address, onError, onSuccess);
     };
 
+    /** 
+     * Temporary Read & Write-Repeat functions...
+     */
+    this.rqControl = function (cmdType,arg0,arg1,arg2,arg3,arg4) {
+        var rqControlDeferred = q.defer();
+        var device = this;
+        var numRetries = 0;
+        var ioNumRetry = 50;
+        var ioDelay = 100;
+        var type={
+            'qRead':'dqRead',
+            'readMany':'dreadMany',
+            'qWrite':'dqWrite',
+            'writeMany':'dwriteMany',
+            'rwMany':'drwMany'
+        }[cmdType];
+        var supportedFunctions = [
+            'qRead',
+            'readMany',
+            'qWrite',
+            'writeMany',
+            'rwMany'
+        ];
+        
+        var control = function() {
+            // console.log('in dRead.read');
+            var ioDeferred = q.defer();
+            device[type](arg0,arg1,arg2,arg3)
+            .then(function(result){
+                // console.log('Read Succeded',result);
+                ioDeferred.resolve({isErr: false, val:result});
+            }, function(err) {
+                // console.log('Read Failed',err);
+                ioDeferred.reject({isErr: true, val:err});
+            });
+            return ioDeferred.promise;
+        };
+        var delayAndRead = function() {
+            var iotimerDeferred = q.defer();
+            var innerControl = function() {
+                // console.log('in dRead.read');
+                var innerIODeferred = q.defer();
+                device[type](arg0,arg1,arg2,arg3)
+                .then(function(result){
+                    // console.log('Read Succeded',result);
+                    innerIODeferred.resolve({isErr: false, val:result});
+                }, function(err) {
+                    // console.log('Read Failed',err);
+                    innerIODeferred.reject({isErr: true, val:err});
+                });
+                return innerIODeferred.promise;
+            };
+            var qDelayErr = function() {
+                var eTimerDeferred = q.defer();
+                eTimerDeferred.resolve('read-timeout occured');
+                return eTimerDeferred.promise;
+            };
+            var qDelay = function() {
+                // console.log('in dRead.qDelay');
+                var timerDeferred = q.defer();
+                if(numRetries < ioNumRetry) {
+                    // console.log('Re-trying');
+                    setTimeout(timerDeferred.resolve,1000);
+                } else {
+                    timerDeferred.reject();
+                }
+                return timerDeferred.promise;
+            };
+            // console.log('in delayAndRead');
+            if(arg4) {
+                console.log('Attempting to Recover from 2358 Error');
+                console.log('Function Arguments',type,arg0,arg1,arg2,arg3);
+            }
+            qDelay()
+            .then(innerControl,qDelayErr)
+            .then(function(res){
+                if(!res.isErr) {
+                    iotimerDeferred.resolve(res.val);
+                } else {
+                    iotimerDeferred.reject(res.val);
+                }
+            },delayAndRead)
+            .then(iotimerDeferred.resolve,iotimerDeferred.reject);
+            return iotimerDeferred.promise;
+        };
+        
+
+        if(supportedFunctions.indexOf(cmdType) >= 0) {
+            control()
+            .then(function(res) {
+                // console.log('data',res);
+                rqControlDeferred.resolve(res.val);
+            },function(res) {
+                var innerDeferred = q.defer();
+                if(res.val == 2358) {
+                    delayAndRead()
+                    .then(innerDeferred.resolve,innerDeferred.reject);
+                } else {
+                    innerDeferred.resolve(res.val);
+                }
+                return innerDeferred.promise;
+            })
+            .then(function(res) {
+                // console.log('Read-Really-Finished',arg0,res);
+                rqControlDeferred.resolve(res);
+            },function(err) {
+                console.log('Here...',err);
+                rqControlDeferred.reject(err)
+            })
+        } else {
+            console.log(cmdType,type,supportedFunctions.indexOf(type))
+            throw 'device_controller.rqControl Error!';
+        }
+        return rqControlDeferred.promise;
+    }
     /**
      * Release the device handle for this device.
      *
