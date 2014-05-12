@@ -10,8 +10,21 @@
 var device_controller = require('./device_controller');
 
 var DEVICE_DISPLAY_SRC = 'device_info/device_display.html';
-var DEVICE_NAME_DEFAULT_REGISTER = 60500
-var NAME_MAX_LEN = 49
+var DEVICE_NAME_DEFAULT_REGISTER = 60500;
+var NAME_MAX_LEN = 49;
+
+
+function formatAsIP(ipAddress) {
+    var ipString = "";
+    ipString += ((ipAddress>>24)&0xFF).toString();
+    ipString += ".";
+    ipString += ((ipAddress>>16)&0xFF).toString();
+    ipString += ".";
+    ipString += ((ipAddress>>8)&0xFF).toString();
+    ipString += ".";
+    ipString += ((ipAddress)&0xFF).toString();
+    return ipString;
+}
 
 
 /**
@@ -30,6 +43,7 @@ function showDevice(device, onSuccess)
     var templateValues;
     var firmwareVersion;
     var bootloaderVersion;
+    var wifiFirmwareVersion;
 
     try {
         isPro = device.read('HARDWARE_INSTALLED') != 0;
@@ -58,10 +72,31 @@ function showDevice(device, onSuccess)
         bootloaderVersion = '[ could not read bootloader version ]';
     }
 
+    try {
+        ethernetIP = formatAsIP(device.read('ETHERNET_IP'));
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        ethernetIP = '[ could not read ethernet IP address ]';
+    }
+
+    try {
+        wifiIP = formatAsIP(device.read('WIFI_IP'));
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        wifiIP = '[ could not read wifi IP address ]';
+    }
+
     templateValues = {
         'device': device,
         'firmware': firmwareVersion,
-        'bootloader': bootloaderVersion
+        'bootloader': bootloaderVersion,
+        'ethernetIP': ethernetIP,
+        'wifiIP': wifiIP,
+        'isPro': isPro
     };
 
     if (isPro) {
