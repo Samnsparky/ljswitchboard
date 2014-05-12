@@ -90,13 +90,45 @@ function showDevice(device, onSuccess)
         wifiIP = '[ could not read wifi IP address ]';
     }
 
+    try {
+        powerEthernet = device.read('POWER_ETHERNET');
+    } catch (e) {
+        showAlert('Could not read POWER_ETHERNET');
+        powerEthernet = false;
+    }
+
+    try {
+        powerWifi = device.read('POWER_WIFI');
+    } catch (e) {
+        showAlert('Could not read POWER_WIFI');
+        powerWifi = false;
+    }
+
+    try {
+        powerAin = device.read('POWER_AIN');
+    } catch (e) {
+        showAlert('Could not read POWER_AIN');
+        powerAin = false;
+    }
+
+    try {
+        powerLed = device.read('POWER_LED');
+    } catch (e) {
+        showAlert('Could not read POWER_LED');
+        powerLed = false;
+    }
+
     templateValues = {
         'device': device,
         'firmware': firmwareVersion,
         'bootloader': bootloaderVersion,
         'ethernetIP': ethernetIP,
         'wifiIP': wifiIP,
-        'isPro': isPro
+        'isPro': isPro,
+        'powerEthernet': powerEthernet,
+        'powerWifi': powerWifi,
+        'powerAin': powerAin,
+        'powerLed': powerLed
     };
 
     if (isPro) {

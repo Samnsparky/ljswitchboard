@@ -51,6 +51,12 @@
                 </span>
             </div>
             {{/if}}
+            <div id="power-overview">
+                <div><span class="power-indicator {{#if ../powerEthernet }}powered{{/if}}"></span> Ethernet {{#if ../powerEthernet }}Powered{{/if}} {{#unless ../powerEthernet}}Not Powered{{/unless}}</div>
+                <div><span class="power-indicator {{#if ../powerWifi }}powered{{/if}}"></span> WiFi {{#if ../powerWifi }}Powered{{/if}} {{#unless ../powerWifi}}Not Powered{{/unless}}</div>
+                <div><span class="power-indicator {{#if ../powerAin }}powered{{/if}}"></span> Analog Input Module {{#if ../powerAin }}Powered{{/if}} {{#unless ../powerAin}}Not Powered{{/unless}}</div>
+                <div><span class="power-indicator {{#if ../powerLed }}powered{{/if}}"></span> Device LED {{#if ../powerLed }}Powered{{/if}} {{#unless ../powerLed}}Not Powered{{/unless}}</div>
+            </div>
         </div>
     </div>
     <div class="span5">
