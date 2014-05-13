@@ -5,7 +5,7 @@
 		<div id="ethernet_settings">
 			<div class="settingsTopDiv">
 				<div class="currentStatusInfo">
-					<b><span>Connection Status: </span><span id="ethernet_connection_status">Connected</span></b>
+					<b><span>Connection Status: </span><span id="ethernet_connection_status">{{ custom.ethernetConnectionStatus}}</span></b>
 					<div class="powerButtonDiv">
 						<div class="btn-group">
 							<button id="ethernetPowerButton" class="btn" title="{{ custom.ethernetPowerButtonString }}">
@@ -15,7 +15,7 @@
 					</div>
 				</div>
 				<div class="connectionStatusMessage">
-					<span id="ethernetStatusMessage">Ethernet is currently active and has the IP address 192.168.1.153.<span>
+					<span id="ethernetStatusMessage">{{ custom.ethernetStatusMessage }}<span>
 				</div>
 			</div>
 			<hr>
@@ -50,7 +50,7 @@
 								<td>
 									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless isDHCPAuto}}display:none;{{/unless}}">{{ initVal }}</span>
 									<div class="Manual_Value" style="{{#if isDHCPAuto}}display:none;{{/if}}">
-										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
+										<input class="ipAddress {{name}}_MAN_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
 									</div>
 								</td>
 								<td class="alertCol">
@@ -93,7 +93,7 @@
 					</div>
 				</div>
 				<div class="connectionStatusMessage">
-					<span id="wifiStatusMessage">WiFi is connected to AAA and has theIP address 192.168.1.153.<span>
+					<span id="wifiStatusMessage">{{ custom.wifiStatusMessage }}<span>
 				</div>
 			</div>
 			<hr>
@@ -159,7 +159,7 @@
 								<td>
 									<span class="Auto_Value {{name}}_AUTO_VAL" style="{{#unless isDHCPAuto}}display:none;{{/unless}}">{{ initVal }}</span>
 									<div class="Manual_Value" style="{{#if isDHCPAuto}}display:none;{{/if}}">
-										<input class="ipAddress {{name}}_AUTO_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
+										<input class="ipAddress {{name}}_MAN_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
 									</div>
 								</td>
 								<td class="alertCol">

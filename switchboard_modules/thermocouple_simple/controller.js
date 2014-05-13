@@ -292,7 +292,7 @@ function module() {
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         var moduleBindings = [
-            {bindingClass: baseReg+'-thermocouple-type-select',  template: baseReg+'-thermocouple-type-select', binding: baseReg+'_EF_TYPE',  direction: 'write', event: 'change'},
+            {bindingClass: baseReg+'-thermocouple-type-select',  template: baseReg+'-thermocouple-type-select', binding: baseReg+'_EF_INDEX',  direction: 'write', event: 'change'},
             {
                 bindingClass: baseReg+'-thermocouple-metric-select',  
                 template: baseReg+'-thermocouple-metric-select', 

@@ -993,7 +993,7 @@ function Framework() {
 
         if(smartName === 'clickHandler') {
             // Add information to binding object
-            binding.binding = bindingName+'-callback';
+            binding.binding = bindingName+CALLBACK_STRING_CONST;
             binding.direction = 'write';
             binding.event = 'click';
             binding.execCallback = true;
@@ -1047,6 +1047,23 @@ function Framework() {
 
             // Save binding to framework
             self.putSetupBinding(setupBinding);
+            isValid = true;
+        } else if (smartName === 'periodicFunction') {
+            // Add information to binding object
+            binding.binding = bindingName+CALLBACK_STRING_CONST;
+            binding.direction = 'read';
+            binding.format = newSmartBinding.format;
+            binding.customFormatFunc = newSmartBinding.customFormatFunc;
+            binding.iterationDelay = newSmartBinding.iterationDelay;
+            binding.initialDelay = newSmartBinding.initialDelay;
+
+            if(typeof(newSmartBinding.periodicCallback) === 'function') {
+                binding.execCallback = true;
+            }
+            binding.callback = newSmartBinding.periodicCallback;
+
+            // Save binding to framework
+            self.putConfigBinding(binding);
             isValid = true;
         }
 
@@ -2188,7 +2205,9 @@ function Framework() {
                         addresses.push(value.binding);
                         formats.push(value.format);
                         customFormatFuncs.push(value.customFormatFunc);
-                    } else {}
+                    } else {
+
+                    }
                     bindings.push(value);
 
                     // Re-set the binding's delay with the new delay
@@ -2320,6 +2339,10 @@ function Framework() {
 
                         //Increment current index
                         curDeviceIOIndex += 1;
+                    } else {
+                        if(binding.execCallback == false) {
+                            console.log('Warning, PeriodicFunction Found but not executing',binding);
+                        }
                     }
                     // If the current binding has a defined binding that 
                     // needs to be executed execute it now
