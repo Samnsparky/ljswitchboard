@@ -1322,7 +1322,8 @@ function module() {
             var wifiDHCP = self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val;
             var wifiDefaultIP = self.currentValues.get('WIFI_IP_DEFAULT').fVal;
 
-            if(wifiStatus == 2900 && (ssid === ssidDefault)) {
+            if(((wifiStatus == 2900) && (ssid === ssidDefault) && (ssid === ''))
+                                || ((wifiStatus == 2900) && (ssid !== ''))) {
                 statusString = 'WiFi is connected to ';
                 statusString += ssid;
                 statusString += ' and has the IP address ';
@@ -1332,7 +1333,7 @@ function module() {
                 statusString = 'WiFi is currently not powered.';
             } else {
                 statusString = 'WiFi is not connected but is trying to connect to ';
-                statusString += ssid;
+                statusString += ssidDefault;
                 if (wifiDHCP === 0) {
                     statusString += ' with the IP address ';
                     statusString += wifiDefaultIP;
@@ -1450,6 +1451,13 @@ function module() {
                     var curSSID = self.currentValues.get('WIFI_SSID').val;
                     if(curSSID === '') {
                         updateStatusMessage = true;
+                    } else {
+                        var curDefaultSSID = self.currentValues.get('WIFI_SSID_DEFAULT').val;
+                        if (curSSID === curDefaultSSID) {
+                            updateStatusMessage = false;
+                        } else {
+                            updateStatusMessage = true;
+                        }
                     }
                 }
             } else {
@@ -1470,8 +1478,14 @@ function module() {
                 $('#wifiStatusMessage').text(message);
                 var ssidDefault = self.currentValues.get('WIFI_SSID_DEFAULT').val;
                 var ssid = self.currentValues.get('WIFI_SSID').val;
-                if(self.isWifiConnected && (ssid === ssidDefault)) {
-                    self.updateWifiSettings();
+                if(self.isWifiConnected) {
+                    if(ssid === '') {
+                        if(ssid === ssidDefault) {
+                            self.updateWifiSettings();
+                        }
+                    } else {
+                        self.updateWifiSettings();
+                    }
                 }
                 self.refreshWifiInfo = false;
             };
@@ -1643,7 +1657,7 @@ function module() {
         // self.moduleContext.wifiIPRegisters = [];
 
         // Get and save wifiNetworkName
-        var networkNameDefault = self.currentValues.get('WIFI_SSID').fVal;
+        var networkNameDefault = self.currentValues.get('WIFI_SSID_DEFAULT').fVal;
         self.moduleContext.wifiNetworkName = networkNameDefault;
 
         // Get and save ethernetPowerStatus
@@ -1808,6 +1822,7 @@ function module() {
         var os = require("os");
         var computerName = os.hostname();
         if(computerName === 'chris-johnsons-macbook-pro-2.local' && window.toolbar.visible) {
+            // self.setNetworkName('AAA');
             self.setWifiPassword('timmarychriskevin');
         }
 
