@@ -1859,12 +1859,12 @@ function module() {
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         self.attachInputValidators();
-        var os = require("os");
-        var computerName = os.hostname();
-        if(computerName === 'chris-johnsons-macbook-pro-2.local' && window.toolbar.visible) {
-            // self.setNetworkName('AAA');
-            self.setWifiPassword('timmarychriskevin');
-        }
+        // var os = require("os");
+        // var computerName = os.hostname();
+        // if(computerName === 'chris-johnsons-macbook-pro-2.local' && window.toolbar.visible) {
+        //     // self.setNetworkName('AAA');
+        //     self.setWifiPassword('timmarychriskevin');
+        // }
 
         // self.setNetworkName('5PoundBass');
         // self.setNetworkName('- DEN Airport Free WiFi');
