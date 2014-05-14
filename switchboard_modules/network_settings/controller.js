@@ -210,9 +210,9 @@ function module() {
         
 
         var ssidEl = $('#WIFI_SSID_DEFAULT_VAL .WIFI_SSID_DEFAULT_AUTO_VAL');
-        ssidEl.val('');
+        // ssidEl.val('');
         ssidEl.attr('placeholder',wifiSSID);
-        ssidEl.trigger('change');
+        // ssidEl.trigger('change');
 
         var dhcpTextEl = $('#wifi-DHCP-Select-Toggle .btnText');
         if(wifiDHCP === 0) {
