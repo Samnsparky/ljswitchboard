@@ -1,7 +1,7 @@
 {
     "constants": {
         "editor": {
-            "defaultScript": "1-Wire for DeSteeg"
+            "defaultScript": "basicExample"
         },
         "console": {
             "maxNumLines": 1000

@@ -207,7 +207,7 @@ function module() {
     this.updateWifiSettings = function() {
         var wifiSSID = self.currentValues.get('WIFI_SSID').val;
         var wifiDHCP = self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val;
-
+        
 
         var ssidEl = $('#WIFI_SSID_DEFAULT_VAL .WIFI_SSID_DEFAULT_AUTO_VAL');
         ssidEl.val('');
@@ -219,6 +219,12 @@ function module() {
             dhcpTextEl.text('DHCP Manual');
         } else {
             dhcpTextEl.text('DHCP Auto');
+        }
+        var wifiPower = self.currentValues.get('POWER_WIFI').val;
+        if(wifiPower === 0) {
+            self.saveCurrentValue('WIFI_IP',0,'0.0.0.0');
+            self.saveCurrentValue('WIFI_SUBNET',0,'0.0.0.0');
+            self.saveCurrentValue('WIFI_GATEWAY',0,'0.0.0.0');
         }
         self.updateIPSettings('wifi');
     };
@@ -935,13 +941,32 @@ function module() {
             });
             return ioDeferred.promise;
         };
+        var readAndSaveRSSI = function() {
+            var ioDeferred = q.defer();
+            self.activeDevice.qRead('WIFI_RSSI')
+            .then(function(result) {
+                newNames = newNames.concat('WIFI_RSSI');
+                newVals = newVals.concat(result);
+                var strRes = self.formatRSSI({value:result});
+                self.saveCurrentValue(
+                    'WIFI_RSSI',
+                    result,
+                    strRes
+                );
+                ioDeferred.resolve();
+            }, function(err) {
+                ioDeferred.reject();
+            });
+            return ioDeferred.promise;
+        };
         readAndSaveInfo()
         .then(readAndSaveSSID,getErrHandle('readAndSaveInfo'))
         .then(readAndSaveDHCP,getErrHandle('readAndSaveSSID'))
+        .then(readAndSaveRSSI,getErrHandle('readAndSaveDHCP'))
         .then(function() {
             // console.log('Wifi Status Regs Updated',newNames,newVals);
             innerDeferred.resolve();
-        },getErrHandle('readAndSaveDHCP'))
+        },getErrHandle('readAndSaveRSSI'))
         .then(function() {
             innerDeferred.resolve();
         },innerDeferred.reject);
@@ -1321,6 +1346,7 @@ function module() {
             var wifiIP = self.currentValues.get('WIFI_IP').fVal;
             var wifiDHCP = self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val;
             var wifiDefaultIP = self.currentValues.get('WIFI_IP_DEFAULT').fVal;
+            var wifiRSSI = self.currentValues.get('WIFI_RSSI').fVal;
 
             if(((wifiStatus == 2900) && (ssid === ssidDefault) && (ssid === ''))
                                 || ((wifiStatus == 2900) && (ssid !== ''))) {
@@ -1328,6 +1354,8 @@ function module() {
                 statusString += ssid;
                 statusString += ' and has the IP address ';
                 statusString += wifiIP;
+                statusString +=' with an initial signal strength of ';
+                statusString += wifiRSSI;
                 statusString += '.';
             } else if (wifiStatus == 2903) {
                 statusString = 'WiFi is currently not powered.';
@@ -1465,10 +1493,17 @@ function module() {
                 self.saveCurrentValue('WIFI_STATUS',data.value,data.stringVal);
                 updateStatusMessage = true;
                 if( newStatus == 2900 ) {
+                    self.saveCurrentValue('POWER_WIFI',1,'Enabled');
+                    $('#wifiPowerButton .buttonText').text('Turn WiFi Off');
                     self.isWifiConnected = true;
                     // console.log('Wifi Connected!');
                     console.log('Wifi SSID: (on connect-change)',self.activeDevice.read('WIFI_SSID'));
+                } else if (newStatus == 2903) {
+                    self.saveCurrentValue('POWER_WIFI',0,'Disabled');
+                    $('#wifiPowerButton .buttonText').text('Turn WiFi On');
                 } else {
+                    self.saveCurrentValue('POWER_WIFI',1,'Enabled');
+                    $('#wifiPowerButton .buttonText').text('Turn WiFi Off');
                     self.isWifiConnected = false;
                     // console.log('Wifi Disconnected!');
                 }
@@ -1681,6 +1716,11 @@ function module() {
             self.saveCurrentValue('POWER_WIFI',1,'Enabled');
             self.moduleContext.wifiPowerButtonString = 'Turn WiFi Off';
         }
+        if(isWifiPowered === 0) {
+            self.saveCurrentValue('WIFI_IP',0,'0.0.0.0');
+            self.saveCurrentValue('WIFI_SUBNET',0,'0.0.0.0');
+            self.saveCurrentValue('WIFI_GATEWAY',0,'0.0.0.0');
+        }
 
         self.moduleContext.isPro = null;
         if (self.activeDevice.getSubclass()) {
@@ -1758,7 +1798,7 @@ function module() {
         var errorBindings = dict();
         setupBindings.forEach(function(setupBinding){
             // console.log('Addr',setupBinding.address,'Status',setupBinding.status,'Val',setupBinding.result);
-            console.log('Addr',setupBinding.address,':',setupBinding.formattedResult,setupBinding.result,setupBinding.status);
+            // console.log('Addr',setupBinding.address,':',setupBinding.formattedResult,setupBinding.result,setupBinding.status);
             if(setupBinding.status === 'error') {
                 isConfigError = true;
                 var addr = setupBinding.address;

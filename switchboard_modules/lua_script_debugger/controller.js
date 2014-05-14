@@ -19,7 +19,7 @@
 
 // Constant that determines device polling rate.  Use an increased rate to aid
 // in user experience.
-var MODULE_UPDATE_PERIOD_MS = 100;
+var MODULE_UPDATE_PERIOD_MS = 200;
 
 // Constant that can be set to disable auto-linking the module to the framework
 var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
@@ -81,7 +81,10 @@ function luaDeviceController() {
     var MAX_ARRAY_PACKET_SIZE = 32; //Set packet size to be 32 bytes
 
     this.catchError = function(err) {
+        var errDeferred = q.defer();
         console.log('luaControllerErr:',err);
+        errDeferred.reject();
+        return errDeferred.promise;
     };
     this.printInfo = function() {
         console.log('Device Name',self.device.cachedName);
@@ -97,6 +100,22 @@ function luaDeviceController() {
         if(self.DEBUG_START_EXECUTIONS) {
             console.log(data);
         }
+    };
+    this.isLuaCodeError = function() {
+        var isError = false;
+        var errors = $('#lua-code-editor .ace_error');
+        if(errors.length > 0) {
+            isError = true;
+        }
+        return isError;
+    };
+    this.getErrorLine = function() {
+        var lineNum = '';
+        var errors = $('#lua-code-editor .ace_error');
+        if(errors.length > 0) {
+            lineNum = errors.text();
+        }
+        return lineNum;
     };
     this.stopLuaScript = function() {
         self.print('disabling LUA_RUN');
@@ -351,12 +370,25 @@ function luaDeviceController() {
         .then(innerDeferred.resolve, innerDeferred.reject);
         return innerDeferred.promise;
     };
+    this.checkForCodeErrors = function() {
+        var codeDeferred = q.defer();
+        if(self.isLuaCodeError()) {
+            showMinAlert('Check Script for Errors, line: '+self.getErrorLine());
+            codeDeferred.reject();
+        } else {
+            codeDeferred.resolve();
+        }
+        return codeDeferred.promise;
+    }
     this.saveScriptToFlash = function() {
         self.print('loading & saving lua script to flash');
-        var ioDeferred = q.defer();
+        var innerDeferred = q.defer();
+
+        // Check LUA Script for Errors
+        self.checkForCodeErrors()
 
         // Disable the LUA script
-        self.stopLuaScript()
+        .then(self.stopLuaScript, checkForCodeErrors)
 
         // Set the LUA Source Size
         .then(self.writeLuaSourceSize, self.catchError)
@@ -404,8 +436,11 @@ function luaDeviceController() {
         self.print('loading & starting Lua script');
         var ioDeferred = q.defer();
 
+        // Check LUA Script for Errors
+        self.checkForCodeErrors()
+        
         // Disable the LUA script
-        self.stopLuaScript()
+        .then(self.stopLuaScript, self.catchError)
 
         // Set the LUA Source Size
         .then(self.writeLuaSourceSize, self.catchError)
@@ -432,8 +467,11 @@ function luaDeviceController() {
         self.print('loading Lua script');
         var ioDeferred = q.defer();
 
+        // Check LUA Script for Errors
+        self.checkForCodeErrors()
+        
         // Disable the LUA script
-        self.stopLuaScript()
+        .then(self.stopLuaScript, self.catchError)
 
         // Set the LUA Source Size
         .then(self.writeLuaSourceSize, self.catchError)
@@ -1237,19 +1275,19 @@ function module() {
             {
                 bindingName: 'LUA_RUN', 
                 smartName: 'readRegister',
-                iterationDelay: 9,
+                iterationDelay: 4,
                 configCallback: saveConfigRunStatus,
                 periodicCallback: isLuaRunning
             }, {
                 bindingName: 'LUA_RUN_DEFAULT', 
                 smartName: 'readRegister',
-                iterationDelay: 9,
+                iterationDelay: 4,
                 configCallback: saveConfigBootScriptStatus,
                 periodicCallback: isConfiguredForStartup
             }, {
                 bindingName: 'LUA_DEBUG_ENABLE', 
                 smartName: 'readRegister',
-                iterationDelay: 9,
+                iterationDelay: 4,
                 configCallback: genericConfigCallback,
             }, {
                 bindingName: 'LUA_DEBUG_NUM_BYTES', 

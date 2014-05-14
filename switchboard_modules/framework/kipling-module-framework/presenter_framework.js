@@ -23,7 +23,7 @@ try {
     console.log('error loading fs_facade');
 }
 
-var FADE_DURATION = 20;
+var FADE_DURATION = 400;
 var DEFAULT_REFRESH_RATE = 1000;
 var CONFIGURING_DEVICE_TARGET = '#sd-ramework-configuring-device-display';
 var DEVICE_VIEW_TARGET = '#device-view';
@@ -235,6 +235,7 @@ function Framework() {
         onDeviceSelected: null,
         onDeviceConfigured: null,
         onTemplateLoaded: null,
+        onTemplateDisplayed: null,
         onRegisterWrite: null,
         onRegisterWritten: null,
         onRefresh: null,
@@ -601,6 +602,23 @@ function Framework() {
     };
     var qExecOnDeviceConfigured = this.qExecOnDeviceConfigured;
 
+    this.qExecOnTemplateDisplayed = function() {
+        var innerDeferred = q.defer();
+        try{
+            self.fire(
+                'onTemplateDisplayed',
+                [],
+                innerDeferred.reject,
+                innerDeferred.resolve
+            );
+        } catch (err) {
+            if(err.name === 'SyntaxError') {
+                console.log('Syntax Error captured');
+            }
+            console.log('Error caught in qExecOnTemplateDisplayed',err);
+        }
+        return innerDeferred.promise;
+    }
     this.qExecOnTemplateLoaded = function() {
         var innerDeferred = q.defer();
         try{
@@ -1895,7 +1913,7 @@ function Framework() {
         // Report that the device has been closed
         self.qExecOnCloseDevice(self.getSelectedDevice())
 
-        // Display the module's template
+        // Hide the module's template
         .then(self.qHideUserTemplate, self.qExecOnLoadError)
 
         // Update the currently-active device
@@ -1919,14 +1937,16 @@ function Framework() {
         // Render the module's template
         .then(self.qRenderModuleTemplate, self.qExecOnLoadError)
 
-        // Display the module's template
-        .then(self.qShowUserTemplate, self.qExecOnLoadError)
-
         // Connect connect any established writeBindings to jquery events
         .then(self.qEstablishWriteBindings, self.qExecOnLoadError)
 
         // Report that the module's template has been loaded
         .then(self.qExecOnTemplateLoaded, self.qExecOnLoadError)
+
+        // Display the module's template
+        .then(self.qShowUserTemplate, self.qExecOnLoadError)
+
+        // Report that the module's template has been displayed
 
         .then(deferred.resolve, deferred.reject);
         return deferred.promise;
@@ -2493,7 +2513,6 @@ function Framework() {
 
         var manageDevicesLink = self.jquery.get('#manage-link');
         visibleTabs.off('click.sdFramework'+self.moduleName);
-        
         self.qExecOnUnloadModule();
     };
     var tabClickHandler = this.tabClickHandler;
@@ -2563,9 +2582,6 @@ function Framework() {
 
         // Render the module's template
         .then(self.qRenderModuleTemplate, self.qExecOnLoadError)
-        
-        // Display the module's template
-        .then(self.qShowUserTemplate, self.qExecOnLoadError)
 
         // Connect connect any established writeBindings to jquery events
         .then(self.qEstablishWriteBindings, self.qExecOnLoadError)
@@ -2575,6 +2591,9 @@ function Framework() {
 
         // Start the DAQ loop
         .then(self.startLoop, self.qExecOnLoadError)
+
+        // Display the module's template
+        .then(self.qShowUserTemplate, self.qExecOnLoadError)
 
         // Re-draw the window to prevent window-disapearing issues
         .then(qRunRedraw, self.qExecOnLoadError)

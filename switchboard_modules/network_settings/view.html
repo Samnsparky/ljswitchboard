@@ -5,7 +5,7 @@
 		<div id="ethernet_settings">
 			<div class="settingsTopDiv">
 				<div class="currentStatusInfo">
-					<b><span>Connection Status: </span><span id="ethernet_connection_status">{{ custom.ethernetConnectionStatus}}</span></b>
+					<span>Connection Status: </span><b><span id="ethernet_connection_status">{{ custom.ethernetConnectionStatus}}</span></b>
 					<div class="powerButtonDiv">
 						<div class="btn-group">
 							<button id="ethernetPowerButton" class="btn" title="{{ custom.ethernetPowerButtonString }}">
@@ -83,7 +83,7 @@
 		<div id="wifi_settings">
 			<div class="settingsTopDiv">
 				<div class="currentStatusInfo">
-					<b><span>Connection Status: </span><span id="WIFI_STATUS">Connected</span></b>
+					<span>Connection Status: </span><b><span id="WIFI_STATUS">Connected</span></b>
 					<div class="powerButtonDiv">
 						<div class="btn-group">
 							<button id="wifiPowerButton" class="btn" title="{{ custom.wifiPowerButtonString }}">
@@ -119,7 +119,7 @@
 						<tr id="WIFI_PASSWORD_DEFAULT_VAL" class="networkSetting">
 							<td>Password:</td>
 							<td>
-								<input class="WIFI_PASSWORD_DEFAULT_AUTO_VAL" type="text" name="{{humanName}}" placeholder="********">
+								<input class="WIFI_PASSWORD_DEFAULT_AUTO_VAL" type="password" name="{{humanName}}" placeholder="********">
 							</td>
 							<td class="alertCol">
 								<div class="alert alert-success">

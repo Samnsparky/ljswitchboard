@@ -25,7 +25,7 @@
     },
     {
         "name": "analog_inputs",
-        "active": true
+        "active": false
     },
     {
         "name": "analog_inputs_fw",
@@ -36,20 +36,32 @@
         "active": true
     },
     {
-        "name": "device_updater",
+        "name": "thermocouple_simple",
         "active": true
     },
     {
         "name": "network_configuration",
-        "active": true
+        "active": false
+    },
+    {
+        "name": "module_manager",
+        "active": false
+    },
+    {
+        "name": "data_logger",
+        "active": false
     },
     {
         "name": "register_matrix",
         "active": true
     },
     {
-        "name": "module_manager",
-        "active": false
+        "name": "lua_script_debugger",
+        "active": true
+    },
+    {
+        "name": "network_settings",
+        "active": true
     },
     {
         "name": "set_defaults",
@@ -60,20 +72,7 @@
         "active": true
     },
     {
-        "name": "thermocouple_simple",
-        "active": true
-    },
-    {
-        "name": "lua_script_debugger",
-        "active": true
-    },
-    {
-        "name": "data_logger",
-        "active": false
-    },
-    {
-        "name": "network_settings",
+        "name": "device_updater",
         "active": true
     }
-
 ]
