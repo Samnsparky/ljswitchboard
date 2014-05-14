@@ -46,6 +46,9 @@ function module() {
 
     this.currentValues = dict();
     this.bufferedValues = dict();
+
+    this.dhcpText = ['Manual','Use DHCP'];
+
     this.saveBufferedValue = function(address,value,formattedVal) {
         self.bufferedValues.set(address,{val:value,fVal:formattedVal});
     };
@@ -198,9 +201,9 @@ function module() {
 
         var dhcpTextEl = $('#ethernet-DHCP-Select-Toggle .btnText');
         if(dhcpDefault === 0) {
-            dhcpTextEl.text('DHCP Manual');
+            dhcpTextEl.text(self.dhcpText[0]);
         } else {
-            dhcpTextEl.text('DHCP Auto');
+            dhcpTextEl.text(self.dhcpText[1]);
         }
         self.updateIPSettings('ethernet');
     };
@@ -216,9 +219,9 @@ function module() {
 
         var dhcpTextEl = $('#wifi-DHCP-Select-Toggle .btnText');
         if(wifiDHCP === 0) {
-            dhcpTextEl.text('DHCP Manual');
+            dhcpTextEl.text(self.dhcpText[0]);
         } else {
-            dhcpTextEl.text('DHCP Auto');
+            dhcpTextEl.text(self.dhcpText[1]);
         }
         var wifiPower = self.currentValues.get('POWER_WIFI').val;
         if(wifiPower === 0) {
@@ -295,10 +298,7 @@ function module() {
     this.getDHCPVal = function(settingID) {
         var manStr = " .btnText";
         var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
-        var dhcpValues = {
-            'DHCP Manual':0,
-            'DHCP Auto':1,
-        };
+        var dhcpValues = self.dhcpText;
         var strVal = manualValEl.text();
         var value = "";
         var isNew = false;
@@ -803,6 +803,20 @@ function module() {
     };
     this.ethernetCancelButton = function(data, onSuccess) {
         console.log('in ethernetCancelButton listener');
+        var dhcp = self.currentValues.get('ETHERNET_DHCP_ENABLE_DEFAULT').val;
+        var buttonText = self.dhcpText[dhcp];
+        $('#ethernetDHCPSelect .btnText').text(buttonText);
+        if(dhcp === 0) {
+            self.showManualEthernetSettings();
+        } else {
+            self.showAutoEthernetSettings();
+        }
+        self.clearEthernetInputs();
+        onSuccess();
+    };
+    this.ethernetHelpButton = function(data, onSuccess) {
+        console.log('in wifiHelpButton listener');
+        gui.Shell.openExternal("http://labjack.com/support/app-notes/basic-networking-troubleshooting");
         onSuccess();
     };
     this.updateActiveEthernetSettings = function() {
@@ -1212,6 +1226,17 @@ function module() {
             var ioDeferred = q.defer();
             if(networkName.isNew) {
                 applySettings = true;
+                self.activeDevice.qWrite('WIFI_SSID',networkName.value)
+                .then(ioDeferred.resolve,ioDeferred.reject);
+            } else {
+                ioDeferred.resolve();
+            }
+            return ioDeferred.promise;
+        };
+        var writeNetworkNameDefault = function() {
+            var ioDeferred = q.defer();
+            if(networkName.isNew) {
+                applySettings = true;
                 self.activeDevice.qWrite('WIFI_SSID_DEFAULT',networkName.value)
                 .then(ioDeferred.resolve,ioDeferred.reject);
             } else {
@@ -1246,13 +1271,19 @@ function module() {
             waitForWifi()
             .then(writeSettings,getIOError('disableWifi'))
             .then(writeNetworkName,getIOError('writeSettings'))
-            .then(writeNetworkPassword,getIOError('writeNetworkName'))
+            .then(writeNetworkNameDefault,getIOError('writeNetworkName'))
+            .then(writeNetworkPassword,getIOError('writeNetworkNameDefault'))
             .then(applyWifiSettings,getIOError('writeNetworkPassword'))
             .then(function() {
                     console.log('Successfully Applied Wifi Settings',names,vals,configData);
                     // Save Current Settings
                     self.saveCurrentValue(
                         'WIFI_SSID_DEFAULT',
+                        networkName.value,
+                        networkName.value
+                    );
+                    self.saveCurrentValue(
+                        'WIFI_SSID',
                         networkName.value,
                         networkName.value
                     );
@@ -1293,6 +1324,20 @@ function module() {
     };
     this.wifiCancelButton = function(data, onSuccess) {
         console.log('in wifiCancelButton listener');
+        var dhcp = self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val;
+        var buttonText = self.dhcpText[dhcp];
+        $('#wifiDHCPSelect .btnText').text(buttonText);
+        if(dhcp === 0) {
+            self.showManualWifiSettings();
+        } else {
+            self.showAutoWifiSettings();
+        }
+        self.clearWifiInputs();
+        onSuccess();
+    };
+    this.wifiHelpButton = function(data, onSuccess) {
+        console.log('in wifiHelpButton listener');
+        gui.Shell.openExternal("http://labjack.com/support/app-notes/basic-networking-troubleshooting");
         onSuccess();
     };
     this.getEthernetStatus = function() {
@@ -1629,6 +1674,11 @@ function module() {
                 smartName: 'clickHandler',
                 callback: self.ethernetCancelButton
             },{
+                // Define binding to handle Ethernet Cancel button presses.
+                bindingName: 'ethernetHelpButton', 
+                smartName: 'clickHandler',
+                callback: self.ethernetHelpButton
+            },{
                 // Define binding to handle Wifi Power button presses.
                 bindingName: 'wifiPowerButton', 
                 smartName: 'clickHandler',
@@ -1648,6 +1698,11 @@ function module() {
                 bindingName: 'wifiCancelButton', 
                 smartName: 'clickHandler',
                 callback: self.wifiCancelButton
+            },{
+                // Define binding to handle Ethernet Cancel button presses.
+                bindingName: 'wifiHelpButton', 
+                smartName: 'clickHandler',
+                callback: self.wifiHelpButton
             }
         ];
         // Save the smartBindings to the framework instance.
@@ -1730,20 +1785,22 @@ function module() {
         var initialEthernetDHCPStatus = self.currentValues.get('ETHERNET_DHCP_ENABLE_DEFAULT');
         if (initialEthernetDHCPStatus.val === 0) {
             self.moduleContext.ethernetDHCPStatusBool = false;
-            self.moduleContext.ethernetDHCPStatusString = "DHCP Manual";
+            self.moduleContext.ethernetDHCPStatusString = self.dhcpText[0];
         } else {
             self.moduleContext.ethernetDHCPStatusBool = true;
-            self.moduleContext.ethernetDHCPStatusString = "DHCP Auto";
+            self.moduleContext.ethernetDHCPStatusString = self.dhcpText[1];
         }
 
         var initialWifiDHCPStatus = self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT');
         if (initialWifiDHCPStatus.val === 0) {
             self.moduleContext.wifiDHCPStatusBool = false;
-            self.moduleContext.wifiDHCPStatusString = "DHCP Manual";
+            self.moduleContext.wifiDHCPStatusString = self.dhcpText[0];
         } else {
             self.moduleContext.wifiDHCPStatusBool = true;
-            self.moduleContext.wifiDHCPStatusString = "DHCP Auto";
+            self.moduleContext.wifiDHCPStatusString = self.dhcpText[1];
         }
+        self.moduleContext.dhcpDisabledText = self.dhcpText[0];
+        self.moduleContext.dhcpEnabledText = self.dhcpText[1];
         // console.log('Ethernet DHCP',
         //     initialEthernetDHCPStatus,
         //     self.moduleContext.ethernetDHCPStatusBool,

@@ -80,6 +80,18 @@
 .ethManualDHCPDivs {
 	
 }
+.networkConfigHelpButtonDiv {
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 177px;
+	display:inline;
+}
+.networkConfigHelpButton {
+	margin: 0px 0px 0px 0px;
+	padding: 2px 0px 0px 0px;
+}
+.networkConfigHelpButton span {
+	margin: 0 2px;
+}
 #wifi_settings {
 	/*box-shadow: 1px 1px 5px black;
 	border: solid 1px black;
