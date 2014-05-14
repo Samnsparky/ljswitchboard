@@ -6,7 +6,7 @@
   "window": {
     "title": "Kiplingv3",
     "icon": "Kipling.ico",
-    "toolbar": true,
+    "toolbar": false,
     "width": 870,
     "height": 730,
     "min_width":535
