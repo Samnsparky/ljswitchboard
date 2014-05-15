@@ -200,16 +200,17 @@ function module() {
         var dhcp = self.currentValues.get('ETHERNET_DHCP_ENABLE').val;
 
         var dhcpTextEl = $('#ethernet-DHCP-Select-Toggle .btnText');
-        if(dhcpDefault === 0) {
-            dhcpTextEl.text(self.dhcpText[0]);
-        } else {
-            dhcpTextEl.text(self.dhcpText[1]);
-        }
+        // dhcpTextEl.text(self.dhcpText[dhcpDefault]);
+        // if(dhcpDefault === 0) {
+        //     self.showManualEthernetSettings();
+        // } else {
+        //     self.showAutoEthernetSettings();
+        // }
         self.updateIPSettings('ethernet');
     };
     this.updateWifiSettings = function() {
         var wifiSSID = self.currentValues.get('WIFI_SSID').val;
-        var wifiDHCP = self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val;
+        var dhcpDefault = self.currentValues.get('WIFI_DHCP_ENABLE_DEFAULT').val;
         
 
         var ssidEl = $('#WIFI_SSID_DEFAULT_VAL .WIFI_SSID_DEFAULT_AUTO_VAL');
@@ -218,11 +219,12 @@ function module() {
         // ssidEl.trigger('change');
 
         var dhcpTextEl = $('#wifi-DHCP-Select-Toggle .btnText');
-        if(wifiDHCP === 0) {
-            dhcpTextEl.text(self.dhcpText[0]);
-        } else {
-            dhcpTextEl.text(self.dhcpText[1]);
-        }
+        // dhcpTextEl.text(self.dhcpText[dhcpDefault]);
+        // if(dhcpDefault === 0) {
+        //     self.showManualWifiSettings();
+        // } else {
+        //     self.showAutoWifiSettings();
+        // }
         var wifiPower = self.currentValues.get('POWER_WIFI').val;
         if(wifiPower === 0) {
             self.saveCurrentValue('WIFI_IP',0,'0.0.0.0');
@@ -298,7 +300,10 @@ function module() {
     this.getDHCPVal = function(settingID) {
         var manStr = " .btnText";
         var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
-        var dhcpValues = self.dhcpText;
+        var dhcpValues = {};
+        dhcpValues[self.dhcpText[0]] = 0;
+        dhcpValues[self.dhcpText[1]] = 1;
+        
         var strVal = manualValEl.text();
         var value = "";
         var isNew = false;
@@ -473,7 +478,7 @@ function module() {
     };
     this.updateValidationStatus = function(isValid,classId,applyButtonId) {
         if(isValid) {
-            var numInvalid = $('#'+classId+' .alert-block').length;
+            var numInvalid = $('#'+classId+' .icon-close').length;
             var numNew = $('#'+classId+' .inputVerified').length;
             if((numInvalid === 0) && (numNew > 0)) {
                 $('#'+applyButtonId+'').removeAttr('disabled');
@@ -554,8 +559,10 @@ function module() {
             isValid = true;
         } else {
             alertEl.hide();
-            alertMessageEl.removeClass('icon-checkmark-3');
-            alertMessageEl.addClass('icon-close');
+            // alertMessageEl.removeClass('icon-checkmark-3');
+            // alertMessageEl.addClass('icon-close');
+            alertMessageEl.removeClass('icon-close');
+            alertMessageEl.addClass('icon-checkmark-3');
             alertEl.addClass('alert-success');
             // alertEl.removeClass('alert-block');
             alertEl.attr('title','Valid Input');
@@ -580,20 +587,25 @@ function module() {
                 alertMessageEl.addClass('icon-checkmark-3');
                 alertEl.removeClass('alert-block');
                 alertEl.addClass('alert-success');
-                alertEl.attr('title','Valid Password');
+                alertEl.attr('title','Password Required Before Applying Settings');
                 inputTextEl.addClass('inputVerified');
                 alertEl.show();
             }
             isValid = true;
         } else {
-            alertMessageEl.removeClass('icon-checkmark-3');
-            alertMessageEl.addClass('icon-close');
+            // alertMessageEl.removeClass('icon-checkmark-3');
+            // alertMessageEl.addClass('icon-close');
+            alertMessageEl.removeClass('icon-close');
+            alertMessageEl.addClass('icon-checkmark-3');
             alertEl.removeClass('alert-success');
             alertEl.addClass('alert-block');
-            alertEl.attr('title','Password Required');
-            inputTextEl.removeClass('inputVerified');
+            // alertEl.removeClass('alert-block');
+            // alertEl.addClass('alert-success');
+            alertEl.attr('title','Password Required Before Applying Settings, Currently Blank');
+            // inputTextEl.removeClass('inputVerified');
+            inputTextEl.addClass('inputVerified');
             alertEl.show();
-            isValid = false;
+            isValid = true;
         }
         self.updateWifiValidationStatus(isValid);
     };
@@ -1270,8 +1282,8 @@ function module() {
         if(performWrites) {
             waitForWifi()
             .then(writeSettings,getIOError('disableWifi'))
-            .then(writeNetworkName,getIOError('writeSettings'))
-            .then(writeNetworkNameDefault,getIOError('writeNetworkName'))
+            // .then(writeNetworkName,getIOError('writeSettings'))
+            .then(writeNetworkNameDefault,getIOError('writeSettings'))
             .then(writeNetworkPassword,getIOError('writeNetworkNameDefault'))
             .then(applyWifiSettings,getIOError('writeNetworkPassword'))
             .then(function() {

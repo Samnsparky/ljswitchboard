@@ -19,8 +19,8 @@
 
 // Constant that determines device polling rate.  Use an increased rate to aid
 // in user experience.
-var MODULE_UPDATE_PERIOD_MS = 200;
-
+var MODULE_UPDATE_PERIOD_MS = 150;
+var SECONDARY_UPDATE_RATE = 1000;
 // Constant that can be set to disable auto-linking the module to the framework
 var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
 
@@ -1271,23 +1271,24 @@ function module() {
                 onSuccess();
             }
         };
+        var SecondaryRate = Math.round(SECONDARY_UPDATE_RATE/MODULE_UPDATE_PERIOD_MS);
         var smartBindings = [
             {
                 bindingName: 'LUA_RUN', 
                 smartName: 'readRegister',
-                iterationDelay: 4,
+                iterationDelay: SecondaryRate,
                 configCallback: saveConfigRunStatus,
                 periodicCallback: isLuaRunning
             }, {
                 bindingName: 'LUA_RUN_DEFAULT', 
                 smartName: 'readRegister',
-                iterationDelay: 4,
+                iterationDelay: SecondaryRate,
                 configCallback: saveConfigBootScriptStatus,
                 periodicCallback: isConfiguredForStartup
             }, {
                 bindingName: 'LUA_DEBUG_ENABLE', 
                 smartName: 'readRegister',
-                iterationDelay: 4,
+                iterationDelay: SecondaryRate,
                 configCallback: genericConfigCallback,
             }, {
                 bindingName: 'LUA_DEBUG_NUM_BYTES', 
