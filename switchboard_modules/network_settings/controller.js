@@ -1269,9 +1269,18 @@ function module() {
         };
         var applyWifiSettings = function() {
             var ioDeferred = q.defer();
+            self.ljmDriver.writeLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS',2000);
             if(applySettings) {
                 self.activeDevice.qWrite('WIFI_APPLY_SETTINGS',1)
-                .then(ioDeferred.resolve,ioDeferred.reject);
+                .then(function(res) {
+                    console.log('WIFI_APPLY_SETTINGS-suc',res);
+                    self.ljmDriver.writeLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS',20000);
+                    ioDeferred.resolve();
+                },function(err) {
+                    console.log('WIFI_APPLY_SETTINGS-err',err);
+                    self.ljmDriver.writeLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS',20000);
+                    ioDeferred.resolve();
+                });
             } else {
                 console.log('Not Applying Wifi Settings');
                 ioDeferred.resolve();
@@ -1979,7 +1988,7 @@ function module() {
         onHandle(true);
     };
     this.onRefreshError = function(framework, registerNames, description, onHandle) {
-        // console.log('in onRefreshError', description);
+        console.log('in onRefreshError', description);
         if(typeof(description.retError) === 'number') {
             console.log('in onRefreshError',device_controller.ljm_driver.errToStrSync(description.retError));
         } else {
