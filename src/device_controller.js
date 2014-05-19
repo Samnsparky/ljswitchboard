@@ -1184,9 +1184,14 @@ var consolidateDevices = function (listing) {
 exports.getDevices = function (onError, onSuccess)
 {
     labjack_driver.closeAllSync();
-    labjack_driver.listAll(
+    console.log('labjack_driver',labjack_driver)
+    labjack_driver.listAllExtended(
+        "LJM_dtT7",
+        "LJM_ctANY",
+        ['DEVICE_NAME_DEFAULT','HARDWARE_INSTALLED','ETHERNET_IP','WIFI_IP'],
         onError,
         function (driverListing) {
+            console.log('driverListing',driverListing)
             var listingDict = dict();
             async.eachSeries(
                 driverListing,
