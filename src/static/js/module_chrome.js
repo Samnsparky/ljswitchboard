@@ -54,9 +54,10 @@ function selectModule(name)
 {
     $('.' + MODULE_TAB_CLASS).removeClass('selected');
     $('#' + name + MODULE_TAB_ID_POSTFIX).addClass('selected');
-    $(MODULE_CONTENTS_ELEMENT).empty().append(
-        $('<img>').attr('src', MODULE_LOADING_IMAGE_SRC)
-    );
+    // $(MODULE_CONTENTS_ELEMENT).empty().append(
+    //     $('<img>').attr('src', MODULE_LOADING_IMAGE_SRC)
+    // );
+    $(MODULE_CONTENTS_ELEMENT).empty();
 
     fs_facade.getModuleInfo(
         name,
