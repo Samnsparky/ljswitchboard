@@ -61,7 +61,7 @@
         }
     ],
     "displayDevTools": false,
-    "overrideAutoModuleLoad": true,
+    "overrideAutoModuleLoad": false,
     "moduleName": "network_settings",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
