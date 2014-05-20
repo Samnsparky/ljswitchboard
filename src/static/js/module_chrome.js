@@ -497,3 +497,18 @@ $('#module-chrome').ready(function(){
         }
     );
 });
+
+/* Generic error handlers */
+window.addEventListener('error',function(errEvent){
+    var m;
+    m = 'module_chrome.js-uncaughtException: '+ errEvent.message + '/nfilename:"' +
+        (errEvent.filename ? errEvent.filename: 'app_front.js') +
+        '",line: ' + errEvent.lineno;
+    alert(m);
+    console.log('m',m);
+});
+process.on('uncaughtException',function(err){
+    console.error('module_chrome.js-uncaughtException:',err);
+    console.error(err.stack);
+    alert('module_chrome.js-uncaughtException')
+});

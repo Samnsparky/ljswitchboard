@@ -3,6 +3,7 @@
   "description": "LabJack Desktop Utilities",
   "version": "0.1.0",
   "main": "index.html",
+  "inject-js-start":"startup.js",
   "window": {
     "title": "Kiplingv3",
     "icon": "Kipling.ico",

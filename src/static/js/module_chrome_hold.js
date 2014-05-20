@@ -389,6 +389,7 @@ $('#module-chrome').ready(function(){
     $('.close-alert-button').click(closeAlert);
 
     $('#manage-link').click(function () {
+        var keeper = device_controller.getDeviceKeeper();
         keeper.clearRecord();
         $('#device-search-msg').show();
         $('#content-holder').html('');

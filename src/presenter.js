@@ -84,6 +84,13 @@ var genericErrorHandler = function(error)
         ' please contact support@labjack.com.'
     );
 };
+var criticalErrorHandler = function(error)
+{
+    console.error(
+        'An unexpected (critical)error occured:' + error.toString() + '. Please ' +
+        'restart Kipling.'
+    );
+};
 
 
 /**
@@ -240,6 +247,7 @@ function includeDeviceDisplaySizes(deviceTypes)
 
 // Load native UI library
 try {
+    console.warn('in persenter.js');
     var gui = require('nw.gui');
 
     // Get the current window
@@ -265,7 +273,9 @@ try {
             }
         );
     });
-} catch (e) {}
+} catch (e) {
+    criticalErrorHandler(e);
+}
 
 
 /**
