@@ -36,6 +36,10 @@
         "active": true
     },
     {
+        "name": "analog_outputs_fw",
+        "active": true
+    },
+    {
         "name": "thermocouple_simple",
         "active": true
     },

@@ -189,7 +189,7 @@ function moveToModules()
         true,
         ['module_chrome.css'],
         ['module_chrome.js'],
-        genericErrorHandler
+        getCustomGenericErrorHandler('device_selector-moveToModules')
     );
 }
 
@@ -229,12 +229,12 @@ function refreshDevices()
             true,
             ['device_selector.css'],
             ['device_selector.js'],
-            genericErrorHandler
+            getCustomGenericErrorHandler('device_selector-refreshDevices')
         );
     };
 
     var devices = device_controller.getDevices(
-        genericErrorHandler,
+        getCustomGenericErrorHandler('device_selector-refreshDevices.getDevices'),
         onDevicesLoaded
     );
 }

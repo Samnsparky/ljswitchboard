@@ -94,7 +94,7 @@ function selectModule(name)
 
         //Renders the module, function lives in 'ljswitchboard/src/presenter.js'
         renderTemplate(src, standardContext, MODULE_CONTENTS_ELEMENT, false,
-            [cssFile], jsFiles, genericErrorHandler);
+            [cssFile], jsFiles, getCustomGenericErrorHandler('module_chrome-renderNoFrameworkModule'));
     };
 
     //Function that loads a module with the singleDevice framework
@@ -139,7 +139,7 @@ function selectModule(name)
             false,
             [framework_style, cssFile], 
             jsFiles, 
-            genericErrorHandler);
+            getCustomGenericErrorHandler('module_chrome-renderSingleDeviceFrameworkModule'));
         //Render a template based off of a framework:
         //renderFrameworkTemplate(SINGLE_DEVICE_FRAMEWORK_VIEW);
     };
@@ -421,6 +421,7 @@ $('#module-chrome').ready(function(){
     $('.close-alert-button').click(closeAlert);
 
     $('#manage-link').click(function () {
+        var keeper = device_controller.getDeviceKeeper();
         keeper.clearRecord();
         $('#device-search-msg').show();
         $('#content-holder').html('');
@@ -434,12 +435,12 @@ $('#module-chrome').ready(function(){
                 true,
                 ['device_selector.css'],
                 ['device_selector.js'],
-                genericErrorHandler
+                getCustomGenericErrorHandler('module_chrome-ready.onDevicesLoaded')
             );
         };
 
         var devices = device_controller.getDevices(
-            genericErrorHandler,
+            getCustomGenericErrorHandler('module_chrome-ready.getDevices'),
             onDevicesLoaded
         );
     });
@@ -481,12 +482,12 @@ $('#module-chrome').ready(function(){
     var devices = device_controller.getDeviceKeeper().getDevices();
     
     module_manager.getActiveModules(
-        genericErrorHandler,
+        getCustomGenericErrorHandler('module_chrome-ready.getActiveModules'),
         function (modules) {
             displayActiveModulesWithEvents(
                 modules,
                 module_manager.shouldDisplayFuture(devices),
-                genericErrorHandler,
+                getCustomGenericErrorHandler('module_chrome-ready.getActiveModules-callback'),
                 function () {
                     if(START_UP_MODULE_OVERRIDE) {
                         selectModule(START_UP_MODULE_NAME);

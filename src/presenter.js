@@ -84,6 +84,16 @@ var genericErrorHandler = function(error)
         ' please contact support@labjack.com.'
     );
 };
+var getCustomGenericErrorHandler = function(message) {
+    return function(error) {
+        alert(
+            'An unexpected error occured:' + error.toString() + '. Please ' +
+            'restart Kipling. This is likely because your device was ' +
+            'disconnected physically from your machine. If this problem persists,' +
+            ' please contact support@labjack.com. (Info: '+message.toString() +')'
+        );
+    };
+}
 var criticalErrorHandler = function(error)
 {
     console.error(
@@ -295,12 +305,12 @@ function renderDeviceSelector()
             true,
             ['device_selector.css'],
             ['device_selector.js'],
-            genericErrorHandler
+            getCustomGenericErrorHandler('presenter.js-renderDeviceSelector-renderTemplate')
         );
     };
 
     var devices = device_controller.getDevices(
-        genericErrorHandler,
+        getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
         onDevicesLoaded
     );
 }

@@ -3,11 +3,11 @@
     "ljmDeviceParameters": 
     [
         {
-            "serialNumber":"1-470010604",
+            "serialNumber":"470010533",
             "connectionType":"Ethernet"
         },
         {
-            "serialNumber":"1-470010620",
+            "serialNumber":"470010620",
             "connectionType":"Ethernet"
         },
         {
@@ -62,7 +62,7 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": false,
-    "moduleName": "network_settings",
+    "moduleName": "analog_outputs_fw",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }
