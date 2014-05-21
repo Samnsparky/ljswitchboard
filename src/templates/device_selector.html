@@ -8,7 +8,7 @@
         {{#noDevices}}
         Sorry, no devices found... Please check your network and / or USB ports and try again.
         {{/noDevices}}
-        {{#connection_types}}
+        {{#device_types}}
         <div id="t7DeviceListBox" class="device-pane-section connection-type">
             <div class="device-pane-popover">
                 <div class="arrow"></div>
@@ -18,14 +18,14 @@
                 <div class="well {{size}}">
                     {{#devices}}
                     <table class="device"><tr>
-                        <td id="image"><img src="static/img/devices/{{ type }}{{specialImageSuffix}}.png"></td>
+                        <td id="image"><img src="static/img/devices/{{ typeStr }}{{specialImageSuffix}}.png"></td>
                         <td class="connection-buttons-holder">
                             <div id="connect-buttons">
                                 {{#connections}}
                                 <div class="connect-button-holder"><button id="{{../type}}-{{../serial}}-{{ipSafe}}-{{typeStr}}-{{type}}-{{../origDeviceType}}" class="btn btn-success connect-button" title="Connect using {{typeStr}}">{{typeStr}}</button></div>
                                 {{/connections}}
                             </div>
-                            <div id="disconnect-button-holder" class="{{^connected}}hidden-button-holder{{/connected}}">
+                            <div id="disconnect-button-holder" class="hidden-button-holder">
                                 <div><button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
                                     Disconnect
                                 </button></div>
@@ -36,11 +36,13 @@
                             <div id="info">
                                 <table>
                                     <tbody>
+                                        <tr><td class="device-attribute-label">Model</td><td id="type" class="device-attribute-value">{{type}}{{specialText}}</td></tr>
                                         <tr><td class="device-attribute-label">Serial</td><td id="serial" class="device-attribute-value">{{serial}}</td></tr>
-                                        <tr><td class="device-attribute-label">Type</td><td id="type" class="device-attribute-value">{{type}}{{specialText}}</td></tr>
                                         <tr><td class="device-attribute-label">Name</td><td id="name" class="device-attribute-value">{{name}}</td></tr>
                                         <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{ethernetIPAddress}}</td></tr>
-                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value">{{wifiIPAddress}}</td></tr>
+                                        {{#wifiIPAddress}}
+                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value">{{.}}</td></tr>
+                                        {{/wifiIPAddress}}
                                     </tbody>
                                 </table>
                             </div>
@@ -50,6 +52,6 @@
                 </div>
             </div>
         </div>
-        {{/connection_types}}
+        {{/device_types}}
     </div>
 </div>

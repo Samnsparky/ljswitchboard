@@ -23,7 +23,7 @@ try {
     );
 }
 
-var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit-TL': 'tall'};
+var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit': 'tall'};
 var CHROME_TEMPLATE_NAME = 'module_chrome.html';
 var CONTENTS_ELEMENT = '#content-holder';
 var MODULE_CONTENTS_ELEMENT = '#module-chrome-contents';
@@ -294,10 +294,11 @@ try {
 function renderDeviceSelector()
 {
     var onDevicesLoaded = function(devices) {
-        var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+        var context = {'device_types': includeDeviceDisplaySizes(devices)};
         $('#device-search-msg').hide();
         if (devices.length === 0)
             context.noDevices = true;
+        console.log(context);
         renderTemplate(
             'device_selector.html',
             context,

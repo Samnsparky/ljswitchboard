@@ -820,87 +820,6 @@ exports.getDeviceKeeper = function()
 };
 
 
-// TODO: markConnectedDevices is more than just marking. This is re-opening
-//       devices that were already opened before they were all closed for
-//       listing again.
-
-/**
- * Open devices and update those devices to indicate that they are open.
- *
- * Re-opens devices that were already opened before they were all closed for
- * listing again. Specifically, re-opens all devices listed in the device
- * keeper and marks those devices as open.
- *
- * @param {Array} devices An array of available devices. It should be an array
- *      of device_controller.Device.
- * @param {function} onSuccess The function to call after the devices have been
- *      openend.
- * @param {function} onError The function to call if there was an error when
- *      opening devices.
-**/
-function markConnectedDevices(devices, onSuccess, onError)
-{
-    var devicesOfType;
-    var device;
-
-    var connectedSerials = exports.getDeviceKeeper().getDeviceSerials();
-    connectedSerials = connectedSerials.map(
-        function (e) { return parseInt(e, 10); }
-    );
-
-    var devicesLen = devices.length;
-    var connectedDevices = [];
-    for(var i=0; i<devicesLen; i++)
-    {
-        devicesOfType = devices[i].devices;
-        var devicesOfTypeLen = devicesOfType.length;
-        for(var j=0; j<devicesOfTypeLen; j++)
-        {
-            device = devicesOfType[j];
-            if (connectedSerials.indexOf(device.serial) != -1)
-                connectedDevices.push(device);
-            else
-                device.connected = false;
-        }
-    }
-
-    async.eachSeries(
-        connectedDevices,
-        function (device, callback) {
-            openDeviceFromAttributes(
-                device.origDeviceType,
-                device.serial,
-                device.ipAddress,
-                device.origConnectionType,
-                function (err) {
-                    device.connected = false;
-                    callback(err);
-                },
-                function (newInner) {
-                    var convConnType = device.origConnectionType;
-                    var newDecoratedDevice = new Device(
-                        newInner,
-                        String(device.serial),
-                        convConnType,
-                        device.origDeviceType
-                    );
-                    exports.getDeviceKeeper().updateDevice(newDecoratedDevice);
-                    device.connected = true;
-                    callback();
-                }
-            );
-        },
-        function (err) {
-            if (err) {
-                onError(err);
-            } else {
-                onSuccess(devices);
-            }
-        }
-    );
-}
-
-
 // TODO: This should just take deviceType.
 /**
  * Get the listing of devices available for a certain device type.
@@ -1032,90 +951,6 @@ function openDeviceFromInfo (deviceInfo, connectionType, onError, onSuccess)
 
 
 /**
- * Get Switchboard-required information about a device for device management.
- *
- * LJM's list all does not provide all of the required device information.
- * This collects the extra information (device name, pro v not pro) that is
- * required by Switchboard for basic management of devices.
- *
- * @param {dict} listingDict Dict that maps device type to an array of devices
- *      available for opening that are of that type (ex: T7 devices).
- * @param {Object} deviceInfo Device info structure with information about
- *      a device that can be opened by Switchboard. This is the structure
- *      produced by createDeviceListingRecord.
- * @param {function} callback Errors are handled internally with special
- *      attribute values. This function is called regardless of errors after
- *      all device attributes have been loaded.
-**/
-function finishDeviceRecord (listingDict, deviceInfo, callback)
-{
-    var listingEntry = getListingEntry(listingDict, deviceInfo);
-    
-    openDeviceFromInfo(
-        deviceInfo,
-        deviceInfo.connectionType,
-        function (err) {
-            console.log('device_controller.js error, finishDeviceRecord',err);
-            record = createDeviceListingRecord(
-                deviceInfo,
-                '[ could not read name ]',
-                '',
-                ''
-            );
-            listingEntry.devices.push(record);
-            callback();
-        },
-        function (device) {
-            var record;
-
-            try {
-                // TODO: This needs to change when rwMany can handle multiple types.
-                var name = device.readSync('DEVICE_NAME_DEFAULT');
-                var hardwareInstalled = device.readSync('HARDWARE_INSTALLED');
-                var ethernetIP = formatAsIP(device.readSync('ETHERNET_IP'));
-                var wifiIP = formatAsIP(device.readSync('WIFI_IP'));
-
-                if (deviceInfo.deviceType == 7) {
-                    hardwareInstalled = hardwareInstalled !== 0;
-                } else {
-                    hardwareInstalled = false;
-                }
-
-                if (hardwareInstalled) {
-                    record = createDeviceListingRecord(
-                        deviceInfo,
-                        name,
-                        ' Pro',
-                        '-pro',
-                        ethernetIP,
-                        wifiIP
-                    );
-                } else {
-                    record = createDeviceListingRecord(
-                        deviceInfo,
-                        name,
-                        '',
-                        ''
-                    );
-                }
-            } catch (e) {
-                record = createDeviceListingRecord(
-                    deviceInfo,
-                    '[ could not read name ]',
-                    '',
-                    ''
-                );
-            }
-            
-            listingEntry.devices.push(record);
-            device.closeSync();
-            callback();
-        }
-    );
-}
-
-
-/**
  * Combine device entries refering to the same device on different connections.
  *
  * Combine device entries that refer to the same device but indicating that the
@@ -1130,11 +965,10 @@ function finishDeviceRecord (listingDict, deviceInfo, callback)
  *      consolidated such that there is only one device info structure per
  *      device serial number.
 **/
-var consolidateDevices = function (listing) {
+var consolidateDevices = function (devices) {
     var existingDevice;
     var newDevice;
     var deviceListing = dict();
-    var devices = listing.devices;
     var numDevices = devices.length;
     
     for (var i=0; i<numDevices; i++) {
@@ -1144,14 +978,6 @@ var consolidateDevices = function (listing) {
             newDevice.connectionTypes.push.apply(
                 newDevice.connectionTypes,
                 existingDevice.connectionTypes
-            );
-            newDevice.ipAddresses.push.apply(
-                newDevice.ipAddresses,
-                existingDevice.ipAddresses
-            );
-            newDevice.ipSafeAddresses.push.apply(
-                newDevice.ipSafeAddresses,
-                existingDevice.ipSafeAddresses
             );
             newDevice.connections.push.apply(
                 newDevice.connections,
@@ -1166,8 +992,73 @@ var consolidateDevices = function (listing) {
         retList.push(value);
     });
 
-    listing.devices = retList;
+    return retList;
 };
+
+
+var unpackDeviceInfo = function (driverListingItem) {
+    var connectionType = driverListingItem.connectionType;
+    var rawConnTypeStr = connectionType.toString();
+    var ipAddress = driverListingItem.ipAddress;
+    var deviceType = driverListingItem.deviceType;
+    var rawDeviceTypeStr = deviceType.toString()
+
+    var unpackStrategies = {};
+
+    var parseName = function (dataItem) {
+        retDeviceInfo.name = dataItem.val;
+    };
+    unpackStrategies['DEVICE_NAME_DEFAULT'] = parseName;
+
+    var parseEthernetIPAddress = function (dataItem) {
+        var ipStr = formatAsIP(dataItem.val);
+        retDeviceInfo.ethernetIPAddress = ipStr;
+        retDeviceInfo.ethernetSafeIPAddress = ipStr.replace(/\./g, '_');
+    };
+    unpackStrategies['ETHERNET_IP'] = parseEthernetIPAddress;
+
+    var parseWiFiIPAddress = function (dataItem) {
+        var ipStr = formatAsIP(dataItem.val);
+        retDeviceInfo.wifiIPAddress = ipStr;
+        retDeviceInfo.wifiSafeIPAddress = ipStr.replace(/\./g, '_');
+    };
+    unpackStrategies['WIFI_IP'] = parseWiFiIPAddress;
+
+    var parseHardwareInstalled = function (dataItem) {
+        if (((dataItem.val >> 1) & 0x1) == 1) {
+            retDeviceInfo.specialText = ' Pro';
+            retDeviceInfo.specialImageSuffix = '-pro';
+        } else {
+            retDeviceInfo.specialText = '';
+            retDeviceInfo.specialImageSuffix = '';
+        }
+    };
+    unpackStrategies['HARDWARE_INSTALLED'] = parseHardwareInstalled;
+
+    var retDeviceInfo = {
+        'serial': driverListingItem.serialNumber,
+        'connections': [{
+            'type': connectionType,
+            'typeStr': CONNECTION_TYPE_NAMES.get(rawConnTypeStr),
+            'ljmTypeStr': DRIVER_CONNECTION_TYPE_NAMES.get(rawConnTypeStr),
+            'ipAddress': ipAddress,
+            'ipSafe': ipAddress.replace(/\./g, '_'),
+            'alreadyOpen': false
+        }],
+        'connectionTypes': [connectionType],
+        'origConnectionType': connectionType,
+        'origDeviceType': deviceType,
+        'type': deviceType,
+        'typeStr': DEVICE_TYPE_NAMES.get(rawDeviceTypeStr),
+        'ljmDeviceType': DRIVER_DEVICE_TYPE_NAMES.get(rawDeviceTypeStr)
+    }
+
+    driverListingItem.data.forEach(function (dataItem) {
+        unpackStrategies[dataItem.name](dataItem);
+    });
+
+    return retDeviceInfo;
+}
 
 
 /**
@@ -1191,35 +1082,11 @@ exports.getDevices = function (onError, onSuccess)
         ['DEVICE_NAME_DEFAULT','HARDWARE_INSTALLED','ETHERNET_IP','WIFI_IP'],
         onError,
         function (driverListing) {
-            console.log('driverListing',driverListing)
-            var listingDict = dict();
-            async.eachSeries(
-                driverListing,
-                function (deviceInfo, callback) {
-                    if(deviceInfo.deviceType == 7) {
-                        finishDeviceRecord(listingDict, deviceInfo, callback);
-                    } else {
-                        callback();
-                    }
-                },
-                function (err) {
-                    if (err) {
-                        onError(err);
-                        return;
-                    }
-                    
-                    var listing = [];
-                    listingDict.forEach(function (value, key) {
-                        listing.push(value);
-                    });
-                    console.log('Listing obj...',listing);
-                    // listing = consolidateDevices(listing[0]);
-                    for (var i=0; i<listing.length; i++)
-                        consolidateDevices(listing[i]);
-                    console.log('Listing obj(shrunken)',listing);
-                    markConnectedDevices(listing, onSuccess, onError);
-                }
+            var unpackedDeviceInfo = consolidateDevices(
+                driverListing.map(unpackDeviceInfo)
             );
+            console.log(unpackedDeviceInfo);
+            onSuccess([{'name': 'T7', 'devices': unpackedDeviceInfo}]);
         }
     );
 };
