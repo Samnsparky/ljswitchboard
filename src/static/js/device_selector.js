@@ -17,26 +17,6 @@ var OPEN_FAIL_MESSAGE = handlebars.compile(
 
 var resizeTimeout;
 
-/**
- * Event handler to show the connect buttons for a device.
- *
- * Event handler that displays the GUI widgets that allow a user to select which
- * method (USB, Ethernet, WiFi, etc.) he / she wants to use to communicate with
- * a device.
- * 
- * @param {jquery.Event} event jQuery event. The widgets manipulated will be
- *      relative to the target and should be show-connect-button or comperable.
-**/
-function showConnectButtons(event)
-{
-    var jqueryID = '#' + event.target.id;
-    $(jqueryID).parents('#info').slideUp(function(){
-        var parents = $(jqueryID).parents('#info-holder');
-        var children = parents.children('#connect-buttons');
-        children.slideDown();
-    });
-}
-
 
 /**
  * Event handler to hide the connect buttons for a device.
@@ -77,9 +57,8 @@ function connectNewDevice(event)
 
     console.log(serial,ipAddress,connectionType,deviceType);
 
-    var info = $(jqueryID).parents('#info-holder').children('#info');
-    info.children('.device-load-progress').show();
-    info.children('#show-connect-button-holder').hide();
+    var container = $(jqueryID).parents('.connection-buttons-holder');
+    container.children('#show-connect-button-holder').hide();
     $('#finish-button').slideUp();
     $('.connect-button').slideUp();
 
@@ -90,9 +69,7 @@ function connectNewDevice(event)
         device_controller.getDeviceKeeper().addDevice(device);
         showFinishButton();
         $('.connect-button').slideDown();
-        info.children('.progress').fadeOut(function(){
-            info.children('#disconnect-button-holder').fadeIn();
-        });
+        container.children('#disconnect-button-holder').slideDown();
     };
 
     device_controller.openDevice(serial, ipAddress, connectionType, deviceType,
@@ -113,10 +90,9 @@ function disconnectDevice(event)
     var jqueryID = '#' + event.target.id;
     var serial = deviceInfo[0];
 
-    var info = $(jqueryID).parents('#info-holder').children('#info');
+    var container = $(jqueryID).parents('.connection-buttons-holder');
 
-    info.children('#disconnect-button-holder').hide();
-    info.children('.progress').fadeIn();
+    container.children('#disconnect-button-holder').hide();
 
     var device = device_controller.getDeviceKeeper().getDevice(serial);
 
@@ -125,9 +101,7 @@ function disconnectDevice(event)
         var deviceKeeper = device_controller.getDeviceKeeper();
 
         deviceKeeper.removeDevice(device);
-        info.children('.progress').fadeOut(function(){
-            info.children('#show-connect-button-holder').fadeIn();
-        });
+        container.children('#connect-buttons').slideDown();
 
         if(deviceKeeper.getNumDevices() === 0)
         {
@@ -477,8 +451,6 @@ function onResized()
 }
 
 $('#device-selector-holder').ready(function(){
-    $('.show-connect-button').click(showConnectButtons);
-    $('.cancel-connection-button').click(hideConnectButtons);
     $('.connect-button').click(connectNewDevice);
     $('.close-alert-button').click(closeAlert);
     $('.disconnect-button').click(disconnectDevice);
