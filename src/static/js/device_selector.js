@@ -15,6 +15,9 @@ var OPEN_FAIL_MESSAGE = handlebars.compile(
     'physical connection and try again or contact support@labjack.com. ' +
     'Driver error number: {{.}}');
 
+var CONNECTED_OVER_TEMPLATE = handlebars.compile('Connected over {{ . }}');
+
+
 var resizeTimeout;
 
 
@@ -66,9 +69,16 @@ function connectNewDevice(event)
 
     var onDeviceOpenend = function(device)
     {
+        var typeStr = device_controller.CONNECTION_TYPE_NAMES.get(
+            connectionType.toString()
+        );
+
         device_controller.getDeviceKeeper().addDevice(device);
         showFinishButton();
         $('.connect-button').slideDown();
+        container.find('.current-connection-indicator').html(
+            CONNECTED_OVER_TEMPLATE(typeStr)
+        );
         container.children('#disconnect-button-holder').slideDown();
     };
 
@@ -443,14 +453,17 @@ function kiplingStartupManager() {
 function onResized()
 {
     console.log('here');
-    var decrement = 170;
+    var decrement = 65;
     if($('.device-selector-holder h1').height() > 48) {
         decrement += 48;
     }
-    $('#t7DeviceListBox').height(($(window).height()-decrement).toString()+'px');
+    var num = ($(window).height()-decrement);
+    $('#t7DeviceListBox').height(num.toString()+'px');
+    $('.devices-enumeration-scroller').height((num-18).toString()+'px')
 }
 
 $('#device-selector-holder').ready(function(){
+    onResized();
     $('.connect-button').click(connectNewDevice);
     $('.close-alert-button').click(closeAlert);
     $('.disconnect-button').click(disconnectDevice);

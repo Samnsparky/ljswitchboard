@@ -1271,3 +1271,5 @@ exports.closeDevice = function(device, onSuccess, onError)
         onSuccess(device);
     });
 };
+
+exports.CONNECTION_TYPE_NAMES = CONNECTION_TYPE_NAMES;

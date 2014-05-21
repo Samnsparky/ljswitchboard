@@ -26,20 +26,21 @@
                                 {{/connections}}
                             </div>
                             <div id="disconnect-button-holder" class="{{^connected}}hidden-button-holder{{/connected}}">
-                                <button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
-                                    disconnect
-                                </button>
+                                <div><button class="btn btn-danger disconnect-button" id="{{serial}}-disconnect">
+                                    Disconnect
+                                </button></div>
+                                <div class="current-connection-indicator"></div>
                             </div>
                         </td>
                         <td id="info-holder">
                             <div id="info">
                                 <table>
                                     <tbody>
-                                        <tr><td class="device-attribute-label">serial</td><td id="serial">{{serial}}</td></tr>
-                                        <tr><td class="device-attribute-label">type</td><td id="type">{{type}}{{specialText}}</td></tr>
-                                        <tr><td class="device-attribute-label">name</td><td id="name">{{name}}</td></tr>
-                                        <tr><td class="device-attribute-label">Ethernet IP</td><td id="ethernet-ip-address">{{ethernetIPAddress}}</td></tr>
-                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address">{{wifiIPAddress}}</td></tr>
+                                        <tr><td class="device-attribute-label">Serial</td><td id="serial" class="device-attribute-value">{{serial}}</td></tr>
+                                        <tr><td class="device-attribute-label">Type</td><td id="type" class="device-attribute-value">{{type}}{{specialText}}</td></tr>
+                                        <tr><td class="device-attribute-label">Name</td><td id="name" class="device-attribute-value">{{name}}</td></tr>
+                                        <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{ethernetIPAddress}}</td></tr>
+                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value">{{wifiIPAddress}}</td></tr>
                                     </tbody>
                                 </table>
                             </div>
