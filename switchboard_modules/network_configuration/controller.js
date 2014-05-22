@@ -7,13 +7,35 @@
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
-var Long = require("long");
+var Long = require('long');
 
 var DEVICE_SELECTOR_SRC = 'network_configuration/device_selector.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var HARDWARE_INSTALLED_REG = 60010;
+var FLASH_UNAVAILABLE_ERROR = 2358;
 
 var selectedDevice;
+
+
+/**
+ * Display an error encountered when operating a device via the GUI.
+ *
+ * @param {Object} err The error to display. If the passed structure has a
+ *      retError attribute, that attribute will be used to describe the error.
+**/
+function showError (err) {
+    var errorMessage;
+
+    if (err.retError === undefined) {
+        errorMessage = err.toString();
+    } else {
+        errorMessage = err.retError.toString();
+    }
+
+    showAlert(
+        'Enountered an error during device operation: ' + errorMessage
+    );
+}
 
 
 /**
@@ -26,25 +48,57 @@ var selectedDevice;
 **/
 function DeviceNetworkAdapter(device)
 {
+    var createErrorSafeGetter = function (target, defaultValue) {
+        return function () {
+            try {
+                return target();
+            } catch (e) {
+                if (e.code == FLASH_UNAVAILABLE_ERROR) {
+                    throw e;
+                } else {
+                    if (e.code != 54)
+                        showError(e);
+                    return defaultValue;
+                }
+            }
+        };
+    };
+
+    var createErrorSafeSetter = function (target) {
+        return function (val) {
+            try {
+                target(val);
+            } catch (e) {
+                console.log(e);
+                if (e.code == FLASH_UNAVAILABLE_ERROR) {
+                    throw e;
+                } else {
+                    if (e.code != 54)
+                        showError(e);
+                }
+            }
+        };
+    };
+
     /**
      * Get the serial number of the device encapsulated by this decorator.
      *
      * @return {String} The serial number of the encapsulated device.
     **/
-    this.getSerial = function()
+    this.getSerial = createErrorSafeGetter(function ()
     {
         return device.getSerial();
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the name of the device encapsulated by this decorator.
      *
      * @return {String} The name of the encapsulated device.
     **/
-    this.getName = function()
+    this.getName = createErrorSafeGetter(function ()
     {
         return device.getName();
-    };
+    }, '[ could not read ]');
 
     /**
      * Determine if this device is currently connected.
@@ -57,35 +111,65 @@ function DeviceNetworkAdapter(device)
         return true;
     };
 
-    this.getEthernetIPAddress = function()
+    /**
+     * Get the IP address that this device will try to take when on Ethernet.
+     *
+     * Get the IP address that this device will attempt to take when connected
+     * by ethernet.
+     *
+     * @return {String} XXX.XXX.X.X string representation of the IP address that
+     *      this device will attempt to take when connected by Ethernet.
+    **/
+    this.getEthernetIPAddress = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_IP_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
-    this.getEthernetSubnet = function()
+    /**
+     * Get the subnet that this device will try to use when on ethernet.
+     *
+     * Get the subnet that this device will attempt to use when connecected by
+     * ethernet.
+     *
+     * @return {String} XXX.XXX.X.X string representation of the IP address of
+     *      the subnet that this device will use when connected by ethernet.
+    **/
+    this.getEthernetSubnet = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_SUBNET_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
-    this.getEthernetGateway = function()
+    /**
+     * Get the gateway that this device will try to use when on ethernet.
+     *
+     * @return {String} XXX.XXX.X.X string representation of the IP address
+     *      of the gateway that this device will use when connected by ethernet.
+    **/
+    this.getEthernetGateway = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_GATEWAY_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
-    this.getEthernetDHCPEnabled = function()
+    /**
+     * Determine if this device will use DCHP when connected by ethernet.
+     *
+     * @return {bool} True if this device will use DCHP when connected by
+     *      ethernet and false otherwise.
+    **/
+    this.getEthernetDHCPEnabled = createErrorSafeGetter(function ()
     {
         return device.read('ETHERNET_DHCP_ENABLE') > 0.1;
-    };
+    }, true);
 
     /**
      * Get the IP address of the device encapsulated by this decorator.
      *
      * @return {String} The IP address of the encapsulated device.
     **/
-    this.getWiFiIPAddress = function()
+    this.getWiFiIPAddress = createErrorSafeGetter(function ()
     {
         return readIP(device.read('WIFI_IP_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the name of the WiFi network this device is set to connect to.
@@ -94,10 +178,10 @@ function DeviceNetworkAdapter(device)
      *      set to connect to. This does not necessarily mean that this device
      *      is connected to that network.
     **/
-    this.getWiFiNetwork = function()
+    this.getWiFiNetwork = createErrorSafeGetter(function ()
     {
         return device.read('WIFI_SSID_DEFAULT');
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the password this device is set to use to connect to a WiFi network.
@@ -108,7 +192,7 @@ function DeviceNetworkAdapter(device)
     **/
     this.getWiFiNetworkPassword = function()
     {
-        return '12345678';
+        return '        ';
     };
 
     /**
@@ -117,20 +201,32 @@ function DeviceNetworkAdapter(device)
      * @return {String} IP address of subnet this device is set to connect to.
      *      Returns null if the device does not support network connection.
     **/
-    this.getWiFiSubnet = function()
+    this.getWiFiSubnet = createErrorSafeGetter(function ()
     {
         return readIP(device.read('WIFI_SUBNET_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
-    this.getWiFiGateway = function()
+    /**
+     * Get the gateway to use when this device is connected by WiFi.
+     *
+     * @return {String} IP address of the gateway that should be used when this
+     *      device is connected by WiFi.
+    **/
+    this.getWiFiGateway = createErrorSafeGetter(function ()
     {
         return readIP(device.read('WIFI_GATEWAY_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
-    this.getWiFiDHCPEnabled = function()
+    /**
+     * Determine if this device should use DCHP when connected by WiFi.
+     *
+     * @return {bool} True if this device should use DCHP when connected by WiFi
+     *      and false otherwise.
+    **/
+    this.getWiFiDHCPEnabled = createErrorSafeGetter(function ()
     {
-        return device.read('WIFI_DHCP_ENABLE') > 0.1;
-    };
+        return device.read('WIFI_DHCP_ENABLE_DEFAULT') > 0.1;
+    }, true);
 
     /**
      * Get the first default DNS server this device is set to use.
@@ -139,10 +235,10 @@ function DeviceNetworkAdapter(device)
      *      is set to use. Return null if the device does not support network
      *      connection.
     **/
-    this.getDNS = function()
+    this.getDNS = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_DNS_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the backup / alternative DNS server this device is set to use.
@@ -151,117 +247,251 @@ function DeviceNetworkAdapter(device)
      *      connect to if the first DNS server is unreachable. Returns null
      *      if the device does not support network connection.
     **/
-    this.getAltDNS = function()
+    this.getAltDNS = createErrorSafeGetter(function ()
     {
         return readIP(device.read('ETHERNET_ALTDNS_DEFAULT'));
-    };
+    }, '[ could not read ]');
 
     /**
      * Get the string description of this device's model type.
      *
      * @return {String} Description of the type of model this device is.
     **/
-    this.getDeviceType = function()
+    this.getDeviceType = createErrorSafeGetter(function ()
     {
         return device.getDeviceType();
-    };
+    }, '[ could not read ]');
 
-    this.isEthernetEnabled = function()
+    /**
+     * Determine if the device has power to its ethernet functionality.
+     *
+     * @return {bool} True if the device has ethernet enabled and false
+     *      otherwise.
+    **/
+    this.isEthernetEnabled = createErrorSafeGetter(function ()
     {
         return device.read('POWER_ETHERNET') > 0.1;
-    };
+    }, false);
 
-    this.isWiFiEnabled = function()
+    /**
+     * Determine if the device has power to its WiFi functionality.
+     *
+     * @return {bool} True if the device has WiFi enabled and false otherwise.
+    **/
+    this.isWiFiEnabled = createErrorSafeGetter(function ()
     {
         return device.read('POWER_WIFI') > 0.1;
-    };
+    }, false);
 
-    this.isPro = function()
+    /**
+     * Determine if the device is a T7 or T7 pro.
+     *
+     * @return {bool} True if the enclosed device handle is for a T7 Pro and
+     *      false if the device is a T7 (not pro).
+    **/
+    this.isPro = createErrorSafeGetter(function ()
     {
         return Math.abs(device.read(HARDWARE_INSTALLED_REG)) > 0.1;
-    };
+    }, false);
 
-    this.setDefaultWiFiNetwork = function (newVal)
+    /**
+     * Indicate which network this device should connect to by default.
+     *
+     * @param {String} newVal The SSID (name) of the WiFi network to connect to.
+    **/
+    this.setDefaultWiFiNetwork = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_SSID_DEFAULT', newVal);
-    };
+    });
 
-    this.setDefaultWiFiNetworkPassword = function (newVal)
+    /**
+     * Indicate which password the device should use by default for WiFi.
+     *
+     * Indicate which password the device should use when connecting to the
+     * default WiFi network.
+     *
+     * @param {String} newVal The password to use to authenticate with the
+     *      default WiFi network.
+    **/
+    this.setDefaultWiFiNetworkPassword = createErrorSafeSetter(function (newVal)
     {
-        device.write('WIFI_PASSWORD_DEFAULT', newVal);
-    };
+        if (newVal !== '        ')
+            device.write('WIFI_PASSWORD_DEFAULT', newVal);
+    });
 
-    this.setDefaultWiFiIPAddress = function (newVal)
+    /**
+     * Indicate which IP address this device should try to take over WiFi.
+     *
+     * Indicate which IP address this device should try to use when connected
+     * over WiFi.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      this device should attempt to use when connected over WiFi.
+    **/
+    this.setDefaultWiFiIPAddress = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_IP_DEFAULT', writeIP(newVal));
-    };
+    });
 
-    this.setDefaultWiFiSubnet = function (newVal)
+    /**
+     * Indicate which subnet this device should use when connected by WiFi.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the subnet that this device should use when connected over WiFi.
+    **/
+    this.setDefaultWiFiSubnet = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_SUBNET_DEFAULT', writeIP(newVal));
-    };
+    });
 
-    this.setDefaultWiFiGateway = function (newVal)
+    /**
+     * Indicate which gateway this device should use when connected by WiFi.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the gateway that this device should use when connected over WiFi.
+    **/
+    this.setDefaultWiFiGateway = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_GATEWAY_DEFAULT', writeIP(newVal));
-    };
+    });
 
-    this.setDefaultDNS = function (newVal)
+    /**
+     * Indicate which primary DNS servers this device should use by default.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the primary DNS servers to use.
+    **/
+    this.setDefaultDNS = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_DNS_DEFAULT', writeIP(newVal));
-    };
+    });
 
-    this.setDefaultAltDNS = function (newVal)
+    /**
+     * Indicate which DNS servers this device should use as a backup.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the DNS servers to use if the primary DNS servers cannot be
+     *      reached.
+    **/
+    this.setDefaultAltDNS = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_ALTDNS_DEFAULT', writeIP(newVal));
-    };
+    });
 
-    this.setDefaultEthernetIPAddress = function (newVal)
+    /**
+     * Indicate which IP address this device should try to take over Ethernet.
+     *
+     * Indicate which IP address this device should try to use when connected
+     * over Ethernet.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      this device should attempt to use when connected over Ethernet.
+    **/
+    this.setDefaultEthernetIPAddress = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_IP_DEFAULT', writeIP(newVal));
-    };
+    });
 
-    this.setDefaultEthernetSubnet = function (newVal)
+    /**
+     * Indicate which subnet this device should use when connected by Ethernet.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the subnet that this device should use when connected over
+     *      Ethernet.
+    **/
+    this.setDefaultEthernetSubnet = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_SUBNET_DEFAULT', writeIP(newVal));
-    };
+    });
 
-    this.setDefaultEthernetGateway = function (newVal)
+    /**
+     * Indicate which gateway this device should use when connected by Ethernet.
+     *
+     * @param {String} The string XXX.XXX.X.X representation of the IP address
+     *      of the gateway that this device should use when connected over
+     *      Ethernet.
+    **/
+    this.setDefaultEthernetGateway = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_GATEWAY_DEFAULT', writeIP(newVal));
-    };
+    });
 
-    this.setEthernetDHCPEnable = function (newVal)
+    /**
+     * Specify if this device should use DCHP when connected by ethernet.
+     *
+     * @param {Number} newVal Value to write to the enable register. If > 0,
+     *      DCHP will be enabled by default when connected by ethernet.
+    **/
+    this.setEthernetDHCPEnable = createErrorSafeSetter(function (newVal)
     {
         device.write('ETHERNET_DHCP_ENABLE_DEFAULT', newVal);
-    };
+    });
 
-    this.setWiFiDHCPEnable = function (newVal)
+    /**
+     * Specify if this device should use DCHP when connected by WiFi.
+     *
+     * @param {Number} newVal Value to write to the enable register. If > 0,
+     *      DCHP will be enabled by default when connected by ethernet.
+    **/
+    this.setWiFiDHCPEnable = createErrorSafeSetter(function (newVal)
     {
         device.write('WIFI_DHCP_ENABLE_DEFAULT', newVal);
-    };
+    });
 
-    this.setPowerEthernet = function (newVal)
+    /**
+     * Specify if the device should power its ethernet module.
+     *
+     * @param {Number} newVal The value to write for the power enable register.
+     *      If > 0, the ethernet module will be enabled by default.
+    **/
+    this.setPowerEthernet = createErrorSafeSetter(function (newVal)
     {
         device.write('POWER_ETHERNET', newVal);
         device.write('POWER_ETHERNET_DEFAULT', newVal);
-    };
+    });
 
-    this.setPowerWiFi = function (newVal)
+    /**
+     * Specify if the device should power its WiFi module.
+     *
+     * @param {Number} newVal The value to write for the power enable register.
+     *      If > 0, the WiFi module will be enabled by default.
+    **/
+    this.setPowerWiFi = createErrorSafeSetter(function (newVal)
     {
         device.write('POWER_WIFI', newVal);
         device.write('POWER_WIFI_DEFAULT', newVal);
-    };
+    });
 
-    this.saveDefaultConfig = function ()
+    /**
+     * Indicate if the current WiFi settings should be applied.
+     *
+     * Indicate if the current WiFi settings should be applied to the device as
+     * the default settings. This is necessary to make changes to the current
+     * settings.
+    **/
+    this.saveDefaultConfig = createErrorSafeSetter(function ()
     {
         device.write('WIFI_APPLY_SETTINGS', 1);
-    };
+    });
+
+    this.isWiFiConnected = createErrorSafeGetter(function () {
+        return device.read('WIFI_STATUS') == 2900;
+    });
 
     this.device = device;
 }
 
 
+/**
+ * Change the numerical representation of an IP address to a string rep.
+ *
+ * Change the numerical representation of an IP address to a string
+ * representation like XXX.XXX.X.X.
+ *
+ * @param {Number} target The numerical representation of an IP address to
+ *      convert.
+ * @return {String} The string representation of the provided IP address.
+**/
 function readIP(target)
 {
     var ipStr = '';
@@ -276,6 +506,16 @@ function readIP(target)
 }
 
 
+/**
+ * Change the string representation of an IP address to a numerical rep.
+ *
+ * Change the string representation of an IP address (like XXX.XXX.X.X) to a
+ * numerical representation of an IP address.
+ *
+ * @param {String} target The string IP address (of form XXX.XXX.X.X) to convert
+ *      to a numerical form.
+ * @return {Number} The numerical representation of the provided IP address.
+**/
 function writeIP(target)
 {
     var ipPieces = target.split('.').map(function (e) {
@@ -305,33 +545,62 @@ function writeIP(target)
 **/
 function showCurrentDeviceSettings(device, onError, onSuccess)
 {
-    if (device.isPro()) {
-        $('#wifi-network-name-input').val(device.getWiFiNetwork());
-        $('#wifi-network-password-input').val(device.getWiFiNetworkPassword());
-        $('#wifi-ip-input').val(device.getWiFiIPAddress());
-        $('#wifi-subnet-input').val(device.getWiFiSubnet());
-        $('#wifi-gateway-input').val(device.getWiFiGateway());
+    var curTab = getActiveTabID();
+    try {
+        
+        if (device.isPro()) {
+            $('#wifi-network-name-input').val(device.getWiFiNetwork());
+            $('#wifi-network-password-input').val(device.getWiFiNetworkPassword());
+            $('#wifi-ip-input').val(device.getWiFiIPAddress());
+            $('#wifi-subnet-input').val(device.getWiFiSubnet());
+            $('#wifi-gateway-input').val(device.getWiFiGateway());
+        }
+
+        $('#ethernet-ip-input').val(device.getEthernetIPAddress());
+        $('#ethernet-subnet-input').val(device.getEthernetSubnet());
+        $('#ethernet-gateway-input').val(device.getEthernetGateway());
+        $('#default-dns-input').val(device.getDNS());
+        $('#alt-dns-input').val(device.getAltDNS());
+
+        configureForCurrentDeviceSettings(device);
+
+        onSuccess();
+
+    } catch (e) {
+        if (e.code == FLASH_UNAVAILABLE_ERROR) {
+            $('#flash-read-notice').slideDown();
+            setTimeout(
+                function () {
+                    if (curTab === getActiveTabID())
+                        showCurrentDeviceSettings(device, onError, onSuccess);
+                },
+                3000
+            );
+        } else {
+            showError(e);
+        }
     }
-
-    $('#ethernet-ip-input').val(device.getEthernetIPAddress());
-    $('#ethernet-subnet-input').val(device.getEthernetSubnet());
-    $('#ethernet-gateway-input').val(device.getEthernetGateway());
-    $('#default-dns-input').val(device.getDNS());
-    $('#alt-dns-input').val(device.getAltDNS());
-
-    configureForCurrentDeviceSettings(device);
-
-    onSuccess();
 }
 
 
+/**
+ * Change the view to show the settings that can be set for the current device.
+ *
+ * Change the GUI to reflect the configuration settings that can be chanced for
+ * the current device.
+ *
+ * @param {DeviceNetworkAdapater} device Decorated device to adapt the GUI for.
+**/
 function configureForCurrentDeviceSettings (device) 
 {
     if (device.isPro()) {
         $('#wifi-note').hide();
+        $('#wifi-controls').show();
+        $('#wifi-advanced-controls').show();
     } else {
         $('#wifi-controls').hide();
         $('#wifi-advanced-controls').hide();
+        $('#wifi-note').show();
     }
 
     if (device.isEthernetEnabled()) {
@@ -372,7 +641,7 @@ function onChangeSelectedDevices()
     $('#device-configuration-pane').hide();
 
     var selectedCheckboxes = $('.device-selection-checkbox:checked');
-    if(selectedCheckboxes.length == 0)
+    if(selectedCheckboxes.length === 0)
         return;
     else if(selectedCheckboxes.length == 1)
         $('#multiple-device-note').hide();
@@ -384,7 +653,8 @@ function onChangeSelectedDevices()
     var device = new DeviceNetworkAdapter(keeper.getDevice(deviceSerial));
     selectedDevice = device;
 
-    showCurrentDeviceSettings(device, genericErrorHandler, function(){
+    showCurrentDeviceSettings(device, genericErrorHandler, function () {
+        $('#flash-read-notice').slideUp();
         $('#device-configuration-pane').fadeIn();
     });
 }
@@ -431,32 +701,35 @@ function prepareIndividualDeviceConfiguration(decoratedDevice)
 {
     showCurrentDeviceSettings(decoratedDevice, genericErrorHandler, function(){
         $('#device-configuration-pane').css('display', 'inline');
+        $('#flash-read-notice').slideUp();
         $('.switch').bootstrapSwitch();
     });
 }
 
 
+/**
+ * Write the configuration values the user specified in GUI to the device.
+ *
+ * Convert the user's specification of configuration values as provided through
+ * Kipling's GUI into values appropriate for the device and write those values
+ * to the device.
+ *
+ * @param {DeviceNetworkAdapter} device Decorated device to operate on /
+ *      configure.
+**/
 function writeDefaultConfiguationValues(device)
 {
     if (device.isPro()) {
+        if (!device.isWiFiConnected()) {
+            device.setPowerWiFi(0);
+            device.saveDefaultConfig();
+        }
         device.setDefaultWiFiNetwork($('#wifi-network-name-input').val());
         device.setDefaultWiFiNetworkPassword(
             $('#wifi-network-password-input').val());
         device.setDefaultWiFiIPAddress($('#wifi-ip-input').val());
         device.setDefaultWiFiSubnet($('#wifi-subnet-input').val());
         device.setDefaultWiFiGateway($('#wifi-gateway-input').val());
-
-        if ($('#wifi-dhcp-switch').is(':checked')) {
-            device.setWiFiDHCPEnable(1);
-        } else {
-            device.setWiFiDHCPEnable(0);
-        }
-        
-        if($('#wifi-switch').is(':checked')) {
-            device.setPowerWiFi(1);
-        } else {
-            device.setPowerWiFi(0);
-        }
     }
 
     device.setDefaultDNS($('#default-dns-input').val());
@@ -477,26 +750,80 @@ function writeDefaultConfiguationValues(device)
         device.setPowerEthernet(0);
     }
 
+    if (device.isPro()) {
+        if ($('#wifi-dhcp-switch').is(':checked')) {
+            device.setWiFiDHCPEnable(1);
+        } else {
+            device.setWiFiDHCPEnable(0);
+        }
+        
+        if($('#wifi-switch').is(':checked')) {
+            device.setPowerWiFi(1);
+        } else {
+            device.setPowerWiFi(0);
+        }
+    }
+
     device.saveDefaultConfig();
 }
 
 
+function showFlashWait(callback)
+{
+    var canceled = false;
+    $('#cancel-flash-button').off('click');
+    $('#cancel-flash-button').click(function () {
+        canceled = true;
+        $('#save-indicator').hide();
+        $('#saved-indicator').hide();
+        $('#flash-write-notice').hide();
+        $('#update-button').slideDown();
+    });
+    $('#flash-write-notice').fadeIn();
+    setTimeout(
+        function () {
+            if (canceled)
+                return;
+
+            $('#flash-write-notice').fadeOut();
+            callback();
+        },
+        3000
+    );
+}
+
+
+/**
+ * Write configuration values for all devices with updates to GUI.
+ *
+ * Configure the GUI to indicate that configuration settings are being written
+ * to a device. This will both update the GUI and start the actual write.
+**/
 function writeConfigurationValues()
 {
+    $('#update-button').slideUp();
     $('#saved-indicator').hide();
     $('#save-indicator').slideDown();
     try {
         writeDefaultConfiguationValues(selectedDevice);
+        $('#save-indicator').hide();
+        $('#saved-indicator').slideDown();
+        $('#update-button').slideDown();
     }
     catch (e) {
-        console.log(e);
+        if (e.code === FLASH_UNAVAILABLE_ERROR) {
+            showFlashWait(writeConfigurationValues);
+        } else {
+            showError(e);
+        }
     }
-    $('#save-indicator').hide();
-    $('#saved-indicator').slideDown();
     return false;
 }
 
 
+/**
+ * Initialization logic for the network configuration module.
+**/
 $('#network-configuration').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     var devices = keeper.getDevices();

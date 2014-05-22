@@ -17,13 +17,14 @@ var INPUTS_TEMPLATE_SRC = 'analog_inputs/input_config.html';
 var CONTROLS_MATRIX_SELECTOR = '#controls-matrix';
 var RANGE_LISTS_SELECTOR = '.range-list';
 var RANGE_LOADING_INDICATOR_SELECTOR = '#loading-ranges-display';
-var selectedDevices = [];
+var selectedDevice;
 var devices = [];
 var targetInputsInfo;
 
 var INPUT_DISPLAY_TEMPLATE_STR = '#input-display-{{valueRegister}}';
 var INPUT_BAR_TEMPLATE_STR = '#input-bar-{{valueRegister}}';
 var RANGE_DISPLAY_TEMPLATE_STR = '#input-display-{{rangeRegister}}';
+var SINGLE_ENDED_CONFIG_VAL = 199;
 
 var INPUT_DISPLAY_TEMPLATE = handlebars.compile(
     INPUT_DISPLAY_TEMPLATE_STR);
@@ -32,9 +33,21 @@ var INPUT_BAR_TEMPLATE = handlebars.compile(
 var RANGE_DISPLAY_TEMPLATE = handlebars.compile(
     RANGE_DISPLAY_TEMPLATE_STR);
 
-var curTabID = getActiveTabID();
+var curDevSelection = 0;
 
 
+/**
+ * Convenience function that executes a string replace all function.
+ *
+ * Convenience function that executes a string replace function that replaces
+ * all instances of a substring with another substring.
+ *
+ * @param {String} find The substring to find.
+ * @param {String} replace The text to replace the find substring with.
+ * @param {String} str The string to execute the find / replace operation on.
+ * @return {String} The provided str input string after the find / replace
+ *      operation.
+**/
 function replaceAll(find, replace, str) {
   return str.replace(new RegExp(find, 'g'), replace);
 }
@@ -59,7 +72,7 @@ function loadRangeOptions()
         fs_facade.renderTemplate(
             templateLocation,
             {'ranges': rangeInfo},
-            genericErrorHandler,
+            deferred.reject,
             function(renderedHTML)
             {
                 $(RANGE_LISTS_SELECTOR).each(function (index, e) {
@@ -69,9 +82,10 @@ function loadRangeOptions()
                 $(RANGE_LOADING_INDICATOR_SELECTOR).fadeOut();
 
                 $('.range-selector').click(function (event) {
-                    var pieces = event.target.id.replace('-range-selector', '').split('-');
+                    var pieces = event.target.id;
+                    pieces = pieces.replace('-range-selector', '').split('-');
                     rangeVal = parseFloat(pieces[0]);
-                    if (pieces[1] == '') {
+                    if (pieces[1] === '') {
                         var numInputs = targetInputsInfo.length;
                         for (var i=0; i<numInputs; i++)
                         {
@@ -81,7 +95,7 @@ function loadRangeOptions()
                             );
                         }
                     } else {
-                        rangeReg = parseInt(pieces[1]);
+                        rangeReg = parseInt(pieces[1], 10);
                         setRange(rangeReg, rangeVal);
                     }
                 });
@@ -96,6 +110,17 @@ function loadRangeOptions()
 }
 
 
+/**
+ * A version of read many that appends the results to an existing array.
+ *
+ * @param {device_controller.Device} device The device to execute the read many
+ *      operation on.
+ * @param {Array} results The array to extend with results of the read many.
+ * @param {Array} registers Array of addresses or register names to read.
+ * @return {q.promise} Promise that resolves after the read many completes or
+ *      rejects on error. Resolves to nothing as results will be extended to
+ *      provide access to the read results.
+**/
 function extendReadMany (device, results, registers)
 {
     return function () {
@@ -114,10 +139,18 @@ function extendReadMany (device, results, registers)
 }
 
 
+/**
+ * Set the range for an analog input.
+ *
+ * @param {Number or String} rangeAddr The numerical address or the string name
+ *      of the register where the range for an input is held.
+ * @param {Number} range The positive side of the range. The range will be set
+ *      from +range volts to -range volts. Passing 10 will result in a range of
+ *      -10 to 10V.
+**/
 function setRange (rangeAddr, range)
 {
-    var device = selectedDevices[0];
-    device.write(rangeAddr, range);
+    selectedDevice.write(rangeAddr, range);
 
     var text;
     if (Math.abs(range - 10) < 0.001)
@@ -134,9 +167,22 @@ function setRange (rangeAddr, range)
 }
 
 
-function readRangesAndStartReadingInputs (inputsInfo)
+/**
+ * Read the ranges for analog inputs & start the callback for reading AIN vals.
+ *
+ * Read the ranges for analog inputs and then start the periodic callback that
+ * reads the values of those analog inputs.
+ *
+ * @param {Object} Structure containing information about the device analog
+ *      inputs.
+ * @param {Number} targetDevSelection A unique numerical ID specifying which
+ *      set of devices have been selected. If the user changes their selection
+ *      of devices, that new device selection will be given a new unique
+ *      numerical ID. This ensures that old callbacks return without attempting
+ *      to access devices.
+**/
+function readRangesAndStartReadingInputs (inputsInfo, targetDevSelection)
 {
-    var device = selectedDevices[0];
     targetInputsInfo = inputsInfo;
     var registers = inputsInfo.map(function (e) {
         return e.range_register;
@@ -146,8 +192,8 @@ function readRangesAndStartReadingInputs (inputsInfo)
         registers.slice(8, 17)
     ];
     var results = [];
-    extendReadMany(device, results, registersSets[0])()
-    .then(extendReadMany(device, results, registersSets[1]))
+    extendReadMany(selectedDevice, results, registersSets[0])()
+    .then(extendReadMany(selectedDevice, results, registersSets[1]))
     .then(
         function () {
             var numResults = results.length;
@@ -169,26 +215,40 @@ function readRangesAndStartReadingInputs (inputsInfo)
                 $(selector).html(text);
             }
             setTimeout(function () {
-                updateInputs(inputsInfo);
+                updateInputs(inputsInfo, targetDevSelection, getActiveTabID());
             }, 1000);
         },
         function (err) {
             console.log(err);
+            showAlert(err.retError);
             setTimeout(function () {
-                updateInputs(inputsInfo);
+                updateInputs(inputsInfo, targetDevSelection, getActiveTabID());
             }, 1000);
         }
     );
 }
 
 
-function updateInputs (inputsInfo) {
-    if (curTabID !== getActiveTabID()) {
-        console.log('here');
+/**
+ * Read all analog inputs again and display their values on the GUI.
+ *
+ * @param {Object} inputsInfo Information about the analog inputs to read.
+ *      Should match the structure in inputs.json within the analog_inputs
+ *      Switchboard module.
+ * @param {Number} targetDevSelection A unique numerical ID specifying which
+ *      set of devices have been selected. If the user changes their selection
+ *      of devices, that new device selection will be given a new unique
+ *      numerical ID. This ensures that old callbacks return without attempting
+ *      to access devices.
+**/
+function updateInputs (inputsInfo, targetDevSelection, curTabID) {
+    var deviceChanged = curDevSelection != targetDevSelection;
+    console.log(curTabID);
+    console.log(curTabID !== getActiveTabID());
+    if (curTabID !== getActiveTabID() || deviceChanged) {
         return;
     }
 
-    var device = selectedDevices[0];
     var registers = inputsInfo.map(function (e) {
         return e.value_register;
     });
@@ -197,8 +257,8 @@ function updateInputs (inputsInfo) {
         registers.slice(8, 17)
     ];
     var results = [];
-    extendReadMany(device, results, registersSets[0])()
-    .then(extendReadMany(device, results, registersSets[1]))
+    extendReadMany(selectedDevice, results, registersSets[0])()
+    .then(extendReadMany(selectedDevice, results, registersSets[1]))
     .then(
         function () {
             var numResults = results.length;
@@ -214,17 +274,17 @@ function updateInputs (inputsInfo) {
                 if (width < 0)
                     width = 0;
 
-                $(selector).html(value.toFixed(6));
+                $(selector).html(value.toFixed(6).toString() + ' V');
                 $(barSelect).css('width', String(width) + 'px');
             }
             setTimeout(function () {
-                updateInputs(inputsInfo);
+                updateInputs(inputsInfo, targetDevSelection, curTabID);
             }, 1000);
         },
         function (err) {
-            console.log(err);
+            showAlert(err.retError);
             setTimeout(function () {
-                updateInputs(inputsInfo);
+                updateInputs(inputsInfo, targetDevSelection, curTabID);
             }, 1000);
         }
     );
@@ -243,6 +303,7 @@ function loadInputs()
     var inputsSrc = fs_facade.getExternalURI(INPUTS_DATA_SRC);
 
     fs_facade.getJSON(inputsSrc, genericErrorHandler, function(inputsInfo){
+        targetInputsInfo = inputsInfo;
         fs_facade.renderTemplate(
             templateLocation,
             {'inputs': inputsInfo},
@@ -251,9 +312,7 @@ function loadInputs()
             {
                 $(CONTROLS_MATRIX_SELECTOR).hide(function(){
                     $(CONTROLS_MATRIX_SELECTOR).html(renderedHTML);
-                    $(CONTROLS_MATRIX_SELECTOR).fadeIn(function () {
-                        readRangesAndStartReadingInputs(inputsInfo);
-                    });
+                    $(CONTROLS_MATRIX_SELECTOR).fadeIn();
 
                     deferred.resolve();
                 });
@@ -266,17 +325,44 @@ function loadInputs()
 
 
 /**
+ * Set the current device's analog inputs to be single ended.
+**/
+function setAllToSingleEnded()
+{
+    var numInputs = targetInputsInfo.length;
+    var addrsToWrite = [];
+    var valuesToWrite = [];
+    var curInput;
+    var curNegativeChannel;
+
+    for (var i=0; i<numInputs; i++) {
+        curInput = targetInputsInfo[i];
+        if (curInput.negative_channel !== undefined) {
+            curNegativeChannel = curInput.negative_channel;
+            addrsToWrite.push(curNegativeChannel);
+            valuesToWrite.push(SINGLE_ENDED_CONFIG_VAL);
+        }
+    }
+
+    return selectedDevice.writeMany(addrsToWrite, valuesToWrite);
+}
+
+
+/**
  * Event handler for when the selected list of devices is changed.
  *
  * Event handler for changes in the selected list of devices. This collection
  * indicates which devices have AIN inputs being manipulated by this module.
 **/
-function changeSelectedDevices()
+function changeSelectedDevice()
 {
-    var selectedCheckboxes = $('.device-selection-checkbox:checked');
-    $('#configuration-pane').hide();
+    var selectedCheckboxes = $('.device-selection-radio:checked');
+    curDevSelection++;
+    $('#loading-ranges-display').show();
+    $('#all-device-configuration-controls').hide();
+    $('#individual-device-configuration-controls').hide();
 
-    selectedDevices = $('.device-selection-checkbox:checked').map(
+    var selectedDevices = $('.device-selection-radio:checked').map(
         function () {
             var numDevices = devices.length;
             var serial = this.id.replace('-selector', '');
@@ -287,25 +373,33 @@ function changeSelectedDevices()
             return null;
         }
     );
-    
-    if(selectedCheckboxes.length > 0) {
-        $('#configuration-pane').fadeIn();
-    } else {
-        // TODO: Redraw bug
-        document.body.style.display='none';
-        document.body.offsetHeight;
-        document.body.style.display='block';
-    }
+    selectedDevice = selectedDevices[0];
+
+    setAllToSingleEnded().then(
+        function () {
+            readRangesAndStartReadingInputs(targetInputsInfo, curDevSelection);
+            $('#loading-ranges-display').hide();
+            $('#all-device-configuration-controls').fadeIn();
+            $('#individual-device-configuration-controls').fadeIn();
+            document.body.style.display='none';
+            document.body.style.display='block';
+        },
+        function (err) {
+            showAlert(err.retError);
+        }
+    );    
 }
 
 
+/**
+ * Initialization logic for the analog inputs module.
+**/
 $('#analog-inputs-configuration').ready(function(){
-    loadInputs().then(loadRangeOptions).done();
-    $('.device-selection-checkbox').click(changeSelectedDevices);
-    $('.device-selection-checkbox').first().prop('checked', true);
+    $('.device-selection-radio').click(changeSelectedDevice);
+    $('.device-selection-radio').first().prop('checked', true);
 
     var keeper = device_controller.getDeviceKeeper();
     devices = keeper.getDevices();
 
-    changeSelectedDevices();
+    loadInputs().then(loadRangeOptions).then(changeSelectedDevice);
 });

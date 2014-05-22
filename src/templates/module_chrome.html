@@ -1,6 +1,18 @@
 <div class="module-chrome" class="container-fluid">
+    <input style="display:none;" id="file-dialog-hidden" type="file" />
+    <input style="display:none;" id="file-save-dialog-hidden" type="file" nwsaveas="luaScript.lua" accept=".lua"/>
+    <div id="alert-message" class="alert">
+      <button type="button" class="close close-alert-button"></button>
+      <div id="error-display"></div>
+    </div>
     <div class="no-space row-fluid">
-        <div id="system-navigation" class="span3">
+        <div id="system-navigation" class="span3 unselectable">
+            <div class="nav-dock-component" id="device-nav-dock">
+                Currently in <span id="cur-module-display"></span>. <a href="#" id="change-modules-link">Switch to a different module >></a>
+            </div>
+            <div class="nav-dock-component" id="close-nav-dock">
+                <a href="#" id="close-modules-link">Close module list >></a>
+            </div>
             <ul id="module-list">
                 {{#module}}
                 <li><a id="{{name}}" href="#">{{humanName}}</a></li>
@@ -13,7 +25,7 @@
                 <div><a href="#" id="manage-link">manage</a></div>
             </div>
         </div>
-        <div id="module-chrome-contents" class="span9NoGutter">
+        <div id="module-chrome-contents" class="span9 unselectable">
         </div>
     </div>
 </div>

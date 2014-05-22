@@ -1,6 +1,7 @@
 html
 {
     background-image:url('../img/background.png');
+    min-width: 500px;
 }
 
 body
@@ -19,4 +20,77 @@ body
     -moz-box-shadow: 0 0 10px #000000;
     -webkit-box-shadow: 0 0 10px #000000;
     box-shadow: 0 0 10px #000000;
+}
+
+#premature-error-holder
+{
+    display: none;
+}
+#content-holder{
+    margin: 0px;
+}
+/*@media screen and (min-width: 768px) {
+    
+}
+
+@media screen and (max-width: 767px) {
+
+}*/
+@media screen and (min-width: 768px) {
+    body {
+        padding-left:20px;
+        padding-right:20px;
+        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: hidden;
+    }
+    #module-list
+    {
+        height: 657px;
+        overflow: auto;
+    }
+    #module-chrome-contents
+    {
+        width: 76%;
+    }
+    #device-display
+    {
+        position: fixed;
+        bottom: 0px;
+    }
+    .nav-dock-component
+    {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    body {
+        padding-left:20px;
+        padding-right:20px;
+        overflow: auto;
+        overflow-x: auto;
+        overflow-y: auto;
+    }
+    #module-list {
+        margin: 0px;
+        display: none;
+    }
+    #device-display
+    {
+        margin-bottom: 10px;
+    }
+    #device-nav-dock
+    {
+        display: block;
+    }
+    #close-nav-dock
+    {
+        display: none;
+    }
+    .nav-dock-component
+    {
+        margin: 10px 0;
+        padding: 10px;
+    }
 }

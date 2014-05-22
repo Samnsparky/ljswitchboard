@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <title>LabJack Switchboard</title>
+        <title>LabJack Kipling</title>
         <link href="static/css/bootmetro.min.css" rel="stylesheet">
         <link href="static/css/bootmetro-responsive.min.css" rel="stylesheet">
         <link href="static/css/bootmetro-icons.min.css" rel="stylesheet">
@@ -10,11 +10,17 @@
         <link rel="stylesheet" type="text/css" href="static/css/bootstrap-switch.css">
         <link rel="stylesheet" type="text/css" href="static/css/slider.css">
         <link href="static/css/switchboard_base.css" rel="stylesheet">
+
+        <!-- Include jquery ui -->
+        <!--<link href="css/ui-lightness/jquery-ui-1.10.4.custom.css" rel="stylesheet">
+        <script src="js/jquery-1.10.2.js"></script>
+        <script src="js/jquery-ui-1.10.4.custom.js"></script>-->
     </head>
     <body>
         <div id="device-search-msg">
-            <div><img src="static/img/progress-indeterminate.gif"></div>
-            <div>Searching for devices</div>
+            <div id="global-load-image-holder"><img src="static/img/progress-indeterminate.gif"></div>
+            <div id="searching-devices-message">Searching for devices</div>
+            <div id="premature-error-holder"></div>
         </div>
         <div id="content-holder">
         </div>
@@ -28,7 +34,7 @@
         <script type="text/javascript" src="static/js/bootmetro.min.js"></script>
         <script type='text/javascript' src="static/js/bootstrap-switch.js"></script>
         <script type='text/javascript' src="static/js/bootstrap-slider.js"></script>
-        <script type='text/javascript' src="static/js/d3.js"></script>
+        <script type='text/javascript' src="static/js/kinetic.js"></script>
 
         <script type="text/javascript" src="presenter.js"></script>
         <script type="text/javascript">
@@ -38,4 +44,3 @@
         </script>
     </body>
 </html>
-

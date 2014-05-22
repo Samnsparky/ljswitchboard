@@ -41,3 +41,18 @@
     top: 5px;
     left: 66px;
 }
+
+#power-overview {
+    margin-top: 30px;
+}
+
+.power-indicator {
+    width: 14px;
+    height: 14px;
+    background-color: #C0C0C0;
+    display: inline-block;
+}
+
+.power-indicator.powered {
+    background-color: #00C000;
+}

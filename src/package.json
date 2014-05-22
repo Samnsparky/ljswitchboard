@@ -3,23 +3,33 @@
   "description": "LabJack Desktop Utilities",
   "version": "0.1.0",
   "main": "index.html",
+  "inject-js-start":"startup.js",
   "window": {
+    "title": "Kiplingv3",
+    "icon": "Kipling.ico",
     "toolbar": true,
     "width": 870,
-    "height": 730
+    "height": 730,
+    "min_width":535
   },
   "nodejs": true,
   "dependencies": {
     "async": "~0",
     "dict": "~1",
     "handlebars": "~1",
-    "labjack-nodejs": "~0",
+    "jshint": "~2",
+    "labjack-nodejs": "0.0.8",
+    "ljmmm-parse": "~0.1",
     "lazy": "~1",
     "long": "~1",
+    "net-ping":"~1",
     "node.extend": "~1",
     "nw-gyp": "~0",
     "q": "~0",
+    "raw-socket":"~1",
+    "request": "~2",
     "simplesets": "~1",
-    "sprintf-js": "~0"
+    "sprintf-js": "~0",
+    "sprintf":  "~0.1.3"
   }
 }

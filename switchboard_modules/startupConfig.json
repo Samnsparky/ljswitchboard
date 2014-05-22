@@ -1,0 +1,68 @@
+{
+    "autoConnectToDevices": false,
+    "ljmDeviceParameters": 
+    [
+        {
+            "serialNumber":"470010533",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010620",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010548",
+            "connectionType":"USB"
+        }
+    ],
+    "Labjack-T7s":
+    [
+        {
+            "serialNumber":"470010533",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010117",
+            "connectionType":"Ethernet"
+        }
+    ],
+    "Boulder-T7s":
+    [
+        {
+            "serialNumber":"470010620",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010533",
+            "connectionType":"Ethernet"
+        }
+    ],
+    "Other-ljmDeviceParameters": 
+    [
+        {
+            "serialNumber":"470010117",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010117",
+            "connectionType":"USB"
+        },
+        {
+            "serialNumber":"470010604",
+            "connectionType":"Ethernet"
+        },
+        {
+            "serialNumber":"470010610",
+            "connectionType":"USB"
+        },
+        {
+            "serialNumber":"470010548",
+            "connectionType":"USB"
+        }
+    ],
+    "displayDevTools": false,
+    "overrideAutoModuleLoad": false,
+    "moduleName": "analog_outputs_fw",
+    "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
+
+}

@@ -1,0 +1,213 @@
+<div id="advanced-ain-readout">
+	<div id="advanced-ain-measurement-obj">
+		<div id="configure-all-inputs-options" class="span12">
+			<h3>Configure All Inputs</h3>
+			<table class="table table-non-striped" id="All-device-config-options-table">
+				<thead>
+					<tr class="table-dataHeader">
+						<th>Range</th>
+						<th>Resolution Index</th>
+						<th>Settling</th>
+						<th>Negative Channel</th>
+						{{#if custom.showEFSystemStatusWarning}}
+						<th>EF System Status</th>
+						{{/if}}
+						{{!--<th>Options</th>--}}
+					</tr>
+				</thead>
+				<tbody style="background-color:transparent">
+					<tr>
+						<td>
+							<select id="all-ain-range-select" class="wrap-select" title="Set Register: ALL_AIN_RANGE">
+								{{#each custom.ainRangeMenuOptionsAll}}
+								<option {{#if disp}}title="Set AIN_ALL_RANGE to {{value}}"{{/if}} value="{{value}}" style="{{style}}" {{selected}}>{{name}}</option>
+								{{/each}}
+							</select>
+						</td>
+						<td>
+							<select id="all-ain-resolution-select" class="wrap-select" title="Set Register: ALL_AIN_RESOLUTION_INDEX">
+								{{#each custom.ainResolutionMenuOptionsAll}}
+								<option {{#if disp}}title="Set AIN_ALL_RESOLUTION_INDEX to {{value}}"{{/if}} value="{{value}}" style="{{style}}" {{selected}}>{{name}}</option>
+								{{/each}}
+							</select>
+						</td>
+						<td>
+							<select id="all-ain-settling-select" class="wrap-select" title="Set Register: ALL_AIN_SETTLING_US">
+								{{#each custom.ainSettlingMenuOptionsAll}}
+								<option {{#if disp}}title="Set AIN_ALL_SETTLING_US to {{value}}"{{/if}} value="{{value}}" style="{{style}}" {{selected}}>{{name}}</option>
+								{{/each}}
+							</select>
+						</td>
+						<td>
+							<select id="all-ain-negative-channel-select" class="wrap-select" title="Set Register: ALL_AIN_NEGATIVE_CH">
+								{{#each custom.ainNegativeCHMenuOptionsAll}}
+								<option {{#if disp}}title="Set ALL_AIN_NEGATIVE_CH to {{value}}"{{/if}} value="{{value}}" style="{{style}}" {{selected}}>{{name}}</option>
+								{{/each}}
+							</select>
+						</td>
+						{{#if custom.showEFSystemStatusWarning}}
+						<td>
+							<i id="AIN_EF_ALL-ef-status-icon" class="displayed-icon text-warning icon-warning" title="An Analog Input is configured for use by the AIN_EF system"></i>
+						</td>
+						{{/if}}
+						{{!--<td>
+							<span id="module-options-toggle-button" class="displayed-icon options-toggle-button expand icon-plus"></span>
+						</td>--}}
+					</tr>
+					<tr style="display:none"></tr>
+					<tr id="module-options-toggle-button-options" class="ain-config-options">
+						<td colspan="7">
+							<table class="table" id="device-config-options-table">
+								<thead>
+									<tr class="table-dataHeader">
+										<th>Override Graph Bounds</th>
+										<th>Lower Bound</th>
+										<th>Upper Bound</th>
+									</tr>
+								</thead>
+								<tbody style="background-color:transparent">
+									<tr>
+										<td title="Configure Graph Min & Max Ranges">
+											<select id="module-options-range-override" class="wrap-select">
+												<option title="Use Default Ranges" value="0" selected>Default</option>
+												<option title="Use Custom Ranges" value="1">Custom</option>
+											</select>
+											{{!--<input type="checkbox" id="Graph-Range-Options0" value="option1">
+											<select id="module-options-range-override" class="wrap-select">
+												{{#each custom.graphRangeOverrideMenuOptions}}
+												<option title="{{optionDesc}}" value="{{value}}" {{selected}}>{{name}}</option>
+												{{/each}}
+											</select>--}}
+										</td>
+										<td title="Configure Graph Min Ranges">
+											<input type="number" id="Graph-Range-Options1" value="-10">
+										</td>
+										<td title="Configure Graph Max Ranges">
+											<input type="number" id="Graph-Range-Options2" value="10">
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div id="ain-inputs-data-section" class="span12">
+			<h3>Analog Inputs</h3>
+			<table class="table table-striped" id="device-selector-table">
+				<thead>
+					<tr class="table-dataHeader">
+						<th class="span2">Channel</th>
+						<th class="span9" style="padding-left: 30px;">Reading</th>
+						<th class="span1">Options</th>
+					</tr>
+				</thead>
+				<tbody>
+				{{#each custom.analogInputs}}
+					<tr id="{{name}}-table-data" class="table-dataRow">
+						<td>
+							<p id="{{name}}-channel-name">{{name}}</p>
+						</td>
+						{{!--<td>
+							<p title="Register: {{name}}"><span id="{{name}}">0.000000</span> V</p>
+							<div class="input-bar" id="{{name}}-input-bar"></div>
+						</td>--}}
+						<td>
+							<table style="width: 100%;margin-bottom: -14px;" id="output-data-table">
+								<tbody style="background-color:transparent">
+									<tr>
+										<td>
+										</td>
+										<td class="result-text">
+											<p title="Register: {{name}}"><span id="{{name}}">0.000000</span> V</p>
+										</td>
+										<td>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="ain-range-text"><span id="{{name}}-min-range-val">-10</span>V</div>
+										</td>
+										<td>
+											<div>
+												<div class="custom-input-bar input-bar" id="{{name}}-input-bar"></div>
+											</div>
+										</td>
+										<td>
+											<div class="ain-range-text"><span id="{{name}}-max-range-val">+10</span>V</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</td>
+						<td>
+							<span id="{{name}}-options-toggle-button" class="displayed-icon options-toggle-button expand icon-plus"></span>
+							{{#if efSystemStatus.showWarning}}
+							<i id="{{name}}-ef-status-icon" class="displayed-icon text-warning icon-warning" title="{{name}} is configured for use by the AIN_EF system"></i>
+							{{/if}}
+						</td>
+					</tr>
+					<tr style="display:none"></tr>
+					<tr id="{{name}}-options-toggle-button-options" class="ain-config-options">
+						<td colspan="7">
+							<table class="table" id="device-config-options-table">
+								<thead>
+									<tr class="table-dataHeader">
+										<th>EF Status</th>
+										<th>Range</th>
+										<th>Resolution Index</th>
+										<th>Settling</th>
+										{{#if displayNegativeCh}}
+										<th>Negitave Channel</th>
+										{{/if}}
+										<!--<th>Binary</th>-->
+									</tr>
+								</thead>
+								<tbody style="background-color:transparent">
+									<td title="Register: {{name}}_EF_INDEX">
+										<p class="{{efSystemStatus.class}}">{{efSystemStatus.message}}</p>
+									</td>
+									<td>
+										<select id="{{name}}-analog-input-range-select" class="analog-input-range-select wrap-select" title="Set Register: {{name}}_RANGE">
+											{{#each ainRangeMenuOptions}}
+											<option title="Set {{../name}}_RANGE to {{value}}" value="{{value}}" {{selected}}>{{name}}</option>
+											{{/each}}
+										</select>
+									</td>
+									<td>
+										<select id="{{name}}-analog-input-resolution-select" class="analog-input-resolution-select wrap-select" title="Set Register: {{name}}_RESOLUTION_INDEX">
+											{{#each ainResolutionMenuOptions}}
+											<option title="Set {{../name}}_RESOLUTION_INDEX to {{value}}" value="{{value}}" {{selected}}>{{name}}</option>
+											{{/each}}
+										</select>
+									</td>
+									<td>
+										<select id="{{name}}-analog-input-settling-select" class="analog-input-settling-select wrap-select" title="Set Register: {{name}}_SETTLING_US">
+											{{#each ainSettlingMenuOptions}}
+											<option title="Set {{../name}}_SETTLING_US to {{value}}" value="{{value}}" {{selected}}>{{name}}</option>
+											{{/each}}
+										</select>
+									</td>
+									{{#if displayNegativeCh}}
+									<td>
+										<select id="{{name}}-analog-input-negative-ch-select" class="analog-input-negative-ch-select wrap-select" title="Set Register: {{name}}_NEGATIVE_CH">
+											{{#each negativeCHMenuOptions}}
+											<option title="Set {{../name}}_NEGATIVE_CH to {{value}}" value="{{value}}" {{selected}}>{{name}}</option>
+											{{/each}}
+										</select>
+									</td>
+									{{/if}}
+									<!--<td>
+										<p id="{{name}}_BINARY" title="Register: {{name}}_BINARY">0.0000</p>
+									</td>-->
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				{{/each}}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

@@ -8,15 +8,27 @@
         "active": true
     },
     {
-        "name": "dashboard_logger",
+        "name": "device_overview",
         "active": true
+    },
+    {
+        "name": "dashboard_logger",
+        "active": false
     },
     {
         "name": "digital_io_config",
         "active": true
     },
     {
+        "name": "digital_io_fw",
+        "active": false
+    },
+    {
         "name": "analog_inputs",
+        "active": false
+    },
+    {
+        "name": "analog_inputs_fw",
         "active": true
     },
     {
@@ -24,15 +36,23 @@
         "active": true
     },
     {
-        "name": "device_updater",
+        "name": "analog_outputs_fw",
+        "active": true
+    },
+    {
+        "name": "thermocouple_simple",
         "active": true
     },
     {
         "name": "network_configuration",
-        "active": true
+        "active": false
     },
     {
-        "name": "power_up_defaults",
+        "name": "module_manager",
+        "active": false
+    },
+    {
+        "name": "data_logger",
         "active": false
     },
     {
@@ -40,7 +60,23 @@
         "active": true
     },
     {
-        "name": "module_manager",
+        "name": "lua_script_debugger",
+        "active": true
+    },
+    {
+        "name": "network_settings",
+        "active": true
+    },
+    {
+        "name": "set_defaults",
+        "active": true
+    },
+    {
+        "name": "reset",
+        "active": true
+    },
+    {
+        "name": "device_updater",
         "active": true
     }
 ]

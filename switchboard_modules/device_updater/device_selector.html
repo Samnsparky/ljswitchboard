@@ -1,4 +1,5 @@
 <table class="table table-striped">
+    {{#hasMultipleDevices}}
     <thead>
         <tr>
             <th>update</th>
@@ -20,8 +21,9 @@
         <td>{{getDeviceType}}</td>
         <td>{{getSerial}}</td>
         <td>{{getName}}</td>
-        <td>{{getFirmwareVersion}}</td>
+        <td id="{{getSerial}}-firmware-display">{{getFirmwareVersion}}</td>
         <td>{{getBootloaderVersion}}</td>
     </tr>
     {{/devices}}
+    {{/hasMultipleDevices}}
 </table>

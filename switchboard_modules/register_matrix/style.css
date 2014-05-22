@@ -96,6 +96,11 @@
     font-size: 14px;
 }
 
+.register-row td
+{
+    word-wrap: break-word;
+}
+
 .small-table-row:nth-child(odd)
 {
     background-color: #F9F9F9;
@@ -126,12 +131,45 @@
     margin-top: 50px;
 }
 
+#tablePagination { 
+    background-color: #E0E0E0; 
+    padding: 5px 5px; 
+    height: 40px;
+}
+
+#tablePagination_paginater { 
+    margin-left: auto; 
+    margin-right: auto;
+}
+
+#tablePagination img { 
+    padding: 0px 2px; 
+    margin: 1px;
+}
+
+#tablePagination img:hover { 
+    padding: 0px 2px; 
+    border: 1px solid #A0A0A0;
+    margin: 0;
+}
+
+#tablePagination select { 
+    width: 100px;
+}
+
+#tablePagination_perPage { 
+    float: left; 
+}
+
+#tablePagination_paginater { 
+    float: right; 
+}
 
 #watch-config-tooltip
 {
-    position: relative;
+    /*position: relative;
     width: 45px;
-    height: 43px;
+    height: 50px;
     line-height: 12px;
     padding: 10px;
     font-size: 12px;
@@ -139,6 +177,19 @@
     background: rgb(0, 0, 0);
     top: -14px;
     text-transform: lowercase;
+    letter-spacing: 0;*/
+    position: relative;
+    width: 100px;
+    height: 15px;
+    line-height: 12px;
+    padding: 5px 5px 10px 8px;
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+    background: rgb(0, 0, 0);
+    top: -8px;
+    text-transform: lowercase;
+    letter-spacing: 0;
+    float: right;
 }
 
 #watch-config-tooltip:after
@@ -150,5 +201,24 @@
     border-width: 10px;
     border-style: solid;
     border-color: black transparent transparent transparent;
-    top: 18px;
+    top: 24px;
 }
+
+#register-matrix-body table
+{
+    table-layout: fixed;
+    min-width: 620px;
+}
+#register-matrix th {
+    padding:2px;
+}
+#register-matrix .addressTableColumn{
+    width: 56px;
+}
+#register-matrix .nameTableColumn{
+    width:264px;
+}
+#register-matrix .typeTableColumn{
+    width: 73px;
+}
+

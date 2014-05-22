@@ -5,15 +5,25 @@
  * Switchboard desktop utilities platform.
  *
  * @author A. Samuel Pottinger (LabJack, 2013)
+ * @contributor Chris Johnson (LabJack, 2013)
 **/
 
 var async = require('async');
 var handlebars = require('handlebars');
 
 var fs_facade = require('./fs_facade');
-var device_controller = require('./device_controller');
+var device_controller = null;
+try {
+    device_controller = require('./device_controller');
+} catch (e) {
+    showPrematureAlert(
+        '<b>Failed to load JSON constants file or LJM on your machine. Please '+
+        'check the install and restart Kipling</b>. Original error: '+
+        e.toString()
+    );
+}
 
-var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit-TL': 'tall'};
+var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit': 'tall'};
 var CHROME_TEMPLATE_NAME = 'module_chrome.html';
 var CONTENTS_ELEMENT = '#content-holder';
 var MODULE_CONTENTS_ELEMENT = '#module-chrome-contents';
@@ -27,9 +37,37 @@ var ACTIVE_TAB_STR_TEMPLATE_STR = '{{ name }}-{{ counter }}';
 var LATE_LOADED_CSS_TEMPLATE = handlebars.compile(LATE_LOADED_CSS_TEMPLATE_STR);
 var LATE_LOADED_JS_TEMPLATE = handlebars.compile(LATE_LOADED_JS_TEMPLATE_STR);
 var ACTIVE_TAB_STR_TEMPLATE = handlebars.compile(ACTIVE_TAB_STR_TEMPLATE_STR);
+var START_UP_MODULE_OVERRIDE = false;
+var START_UP_MODULE_NAME = 'thermocouple_simple';
 
 var currentTab = '';
 var numTabChanges = 0;
+
+function showCriticalAlert(content) {
+    $('#device-search-msg').css("background-color",'#e16908');
+    $('#device-search-msg').css("border",'1px solid #e16908');
+    $('#device-search-msg').css("z-index",1000);
+    $('#device-search-msg').animate({'width': '100%', 'left': '0%'});
+    $('#searching-devices-message').hide();
+    $('#device-search-msg').show();
+    var prevInfo = $('#premature-error-holder').html();
+    if(prevInfo === '') {
+        $('#premature-error-holder').html(content);
+    } else {
+        $('#premature-error-holder').html(prevInfo + '<br>' + content);
+    }
+    $('#premature-error-holder').slideDown();
+    $('#global-load-image-holder').slideUp();
+}
+function showPrematureAlert(content) {
+    $('#premature-error-holder').html(content);
+    setTimeout(function () {
+        $('#premature-error-holder').slideDown();
+        $('#global-load-image-holder').slideUp();
+        $('#searching-devices-message').slideUp();
+        $('#device-search-msg').animate({'width': '90%', 'left': '0%'});
+    }, 1000);
+}
 
 
 /**
@@ -39,7 +77,29 @@ var numTabChanges = 0;
 **/
 var genericErrorHandler = function(error)
 {
-    throw error;
+    alert(
+        'An unexpected error occured:' + error.toString() + '. Please ' +
+        'restart Kipling. This is likely because your device was ' +
+        'disconnected physically from your machine. If this problem persists,' +
+        ' please contact support@labjack.com.'
+    );
+};
+var getCustomGenericErrorHandler = function(message) {
+    return function(error) {
+        alert(
+            'An unexpected error occured:' + error.toString() + '. Please ' +
+            'restart Kipling. This is likely because your device was ' +
+            'disconnected physically from your machine. If this problem persists,' +
+            ' please contact support@labjack.com. (Info: '+message.toString() +')'
+        );
+    };
+}
+var criticalErrorHandler = function(error)
+{
+    console.error(
+        'An unexpected (critical)error occured:' + error.toString() + '. Please ' +
+        'restart Kipling.'
+    );
 };
 
 
@@ -66,6 +126,28 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
 {
     var onRender = function (renderedHTML)
     {
+        var appendToHead = function(data, filePath) {
+            try{
+                $('head').append(data);
+            } catch (err) {
+                var fpArray = filePath.split('/');
+                var fileName = fpArray[fpArray.length-1];
+                var moduleName = currentTab.split('/')[0];
+                console.log('Critical Error:',err.name);
+                console.log('When Loading File:',fileName);
+                console.log('Error Contents:',err);
+
+                showCriticalAlert('<br>'+'<br>'+'<br>'+'<br>'+
+                    'Critical Error Encountered Loading Module: '+moduleName+'<br>'+
+                    'Error: <strong>'+err.name+'</strong><br>'+
+                    'When Loading File: <strong>'+fileName+'</strong><br>'+
+                    'Full Path To File: '+filePath+'<br>'+
+                    'Error Contents: '+err.toString()+'<br>'+
+                    'Check console.log for more info.'+'<br>'+
+                    'Consider using <strong>www.jshint.com</strong> to debug file'
+                    );
+            }
+        };
         var cssHTML;
         var jsHTML;
 
@@ -89,32 +171,38 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                 onErr(new Error('Could not find ' + fileLoc + ' .'));
                 return;
             }
-
-            cssHTML = LATE_LOADED_CSS_TEMPLATE({
-                'href': fileLoc,
-                'type': safeDest
-            }); 
-            $('head').append(cssHTML);
+            try {
+                cssHTML = LATE_LOADED_CSS_TEMPLATE({
+                    'href': fileLoc,
+                    'type': safeDest
+                }); 
+            } catch (err) {
+                console.log('Error compiling cssHTML presenter.js');
+            }
+            // $('head').append(cssHTML);
+            appendToHead(cssHTML, fileLoc);
         });
 
         $.each(jsFiles, function (index, fileLoc)
         {
-            if(internal)
+            if(internal) {
                 fileLoc = fs_facade.getInternalURI(fileLoc);
-            else
+            } else {
                 fileLoc = fs_facade.getExternalURI(fileLoc);
-
-            if(fileLoc === null)
-            {
+            }
+            if(fileLoc === null) {
                 onErr(new Error('Could not find ' + fileLoc + ' .'));
                 return;
             }
-
-            jsHTML = LATE_LOADED_JS_TEMPLATE({
-                'href': fileLoc,
-                'type': safeDest
-            });
-            $('head').append(jsHTML);
+            try {
+                jsHTML = LATE_LOADED_JS_TEMPLATE({
+                    'href': fileLoc,
+                    'type': safeDest
+                });
+            } catch (err) {
+                console.log('Error compiling jsHTML presenter.js');
+            }
+            appendToHead(jsHTML, fileLoc);
         });
 
         $(dest).fadeIn();
@@ -134,8 +222,18 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
     
     numTabChanges++;
     currentTab = name;
-    fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
+    try {
+        fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
+    } catch(err) {
+        console.log('error caught rendering template',err);
+    }
 }
+
+function renderTemplateFramework(frameworkName, name, context, dest, internal, cssFiles, jsFiles, onErr) {
+    renderTemplate(frameworkName, context, dest, internal, cssFiles, jsFiles, onErr);
+    currentTab = name;
+}
+
 
 
 /**
@@ -159,6 +257,7 @@ function includeDeviceDisplaySizes(deviceTypes)
 
 // Load native UI library
 try {
+    console.warn('in persenter.js');
     var gui = require('nw.gui');
 
     // Get the current window
@@ -166,6 +265,11 @@ try {
 
     // Register callback to close devices on application close.
     win.on('close', function() {
+        if (device_controller === null) {
+            win.close(true);
+            return;
+        }
+
         async.each(
             device_controller.getDeviceKeeper().getDevices(),
             function (device, callback) {
@@ -179,7 +283,9 @@ try {
             }
         );
     });
-} catch (e) {}
+} catch (e) {
+    criticalErrorHandler(e);
+}
 
 
 /**
@@ -188,8 +294,11 @@ try {
 function renderDeviceSelector()
 {
     var onDevicesLoaded = function(devices) {
-        var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+        var context = {'device_types': includeDeviceDisplaySizes(devices)};
         $('#device-search-msg').hide();
+        if (devices.length === 0)
+            context.noDevices = true;
+        console.log('onLoad Context',context);
         renderTemplate(
             'device_selector.html',
             context,
@@ -197,12 +306,12 @@ function renderDeviceSelector()
             true,
             ['device_selector.css'],
             ['device_selector.js'],
-            genericErrorHandler
+            getCustomGenericErrorHandler('presenter.js-renderDeviceSelector-renderTemplate')
         );
     };
 
     var devices = device_controller.getDevices(
-        genericErrorHandler,
+        getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
         onDevicesLoaded
     );
 }
@@ -214,3 +323,4 @@ function getActiveTabID()
         { 'name': currentTab, 'counter': numTabChanges }
     );
 }
+

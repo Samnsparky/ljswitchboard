@@ -41,6 +41,7 @@ function getTypeRegSize(typeName)
  *      will be an Array of String or, in other words, the expansion / result of
  *      the interpretation of the LJMMM field.
 **/
+// exports.expandLJMMMName = function(name, onSuccess)
 exports.expandLJMMMName = function(name, onSuccess)
 {
     var ljmmmRegex = /^(.*)\#\((\d+)\:(\d+)\:?(\d+)?\)(.*)$/;
@@ -77,6 +78,7 @@ exports.expandLJMMMName = function(name, onSuccess)
  *      of the provided entry as an LJMMM field, enumerating and creating the
  *      appropriate entries when interpreting that field.
 **/
+// exports.expandLJMMMEntry = function(entry, onSuccess)
 exports.expandLJMMMEntry = function(entry, onSuccess)
 {
     var expandedEntries = exports.expandLJMMMName(entry.name, function(names){

@@ -33,6 +33,28 @@ var OUTPUT_SWITCH_TEMPLATE = handlebars.compile(
 var targetedDevices = [];
 
 var curTabID = getActiveTabID();
+var curDevSelection = 0;
+
+
+/**
+ * Flexible error handler for device communication failure.
+ *
+ * @param {Object} err The error to report. If err has a retError attribute,
+ *      that attribute will be used to describe the error. Otherwise the err
+ *      parameter's toString function will be used.
+**/
+function handleError (err) {
+    if (err.retError === undefined) {
+        showAlert(
+            'Failed to communicate with the device. Error: ' + err.toString()
+        );
+    } else {
+        showAlert(
+            'Failed to communicate with the device. Error: ' +
+            err.retError.toString()
+        );
+    }
+}
 
 
 /**
@@ -93,6 +115,16 @@ function renderManyDeviceControls(registers, devices, onSuccess)
 }
 
 
+// TODO: The fact that this updates the view right off may violate MVC.
+/**
+ * Read the state of the digital lines configured as input.
+ *
+ * Read the state of the digital (FIO) lines configured as input on the selected
+ * devices. This function will update the view in the process.
+ *
+ * @return {q.promise} Promise that resolves after the read is complete.
+ *      Rejects on error and resolves to nothing.
+**/
 function readInputs ()
 {
     var deferred = q.defer();
@@ -122,10 +154,8 @@ function readInputs ()
                         $(targetID).removeClass('inactive');
                         $(targetID).removeClass('active');
                         if (Math.abs(value - 1) < 0.1) {
-                            $(targetID).html('high');
                             $(targetID).addClass('active');
                         } else {
-                            $(targetID).html('low');
                             $(targetID).addClass('inactive');
                         }
                     }
@@ -146,6 +176,17 @@ function readInputs ()
     return deferred.promise;
 }
 
+
+// TODO: The fact that this reads right from the view may violate MVC.
+/**
+ * Write the state of all FIO lines configured as output.
+ *
+ * Sets of all of the digital (FIO) lines to the user selected state on all of
+ * the currently selected devices.
+ *
+ * @return {q.promise} Promise that resolves (to nothing) after the device
+ *      write operations complete. Rejects on error.
+**/
 function writeOutputs ()
 {
     var deferred = q.defer();
@@ -191,19 +232,43 @@ function writeOutputs ()
 }
 
 
-function readInputsWriteOutputs ()
+/**
+ * Convenience function that writes all outputs and then reads all inputs.
+ *
+ * Convenience function that writes all outputs and then reads all inputs before
+ * scheduling another set of read / write operations. This will return without
+ * operation or setting a timeout if the tab has changed or the device selection
+ * was updated.
+**/
+function readInputsWriteOutputs (expectedDevSelection)
 {
-    if (curTabID !== getActiveTabID()) {
+    var shouldStop = curTabID !== getActiveTabID();
+    shouldStop = shouldStop || curDevSelection != expectedDevSelection
+    if ( shouldStop ) {
         return;
     }
 
-    writeOutputs().then(readInputs).then(function() {
-        setTimeout(readInputsWriteOutputs, REFRESH_DELAY);
-    });
+    writeOutputs()
+    .then(readInputs, handleError)
+    .then(
+        function() {
+            setTimeout(
+                function () { readInputsWriteOutputs(expectedDevSelection); },
+                REFRESH_DELAY
+            );
+        },
+        handleError
+    );
 }
 
 
-function changeDIODir (event)
+/**
+ * JQuery event handler to manage user toggling the direction of an FIO line.
+ *
+ * JQuery event handler that actuates changing an FIO line from an input to an
+ * output or an output to an input.
+**/
+function changeFIODir (event)
 {
     var selectedSwitch = event.target.id;
     var targetID = selectedSwitch.replace('-switch', '');
@@ -234,6 +299,7 @@ function changeDIODir (event)
 **/
 function changeActiveDevices(registers)
 {
+    curDevSelection++;
     $(IO_CONFIG_PANE_SELECTOR).fadeOut(function(){
         var devices = [];
         var keeper = device_controller.getDeviceKeeper();
@@ -246,8 +312,11 @@ function changeActiveDevices(registers)
         var onRender = function() {
             $(IO_CONFIG_PANE_SELECTOR).fadeIn();
             targetedDevices = devices;
-            setTimeout(readInputs, REFRESH_DELAY);
-            $('.direction-switch-check').change(changeDIODir);
+            setTimeout(
+                function () { readInputsWriteOutputs(curDevSelection); },
+                REFRESH_DELAY
+            );
+            $('.direction-switch-check').change(changeFIODir);
             $('.output-switch-check').parent().parent().hide();
         };
         
@@ -263,6 +332,9 @@ function changeActiveDevices(registers)
 }
 
 
+/**
+ * Initialization logic for the digital IO config module.
+**/
 $('#digital-io-configuration').ready(function(){
     var keeper = device_controller.getDeviceKeeper();
     var devices = keeper.getDevices();
@@ -282,13 +354,16 @@ $('#digital-io-configuration').ready(function(){
             registerData,
             devices[0],
             function () { 
-                $('.direction-switch-check').change(changeDIODir);
+                $('.direction-switch-check').change(changeFIODir);
                 $('.output-switch-check').parent().parent().hide();
             }
         );
         targetedDevices = [devices[0]];
         devices[0].write('FIO_DIRECTION', 0);
-        setTimeout(readInputsWriteOutputs, REFRESH_DELAY);
+        setTimeout(
+            function () { readInputsWriteOutputs(curDevSelection); },
+            REFRESH_DELAY
+        );
 
         $('.device-selection-checkbox').click(function(){
             changeActiveDevices(registerData);

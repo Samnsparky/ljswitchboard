@@ -19,7 +19,7 @@ var REGISTERS_TABLE_TEMPLATE_SRC = 'register_matrix/matrix.html';
 var REGISTER_WATCH_LIST_TEMPLATE_SRC = 'register_matrix/watchlist.html';
 
 var REGISTER_MATRIX_SELECTOR = '#register-matrix';
-var REGISTER_WATCHLIST_SELECTOR = '#register-watchlist'
+var REGISTER_WATCHLIST_SELECTOR = '#register-watchlist';
 
 var DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR =
     '#{{address}}-description-display';
@@ -41,6 +41,26 @@ var REFRESH_DELAY = 1000;
 var selectedDevice;
 var registerWatchList = [];
 var curTabID = getActiveTabID();
+
+
+/**
+ * Inform the user of an error via the GUI.
+ *
+ * @param {Object} err The error encountered. If err has a retError attribute,
+ *      that error will be described by its retError attribute. Otherwise it
+ *      will be described by its toString method.
+**/
+function showError(err) {
+    var errMsg;
+
+    if (err.retError === undefined) {
+        errMsg = err.toString();
+    } else {
+        errMsg = err.retError.toString();
+    }
+
+    showAlert('Error while communicating with the device: ' + errMsg);
+}
 
 
 /**
@@ -69,7 +89,11 @@ function expandLJMMMEntries(entries)
             });
         },
         function(error, newEntries){
-            deferred.resolve(newEntries);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(newEntries);
+            }
         }
     );
 
@@ -90,8 +114,8 @@ function getRegisterInfo()
     var deferred = q.defer();
 
     var registerInfoSrc = fs_facade.getExternalURI(REGISTERS_DATA_SRC);
-    fs_facade.getJSON(registerInfoSrc, genericErrorHandler, function(info){
-        deferred.resolve(info['registers']);        
+    fs_facade.getJSON(registerInfoSrc, deferred.reject, function(info){
+        deferred.resolve(info.registers);
     });
 
     return deferred.promise;
@@ -119,13 +143,19 @@ function filterDeviceRegisters(registers, deviceName)
     async.filter(
         registers,
         function(register, callback){
-            var names = register.devices.map(function(e){
-                if(e.name === undefined)
-                    return e;
-                else
-                    return e.name
-            });
-            callback(names.indexOf(deviceName) != -1);
+            var devices = register.devices;
+
+            if (typeof devices == 'string' || devices instanceof String) {
+                callback(devices === deviceName);
+            } else {
+                var names = devices.map(function(e){
+                    if(e.device === undefined)
+                        return e;
+                    else
+                        return e.device;
+                });
+                callback(names.indexOf(deviceName) != -1);
+            }
         },
         function(registers){
             deferred.resolve(registers);
@@ -149,7 +179,7 @@ function createDeviceFilter(device)
 {
     return function(registers){
         return filterDeviceRegisters(registers, device);
-    }
+    };
 }
 
 
@@ -186,9 +216,11 @@ function fwminSelector(registers, device)
             callback(null, newRegister);
         },
         function(error, registers){
-            if(error !== null)
-                genericErrorHandler(error);
-            deferred.resolve(registers);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(registers);
+            }
         }
     );
 
@@ -210,7 +242,7 @@ function createFwminSelector(device)
 {
     return function(registers){
         return fwminSelector(registers, device);
-    }
+    };
 }
 
 
@@ -322,6 +354,9 @@ function getTagSet(entries)
 }
 
 
+/**
+ * Force a redraw on the rendering engine.
+**/
 function runRedraw()
 {
     document.body.style.display='none';
@@ -355,7 +390,7 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
     var location = fs_facade.getExternalURI(REGISTERS_TABLE_TEMPLATE_SRC);
     var entriesByAddress = organizeRegistersByAddress(entries);
 
-    if(tags == undefined)
+    if(tags === undefined)
         tags = getTagSet(entries);
     if(currentTag === undefined)
         currentTag = 'all';
@@ -374,7 +409,7 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
     fs_facade.renderTemplate(
         location,
         templateVals,
-        genericErrorHandler,
+        showError,
         function(renderedHTML)
         {
             $(REGISTER_MATRIX_SELECTOR).html(renderedHTML);
@@ -441,14 +476,21 @@ function searchRegisters(entries, allTags, tag, searchTerm)
     }
 
     var termLow = searchTerm.toLowerCase();
+
+    var matchesTerm = function (testTerm) {
+        var matches = testTerm !== undefined;
+        matches = matches && testTerm.toLowerCase().indexOf(termLow) != -1;
+        return matches;
+    };
+
     if(termLow !== '')
     {
         filteredEntries = filteredEntries.filter(function(e){
-            var inName = e.name.toLowerCase().indexOf(termLow) != -1;
-            var inTag = e.flatTagStr.toLowerCase().indexOf(termLow) != -1;
-            var inDesc = e.description.toLowerCase().indexOf(termLow) != -1;
+            var matchesName = matchesTerm(e.name);
+            var matchesTag = matchesTerm(e.flatTagStr);
+            var matchesDesc = matchesTerm(e.description);
 
-            return inName || inTag || inDesc;
+            return matchesName || matchesTag || matchesDesc;
         });
     }
 
@@ -480,7 +522,11 @@ function flattenEntries(entries)
             callback();
         },
         function(error){
-            deferred.resolve(retList);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(retList);
+            }
         }
     );
 
@@ -513,9 +559,11 @@ function flattenTags(registers)
             callback(null, newRegister);
         },
         function(error, registers){
-            if(error !== null)
-                genericErrorHandler(error);
-            deferred.resolve(registers);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(registers);
+            }
         }
     );
 
@@ -548,12 +596,15 @@ function addRWInfo(registers)
             var writeOnly = newRegister.writeAccess && !newRegister.readAccess;
             newRegister.writeOnly = writeOnly;
             newRegister.useAsWrite = writeOnly;
+            newRegister.type = newRegister.type;
             callback(null, newRegister);
         },
         function(error, registers){
-            if(error !== null)
-                genericErrorHandler(error);
-            deferred.resolve(registers);
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(registers);
+            }
         }
     );
 
@@ -634,6 +685,7 @@ function refreshWatchList()
                     var address = event.target.id;
                     address = address.replace('write-reg-', '');
                     address = address.replace('icon-', '');
+                    var isString = $('#' + address.toString() + '-type-display').html() === 'STRING';
                     var rowSelector = WATCH_ROW_SELECTOR_TEMPLATE({
                         'address': address
                     });
@@ -644,11 +696,16 @@ function refreshWatchList()
                     var value = $(inputSelector).val();
 
                     var addressNum = Number(address);
-                    var valueNum = Number(value);
+                    var convValue;
+                    if (isString) {
+                        convValue = value;
+                    } else {
+                        convValue = Number(value);
+                    }
 
                     $(rowSelector).find('.write-confirm-msg').slideDown(
                         function () {
-                            selectedDevice.writeAsync(addressNum, valueNum)
+                            selectedDevice.writeAsync(addressNum, convValue)
                             .then(
                                 function () {
                                     $(rowSelector).find(
@@ -656,7 +713,7 @@ function refreshWatchList()
                                     ).slideUp();
                                 },
                                 function (err) {
-                                    console.log(err);
+                                    showError(err);
                                 }
                             );
                         }
@@ -739,27 +796,10 @@ function removeFromWatchList(event)
 }
 
 
-function updateReadRegisters ()
+function createUpdateReadNumberRegistersCallback (readAddresses)
 {
-    if (curTabID !== getActiveTabID()) {
-        return;
-    }
-
-    var readRegisters = registerWatchList.filter(function (e) {
-        return !e.useAsWrite;
-    });
-    var readAddresses = readRegisters.map(function (e) {
-        return e.address;
-    });
-
-    if (readAddresses.length == 0) {
-        setTimeout(updateReadRegisters, REFRESH_DELAY);
-        return;
-    }
-
-    var promise = selectedDevice.readMany(readAddresses);
-    promise.then(function (results) {
-
+    return function (results) {
+        var deferred = q.defer();
         var numResults = results.length;
         for (var i=0; i<numResults; i++) {
             var register = readAddresses[i];
@@ -767,11 +807,96 @@ function updateReadRegisters ()
             var displaySelector = '#' + String(register) + '-cur-val-display';
             $(displaySelector).html(value.toFixed(6));
         }
+        deferred.resolve();
+        return deferred.promise;
+    };
+}
 
-        setTimeout(updateReadRegisters, REFRESH_DELAY);
-    }, function (err) {
-        setTimeout(updateReadRegisters, REFRESH_DELAY);
+
+function updateStringRegisterCallback (register, value)
+{
+    var displaySelector = '#' + String(register) + '-cur-val-display';
+    $(displaySelector).html(value);
+}
+
+
+function splitByRetType (registers)
+{
+    var numberRegisters = [];
+    var stringRegisters = [];
+    
+    registers.forEach(function (register) {
+        if (register.type === 'STRING') {
+            stringRegisters.push(register);
+        } else {
+            numberRegisters.push(register);
+        }
     });
+
+    return {numRegs: numberRegisters, strRegs: stringRegisters};
+}
+
+
+function updateReadRegisters ()
+{
+    var onError = function (err) {
+        if (err) {
+            showError(err);
+        }
+        setTimeout(updateReadRegisters, REFRESH_DELAY);
+    };
+
+    if (curTabID !== getActiveTabID()) {
+        return;
+    }
+
+    var readRegisters = registerWatchList.filter(function (e) {
+        return !e.useAsWrite;
+    });
+
+    var splitResult = splitByRetType(readRegisters);
+    var numberReadRegisters = splitResult.numRegs;
+    var stringReadRegisters = splitResult.strRegs;
+
+    var numberReadAddresses = numberReadRegisters.map(function (e) {
+        return e.address;
+    });
+    var stringReadAddresses = stringReadRegisters.map(function (e) {
+        return e.address;
+    });
+
+    var promise;
+    if (numberReadAddresses.length > 0) {
+        promise = selectedDevice.readMany(numberReadAddresses);
+        promise.then(
+            createUpdateReadNumberRegistersCallback(numberReadAddresses),
+            onError
+        );
+    } else {
+        var immediateDeferred = q.defer();
+        promise = immediateDeferred.promise;
+        immediateDeferred.resolve();
+    }
+
+    stringReadAddresses.forEach(function (address) {
+        promise.then(function () {
+            var innerDeferred = q.defer();
+            selectedDevice.readAsync(
+                address,
+                onError,
+                function (val) {
+                    updateStringRegisterCallback(address, val);
+                    innerDeferred.resolve();
+                }
+            );
+            return innerDeferred.promise;
+        }, onError);
+    });
+
+    promise.then(
+        function () { setTimeout(updateReadRegisters, REFRESH_DELAY); },
+        onError
+    );
 }
 
 
@@ -797,7 +922,7 @@ $('#register-matrix-holder').ready(function(){
     $('.device-selection-radio').change(function(){
         $('#device-selector').hide();
         $('#device-selector').fadeIn();
-        var serialNum = $('.device-selection-radio').val();
+        var serialNum = $('input[name=deviceSelectionRadios]:checked').val();
         setSelectedDevice(serialNum);
     });
 
