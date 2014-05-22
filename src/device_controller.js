@@ -26,8 +26,16 @@ var DRIVER_DEVICE_TYPE_NAMES = dict({
     '6': 'LJM_dtU6',
     '7': 'LJM_dtT7',
     '9': 'LJM_dtUE9',
-    '200': 'LJM_LJM_dtDIGIT'
+    '200': 'LJM_dtDIGIT'
 });
+
+var DEVICE_TYPE_NAMES_BY_DRIVER_NAME = dict({
+    'LJM_dtU3': 'U3',
+    'LJM_dtU6': 'U6',
+    'LJM_dtT7': 'T7',
+    'LJM_dtUE9': 'UE9',
+    'LJM_dtDIGIT': 'Digit'
+})
 
 var CONNECT_TYPE_USB = 1;
 var CONNECTION_TYPE_NAMES = dict({
@@ -43,6 +51,31 @@ var DRIVER_CONNECTION_TYPE_NAMES = dict({
     '2': 'LJM_ctTCP',
     '3': 'LJM_ctETHERNET',
     '4': 'LJM_ctWIFI'
+});
+
+var SCAN_REQUEST_LIST = [
+    {
+        'deviceType': 'LJM_dtT7',
+        'connectionType': 'LJM_ctANY',
+        'addresses': [
+            'DEVICE_NAME_DEFAULT',
+            'HARDWARE_INSTALLED',
+            'ETHERNET_IP',
+            'WIFI_IP'
+        ]
+    },
+    {
+        'deviceType': 'LJM_dtDIGIT',
+        'connectionType': 'LJM_ctUSB',
+        'addresses': ['DEVICE_NAME_DEFAULT','DGT_INSTALLED_OPTIONS']
+    }
+];
+var DEVICE_ENABLED_LIST = dict({
+    'U3': false,
+    'U6': false,
+    'T7': true,
+    'UE9': false,
+    'Digit': false
 });
 
 exports.driver_const = labjack_nodejs.driver_const;
@@ -975,10 +1008,6 @@ var consolidateDevices = function (devices) {
         newDevice = devices[i];
         existingDevice = deviceListing.get(newDevice.serial.toString(), null);
         if (existingDevice !== null) {
-            newDevice.connectionTypes.push.apply(
-                newDevice.connectionTypes,
-                existingDevice.connectionTypes
-            );
             newDevice.connections.push.apply(
                 newDevice.connections,
                 existingDevice.connections
@@ -987,9 +1016,53 @@ var consolidateDevices = function (devices) {
         deviceListing.set(newDevice.serial.toString(), newDevice);
     }
 
+    var missingConn = function (deviceInfo, connectionType, ipAddr) {
+        var missingConnType = deviceInfo.connections.filter(function (connection) {
+            return connection.typeStr === connectionType;
+        }).length == 0;
+
+        var hasIP = ipAddr && ipAddr !== '0.0.0.0';
+
+        return missingConnType && hasIP;
+    };
+
+    var addNonSearchableConnection = function(deviceInfo, connType, ipAddr) {
+        var conType = {
+            'Ethernet':{'num': 3, 'str': '3'},
+            'WiFi':{'num': 4, 'str': '4'}
+        }[connType];
+
+        deviceInfo.connections.push({
+            'type': conType.num,
+            'typeStr': CONNECTION_TYPE_NAMES.get(conType.str),
+            'ljmTypeStr': DRIVER_CONNECTION_TYPE_NAMES.get(conType.str),
+            'ipAddress': ipAddr,
+            'ipSafe': ipAddr,
+            'alreadyOpen': false,
+            'notSearchableWarning': true
+        });
+    };
+
     var retList = [];
-    deviceListing.forEach(function (value, key) {
-        retList.push(value);
+    deviceListing.forEach(function (deviceInfo, key) {
+        if (missingConn(deviceInfo, 'Wifi', deviceInfo.wifiIPAddress)) {
+            addNonSearchableConnection(
+                deviceInfo,
+                'WiFi',
+                deviceInfo.wifiIPAddress
+            );
+        }
+
+        if (missingConn(deviceInfo, 'Ethernet', deviceInfo.ethernetIPAddress))
+        {
+            addNonSearchableConnection(
+                deviceInfo,
+                'Ethernet',
+                deviceInfo.ethernetIPAddress
+            );
+        }
+        
+        retList.push(deviceInfo);
     });
 
     return retList;
@@ -1035,6 +1108,20 @@ var unpackDeviceInfo = function (driverListingItem) {
     };
     unpackStrategies['HARDWARE_INSTALLED'] = parseHardwareInstalled;
 
+    var readDigitInstalledOptions = function(dataItem) {
+        if (dataItem.val == 3) {
+            retDeviceInfo.specialText = '-TLH';
+            retDeviceInfo.specialImageSuffix = '-TLH';
+        } else if (dataItem.val == 2) {
+            retDeviceInfo.specialText = '-TL';
+            retDeviceInfo.specialImageSuffix = '-TL';
+        } else {
+            retDeviceInfo.specialText = '';
+            retDeviceInfo.specialImageSuffix = '';
+        }
+    };
+    unpackStrategies['DGT_INSTALLED_OPTIONS'] = readDigitInstalledOptions;
+    var deviceTypeStr = DEVICE_TYPE_NAMES.get(rawDeviceTypeStr);
     var retDeviceInfo = {
         'serial': driverListingItem.serialNumber,
         'connections': [{
@@ -1043,14 +1130,16 @@ var unpackDeviceInfo = function (driverListingItem) {
             'ljmTypeStr': DRIVER_CONNECTION_TYPE_NAMES.get(rawConnTypeStr),
             'ipAddress': ipAddress,
             'ipSafe': ipAddress.replace(/\./g, '_'),
-            'alreadyOpen': false
+            'alreadyOpen': false,
+            'notSearchableWarning': false
         }],
         'connectionTypes': [connectionType],
         'origConnectionType': connectionType,
         'origDeviceType': deviceType,
         'type': deviceType,
-        'typeStr': DEVICE_TYPE_NAMES.get(rawDeviceTypeStr),
-        'ljmDeviceType': DRIVER_DEVICE_TYPE_NAMES.get(rawDeviceTypeStr)
+        'typeStr': deviceTypeStr,
+        'ljmDeviceType': DRIVER_DEVICE_TYPE_NAMES.get(rawDeviceTypeStr),
+        'isEnabled': DEVICE_ENABLED_LIST.get(deviceTypeStr)
     }
 
     driverListingItem.data.forEach(function (dataItem) {
@@ -1058,7 +1147,109 @@ var unpackDeviceInfo = function (driverListingItem) {
     });
 
     return retDeviceInfo;
+};
+
+
+var tryOpenDeviceConnection = function (deviceInfo, connection) {
+    var deferred = q.defer();
+
+    openDeviceFromAttributes(
+        deviceInfo.type,
+        deviceInfo.serial,
+        connection.ipAddress,
+        connection.type,
+        function (error) {
+            console.log('here1',deviceInfo.serial);
+            connection.alreadyOpen = true;
+            deferred.resolve();
+        },
+        function (device) {
+            console.log('here2',deviceInfo.serial);
+            device.close(function(){
+                device.close(deferred.resolve, deferred.resolve);
+            }, deferred.resolve);
+        }
+    );
+
+    return function () { return deferred.promise; };
 }
+
+
+var tryOpenDevice = function (deviceInfo) {
+
+    var connectionTypePromises = deviceInfo.connections.map(
+        function (connection) {
+            return tryOpenDeviceConnection(deviceInfo, connection);
+        }
+    );
+
+    var finalPromise = connectionTypePromises.reduce(
+        function (previousPromise, currentPromise) {
+            if (previousPromise === null)
+                return currentPromise();
+            else
+                return previousPromise.then(currentPromise);
+        },
+        null
+    );
+
+    return function () { return finalPromise };
+};
+
+
+var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
+{
+    return function (devScanList) {
+        var deferred = q.defer();
+
+        labjack_driver.closeAllSync();
+        labjack_driver.listAllExtended(
+            deviceType,
+            connectionType,
+            reqAttrs,
+            function(err) {
+                var errMsg = 'Error calling listAllExtended '+
+                    'device_controller.getDevices';
+                console.error(errMsg,err);
+                deferred.resolve(devScanList);
+            },
+            function (driverListing) {
+                var unpackedDeviceInfo = consolidateDevices(
+                    driverListing.map(unpackDeviceInfo)
+                );
+
+                var tryOpenPromises = unpackedDeviceInfo.map(tryOpenDevice);
+                var finalPromise = tryOpenPromises.reduce(
+                    function (previousPromise, currentPromise) {
+                        if (previousPromise === null)
+                            return currentPromise();
+                        else
+                            return previousPromise.then(currentPromise);
+                    },
+                    null
+                );
+
+                if (finalPromise === null) {
+                    deferred.resolve(devScanList);
+                    return;
+                } else {
+                    var name = DEVICE_TYPE_NAMES_BY_DRIVER_NAME.get(deviceType);
+                    finalPromise.then(function () {
+                        devScanList.push(
+                            {
+                                'name': name,
+                                'devices': unpackedDeviceInfo
+                            }
+                        );
+                        deferred.resolve(devScanList);
+                    });
+                }
+            }
+        );
+
+        return deferred.promise; 
+    };
+};
 
 
 /**
@@ -1074,21 +1265,25 @@ var unpackDeviceInfo = function (driverListingItem) {
 **/
 exports.getDevices = function (onError, onSuccess)
 {
-    labjack_driver.closeAllSync();
-    console.log('labjack_driver',labjack_driver)
-    labjack_driver.listAllExtended(
-        "LJM_dtT7",
-        "LJM_ctANY",
-        ['DEVICE_NAME_DEFAULT','HARDWARE_INSTALLED','ETHERNET_IP','WIFI_IP'],
-        onError,
-        function (driverListing) {
-            var unpackedDeviceInfo = consolidateDevices(
-                driverListing.map(unpackDeviceInfo)
-            );
-            console.log(unpackedDeviceInfo);
-            onSuccess([{'name': 'T7', 'devices': unpackedDeviceInfo}]);
-        }
+    var retListPromises = SCAN_REQUEST_LIST.map(function (deviceTypeInfo) {
+        return getDevicesOfTypeFuture(
+            deviceTypeInfo.deviceType,
+            deviceTypeInfo.connectionType,
+            deviceTypeInfo.addresses
+        )
+    });
+
+    var lastPromise = retListPromises.reduce(
+        function (previousPromise, currentPromise) {
+            if (previousPromise === null)
+                return currentPromise([]);
+            else
+                return previousPromise.then(currentPromise, onError);
+        },
+        null
     );
+
+    lastPromise.then(onSuccess, onError);
 };
 
 

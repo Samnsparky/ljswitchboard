@@ -201,7 +201,7 @@ function refreshDevices()
     $('#device-search-msg').show();
     $('#content-holder').html('');
     var onDevicesLoaded = function(devices) {
-        var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+        var context = {'device_types': includeDeviceDisplaySizes(devices)};
         console.log('List All Screen Context',context);
         if (devices.length === 0)
             context.noDevices = true;
@@ -458,8 +458,7 @@ function onResized()
         decrement += 48;
     }
     var num = ($(window).height()-decrement);
-    $('#t7DeviceListBox').height(num.toString()+'px');
-    $('.devices-enumeration-scroller').height((num-18).toString()+'px')
+    $('.device-pane').height((num-10).toString()+'px');
 }
 
 $('#device-selector-holder').ready(function(){

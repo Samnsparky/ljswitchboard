@@ -19,7 +19,7 @@ function catchWindowErrors(e) {
         m + '</h2><div style="color:white;background-color:red">' +
         errEvent.error.stack + '</div></pre>'
     )
-    console.error(m);
+    console.error(m, e);
 }
 process.on('uncaughtException', catchUncaughtExceptions);
 window.addEventListener('error' ,catchWindowErrors);

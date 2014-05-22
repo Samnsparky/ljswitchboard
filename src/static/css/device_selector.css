@@ -24,7 +24,6 @@
     margin-bottom: 20px;*/
 }
 .devices-enumeration-scroller {
-    overflow: auto;
     width: 100%;
     height: 100%;
 }
@@ -41,16 +40,15 @@
 .device-pane
 {
     background-color: white;
-
     -moz-box-shadow: 0 0 10px #000000;
     -webkit-box-shadow: 0 0 10px #000000;
     box-shadow: 0 0 10px #000000;
-    /*height: 580px;*/
+    height: 580px;
+    overflow: auto;
 }
 .device-pane-section {
     width:100%;
     width: 100%;
-    height: 560px;
     margin-bottom: 20px;
 }
 

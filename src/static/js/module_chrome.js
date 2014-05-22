@@ -426,7 +426,7 @@ $('#module-chrome').ready(function(){
         $('#device-search-msg').show();
         $('#content-holder').html('');
         var onDevicesLoaded = function(devices) {
-            var context = {'connection_types': includeDeviceDisplaySizes(devices)};
+            var context = {'device_types': includeDeviceDisplaySizes(devices)};
             $('#device-search-msg').hide();
             renderTemplate(
                 'device_selector.html',

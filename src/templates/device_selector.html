@@ -22,7 +22,11 @@
                         <td class="connection-buttons-holder">
                             <div id="connect-buttons">
                                 {{#connections}}
-                                <div class="connect-button-holder"><button id="{{../type}}-{{../serial}}-{{ipSafe}}-{{typeStr}}-{{type}}-{{../origDeviceType}}" class="btn btn-success connect-button" title="Connect using {{typeStr}}">{{typeStr}}</button></div>
+                                <div class="connect-button-holder"><button 
+                                    id="{{../type}}-{{../serial}}-{{ipSafe}}-{{typeStr}}-{{type}}-{{../origDeviceType}}" 
+                                    class="btn {{#if ../isEnabled}}{{#unless alreadyOpen}}{{#if notSearchableWarning}}btn-warning{{else}}btn-success{{/if}}{{/unless}}{{else}}{{/if}} connect-button" 
+                                    title="{{#if alreadyOpen}}Unable to {{typeStr}}{{specialText}} connect via {{typeStr}}{{else}}{{#if notSearchableWarning}}Connect to {{typeStr}}{{specialText}} using {{typeStr}} however, scan failed{{else}}Connect to {{typeStr}}{{specialText}} using {{typeStr}}{{/if}}{{/if}}" 
+                                    {{#alreadyOpen}}disabled{{/alreadyOpen}} {{#unless ../isEnabled}}disabled{{/unless}}>{{typeStr}}</button></div>
                                 {{/connections}}
                             </div>
                             <div id="disconnect-button-holder" class="hidden-button-holder">
@@ -36,13 +40,15 @@
                             <div id="info">
                                 <table>
                                     <tbody>
-                                        <tr><td class="device-attribute-label">Model</td><td id="type" class="device-attribute-value">{{type}}{{specialText}}</td></tr>
+                                        <tr><td class="device-attribute-label">Model</td><td id="type" class="device-attribute-value">{{typeStr}}{{specialText}}</td></tr>
                                         <tr><td class="device-attribute-label">Serial</td><td id="serial" class="device-attribute-value">{{serial}}</td></tr>
                                         <tr><td class="device-attribute-label">Name</td><td id="name" class="device-attribute-value">{{name}}</td></tr>
-                                        <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{ethernetIPAddress}}</td></tr>
-                                        {{#wifiIPAddress}}
-                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value">{{.}}</td></tr>
-                                        {{/wifiIPAddress}}
+                                        {{#ethernetIPAddress}}
+                                        <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{.}}</td></tr>
+                                        {{/ethernetIPAddress}}
+                                        {{#if specialText}}{{#if ../wifiIPAddress }}
+                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value">{{../wifiIPAddress}}</td></tr>
+                                        {{/if}}{{/if}}
                                     </tbody>
                                 </table>
                             </div>
