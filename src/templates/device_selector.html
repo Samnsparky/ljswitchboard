@@ -23,10 +23,11 @@
                             <div id="connect-buttons">
                                 {{#connections}}
                                 <div class="connect-button-holder"><button 
-                                    id="{{../type}}-{{../serial}}-{{ipSafe}}-{{typeStr}}-{{type}}-{{../origDeviceType}}" 
-                                    class="btn {{#if ../isEnabled}}{{#unless alreadyOpen}}{{#if notSearchableWarning}}btn-warning{{else}}btn-success{{/if}}{{/unless}}{{else}}{{/if}} connect-button" 
-                                    title="{{#if alreadyOpen}}Unable to {{typeStr}}{{specialText}} connect via {{typeStr}}{{else}}{{#if notSearchableWarning}}Connect to {{typeStr}}{{specialText}} using {{typeStr}} however, scan failed{{else}}Connect to {{typeStr}}{{specialText}} using {{typeStr}}{{/if}}{{/if}}" 
-                                    {{#alreadyOpen}}disabled{{/alreadyOpen}} {{#unless ../isEnabled}}disabled{{/unless}}>{{typeStr}}</button></div>
+                                    id="{{../type}}-{{../serial}}-{{ipSafe}}-{{typeStr}}-{{type}}-{{../origDeviceType}}"
+                                    class="btn {{button_class}} connect-button" 
+                                    title="{{button_title}}" 
+                                    {{button_state}}
+                                    >{{typeStr}}</button></div>
                                 {{/connections}}
                             </div>
                             <div id="disconnect-button-holder" class="hidden-button-holder">
@@ -47,7 +48,7 @@
                                         <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{.}}</td></tr>
                                         {{/ethernetIPAddress}}
                                         {{#if specialText}}{{#if ../wifiIPAddress }}
-                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value">{{../wifiIPAddress}}</td></tr>
+                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value">{{../wifiIPAddress}}{{{../button_image}}}</td></tr>
                                         {{/if}}{{/if}}
                                     </tbody>
                                 </table>

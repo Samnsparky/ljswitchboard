@@ -1,5 +1,5 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "ljmDeviceParameters": 
     [
         {

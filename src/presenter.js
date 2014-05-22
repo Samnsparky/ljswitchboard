@@ -298,7 +298,7 @@ function renderDeviceSelector()
         $('#device-search-msg').hide();
         if (devices.length === 0)
             context.noDevices = true;
-        console.log(context);
+        console.log('onLoad Context',context);
         renderTemplate(
             'device_selector.html',
             context,

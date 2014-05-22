@@ -11,6 +11,7 @@ var async = require('async');
 var dict = require('dict');
 var q = require('q');
 var labjack_nodejs = require('labjack-nodejs');
+var device_selector_view_gen = require('./device_selector_view_gen');
 var labjack_driver = new labjack_nodejs.driver();
 
 var LJM_DT_T7 = labjack_nodejs.driver_const.LJM_DT_T7.toString();
@@ -61,7 +62,8 @@ var SCAN_REQUEST_LIST = [
             'DEVICE_NAME_DEFAULT',
             'HARDWARE_INSTALLED',
             'ETHERNET_IP',
-            'WIFI_IP'
+            'WIFI_IP',
+            'WIFI_RSSI'
         ]
     },
     {
@@ -77,6 +79,17 @@ var DEVICE_ENABLED_LIST = dict({
     'UE9': false,
     'Digit': false
 });
+var WIFI_RSSI_IMAGES = [
+    {'val':-30,'img':'wifiRSSI-4'},
+    {'val':-40,'img':'wifiRSSI-3'},
+    {'val':-50,'img':'wifiRSSI-2'},
+    {'val':-60,'img':'wifiRSSI-1'},
+    {'val':-70,'img':'wifiRSSI-0'},
+    {'val':-200,'img':'wifiRSSI-0'},
+]
+
+var NUM_SCAN_RETRIES = 4;
+var LIST_ALL_SCAN_RETRY_ERROR = 1233;
 
 exports.driver_const = labjack_nodejs.driver_const;
 exports.ljm_driver = labjack_driver;
@@ -1028,6 +1041,7 @@ var consolidateDevices = function (devices) {
 
     var addNonSearchableConnection = function(deviceInfo, connType, ipAddr) {
         var conType = {
+            'USB':{'num': 1, 'str': '1'},
             'Ethernet':{'num': 3, 'str': '3'},
             'WiFi':{'num': 4, 'str': '4'}
         }[connType];
@@ -1037,7 +1051,7 @@ var consolidateDevices = function (devices) {
             'typeStr': CONNECTION_TYPE_NAMES.get(conType.str),
             'ljmTypeStr': DRIVER_CONNECTION_TYPE_NAMES.get(conType.str),
             'ipAddress': ipAddr,
-            'ipSafe': ipAddr,
+            'ipSafe': ipAddr.replace(/\./g, '_'),
             'alreadyOpen': false,
             'notSearchableWarning': true
         });
@@ -1068,7 +1082,25 @@ var consolidateDevices = function (devices) {
     return retList;
 };
 
-
+var getWiFiRSSIImgName = function(rssi) {
+    var imgName = '';
+    if(rssi < WIFI_RSSI_IMAGES[0].val) {
+        WIFI_RSSI_IMAGES.some(function(rssiData){
+            if(rssi < rssiData.val) {
+            } else {
+                imgName = rssiData.img;
+                return true
+            }
+        });
+    } else {
+        imgName = WIFI_RSSI_IMAGES[0].img;
+    }
+    
+    if(imgName === '') {
+        imgName = WIFI_RSSI_IMAGES[WIFI_RSSI_IMAGES.length-1].img;
+    }
+    return imgName
+}
 var unpackDeviceInfo = function (driverListingItem) {
     var connectionType = driverListingItem.connectionType;
     var rawConnTypeStr = connectionType.toString();
@@ -1096,9 +1128,31 @@ var unpackDeviceInfo = function (driverListingItem) {
         retDeviceInfo.wifiSafeIPAddress = ipStr.replace(/\./g, '_');
     };
     unpackStrategies['WIFI_IP'] = parseWiFiIPAddress;
+    var parseWiFiIPAddress = function (dataItem) {
+        var newRSSI = dataItem.val;
+        var avgRSSI = retDeviceInfo.avgWiFiRSSI;
+        var numInAvg = retDeviceInfo.numInAvgWiFiRSSI;
+        
+        if(newRSSI > -200) {
+            avgRSSI = avgRSSI * numInAvg;
+            avgRSSI += newRSSI;
+            numInAvg += 1;
+            avgRSSI = avgRSSI / numInAvg;
+        }
+        var imgName = getWiFiRSSIImgName(avgRSSI);
+        if((retDeviceInfo.specialImageSuffix === '') && (retDeviceInfo.type == 7)) {
+            imgName = '';
+        }
+        console.log('RSSI-Debug',driverListingItem.serialNumber,driverListingItem.connectionType,newRSSI,imgName);
+        retDeviceInfo.wifiRSSIImgName = imgName;
+        retDeviceInfo.wifiRSSIStr = avgRSSI.toString() + 'dB';
+        retDeviceInfo.avgWiFiRSSI = avgRSSI;
+        retDeviceInfo.numInAvgWiFiRSSI = numInAvg;
+    };
+    unpackStrategies['WIFI_RSSI'] = parseWiFiIPAddress;
 
     var parseHardwareInstalled = function (dataItem) {
-        if (((dataItem.val >> 1) & 0x1) == 1) {
+        if (dataItem.val !== 0) {
             retDeviceInfo.specialText = ' Pro';
             retDeviceInfo.specialImageSuffix = '-pro';
         } else {
@@ -1138,8 +1192,13 @@ var unpackDeviceInfo = function (driverListingItem) {
         'origDeviceType': deviceType,
         'type': deviceType,
         'typeStr': deviceTypeStr,
+        'deviceType': deviceTypeStr,
         'ljmDeviceType': DRIVER_DEVICE_TYPE_NAMES.get(rawDeviceTypeStr),
-        'isEnabled': DEVICE_ENABLED_LIST.get(deviceTypeStr)
+        'isEnabled': DEVICE_ENABLED_LIST.get(deviceTypeStr),
+        'avgWiFiRSSI': 0,
+        'wifiRSSIStr': '0dB',
+        'wifiRSSIImgName': '',
+        'numInAvgWiFiRSSI': 0
     }
 
     driverListingItem.data.forEach(function (dataItem) {
@@ -1159,13 +1218,12 @@ var tryOpenDeviceConnection = function (deviceInfo, connection) {
         connection.ipAddress,
         connection.type,
         function (error) {
-            console.log('here1',deviceInfo.serial);
             connection.alreadyOpen = true;
             deferred.resolve();
         },
         function (device) {
-            console.log('here2',deviceInfo.serial);
             device.close(function(){
+                console.error('Trying to close device-2',deviceInfo.serial,connection.type);
                 device.close(deferred.resolve, deferred.resolve);
             }, deferred.resolve);
         }
@@ -1201,8 +1259,8 @@ var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
 {
     return function (devScanList) {
         var deferred = q.defer();
-
         labjack_driver.closeAllSync();
+        labjack_driver.writeLibrarySync('LJM_OLD_FIRMWARE_CHECK',0);
         labjack_driver.listAllExtended(
             deviceType,
             connectionType,
@@ -1211,7 +1269,7 @@ var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
                 var errMsg = 'Error calling listAllExtended '+
                     'device_controller.getDevices';
                 console.error(errMsg,err);
-                deferred.resolve(devScanList);
+                deferred.reject(err);
             },
             function (driverListing) {
                 var unpackedDeviceInfo = consolidateDevices(
@@ -1252,6 +1310,77 @@ var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
 };
 
 
+var innerGetDevices = function (onError, onSuccess)
+{
+    var retData;
+
+    var innerGetDevices = function (wasAlreadySuccessful) {
+        var deferred = q.defer();
+        var hadError = false;
+
+        var innerOnError = function () {
+            console.log('attempting to recover');
+        };
+
+        if (wasAlreadySuccessful) {
+            deferred.resolve(true);
+            return deferred.promise;
+        }
+
+        var retListPromises = SCAN_REQUEST_LIST.map(function (deviceTypeInfo) {
+            return getDevicesOfTypeFuture(
+                deviceTypeInfo.deviceType,
+                deviceTypeInfo.connectionType,
+                deviceTypeInfo.addresses
+            )
+        });
+
+        var lastPromise = retListPromises.reduce(
+            function (previousPromise, currentPromise) {
+                if (previousPromise === null)
+                    return currentPromise([]);
+                else
+                    return previousPromise.then(currentPromise, function () {
+                        innerOnError();
+                        hadError = true;
+                    });
+            },
+            null
+        );
+
+        lastPromise.then(function (newRetData) {
+            retData = newRetData;
+            console.log('determining success...',hadError)
+            if (hadError)
+                deferred.resolve(false);
+            else
+                deferred.resolve(true);
+            console.log('here here here ***');
+        }, innerOnError);
+
+        return deferred.promise;
+    };
+
+    var futures = [];
+    for (var i=0; i<NUM_SCAN_RETRIES; i++)
+        futures.push(innerGetDevices);
+
+    var lastPromise = futures.reduce(function (lastAttempt, currentAttempt) {
+        if (lastAttempt === null)
+            return currentAttempt();
+        else
+            return lastAttempt.then(currentAttempt);
+    }, null);
+
+    lastPromise.then(function (wasSuccessful) {
+        if (wasSuccessful)
+            onSuccess(retData);
+        else
+            onSuccess([]);
+    }, onError);
+};
+
+
 /**
  * Get a list of devices currently visible by to this computer.
  *
@@ -1263,28 +1392,39 @@ var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
  *      The value of "devices" is a list of Objects with the keys "serial",
  *      "connectionTypes", "type", and "name".
 **/
-exports.getDevices = function (onError, onSuccess)
-{
-    var retListPromises = SCAN_REQUEST_LIST.map(function (deviceTypeInfo) {
-        return getDevicesOfTypeFuture(
-            deviceTypeInfo.deviceType,
-            deviceTypeInfo.connectionType,
-            deviceTypeInfo.addresses
-        )
-    });
+exports.getDevices = function (onError, onSuccess) {
+    labjack_driver.writeLibrarySync('LJM_OPEN_TCP_DEVICE_TIMEOUT_MS',2000);
+    labjack_driver.writeLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS', 2000);
 
-    var lastPromise = retListPromises.reduce(
-        function (previousPromise, currentPromise) {
-            if (previousPromise === null)
-                return currentPromise([]);
-            else
-                return previousPromise.then(currentPromise, onError);
-        },
-        null
+    var decorateCleanup = function (continuation) {
+        return function (value) {
+            labjack_driver.writeLibrarySync('LJM_OPEN_TCP_DEVICE_TIMEOUT_MS',20000);
+            labjack_driver.writeLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS',20000);
+            continuation(value);
+        };
+    };
+
+    var decorateSelectorVals = function (continuation) {
+        return function (deviceTypes) {
+            console.log('WHERE ARE WE????');
+            console.log(deviceTypes);
+            deviceTypes.forEach(function (deviceType) {
+                deviceType.devices.forEach(function (device) {
+                    device.connections.forEach(function (connection) {
+                        device_selector_view_gen.addDeviceSelectorVals(
+                            device, connection);
+                    });
+                });
+            });
+            continuation(deviceTypes);
+        }
+    };
+
+    innerGetDevices(
+        decorateCleanup(onError),
+        decorateSelectorVals(decorateCleanup(onSuccess))
     );
-
-    lastPromise.then(onSuccess, onError);
-};
+}
 
 
 /**
@@ -1311,7 +1451,9 @@ exports.openDevice = function (serial, ipAddress, connType, deviceType, onError,
         connType,
         onError,
         function (innerDevice) {
+            console.log('Creating New Device Object',deviceType,serial,ipAddress,connType)
             var device = new Device(innerDevice, serial, connType, deviceType);
+            console.log('After-Creating New Device Object',deviceType,serial,ipAddress,connType,device)
             onSuccess(device);
         }
     );
