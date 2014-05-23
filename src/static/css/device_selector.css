@@ -1,11 +1,11 @@
 .connection-buttons-holder {
     vertical-align: top;
     padding: 0 10px;
-    width: 93px;
+    width: 110px;
 }
 
 .current-connection-indicator {
-    width: 93px;
+    width: 110px;
 }
 
 .device-attribute-label {
@@ -172,11 +172,11 @@
 .connect-button
 {
     margin-bottom: 1px;
-    width: 93px;
+    width: 110px;
 }
 
 .disconnect-button {
-    width: 93px;
+    width: 110px;
     padding: 5px;
     text-align: center;
 }
