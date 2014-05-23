@@ -150,19 +150,22 @@ function getAvailableFirmwareListing(onError, onSuccess)
                 url,
                 function (error, response, body) {
                     if (error || response.statusCode != 200) {
+                        console.log('HERE!!!',url)
                         $('#internet-error-list').append(
                             ERROR_TEMPLATE(humanName)
                         );
                         innerDeferred.resolve(overallFirmwareListing);
                         return;
                     }
+                    console.log('HERE',url)
 
                     var firmwareListing = [];
                     var match = FIRMWARE_LINK_REGEX.exec(body);
-                    var targetURL = match[0].replace(/href\=\"/g, '');
-                    targetURL = targetURL.replace(/\"/g, '');
 
                     while (match !== null) {
+                        console.log('in while loop',match)
+                        var targetURL = match[0].replace(/href\=\"/g, '');
+                        targetURL = targetURL.replace(/\"/g, '');
                         var version = (parseFloat(match[1])/10000).toFixed(4);
                         var humanVersion = HUMAN_VERSION_TEMPLATE({
                             version: version,
@@ -177,7 +180,9 @@ function getAvailableFirmwareListing(onError, onSuccess)
                                 url: targetURL
                             }
                         );
+
                         match = FIRMWARE_LINK_REGEX.exec(body);
+
                     }
 
                     var numFirmwares = firmwareListing.length;
@@ -185,7 +190,7 @@ function getAvailableFirmwareListing(onError, onSuccess)
                         innerDeferred.resolve(overallFirmwareListing);
                         return;
                     }
-
+                    console.log('After While Loop')
                     var highestFirmware = firmwareListing[0];
                     for (var i=1; i<numFirmwares; i++) {
                         if (highestFirmware.version < firmwareListing[i].version)
