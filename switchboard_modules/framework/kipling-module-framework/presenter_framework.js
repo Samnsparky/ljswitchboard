@@ -2165,7 +2165,6 @@ function Framework() {
                     }
                 );
             } else {
-                console.log('in handleIOError', details);
                 innerDeferred.reject(details);
             }
             return innerDeferred.promise;
@@ -2258,8 +2257,12 @@ function Framework() {
             self.fire(
                 'onRefresh',
                 [ bindingsInfo ],
-                innerDeferred.reject,
-                function () { innerDeferred.resolve(bindingsInfo); }
+                function() {
+                    innerDeferred.reject();
+                },
+                function () { 
+                    innerDeferred.resolve(bindingsInfo); 
+                }
             );
             return innerDeferred.promise;
         };

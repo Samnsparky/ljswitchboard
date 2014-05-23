@@ -24,12 +24,12 @@ var imageTree = {
 			'name': 'specialText',
 			'vals': {
 				' Pro': {
-					'subAttr': 'connection',
-					'name': 'typeStr',
+					'name': 'wifiStatusStr',
 					'vals': {
-						'Wifi': '<img title="Signal Strength is {{ device.wifiRSSIStr }}" class="wifiRSSIImage" src="static/img/{{ device.wifiRSSIImgName }}.png">'
+						'Un-Powered': '<img title="WiFi Module Unpowered" class="wifiRSSIImage" src="static/img/wifiRSSI-not-active.png">',
+						'Associated': '<img title="Signal Strength is {{ device.wifiRSSIStr }}" class="wifiRSSIImage" src="static/img/{{ device.wifiRSSIImgName }}.png">'
 					},
-					'defaultVal': ''
+					'defaultVal': '<img title="WiFi Module {{ device.wifiStatusStr }}" class="wifiRSSIImage" src="static/img/wifiRSSI-unknown.png">'
 				}
 			},
 			'defaultVal': ''
@@ -55,15 +55,26 @@ var classTree = {
 };
 trees.push({'val': 'button_class', 'tree': classTree, 'target': 'connection'});
 
+var wifiIPTree = {
+	'name': 'wifiStatus',
+	'trueVal': '{{ device.wifiIPAddress }}',
+	'falseVal': '0.0.0.0'
+};
+trees.push({'val': 'displayWifiIPAddress', 'tree': wifiIPTree, 'target': 'device'});
+
 var titleTree = {
-	'subAttr': 'connection',
-	'name': 'alreadyOpen',
-	'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
-	'falseVal': {
-		'name': 'notSearchableWarning',
-		'trueVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }} however, scan failed',
-		'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
-	}
+	'name': 'wifiStatus',
+	'trueVal': {
+		'name': 'alreadyOpen',
+		'subAttr': 'connection',
+		'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
+		'falseVal': {
+			'name': 'notSearchableWarning',
+			'trueVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }} however, scan failed',
+			'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
+		}
+	},
+	'falseVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via WiFi because WiFi module is unpowered'
 };
 trees.push({'val': 'button_title', 'tree': titleTree, 'target': 'connection'});
 

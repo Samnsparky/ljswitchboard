@@ -3,10 +3,10 @@
 	<div class="dacRow row-fluid">
 		<div class="centered-left span1">{{name}}</div>
 		<div class="span7 inputBar">
-		    <input id="{{register}}-control" type="range" class="slider" data-slider-min="0" data-slider-max="5" data-slider-step="0.01" data-slider-orientation="horizontal">
+		    <input id="{{register}}_input_slider" type="range" class="slider" data-slider-min="0" data-slider-max="5" data-slider-step="0.01" data-slider-orientation="horizontal">
 		</div>
 		<div class="span4 centered-left" id="{{register}}-confirmation-display">
-			<input type="number" class="" min="0" max="5" step="0.0001" style="width: 100%;" pattern="([0-4](\.\d{1,5})?|5)$">
+			<input class="spinner" id="{{register}}_input_spinner" name="spinner" value="5.06"></input>
 		</div>
 	</div>
 	{{/each}}
