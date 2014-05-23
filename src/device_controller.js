@@ -158,6 +158,10 @@ var Device = function (device, serial, connectionType, deviceType)
 
     this.getSubclass = GET_SUBCLASS_FUNCTIONS[DEVICE_TYPE_NAMES.get(deviceType.toString())](this);
 
+    this.invalidateCache = function() {
+        this.cachedName = null;
+        this.cachedFirmware = null;
+    }
     /**
      * Get the serial number for this device.
      *

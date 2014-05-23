@@ -1,3 +1,9 @@
+#device-upgrade-progress-status {
+	position: relative;
+	left: 0;
+	top: 0;
+}
+
 #firmware-select
 {
     display: none;

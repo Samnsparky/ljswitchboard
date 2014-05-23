@@ -4,15 +4,21 @@
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
-var FIRMWARE_LISTING_URL = 'http://www.labjack.com/support/firmware/t7';
+var BASE_FIRMWARE_LISTING_URL = 'http://www.labjack.com/support/firmware/t7';
+var FIRMWARE_LISTING_URL = BASE_FIRMWARE_LISTING_URL;
+var BETA_LISTING_URL = BASE_FIRMWARE_LISTING_URL+'/beta';
+var OLD_LISTING_URL = BASE_FIRMWARE_LISTING_URL+'/old';
 var DEVICE_SELECTOR_SRC = 'device_updater/device_selector.html';
 var FIRMWARE_LISTING_SRC = 'device_updater/firmware_listing.html';
 var DEVICE_SELECTOR_PANE_SELECTOR = '#device-overview';
 var FIRMWARE_LIST_SELECTOR = '#firmware-list';
 var FIRMWARE_LINK_REGEX = /href\=\".*T7firmware\_([\d\-]+)\_([\d\-]+)\.bin"/g;
 var NUM_UPGRADE_STEPS = 4.0;
+var COULD_NOT_PARSE_MSG = 'Could not find firmwares on labjack.com';
 
 var async = require('async');
+var handlebars = require('handlebars');
+var q = require('q');
 var request = require('request');
 
 var labjack_t7_upgrade = require('./labjack_t7_upgrade');
@@ -20,6 +26,14 @@ var labjack_t7_upgrade = require('./labjack_t7_upgrade');
 var selectedSerials = [];
 
 var DISABLE_WIFI_POWER = true;
+
+var ERROR_TEMPLATE = handlebars.compile(
+    '<li>Could not read {{ . }} registers</li>'
+);
+
+var HUMAN_VERSION_TEMPLATE = handlebars.compile(
+    '{{ version }} ({{ humanName }})'
+);
 
 
 /**
@@ -121,44 +135,96 @@ function UpgradeableDeviceAdapter(device)
 **/
 function getAvailableFirmwareListing(onError, onSuccess)
 {
-    request(
-        FIRMWARE_LISTING_URL,
-        function (error, response, body) {
-            if (error || response.statusCode != 200) {
-                $('#web-load-waiting-indicator').slideUp();
-                $('#no-internet-message').show();
-                $('#no-internet-message').hide();
-                $('#no-internet-message').slideDown();
-                return;
-            }
+    var nicerOnError = function (display) {
+        $('#web-load-waiting-indicator').slideUp();
+        $('#no-internet-message').show();
+        $('#no-internet-message').hide();
+        $('#no-internet-message').slideDown();
+        $('#internet-controls').html(COULD_NOT_PARSE_MSG);
+    };
 
-            var firmwareListing = [];
-            var match = FIRMWARE_LINK_REGEX.exec(body);
-            var targetURL = match[0].replace(/href\=\"/g, '');
-            targetURL = targetURL.replace(/\"/g, '');
-
-            while (match !== null) {
-                firmwareListing.push(
-                    {
-                        version: parseFloat(match[1])/10000,
-                        latest: false,
-                        url: targetURL
+    var innerRequest = function (url, humanName, hasLatest) {
+        return function (overallFirmwareListing) {
+            var innerDeferred = q.defer();
+            request(
+                url,
+                function (error, response, body) {
+                    if (error || response.statusCode != 200) {
+                        $('#internet-error-list').append(
+                            ERROR_TEMPLATE(humanName)
+                        );
+                        innerDeferred.resolve(overallFirmwareListing);
+                        return;
                     }
-                );
-                match = FIRMWARE_LINK_REGEX.exec(body);
-            }
 
-            var numFirmwares = firmwareListing.length;
-            var highestFirmware = firmwareListing[0];
-            for (var i=1; i<numFirmwares; i++) {
-                if (highestFirmware.version < firmwareListing[i].version)
-                    highestFirmware = firmwareListing[i];
-            }
-            highestFirmware.latest = true;
+                    var firmwareListing = [];
+                    var match = FIRMWARE_LINK_REGEX.exec(body);
+                    var targetURL = match[0].replace(/href\=\"/g, '');
+                    targetURL = targetURL.replace(/\"/g, '');
 
-            onSuccess(firmwareListing);
-        }
+                    while (match !== null) {
+                        var version = (parseFloat(match[1])/10000).toFixed(4);
+                        var humanVersion = HUMAN_VERSION_TEMPLATE({
+                            version: version,
+                            humanName: humanName
+                        });
+
+                        firmwareListing.push(
+                            {
+                                version: version,
+                                latest: false,
+                                humanVersion: humanVersion,
+                                url: targetURL
+                            }
+                        );
+                        match = FIRMWARE_LINK_REGEX.exec(body);
+                    }
+
+                    // TODO: Display betas at lowest
+                    var numFirmwares = firmwareListing.length;
+                    var highestFirmware = firmwareListing[0];
+                    for (var i=1; i<numFirmwares; i++) {
+                        if (highestFirmware.version < firmwareListing[i].version)
+                            highestFirmware = firmwareListing[i];
+                    }
+
+                    if (hasLatest)
+                        highestFirmware.latest = true;
+
+                    overallFirmwareListing = overallFirmwareListing.concat(
+                        firmwareListing
+                    );
+                    innerDeferred.resolve(overallFirmwareListing);
+                }
+            );
+
+            return innerDeferred.promise;
+        };
+    };
+
+    var futures = [
+        innerRequest(FIRMWARE_LISTING_URL, 'current', true),
+        innerRequest(BETA_LISTING_URL, 'beta', false),
+        innerRequest(OLD_LISTING_URL, 'old', false)
+    ];
+
+    var finalPromise = futures.reduce(
+        function (lastPromise, currentPromise) {
+            if (lastPromise === null)
+                return currentPromise([]);
+            else
+                return lastPromise.then(currentPromise);
+        },
+        null
     );
+
+    finalPromise.then(function (firmwareListing) {
+        if (firmwareListing.length === 0)
+            nicerOnError();
+        else
+            $('#internet-error-list').remove();
+        onSuccess(firmwareListing);
+    })
 }
 
 
@@ -312,6 +378,12 @@ function updateFirmware (firmwareFileLocation) {
                 callback();
         };
 
+        this.displayStatusText = function (value, callback) {
+            $('#device-upgrade-progress-status').html(value);
+            if (callback !== undefined)
+                callback();
+        };
+
         this.update(0);
     };
 
@@ -342,6 +414,7 @@ function updateFirmware (firmwareFileLocation) {
                         firmwareDisplaySelector += '-firmware-display';
                         device.device = bundle.getDevice();
                         console.log(device.device);
+                        device.invalidateCache();
                         numUpgraded++;
                         $(firmwareDisplaySelector).html(
                             bundle.getFirmwareVersion()

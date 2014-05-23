@@ -33,7 +33,7 @@
     },
     {
         "name": "analog_outputs",
-        "active": true
+        "active": false
     },
     {
         "name": "analog_outputs_fw",
