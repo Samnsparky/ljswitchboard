@@ -38,9 +38,11 @@ function module() {
     this.bufferedValues = dict();
     this.bufferedOutputValues = dict();
 
+    this.hasChanges = false;
+
     this.DAC_CHANNEL_READ_DELAY = 2;
 
-    this.DAC_CHANNEL_PRECISION = 8;
+    this.DAC_CHANNEL_PRECISION = 3;
 
     
 
@@ -69,17 +71,15 @@ function module() {
             onSuccess();
         };
         var writeBufferedDACValues = function(data, onSuccess) {
-            console.log('in writeBufferedDACValues');
-            self.bufferedOutputValues.forEach(function(newVal,address){
-                var curVal = self.currentValues.get(address);
-                // Check to see if the data is new
-                if(newVal != curVal) {
-                    // Value is not what is currently on the device
+            if (self.hasChanges) {
+                // console.log('in writeBufferedDACValues');
+                self.bufferedOutputValues.forEach(function(newVal,address){
                     console.log('Updating',address,'with',newVal);
                     self.activeDevice.write(address,newVal);
                     self.currentValues.set(address,newVal);
-                }
-            })
+                });
+                self.hasChanges = false;
+            }
             onSuccess();
         }
         var genericCallback = function(data, onSuccess) {
@@ -149,6 +149,8 @@ function module() {
                 value = setupBinding.result;
             }
             self.currentValues.set(name,value);
+            self.bufferedOutputValues.set(name,value);
+            self.hasChanges = false;
         });
 
         self.moduleContext.outputs = self.DACRegisters;
@@ -159,9 +161,33 @@ function module() {
     this.formatVoltageTooltip = function(value) {
         return sprintf.sprintf("%.2f V", value);
     };
+    this.writeDisplayedVoltage = function(register, selectedVoltage) {
+        console.log(register,selectedVoltage);
+        self.bufferedOutputValues.set(register,selectedVoltage);
+        $('#' + register + '_input_slider').slider('setValue', selectedVoltage);
+        $('#' + register + '_input_spinner').spinner('value', selectedVoltage);
+        self.hasChanges = true;
+    }
     this.onVoltageSelected = function(event) {
-        var selectedVoltage = Number($('#'+event.target.id).val());
-        console.log('Voltage Selected',selectedVoltage);
+        var firingID = event.target.id;
+        var selectedVoltage;
+
+        if (firingID.search('_input_spinner') > 0) {
+            selectedVoltage = Number(
+                $('#'+firingID).spinner('value')
+            );
+        } else {
+            selectedVoltage = Number(
+                $('#'+firingID).data('slider').getValue()
+            );
+        }
+
+        var register = firingID
+        .replace('_input_spinner', '')
+        .replace('_input_slider', '');
+
+        console.log('newVal',typeof(selectedVoltage),selectedVoltage,register);
+        self.writeDisplayedVoltage(register,selectedVoltage);
     };
     // function onVoltageSelected(event)
     // {
@@ -186,21 +212,40 @@ function module() {
     **/
     this.createSliders = function()
     {
-        $('.slider').slider(
-            {formater: self.formatVoltageTooltip, value: 0}
-        ).on('slideStop', self.onVoltageSelected);
+        $('.slider').unbind();
+        var sliderObj = $('.slider').slider(
+            {'formater': self.formatVoltageTooltip, 'value': 4.9}
+        );
+        // sliderObj.data('slider').setValue(1);
+        sliderObj.bind('slide', self.onVoltageSelected);
+        // $('.slider').slider(
+        //     {'formater': self.formatVoltageTooltip, 'value': 0}
+        // ).
     }
     this.createSpinners = function() {
+        $( ".spinner" ).unbind();
         $( ".spinner" ).spinner({
-            step: 0.01,
-            numberFormat: "nV"
+            'step': 0.001,
+            'numberFormat': "nV",
+            'max': 5,
+            'min': 0,
+            'spin': self.onVoltageSelected
+            // 'stop': self.onVoltageSelected
         });
     }
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        self.createSliders();
         self.createSpinners();
         onSuccess();
     };
+    this.onTemplateDisplayed = function(framework, onError, onSuccess) {
+        // console.log('in onTemplateDisplayed');
+        self.createSliders();    
+        self.DACRegisters.forEach(function(register){
+            var val = self.currentValues.get(register.register);
+            self.writeDisplayedVoltage(register.register,val);
+        });
+        onSuccess();
+    }
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
         // console.log('in onRegisterWrite',binding);
         onSuccess();
