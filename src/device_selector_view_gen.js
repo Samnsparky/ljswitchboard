@@ -80,24 +80,20 @@ trees.push({'val': 'button_title', 'tree': titleTree, 'target': 'connection'});
 
 exports.addDeviceSelectorVals = function (device, connection) {
 	var findTreeVal = function (treeInstruct, target) {
-		console.log(treeInstruct);
 		if (treeInstruct.subAttr) {
 			target = target[treeInstruct.subAttr];
 		}
 
-		console.log('=-------=', target);
 		var targetAttr = target[treeInstruct.name];
 		var retVal;
 
 		if (treeInstruct.trueVal !== undefined) {
-			console.log('***********', treeInstruct, target);
 			if (targetAttr) {
 				retVal = treeInstruct.trueVal;
 			} else {
 				retVal = treeInstruct.falseVal;
 			}
 		} else {
-			console.log('***********-------', treeInstruct);
 			if (treeInstruct.vals[targetAttr]) {
 				retVal = treeInstruct.vals[targetAttr];
 			} else {
@@ -105,14 +101,11 @@ exports.addDeviceSelectorVals = function (device, connection) {
 			}
 		}
 
-		console.log('RET VAL RET VAL RET VAL:', retVal);
 		if (retVal === null) {
 			return null;
 		} else if (retVal.name) {
-			console.log('=- :) -- :) --=');
 			return findTreeVal(retVal, target)
 		} else {
-			console.log('=- :-/ -- :-/ --=');
 			return handlebars.compile(retVal)({
 				'device': device,
 				'current': target
@@ -120,7 +113,6 @@ exports.addDeviceSelectorVals = function (device, connection) {
 		}
 	};
 
-	console.log('WTF??????');
 	device.connection = connection;
 	trees.forEach(function (treeSpec) {
 		var newVal = findTreeVal(treeSpec.tree, device);
