@@ -180,8 +180,12 @@ function getAvailableFirmwareListing(onError, onSuccess)
                         match = FIRMWARE_LINK_REGEX.exec(body);
                     }
 
-                    // TODO: Display betas at lowest
                     var numFirmwares = firmwareListing.length;
+                    if (numFirmwares == 0) {
+                        innerDeferred.resolve(overallFirmwareListing);
+                        return;
+                    }
+
                     var highestFirmware = firmwareListing[0];
                     for (var i=1; i<numFirmwares; i++) {
                         if (highestFirmware.version < firmwareListing[i].version)
