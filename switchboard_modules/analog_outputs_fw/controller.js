@@ -171,23 +171,35 @@ function module() {
     this.onVoltageSelected = function(event) {
         var firingID = event.target.id;
         var selectedVoltage;
+        var isValidValue = false;
+        var register = firingID
+            .replace('_input_spinner', '')
+            .replace('_input_slider', '');
 
         if (firingID.search('_input_spinner') > 0) {
-            selectedVoltage = Number(
-                $('#'+firingID).spinner('value')
-            );
+            var spinText = $('#'+firingID).val();
+            if(spinText !== null) {
+                isValidValue = (spinText !== null && spinText.match(/[\d]+(\.\d+)?$/g) !== null);
+                selectedVoltage = Number(spinText);
+            }
         } else {
             selectedVoltage = Number(
                 $('#'+firingID).data('slider').getValue()
             );
+            isValidValue = true;
         }
-
-        var register = firingID
-        .replace('_input_spinner', '')
-        .replace('_input_slider', '');
-
-        console.log('newVal',typeof(selectedVoltage),selectedVoltage,register);
-        self.writeDisplayedVoltage(register,selectedVoltage);
+        if(isValidValue) {
+            console.log('newVal',typeof(selectedVoltage),selectedVoltage,register);
+            $('#'+register+'_input_spinner').css('border', 'none');
+            self.writeDisplayedVoltage(register,selectedVoltage);
+        } else {
+            if (firingID.search('_input_spinner') > 0) {
+                var spinText = $('#'+firingID).val();
+                if (spinText !== null && !spinText.match(/\d+\./g)) {
+                    $('#'+register+'_input_spinner').css('border', '1px solid red');
+                }
+            }
+        }
     };
     // function onVoltageSelected(event)
     // {
@@ -229,8 +241,8 @@ function module() {
             'numberFormat': "nV",
             'max': 5,
             'min': 0,
-            'spin': self.onVoltageSelected
-            // 'stop': self.onVoltageSelected
+            'spin': self.onVoltageSelected,
+            'stop': self.onVoltageSelected
         });
     }
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
