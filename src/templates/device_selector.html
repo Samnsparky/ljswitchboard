@@ -48,7 +48,7 @@
                                         <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{.}}</td></tr>
                                         {{/ethernetIPAddress}}
                                         {{#if specialText}}{{#if ../wifiIPAddress }}
-                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value">{{../wifiIPAddress}}{{{../button_image}}}</td></tr>
+                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value"><span class="wifiIPAddressText">{{../displayWifiIPAddress}}</span>{{{../button_image}}}</td></tr>
                                         {{/if}}{{/if}}
                                     </tbody>
                                 </table>

@@ -1,13 +1,13 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "ljmDeviceParameters": 
     [
         {
-            "serialNumber":"470010533",
+            "serialNumber":"470010548",
             "connectionType":"Ethernet"
         },
         {
-            "serialNumber":"470010620",
+            "serialNumber":"1-470010620",
             "connectionType":"Ethernet"
         },
         {
@@ -61,8 +61,8 @@
         }
     ],
     "displayDevTools": false,
-    "overrideAutoModuleLoad": false,
-    "moduleName": "analog_outputs_fw",
+    "overrideAutoModuleLoad": true,
+    "moduleName": "device_updater",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
 }

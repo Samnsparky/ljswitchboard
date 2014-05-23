@@ -140,6 +140,10 @@
     display: inline-block;
     font-size: 12px;
 }
+.wifiIPAddressText {
+    width: 85px;
+    display: inline-block;
+}
 .wifiRSSIImage {
     position: relative;
     width: 30px;

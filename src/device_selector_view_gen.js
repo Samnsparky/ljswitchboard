@@ -24,12 +24,12 @@ var imageTree = {
 			'name': 'specialText',
 			'vals': {
 				' Pro': {
-					'subAttr': 'connection',
-					'name': 'typeStr',
+					'name': 'wifiStatusStr',
 					'vals': {
-						'Wifi': '<img title="Signal Strength is {{ device.wifiRSSIStr }}" class="wifiRSSIImage" src="static/img/{{ device.wifiRSSIImgName }}.png">'
+						'Un-Powered': '<img title="WiFi Module Unpowered" class="wifiRSSIImage" src="static/img/wifiRSSI-not-active.png">',
+						'Associated': '<img title="Signal Strength is {{ device.wifiRSSIStr }}" class="wifiRSSIImage" src="static/img/{{ device.wifiRSSIImgName }}.png">'
 					},
-					'defaultVal': ''
+					'defaultVal': '<img title="WiFi Module {{ device.wifiStatusStr }}" class="wifiRSSIImage" src="static/img/wifiRSSI-unknown.png">'
 				}
 			},
 			'defaultVal': ''
@@ -55,38 +55,45 @@ var classTree = {
 };
 trees.push({'val': 'button_class', 'tree': classTree, 'target': 'connection'});
 
+var wifiIPTree = {
+	'name': 'wifiStatus',
+	'trueVal': '{{ device.wifiIPAddress }}',
+	'falseVal': '0.0.0.0'
+};
+trees.push({'val': 'displayWifiIPAddress', 'tree': wifiIPTree, 'target': 'device'});
+
 var titleTree = {
-	'subAttr': 'connection',
-	'name': 'alreadyOpen',
-	'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
-	'falseVal': {
-		'name': 'notSearchableWarning',
-		'trueVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }} however, scan failed',
-		'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
-	}
+	'name': 'wifiStatus',
+	'trueVal': {
+		'name': 'alreadyOpen',
+		'subAttr': 'connection',
+		'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
+		'falseVal': {
+			'name': 'notSearchableWarning',
+			'trueVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }} however, scan failed',
+			'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
+		}
+	},
+	'falseVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via WiFi because WiFi module is unpowered'
 };
 trees.push({'val': 'button_title', 'tree': titleTree, 'target': 'connection'});
 
 exports.addDeviceSelectorVals = function (device, connection) {
 	var findTreeVal = function (treeInstruct, target) {
-		console.log(treeInstruct);
 		if (treeInstruct.subAttr) {
 			target = target[treeInstruct.subAttr];
 		}
 
-		console.log('=-------=', target);
 		var targetAttr = target[treeInstruct.name];
 		var retVal;
 
 		if (treeInstruct.trueVal !== undefined) {
-			console.log('***********', treeInstruct, target);
 			if (targetAttr) {
 				retVal = treeInstruct.trueVal;
 			} else {
 				retVal = treeInstruct.falseVal;
 			}
 		} else {
-			console.log('***********-------', treeInstruct);
 			if (treeInstruct.vals[targetAttr]) {
 				retVal = treeInstruct.vals[targetAttr];
 			} else {
@@ -94,14 +101,11 @@ exports.addDeviceSelectorVals = function (device, connection) {
 			}
 		}
 
-		console.log('RET VAL RET VAL RET VAL:', retVal);
 		if (retVal === null) {
 			return null;
 		} else if (retVal.name) {
-			console.log('=- :) -- :) --=');
 			return findTreeVal(retVal, target)
 		} else {
-			console.log('=- :-/ -- :-/ --=');
 			return handlebars.compile(retVal)({
 				'device': device,
 				'current': target
@@ -109,7 +113,6 @@ exports.addDeviceSelectorVals = function (device, connection) {
 		}
 	};
 
-	console.log('WTF??????');
 	device.connection = connection;
 	trees.forEach(function (treeSpec) {
 		var newVal = findTreeVal(treeSpec.tree, device);

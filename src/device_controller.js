@@ -62,6 +62,7 @@ var SCAN_REQUEST_LIST = [
             'DEVICE_NAME_DEFAULT',
             'HARDWARE_INSTALLED',
             'ETHERNET_IP',
+            'WIFI_STATUS',
             'WIFI_IP',
             'WIFI_RSSI'
         ]
@@ -86,7 +87,19 @@ var WIFI_RSSI_IMAGES = [
     {'val':-60,'img':'wifiRSSI-1'},
     {'val':-70,'img':'wifiRSSI-0'},
     {'val':-200,'img':'wifiRSSI-0'},
-]
+];
+var WIFI_STATUS_DISPLAY_DATA = {
+    2900: {'display':true,'str':'Associated'},
+    2901: {'display':true,'str':'Associating'},
+    2902: {'display':true,'str':'Association Failed'},
+    2903: {'display':false,'str':'Un-Powered'},
+    2904: {'display':true,'str':'Booting Up'},
+    2905: {'display':true,'str':'Could Not Start'},
+    2906: {'display':true,'str':'Applying Settings'},
+    2907: {'display':true,'str':'DHCP Started'},
+    2908: {'display':true,'str':'Unknown'},
+    2909: {'display':true,'str':'Other'}
+};
 
 var NUM_SCAN_RETRIES = 4;
 var LIST_ALL_SCAN_RETRY_ERROR = 1233;
@@ -145,6 +158,10 @@ var Device = function (device, serial, connectionType, deviceType)
 
     this.getSubclass = GET_SUBCLASS_FUNCTIONS[DEVICE_TYPE_NAMES.get(deviceType.toString())](this);
 
+    this.invalidateCache = function() {
+        this.cachedName = null;
+        this.cachedFirmware = null;
+    }
     /**
      * Get the serial number for this device.
      *
@@ -1122,6 +1139,15 @@ var unpackDeviceInfo = function (driverListingItem) {
     };
     unpackStrategies['ETHERNET_IP'] = parseEthernetIPAddress;
 
+    var parseWiFiStatus = function (dataItem) {
+        var newStatus = dataItem.val;
+        var data = WIFI_STATUS_DISPLAY_DATA[newStatus];
+
+        retDeviceInfo.wifiStatus = data.display;
+        retDeviceInfo.wifiStatusStr = data.str;
+    };
+    unpackStrategies['WIFI_STATUS'] = parseWiFiStatus;
+
     var parseWiFiIPAddress = function (dataItem) {
         var ipStr = formatAsIP(dataItem.val);
         retDeviceInfo.wifiIPAddress = ipStr;
@@ -1198,7 +1224,9 @@ var unpackDeviceInfo = function (driverListingItem) {
         'avgWiFiRSSI': 0,
         'wifiRSSIStr': '0dB',
         'wifiRSSIImgName': '',
-        'numInAvgWiFiRSSI': 0
+        'numInAvgWiFiRSSI': 0,
+        'wifiStatus': 'Un-Powered',
+        'wifiStatusStr': false
     }
 
     driverListingItem.data.forEach(function (dataItem) {

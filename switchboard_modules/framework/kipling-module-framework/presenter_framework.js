@@ -619,6 +619,8 @@ function Framework() {
         }
         return innerDeferred.promise;
     }
+    var qExecOnTemplateDisplayed = this.qExecOnTemplateDisplayed;
+    
     this.qExecOnTemplateLoaded = function() {
         var innerDeferred = q.defer();
         try{
@@ -1947,6 +1949,7 @@ function Framework() {
         .then(self.qShowUserTemplate, self.qExecOnLoadError)
 
         // Report that the module's template has been displayed
+        .then(self.qExecOnTemplateDisplayed, self.qExecOnLoadError)
 
         .then(deferred.resolve, deferred.reject);
         return deferred.promise;
@@ -2165,7 +2168,6 @@ function Framework() {
                     }
                 );
             } else {
-                console.log('in handleIOError', details);
                 innerDeferred.reject(details);
             }
             return innerDeferred.promise;
@@ -2258,8 +2260,12 @@ function Framework() {
             self.fire(
                 'onRefresh',
                 [ bindingsInfo ],
-                innerDeferred.reject,
-                function () { innerDeferred.resolve(bindingsInfo); }
+                function() {
+                    innerDeferred.reject();
+                },
+                function () { 
+                    innerDeferred.resolve(bindingsInfo); 
+                }
             );
             return innerDeferred.promise;
         };
@@ -2594,6 +2600,9 @@ function Framework() {
 
         // Display the module's template
         .then(self.qShowUserTemplate, self.qExecOnLoadError)
+
+        // Report that the module's template has been displayed
+        .then(self.qExecOnTemplateDisplayed, self.qExecOnLoadError)
 
         // Re-draw the window to prevent window-disapearing issues
         .then(qRunRedraw, self.qExecOnLoadError)

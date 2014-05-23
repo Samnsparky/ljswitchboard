@@ -24,6 +24,25 @@ var ALLOWED_IMAGE_INFO_DEVICE_TYPES = [
 var EXPECTED_ZEROED_MEM_VAL = 4294967295; // 0xFFFFFFFF
 var EXPECTED_REBOOT_WAIT = 5000;
 
+var CHECKPOINT_ONE_PERCENT = 10;
+var CHECKPOINT_TWO_PERCENT = 30;
+var CHECKPOINT_THREE_PERCENT = 85;
+var CHECKPOINT_FOUR_PERCENT = 90;
+var CHECKPOINT_FIVE_PERCENT = 100;
+
+
+var curOffset = 0;
+var curScaling = 0;
+var shouldUpdateProgressBar = false;
+var globalProgressListener;
+
+function updateProgressScaled (value) {
+    if (shouldUpdateProgressBar) {
+        var scaledValue = curScaling * value + curOffset;
+        globalProgressListener.update(scaledValue, function () {});
+    }
+};
+
 
 /**
  * Reject a deferred / promise because of an error.
@@ -670,10 +689,14 @@ var createFlashOperation = function (bundle, startAddress, lengthInts, sizeInts,
         executeOperations.push(execution);
     }
 
+    var numIntsWritten = 0;
+
     async.reduce(
         executeOperations,
         [],
         function (lastMemoryResult, currentExecution, callback) {
+            numIntsWritten += sizeInts;
+            updateProgressScaled(numIntsWritten);
             currentExecution(lastMemoryResult).then(
                 function (newMemory){
                     callback(null, newMemory);
@@ -878,26 +901,39 @@ exports.writeFlash = function(bundle, startAddress, length, size, key, data)
  * @return {q.promise} Promise that resolves to the provided bundle after the
  *      write is complete.
 **/
-exports.writeImage = function(bundle)
+exports.writeImage = function(minPercent, maxPercent)
 {
-    var deferred = q.defer();
+    return function (bundle) {
+        var deferred = q.defer();
+        shouldUpdateProgressBar = true;
 
-    // 4 bytes per integer
-    var numberOfIntegers = bundle.getFirmwareImage().length / 4;
+        // 4 bytes per integer
+        var numberOfIntegers = bundle.getFirmwareImage().length / 4;
+        var perecentScaleFactor = (maxPercent - minPercent)/numberOfIntegers;
+        curScaling = perecentScaleFactor;
+        curOffset = minPercent;
 
-    exports.writeFlash(
-        bundle,
-        driver_const.T7_EFAdd_ExtFirmwareImage,
-        numberOfIntegers,
-        driver_const.T7_FLASH_BLOCK_WRITE_SIZE,
-        driver_const.T7_EFkey_ExtFirmwareImage,
-        bundle.getFirmwareImage()
-    ).then(
-        function (memoryContents) { deferred.resolve(bundle); },
-        createSafeReject(deferred)
-    );
+        exports.writeFlash(
+            bundle,
+            driver_const.T7_EFAdd_ExtFirmwareImage,
+            numberOfIntegers,
+            driver_const.T7_FLASH_BLOCK_WRITE_SIZE,
+            driver_const.T7_EFkey_ExtFirmwareImage,
+            bundle.getFirmwareImage()
+        ).then(
+            function (memoryContents) {
+                shouldUpdateProgressBar = false;
+                deferred.resolve(bundle);
+            },
+            function (err) {
+                var callback = createSafeReject(deferred);
+                shouldUpdateProgressBar = false;
+                callback(err);
+            }
+        );
 
-    return deferred.promise;
+        return deferred.promise;
+    };
 };
 
 
@@ -911,28 +947,40 @@ exports.writeImage = function(bundle)
  * @return {q.promise} Promise that resolves to the provided bundle after the
  *      write is complete.
 **/
-exports.writeImageInformation = function(bundle)
+exports.writeImageInformation = function(minPercent, maxPercent)
 {
-    var deferred = q.defer();
+    return function (bundle) {
+        var deferred = q.defer();
 
-    var rawImageInfo = bundle.getFirmwareImageInformation().rawImageInfo;
+        var rawImageInfo = bundle.getFirmwareImageInformation().rawImageInfo;
 
-    // 4 bytes per integer
-    var numberOfIntegers = rawImageInfo.length / 4;
+        // 4 bytes per integer
+        var numberOfIntegers = rawImageInfo.length / 4;
+        var perecentScaleFactor = (maxPercent - minPercent)/numberOfIntegers;
+        curScaling = perecentScaleFactor;
+        curOffset = minPercent;
 
-    exports.writeFlash(
-        bundle,
-        driver_const.T7_EFAdd_ExtFirmwareImgInfo,
-        numberOfIntegers,
-        driver_const.T7_FLASH_BLOCK_WRITE_SIZE,
-        driver_const.T7_EFkey_ExtFirmwareImgInfo,
-        rawImageInfo
-    ).then(
-        function (memoryContents) { deferred.resolve(bundle); },
-        createSafeReject(deferred)
-    );
+        exports.writeFlash(
+            bundle,
+            driver_const.T7_EFAdd_ExtFirmwareImgInfo,
+            numberOfIntegers,
+            driver_const.T7_FLASH_BLOCK_WRITE_SIZE,
+            driver_const.T7_EFkey_ExtFirmwareImgInfo,
+            rawImageInfo
+        ).then(
+            function (memoryContents) {
+                shouldUpdateProgressBar = false;
+                deferred.resolve(bundle);
+            },
+            function (err) {
+                var callback = createSafeReject(deferred);
+                shouldUpdateProgressBar = false;
+                callback(err);
+            }
+        );
 
-    return deferred.promise;
+        return deferred.promise;
+    };
 };
 
 
@@ -1120,24 +1168,45 @@ exports.updateFirmware = function(device, firmwareFileLocation,
             return innerDeferred.promise;
         };
     };
+    var updateStatusText = function (value) {
+        return function (bundle) {
+            var innerDeferred = q.defer();
+            progressListener.displayStatusText(value, function () {
+                innerDeferred.resolve(bundle);
+            });
+            return innerDeferred.promise;
+        };
+    };
+
+    globalProgressListener = progressListener;
 
     // 12 steps
     exports.readFirmwareFile(firmwareFileLocation, reportError)
     .then(injectDevice, reportError)
     .then(exports.checkCompatibility, reportError)
-    .then(updateProgress(10), reportError)
+    .then(updateProgress(CHECKPOINT_ONE_PERCENT), reportError)
+    .then(updateStatusText('Erasing image...'), reportError)
     .then(exports.eraseImage, reportError)
     .then(exports.eraseImageInformation, reportError)
     //.then(exports.checkErase, reportError)
-    .then(updateProgress(50), reportError)
-    .then(exports.writeImage, reportError)
-    .then(exports.writeImageInformation, reportError)
+    .then(updateProgress(CHECKPOINT_TWO_PERCENT), reportError)
+    .then(updateStatusText('Writing image...'), reportError)
+    .then(exports.writeImage(
+        CHECKPOINT_TWO_PERCENT,
+        CHECKPOINT_THREE_PERCENT
+    ), reportError)
+    .then(exports.writeImageInformation(
+        CHECKPOINT_THREE_PERCENT,
+        CHECKPOINT_FOUR_PERCENT
+    ), reportError)
     //.then(exports.checkImageWrite, reportError)
-    .then(updateProgress(90), reportError)
+    .then(updateProgress(CHECKPOINT_FOUR_PERCENT), reportError)
+    .then(updateStatusText('Restarting...'), reportError)
     .then(exports.restartAndUpgrade, reportError)
+    .then(updateStatusText('<br>Waiting for device(s)...'), reportError)
     .then(exports.waitForEnumeration, reportError)
     .then(exports.checkNewFirmware, reportError)
-    .then(updateProgress(100), reportError)
+    .then(updateProgress(CHECKPOINT_FIVE_PERCENT), reportError)
     .then(deferred.resolve, reportError);
 
     return deferred.promise;

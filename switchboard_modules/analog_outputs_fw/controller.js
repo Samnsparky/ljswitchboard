@@ -19,7 +19,7 @@
 
 // Constant that determines device polling rate.  Use an increased rate to aid
 // in user experience.
-var MODULE_UPDATE_PERIOD_MS = 1000;
+var MODULE_UPDATE_PERIOD_MS = 500;
 
 // Constant that can be set to disable auto-linking the module to the framework
 var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
@@ -34,6 +34,15 @@ function module() {
     this.moduleContext = {};
     this.activeDevice = undefined;
 
+    this.currentValues = dict();
+    this.bufferedValues = dict();
+    this.bufferedOutputValues = dict();
+
+    this.hasChanges = false;
+
+    this.DAC_CHANNEL_READ_DELAY = 2;
+
+    this.DAC_CHANNEL_PRECISION = 3;
 
     
 
@@ -54,9 +63,25 @@ function module() {
             onSuccess();
         };
         var genericPeriodicCallback = function(data, onSuccess) {
-            console.log('genericPeriodicCallback');
+            
+            var name = data.binding.binding;
+            var value = Number(data.value.toFixed(self.DAC_CHANNEL_PRECISION));
+            self.bufferedValues.set(name,value);
+            // console.log('genericPeriodicCallback',data.binding.binding,value);
             onSuccess();
         };
+        var writeBufferedDACValues = function(data, onSuccess) {
+            if (self.hasChanges) {
+                // console.log('in writeBufferedDACValues');
+                self.bufferedOutputValues.forEach(function(newVal,address){
+                    console.log('Updating',address,'with',newVal);
+                    self.activeDevice.write(address,newVal);
+                    self.currentValues.set(address,newVal);
+                });
+                self.hasChanges = false;
+            }
+            onSuccess();
+        }
         var genericCallback = function(data, onSuccess) {
             console.log('genericCallback');
             onSuccess();
@@ -68,6 +93,7 @@ function module() {
             var binding = {};
             binding.bindingName = regInfo.name;
             binding.smartName = 'readRegister';
+            binding.iterationDelay = self.DAC_CHANNEL_READ_DELAY;
             binding.periodicCallback = genericPeriodicCallback;
             binding.configCallback = genericConfigCallback;
             smartBindings.push(binding);
@@ -76,68 +102,24 @@ function module() {
         // Add DAC readRegisters
         self.DACRegisters.forEach(addSmartBinding);
 
-        // var customSmartBindings = [
-        //     {
-        //         // Define binding to handle Ethernet-Status updates.
-        //         bindingName: 'ethernetStatusManager', 
-        //         smartName: 'periodicFunction',
-        //         periodicCallback: ethernetStatusListner
-        //     },{
-        //         // Define binding to handle Ethernet Power button presses.
-        //         bindingName: 'ethernetPowerButton', 
-        //         smartName: 'clickHandler',
-        //         callback: self.ethernetPowerButton
-        //     },{
-        //         // Define binding to handle Ethernet DHCP-select button presses.
-        //         bindingName: 'ethernet-DHCP-Select-Toggle', 
-        //         smartName: 'clickHandler',
-        //         callback: self.ethernetDHCPSelect
-        //     },{
-        //         // Define binding to handle Ethernet Apply button presses.
-        //         bindingName: 'ethernetApplyButton', 
-        //         smartName: 'clickHandler',
-        //         callback: self.ethernetApplyButton
-        //     },{
-        //         // Define binding to handle Ethernet Cancel button presses.
-        //         bindingName: 'ethernetCancelButton', 
-        //         smartName: 'clickHandler',
-        //         callback: self.ethernetCancelButton
-        //     },{
-        //         // Define binding to handle Ethernet Cancel button presses.
-        //         bindingName: 'ethernetHelpButton', 
-        //         smartName: 'clickHandler',
-        //         callback: self.ethernetHelpButton
-        //     },{
-        //         // Define binding to handle Wifi Power button presses.
-        //         bindingName: 'wifiPowerButton', 
-        //         smartName: 'clickHandler',
-        //         callback: self.wifiPowerButton
-        //     },{
-        //         // Define binding to handle Wifi DHCP-select button presses.
-        //         bindingName: 'wifi-DHCP-Select-Toggle', 
-        //         smartName: 'clickHandler',
-        //         callback: self.wifiDHCPSelect
-        //     },{
-        //         // Define binding to handle Wifi Apply button presses.
-        //         bindingName: 'wifiApplyButton', 
-        //         smartName: 'clickHandler',
-        //         callback: self.wifiApplyButton
-        //     },{
-        //         // Define binding to handle Wifi Cancel button presses.
-        //         bindingName: 'wifiCancelButton', 
-        //         smartName: 'clickHandler',
-        //         callback: self.wifiCancelButton
-        //     },{
-        //         // Define binding to handle Ethernet Cancel button presses.
-        //         bindingName: 'wifiHelpButton', 
-        //         smartName: 'clickHandler',
-        //         callback: self.wifiHelpButton
-        //     }
-        // ];
+        var customSmartBindings = [
+            {
+                // Define binding to handle Ethernet-Status updates.
+                bindingName: 'dacUpdater', 
+                smartName: 'periodicFunction',
+                periodicCallback: writeBufferedDACValues
+            }
+            // ,{
+            //     // Define binding to handle Ethernet Cancel button presses.
+            //     bindingName: 'wifiHelpButton', 
+            //     smartName: 'clickHandler',
+            //     callback: self.wifiHelpButton
+            // }
+        ];
         // Save the smartBindings to the framework instance.
         framework.putSmartBindings(smartBindings);
         // Save the customSmartBindings to the framework instance.
-        // framework.putSmartBindings(customSmartBindings);
+        framework.putSmartBindings(customSmartBindings);
         onSuccess();
     };
     
@@ -158,6 +140,19 @@ function module() {
     };
 
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
+        setupBindings.forEach(function(setupBinding){
+            var name = setupBinding.address;
+            var value;
+            if(setupBinding.status === 'error') {
+                value = 0;
+            } else {
+                value = setupBinding.result;
+            }
+            self.currentValues.set(name,value);
+            self.bufferedOutputValues.set(name,value);
+            self.hasChanges = false;
+        });
+
         self.moduleContext.outputs = self.DACRegisters;
         framework.setCustomContext(self.moduleContext);
         onSuccess();
@@ -166,9 +161,33 @@ function module() {
     this.formatVoltageTooltip = function(value) {
         return sprintf.sprintf("%.2f V", value);
     };
+    this.writeDisplayedVoltage = function(register, selectedVoltage) {
+        console.log(register,selectedVoltage);
+        self.bufferedOutputValues.set(register,selectedVoltage);
+        $('#' + register + '_input_slider').slider('setValue', selectedVoltage);
+        $('#' + register + '_input_spinner').spinner('value', selectedVoltage);
+        self.hasChanges = true;
+    }
     this.onVoltageSelected = function(event) {
-        var selectedVoltage = Number($('#'+event.target.id).val());
-        console.log('Voltage Selected',selectedVoltage);
+        var firingID = event.target.id;
+        var selectedVoltage;
+
+        if (firingID.search('_input_spinner') > 0) {
+            selectedVoltage = Number(
+                $('#'+firingID).spinner('value')
+            );
+        } else {
+            selectedVoltage = Number(
+                $('#'+firingID).data('slider').getValue()
+            );
+        }
+
+        var register = firingID
+        .replace('_input_spinner', '')
+        .replace('_input_slider', '');
+
+        console.log('newVal',typeof(selectedVoltage),selectedVoltage,register);
+        self.writeDisplayedVoltage(register,selectedVoltage);
     };
     // function onVoltageSelected(event)
     // {
@@ -193,16 +212,40 @@ function module() {
     **/
     this.createSliders = function()
     {
-        $('.slider').slider(
-            {formater: self.formatVoltageTooltip, value: 0}
-        ).on('slideStop', self.onVoltageSelected);
-
-        loadCurrentDACSettings();
+        $('.slider').unbind();
+        var sliderObj = $('.slider').slider(
+            {'formater': self.formatVoltageTooltip, 'value': 4.9}
+        );
+        // sliderObj.data('slider').setValue(1);
+        sliderObj.bind('slide', self.onVoltageSelected);
+        // $('.slider').slider(
+        //     {'formater': self.formatVoltageTooltip, 'value': 0}
+        // ).
+    }
+    this.createSpinners = function() {
+        $( ".spinner" ).unbind();
+        $( ".spinner" ).spinner({
+            'step': 0.001,
+            'numberFormat': "nV",
+            'max': 5,
+            'min': 0,
+            'spin': self.onVoltageSelected
+            // 'stop': self.onVoltageSelected
+        });
     }
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        self.createSliders();
+        self.createSpinners();
         onSuccess();
     };
+    this.onTemplateDisplayed = function(framework, onError, onSuccess) {
+        // console.log('in onTemplateDisplayed');
+        self.createSliders();    
+        self.DACRegisters.forEach(function(register){
+            var val = self.currentValues.get(register.register);
+            self.writeDisplayedVoltage(register.register,val);
+        });
+        onSuccess();
+    }
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
         // console.log('in onRegisterWrite',binding);
         onSuccess();
@@ -215,7 +258,9 @@ function module() {
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        // console.log('in onRefreshed',framework.moduleName);
+        self.bufferedValues.forEach(function(value,key){
+            self.currentValues.set(key,value);
+        })
         onSuccess();
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {

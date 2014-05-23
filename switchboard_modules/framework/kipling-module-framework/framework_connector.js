@@ -46,6 +46,9 @@ try {
         if(typeof(sdModule.onTemplateLoaded) === "function") {
             sdFramework.on('onTemplateLoaded',sdModule.onTemplateLoaded); 
         }
+        if(typeof(sdModule.onTemplateDisplayed) === "function") {
+            sdFramework.on('onTemplateDisplayed',sdModule.onTemplateDisplayed); 
+        }
         if(typeof(sdModule.onRegisterWrite) === "function") {
             sdFramework.on('onRegisterWrite',sdModule.onRegisterWrite);
         }
