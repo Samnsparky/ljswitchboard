@@ -1268,7 +1268,7 @@ var ignoreNonTCP = function (innerFunc) {
             deferred.resolve();
             return deferred.promise;
         } else {
-            return tryOpenDeviceConnection();
+            return innerFunc(deviceInfo, connection);
         }
     };
 };
