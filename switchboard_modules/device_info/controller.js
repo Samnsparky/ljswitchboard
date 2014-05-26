@@ -62,7 +62,7 @@ function showDevice(device, onSuccess)
         );
         firmwareVersion = '[ could not read firmware ]'
     }
-    
+
     try {
         bootloaderVersion = device.getBootloaderVersion().toFixed(4);
     } catch (e) {
@@ -147,9 +147,18 @@ function showDevice(device, onSuccess)
                 $('#change-name-controls').slideDown();
             });
 
-            $('#change-name-button').click(function () {
+            var changeNameListener = function () {
                 var newName = $('#new-name-input').val();
                 changeDeviceName(device, newName);
+            };
+
+            $('#change-name-button').click(changeNameListener);
+
+            $('#new-name-input').keypress(function (event) {
+                if ( event.which == 13 ) {
+                    event.preventDefault();
+                    changeNameListener();
+                }
             });
 
             $('#selected-device-display').html(device.getSerial());
@@ -194,13 +203,13 @@ function changeDeviceName (device, newName)
 {
     newName = newName.replace('.', '');
     newName = newName.substr(0, 49);
-    
+
     try {
         device.setName(newName);
     } catch (e) {
         showAlert('Failed to set device name: ' + e.toString());
     }
-    
+
     $('#current-name-display').html(newName);
     $('#change-name-controls').slideUp();
 }

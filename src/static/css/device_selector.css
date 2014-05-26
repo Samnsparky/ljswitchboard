@@ -19,7 +19,7 @@
 {
     margin-left: 50px;
     margin-top: 10px;
-    
+
     /*height: 685px;
     margin-bottom: 20px;*/
 }
@@ -92,9 +92,9 @@
 
 .device-pane-popover .arrow
 {
-    width: 0; 
+    width: 0;
     margin-top: 4px;
-    height: 0; 
+    height: 0;
     border-top: 5px solid transparent;
     border-bottom: 5px solid transparent;
     border-left: 5px solid #999999;
@@ -117,7 +117,7 @@
     margin-bottom: 10px;
     padding-bottom: 10px;
     display: inline-block;
-    width: 460px;
+    width: 475px;
     padding-right: 10px;
     vertical-align: top;
     border: 1px solid #ddd;
