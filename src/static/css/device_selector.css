@@ -190,3 +190,8 @@
 {
     display: none;
 }
+
+.logo-holder {
+    text-align: center;
+    margin-bottom: 10px;
+}
