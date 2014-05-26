@@ -65,6 +65,9 @@
             {{/registers}}
         </tbody>
     </table>
+    {{^hasRegisters}}
+    <div>No registers found.</div>
+    {{/hasRegisters}}
 </div>
 <script>
 $('#register-matrix-body').ready(function () {

@@ -399,6 +399,7 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
 
     var templateVals = {
         'registers': filteredEntries,
+        'hasRegisters': filteredEntries.length > 0,
         'tags': tags,
         'currentTag': currentTag,
         'currentSearchTerm': currentSearchTerm

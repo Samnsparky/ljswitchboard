@@ -126,6 +126,12 @@
     display:none;
 }
 
+#no-reg-msg {
+    font-weight: bold;
+    font-size: 14px;
+    margin: 15px 0;
+}
+
 #register-matrix-search
 {
     margin-top: 50px;
