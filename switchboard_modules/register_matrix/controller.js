@@ -12,6 +12,7 @@ var handlebars = require('handlebars');
 var simplesets = require('simplesets');
 var q = require('q');
 
+var labjack_nodejs = require('labjack-nodejs');
 var ljmmm = require('./ljmmm');
 
 var REGISTERS_DATA_SRC = 'register_matrix/ljm_constants.json';
@@ -113,10 +114,7 @@ function getRegisterInfo()
 {
     var deferred = q.defer();
 
-    var registerInfoSrc = fs_facade.getExternalURI(REGISTERS_DATA_SRC);
-    fs_facade.getJSON(registerInfoSrc, deferred.reject, function(info){
-        deferred.resolve(info.registers);
-    });
+    deferred.resolve(device_controller.ljm_driver.constants.origConstants.registers);
 
     return deferred.promise;
 }
@@ -415,16 +413,16 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
             $(REGISTER_MATRIX_SELECTOR).html(renderedHTML);
 
             $('.toggle-info-button').click(toggleRegisterInfo);
-            
+
             $('.add-to-list-button').click(function(event){
                 addToWatchList(event, entriesByAddress);
             });
-            
+
             $('.tag-selection-link').click(function(event){
                 var tag = event.target.id.replace('-tag-selector', '');
                 searchRegisters(entries, tags, tag, currentSearchTerm);
             });
-            
+
             $('#search-button').click(function(event){
                 var term = $('#search-box').val();
                 searchRegisters(entries, tags, currentTag, term);
@@ -824,7 +822,7 @@ function splitByRetType (registers)
 {
     var numberRegisters = [];
     var stringRegisters = [];
-    
+
     registers.forEach(function (register) {
         if (register.type === 'STRING') {
             stringRegisters.push(register);
@@ -905,7 +903,7 @@ function setSelectedDevice (serial)
     var keeper = device_controller.getDeviceKeeper();
     var devices = keeper.getDevices();
     var numDevices = devices.length;
-    
+
     for (var i=0; i<numDevices; i++) {
         if (devices[i].getSerial() === serial)
             selectedDevice = devices[i];
