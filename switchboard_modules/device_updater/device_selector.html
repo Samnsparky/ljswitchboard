@@ -26,4 +26,13 @@
     </tr>
     {{/devices}}
     {{/hasMultipleDevices}}
+    {{^hasMultipleDevices}}
+    {{#devices}}
+    <div id="cur-version-info">
+        <h3>Current Device Information</h3>
+        <div>Firmware version: <span id="{{getSerial}}-firmware-display">{{getFirmwareVersion}}</span></div>
+        <div>Bootloader version: {{getBootloaderVersion}}</div>
+    </div>
+    {{/devices}}
+    {{/hasMultipleDevices}}
 </table>
