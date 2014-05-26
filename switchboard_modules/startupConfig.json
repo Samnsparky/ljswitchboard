@@ -1,6 +1,6 @@
 {
-    "autoConnectToDevices": true,
-    "ljmDeviceParameters": 
+    "autoConnectToDevices": false,
+    "ljmDeviceParameters":
     [
         {
             "serialNumber":"470010548",
@@ -37,7 +37,7 @@
             "connectionType":"Ethernet"
         }
     ],
-    "Other-ljmDeviceParameters": 
+    "Other-ljmDeviceParameters":
     [
         {
             "serialNumber":"470010117",
@@ -61,7 +61,7 @@
         }
     ],
     "displayDevTools": false,
-    "overrideAutoModuleLoad": true,
+    "overrideAutoModuleLoad": false,
     "moduleName": "device_updater",
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'"
 
