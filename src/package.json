@@ -6,7 +6,7 @@
   "inject-js-start":"startup.js",
   "window": {
     "title": "Kiplingv3",
-    "icon": "Kipling.ico",
+    "icon": "Kiplingv3_Icon2.png",
     "toolbar": true,
     "width": 870,
     "height": 730,
