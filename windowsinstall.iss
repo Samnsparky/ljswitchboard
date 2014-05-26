@@ -37,7 +37,7 @@ Source: "C:\Users\Rory\Desktop\rob_kipling_build\ljswitchboard\deploy\*"; DestDi
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{pf32}\{#MyAppName}\Kipling.ico"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{pf32}\{#MyAppName}\Kiplingv3_Icon2.ico"
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{pf32}\{#MyAppName}\Kipling.ico"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
