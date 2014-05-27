@@ -455,7 +455,7 @@ function onResized()
     console.log('here');
     var decrement = 95;
     if($('.device-selector-holder h1').height() > 48) {
-        decrement += 48;
+        decrement += 78;
     }
     var num = ($(window).height()-decrement);
     $('.device-pane').height((num-10).toString()+'px');
