@@ -169,6 +169,11 @@
     display: none;
 }
 
+#logo-holder {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
 .connect-button
 {
     margin-bottom: 1px;
@@ -189,9 +194,4 @@
 .hidden-button-holder
 {
     display: none;
-}
-
-.logo-holder {
-    text-align: center;
-    margin-bottom: 10px;
 }

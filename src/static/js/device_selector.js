@@ -233,7 +233,7 @@ function kiplingStartupManager() {
         innerDeferred.reject();
         return innerDeferred.promise;
     };
-    
+
     this.loadConfigData = function() {
         var innerDeferred = q.defer();
         var filePath = fs_facade.getExternalURI('startupConfig.json');
@@ -354,16 +354,16 @@ function kiplingStartupManager() {
             }
             // console.log('ct',ct);
             device_controller.openDevice(
-                sn, 
-                '', 
-                ct, 
+                sn,
+                '',
+                ct,
                 dt,
                 function() {
                     numDevicesConnected += 1;
                     if(numDevicesConnected == numDevicesToConnectTo) {
                         innerDeferred.resolve(configData);
                     }
-                }, 
+                },
                 function(device) {
                     numDevicesConnected += 1;
                     device_controller.getDeviceKeeper().addDevice(device);
@@ -394,7 +394,7 @@ function kiplingStartupManager() {
         });
         if(!moveToModule) {
             innerDeferred.reject();
-        } 
+        }
         else {
             innerDeferred.resolve(configData);
         }
@@ -428,7 +428,7 @@ function kiplingStartupManager() {
         return innerDeferred.promise;
     };
     var clickFinishButton = this.clickFinishButton;
-    
+
 
     this.autoStart = function() {
         var deferred = q.defer();
@@ -453,7 +453,7 @@ function kiplingStartupManager() {
 function onResized()
 {
     console.log('here');
-    var decrement = 65;
+    var decrement = 35;
     if($('.device-selector-holder h1').height() > 48) {
         decrement += 48;
     }
@@ -473,7 +473,7 @@ $('#device-selector-holder').ready(function(){
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(onResized, 2);
     });
-    
+
     var deviceKeeper = device_controller.getDeviceKeeper();
 
     if(deviceKeeper.getNumDevices() > 0)
