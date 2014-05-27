@@ -162,6 +162,9 @@
 #finish-button
 {
     display: none;
+    -webkit-animation-name: pulse;
+    -webkit-animation-duration: 2s;
+    -webkit-animation-iteration-count: infinite;
 }
 
 #alert-message
@@ -194,4 +197,11 @@
 .hidden-button-holder
 {
     display: none;
+}
+
+
+@-webkit-keyframes pulse {
+  from { background-color: #49025D; -webkit-box-shadow: 0 0 9px #333; border-color: #49025D;}
+  50% { background-color: #872EA0; -webkit-box-shadow: 0 0 18px #000; border-color: #872EA0;}
+  to { background-color: #49025D; -webkit-box-shadow: 0 0 9px #333; border-color: #49025D;}
 }
