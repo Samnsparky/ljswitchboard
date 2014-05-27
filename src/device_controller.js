@@ -1267,7 +1267,7 @@ var ignoreNonTCP = function (innerFunc) {
             return function () {
                 var deferred = q.defer();
                 deferred.resolve();
-                deferred.promise;
+                return deferred.promise;
             };
         } else {
             return innerFunc(deviceInfo, connection);
