@@ -453,7 +453,7 @@ function kiplingStartupManager() {
 function onResized()
 {
     console.log('here');
-    var decrement = 35;
+    var decrement = 95;
     if($('.device-selector-holder h1').height() > 48) {
         decrement += 48;
     }
