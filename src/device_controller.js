@@ -1264,9 +1264,11 @@ var tryOpenDeviceConnection = function (deviceInfo, connection) {
 var ignoreNonTCP = function (innerFunc) {
     return function (deviceInfo, connection) {
         if (connection.type === CONNECT_TYPE_USB) {
-            var deferred = q.defer();
-            deferred.resolve();
-            return deferred.promise;
+            return function () {
+                var deferred = q.defer();
+                deferred.resolve();
+                deferred.promise;
+            };
         } else {
             return innerFunc(deviceInfo, connection);
         }
