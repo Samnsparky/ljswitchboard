@@ -427,6 +427,12 @@ $('#module-chrome').ready(function(){
         $('#content-holder').html('');
         var onDevicesLoaded = function(devices) {
             var context = {'device_types': includeDeviceDisplaySizes(devices)};
+            var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
+            context.ljmVersionNumber = ljmVersion;
+            var kiplingVersion = gui.App.manifest.version;
+            context.kiplingVersionNumber = kiplingVersion;
+            var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
+            context.ljmWrapperVersionNumber = ljmWrapperVersion
             $('#device-search-msg').hide();
             renderTemplate(
                 'device_selector.html',

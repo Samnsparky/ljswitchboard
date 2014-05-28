@@ -1,6 +1,7 @@
 <div id="network_settings">	
 	<div id="ethernet_settings_div">
 		<h3>Ethernet</h3>
+		{{#if custom.showEthernetWarning}}<span class="text-warning icon-warning" title="{{../custom.ethernetPowerButtonWarning }}"></span>Currently connected to device over Ethernet, changing current Ethernet settings may break your connection.{{/if}}
 		<hr>
 		<div id="ethernet_settings">
 			<div class="settingsTopDiv">
@@ -9,7 +10,7 @@
 					<div class="powerButtonDiv">
 						<div class="btn-group">
 							<button id="ethernetPowerButton" class="btn" title="{{ custom.ethernetPowerButtonString }}">
-								<span class="buttonText">{{ custom.ethernetPowerButtonString }}</span>
+								<span class="buttonText">{{#if custom.showEthernetWarning}}<span class="text-warning icon-warning" title="{{../custom.ethernetPowerButtonWarning }}"></span>{{/if}}{{ custom.ethernetPowerButtonString }}<!-- {{#if custom.showEthernetWarning}}<span class="text-warning icon-warning" title="{{../custom.ethernetPowerButtonWarning }}"></span>{{/if}} --></span>
 							</button>
 						</div>
 					</div>
@@ -65,7 +66,7 @@
 				<div class="applyAndCancelButtons">
 						<div class="btn-group">
 							<button id="ethernetApplyButton" class="btn" title="Apply Changes">
-								<span class="buttonText">Apply</span>
+								<span class="buttonText">{{#if custom.showEthernetWarning}}<span class="text-warning icon-warning" title="{{../custom.ethernetWarningMessage }}"></span>{{/if}}Apply<!-- {{#if custom.showEthernetWarning}}<span class="text-warning icon-warning" title="{{../custom.ethernetWarningMessage }}"></span>{{/if}} --></span>
 							</button>
 							<button id="ethernetCancelButton" class="btn" title="Cancel Changes">
 								<span class="buttonText">Cancel</span>
@@ -84,6 +85,7 @@
 	<br>
 	<div id="wifi_settings_div">
 		<h3>WiFi</h3>
+		{{#if custom.showWifiWarning}}<span class="text-warning icon-warning" title="{{../custom.ethernetPowerButtonWarning }}"></span>Currently connected to device over WiFi, changing current WiFi settings may break your connection.{{/if}}
 		<hr>
 		<div id="wifi_settings">
 			<div class="settingsTopDiv">
@@ -92,7 +94,7 @@
 					<div class="powerButtonDiv">
 						<div class="btn-group">
 							<button id="wifiPowerButton" class="btn" title="{{ custom.wifiPowerButtonString }}">
-								<span class="buttonText">{{ custom.wifiPowerButtonString }}</span>
+								<span class="buttonText">{{#if custom.showWifiWarning}}<span class="text-warning icon-warning" title="{{../custom.ethernetPowerButtonWarning }}"></span>{{/if}}{{ custom.wifiPowerButtonString }}<!-- {{#if custom.showWifiWarning}}<span class="text-warning icon-warning" title="{{../custom.ethernetPowerButtonWarning }}"></span>{{/if}} --></span>
 							</button>
 						</div>
 					</div>
@@ -179,7 +181,7 @@
 				<div class="applyAndCancelButtons">
 						<div class="btn-group">
 							<button id="wifiApplyButton" class="btn" title="Apply Changes">
-								<span class="buttonText">Apply</span>
+								<span class="buttonText">{{#if custom.showWifiWarning}}<span class="text-warning icon-warning" title="{{../custom.wifiWarningMessage }}"></span>{{/if}}Apply<!-- {{#if custom.showWifiWarning}}<span class="text-warning icon-warning" title="{{../custom.wifiWarningMessage }}"></span>{{/if}} --></span>
 							</button>
 							<button id="wifiCancelButton" class="btn" title="Cancel Changes">
 								<span class="buttonText">Cancel</span>

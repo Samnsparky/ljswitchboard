@@ -37,6 +37,7 @@ function module() {
     this.moduleContext = {};
 
     this.activeDevice = undefined;
+    this.connectionType = -1;
 
     this.isEthernetConnected = false;
     this.isWifiConnected = false;
@@ -648,6 +649,7 @@ function module() {
             };
         };
         var curStatus = sdModule.currentValues.get('POWER_ETHERNET').val;
+        console.log('in wifiPowerButton',curStatus);
         if(curStatus === 0) {
             self.activeDevice.writeMany(
                 ['POWER_ETHERNET','POWER_ETHERNET_DEFAULT'],
@@ -1016,6 +1018,7 @@ function module() {
             };
         };
         var curStatus = sdModule.currentValues.get('POWER_WIFI').val;
+        console.log('in wifiPowerButton',curStatus);
         if(curStatus === 0) {
             self.activeDevice.writeMany(
                 ['POWER_WIFI','POWER_WIFI_DEFAULT'],
@@ -1743,10 +1746,12 @@ function module() {
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
         console.log('in onDeviceSelected');
         self.activeDevice = device;
+        self.connectionType = device.getConnectionType();
+        console.log('Connection Type',self.connectionType);
         // self.activeDevice.setDebugFlashErr(true);
 
         framework.clearConfigBindings();
-        framework.setStartupMessage('Waiting for Wifi Module to start');
+        framework.setStartupMessage('Reading Device Configuration');
         var dummyQ = function() {
             var deferred = q.defer();
             deferred.resolve();
@@ -1763,6 +1768,36 @@ function module() {
         });
     };
     this.configureModuleContext = function(framework) {
+        var ethernetWarningMessage = '';
+        var wifiWarningMessage = '';
+        var ethernetPowerButtonWarning = '';
+        var wifiPowerButtonWarning = '';
+        var showWifiWarning = false;
+        var showEthernetWarning = false;
+        if(self.connectionType == 2) {
+            showEthernetWarning = true;
+            showWifiWarning = true;
+            ethernetWarningMessage = 'Current Connection type is TCP, applying settings may break your connection.';
+            wifiWarningMessage = 'Current Connection type is TCP, applying settings may break your connection.';
+            ethernetPowerButtonWarning = 'Current Connection type is Ethernet, turning off Ethernet may break your connection.';
+            wifiPowerButtonWarning = 'Current Connection type is WiFi, turning off Wifi may break your connection.';
+        } else if (self.connectionType == 3) {
+            showEthernetWarning = true;
+            ethernetWarningMessage = 'Current Connection type is Ethernet, applying settings may break your connection.';
+            ethernetPowerButtonWarning = 'Current Connection type is Ethernet, turning off Ethernet will break your connection.';
+        } else if(self.connectionType == 4) {
+            showWifiWarning = true;
+            wifiWarningMessage = 'Current Connection type is WiFi, applying settings may break your connection.';
+            wifiPowerButtonWarning = 'Current Connection type is WiFi, turning off Wifi will break your connection.';
+        }
+        self.moduleContext.showEthernetWarning = showEthernetWarning;
+        self.moduleContext.ethernetWarningMessage = ethernetWarningMessage;
+        self.moduleContext.ethernetPowerButtonWarning = ethernetPowerButtonWarning;
+        self.moduleContext.showWifiWarning = showWifiWarning;
+        self.moduleContext.wifiWarningMessage = wifiWarningMessage;
+        self.moduleContext.wifiPowerButtonWarning = wifiPowerButtonWarning;
+        
+
         // Load configuration data & customize view
         // self.moduleContext.ethernetIPRegisters = [];
         // self.moduleContext.wifiIPRegisters = [];

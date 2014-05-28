@@ -58,8 +58,6 @@ function connectNewDevice(event)
     var connectionType = parseInt(deviceInfo[4]);
     var deviceType = parseInt(deviceInfo[5]);
 
-    console.log(serial,ipAddress,connectionType,deviceType);
-
     var container = $(jqueryID).parents('.connection-buttons-holder');
     container.children('#show-connect-button-holder').hide();
     $('#finish-button').slideUp();
@@ -203,6 +201,12 @@ function refreshDevices()
     var onDevicesLoaded = function(devices) {
         var context = {'device_types': includeDeviceDisplaySizes(devices)};
         console.log('List All Screen Context',context);
+        var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
+        context.ljmVersionNumber = ljmVersion;
+        var kiplingVersion = gui.App.manifest.version;
+        context.kiplingVersionNumber = kiplingVersion;
+        var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
+        context.ljmWrapperVersionNumber = ljmWrapperVersion
         if (devices.length === 0)
             context.noDevices = true;
         $('#device-search-msg').hide();
@@ -267,7 +271,6 @@ function kiplingStartupManager() {
     var startDevTools = this.startDevTools;
 
     this.checkIfAutoConfigure = function(configData) {
-        console.log('configData',configData);
         var innerDeferred = q.defer();
         if(configData.autoConnectToDevices !== undefined) {
             if(configData.autoConnectToDevices){
@@ -308,7 +311,6 @@ function kiplingStartupManager() {
             } else if(dtText === 'Digit-TLH') {
                 dt = 'LJM_dtDIGIT_TLH';
             }
-            // console.log('Found:',sn,conButtonObjects,dtText);
 
 
             // var deviceInfo = event.target.id.split('-');
@@ -336,9 +338,7 @@ function kiplingStartupManager() {
 
                 }
             );
-            // console.log(devices,conTypes)
         }
-        console.log('Found Devices',devices);
         return devices;
     };
     var getDeviceData = getDeviceData;
@@ -358,8 +358,6 @@ function kiplingStartupManager() {
             } else if(ct === 'USB') {
                 ct = 'LJM_ctUSB';
             }
-            console.log('in connectToDevices sn',sn,'ct',ct,'dt',dt);
-            // console.log('ct',ct);
             device_controller.openDevice(
                 sn,
                 '',
@@ -438,7 +436,6 @@ function kiplingStartupManager() {
 
 
     this.autoStart = function() {
-        console.log('in device_selector autoStart');
         var deferred = q.defer();
         self.loadConfigData()
         .then(self.startDevTools, handleErrors)
@@ -460,7 +457,6 @@ function kiplingStartupManager() {
 **/
 function onResized()
 {
-    console.log('here');
     var decrement = 105;
     if($('.device-selector-holder h1').height() > 48) {
         decrement += 78;

@@ -1,6 +1,23 @@
 <div class="device-selector-holder">
     <div id="logo-holder"><img src="static/img/labjack-logo.png"></div>
     <h1>Select Devices <button id="refresh-button" class="btn btn-primary">Refresh Devices >></button><button id="finish-button" class="btn btn-primary">Finish >></button></h1>
+    <div id="versionNumbers">
+        <h4>Versions</hr>
+        <table>
+            <tr>
+                <td class="ljVersionNumbers">LJM</td>
+                <td class="ljVersionNumbers">{{ljmVersionNumber}}</td>
+            </tr>
+            <tr>
+                <td class="ljVersionNumbers">Kipling</td>
+                <td class="ljVersionNumbers">{{kiplingVersionNumber}}</td>
+            </tr>
+            <tr>
+                <td class="ljVersionNumbers">Wrapper</td>
+                <td class="ljVersionNumbers">{{ljmWrapperVersionNumber}}</td>
+            </tr>
+        </table>
+    </div>
     <div id="alert-message" class="alert">
       <button type="button" class="close close-alert-button"></button>
       <div id="error-display"></div>

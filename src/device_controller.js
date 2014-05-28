@@ -104,6 +104,7 @@ var WIFI_STATUS_DISPLAY_DATA = {
 var NUM_SCAN_RETRIES = 4;
 var LIST_ALL_SCAN_RETRY_ERROR = 1233;
 
+exports.labjack_nodejs = labjack_nodejs;
 exports.driver_const = labjack_nodejs.driver_const;
 exports.ljm_driver = labjack_driver;
 

@@ -1,3 +1,21 @@
+body {
+    line-height: normal;
+}
+#versionNumbers {
+    position:absolute;
+    top:0px;
+    right:0px;
+}
+#versionNumbers h4 {
+    font-weight: 500;
+    font-size: 11px;
+    line-height: normal;
+}
+#versionNumbers .ljVersionNumbers {
+    font-weight: 200;
+    font-size: 10px;
+    line-height: normal;
+}
 .connection-buttons-holder {
     vertical-align: top;
     padding: 0 10px;
