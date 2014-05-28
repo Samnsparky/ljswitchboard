@@ -74,7 +74,7 @@ var titleTree = {
 			'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
 		}
 	},
-	'falseVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via WiFi because WiFi module is unpowered'
+	'falseVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }} because {{ current.typeStr }} module is unpowered'
 };
 trees.push({'val': 'button_title', 'tree': titleTree, 'target': 'connection'});
 

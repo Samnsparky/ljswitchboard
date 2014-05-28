@@ -8,6 +8,9 @@
     font-size: 16px;
     padding: 0px;
 }
+#single-device-framework-obj #device-selector th p {
+    margin:0px;
+}
 
 .subsection
 {

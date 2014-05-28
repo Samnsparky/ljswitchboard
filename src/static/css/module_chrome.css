@@ -89,6 +89,12 @@ p, h1, h2, h3 {
 {
     color: #E0E0E0;
 }
+#device-selector td {
+    padding: 2px;
+}
+#device-selector th {
+    padding: 2px;
+}
 
 #module-chrome-contents
 {

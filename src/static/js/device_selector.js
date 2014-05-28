@@ -352,6 +352,7 @@ function kiplingStartupManager() {
             } else if(ct === 'USB') {
                 ct = 'LJM_ctUSB';
             }
+            console.log('in connectToDevices sn',sn,'ct',ct,'dt',dt);
             // console.log('ct',ct);
             device_controller.openDevice(
                 sn,
