@@ -267,6 +267,7 @@ function kiplingStartupManager() {
     var startDevTools = this.startDevTools;
 
     this.checkIfAutoConfigure = function(configData) {
+        console.log('configData',configData);
         var innerDeferred = q.defer();
         if(configData.autoConnectToDevices !== undefined) {
             if(configData.autoConnectToDevices){
@@ -285,7 +286,7 @@ function kiplingStartupManager() {
         var devices = [];
         var serialNumbers = [];
         var connectionTypes = [];
-        var devObjs = $('.devices-enumeration .device');
+        var devObjs = $('.devices-enumeration-scroller .device');
         var numDevicesFound = devObjs.length;
 
 
@@ -302,6 +303,10 @@ function kiplingStartupManager() {
                 dt = 'LJM_dtT7';
             } else if(dtText === 'T7') {
                 dt = 'LJM_dtT7';
+            } else if(dtText === 'Digit-TL') {
+                dt = 'LJM_dtDIGIT_TL';
+            } else if(dtText === 'Digit-TLH') {
+                dt = 'LJM_dtDIGIT_TLH';
             }
             // console.log('Found:',sn,conButtonObjects,dtText);
 
@@ -317,7 +322,7 @@ function kiplingStartupManager() {
             for(j = 0; j < numConTypes; j++) {
                 conTypes.push(
                     {
-                        "type": conButtonObjects.eq(j).html().split(' ')[1],
+                        "type": conButtonObjects.eq(j).html(),
                         "button": conButtonObjects.eq(j)
                     }
                 );
@@ -333,6 +338,7 @@ function kiplingStartupManager() {
             );
             // console.log(devices,conTypes)
         }
+        console.log('Found Devices',devices);
         return devices;
     };
     var getDeviceData = getDeviceData;
@@ -432,6 +438,7 @@ function kiplingStartupManager() {
 
 
     this.autoStart = function() {
+        console.log('in device_selector autoStart');
         var deferred = q.defer();
         self.loadConfigData()
         .then(self.startDevTools, handleErrors)

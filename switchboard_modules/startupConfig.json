@@ -1,5 +1,5 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "ljmDeviceParameters":
     [
         {
@@ -7,12 +7,8 @@
             "connectionType":"Ethernet"
         },
         {
-            "serialNumber":"1-470010620",
+            "serialNumber":"470010563",
             "connectionType":"Ethernet"
-        },
-        {
-            "serialNumber":"470010548",
-            "connectionType":"USB"
         }
     ],
     "Labjack-T7s":

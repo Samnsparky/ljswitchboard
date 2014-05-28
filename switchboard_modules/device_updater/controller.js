@@ -79,6 +79,16 @@ function UpgradeableDeviceAdapter(device)
     {
         return device.getName();
     };
+    /**
+     * Get the type of device subclass that this decorator encapsulates.
+     *
+     * @return {String} The string description of the model sub-class of the 
+     *      device that this decorator encapsulates.
+    **/
+    this.getSubclass = function()
+    {
+        return executeErrorSafeFunction(device.getSubclass);
+    };
 
     /**
      * Get the type of device that this decorator encapsulates.
