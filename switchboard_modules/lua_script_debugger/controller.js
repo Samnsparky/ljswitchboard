@@ -37,9 +37,14 @@ function textEditor() {
         self.editorMode = mode;
 
         // Initialize the aceEditor instance
-        self.editor = ace.edit(id);
-        self.editor.setTheme(theme);
-        self.editor.getSession().setMode(mode);
+        
+        try{
+            self.editor = ace.edit(id);
+            self.editor.setTheme(theme);
+            self.editor.getSession().setMode(mode);
+        } catch(err) {
+            console.error('Error initializing ace editor',err);
+        }
     };
     this.setHeight = function(newHeight) {
         if(newHeight != self.curHeight) {
@@ -49,7 +54,12 @@ function textEditor() {
                 $('#'+self.htmlID).height(newHeight + 'px');
             }
         }
-        self.editor.resize(true);
+        try{
+            self.editor.resize(true);
+        } catch(err) {
+            console.error('Error Resizing ace editor',err);
+            alert('Error resizing ace editor');
+        }
     };
     this.getHeight = function() {
         if(self.curHeight == -1) {
@@ -711,8 +721,13 @@ function module() {
     var debuggingLog = new textEditor();
     this.debuggingLog = debuggingLog;
 
-    var luaController = new luaDeviceController();
-    this.luaController = luaController;
+    try{
+        var luaController = new luaDeviceController();
+        this.luaController = luaController;
+    } catch(err) {
+        console.error('Caught Another Error!!',err);
+        alert('Here Too!');
+    }
 
     var moduleContext = {};
     this.moduleContext = moduleContext;
@@ -1482,22 +1497,25 @@ function module() {
             return false;
         });
         // Initialize ace editor obj for luaEditor & debuggingLog:
-        luaEditor.setupEditor(
-            "lua-code-editor", 
-            "ace/theme/monokai", 
-            "ace/mode/lua"
-        );
-        debuggingLog.setupEditor(
-            "lua-debugging-log-editor", 
-            "ace/theme/monokai", 
-            "ace/mode/text"
-        );
+        try {
+            luaEditor.setupEditor(
+                "lua-code-editor", 
+                "ace/theme/monokai", 
+                "ace/mode/lua"
+            );
+            debuggingLog.setupEditor(
+                "lua-debugging-log-editor", 
+                "ace/theme/monokai", 
+                "ace/mode/text"
+            );
+            // Save luaEditor & debuggingLog objects to the luaController object
+            self.luaController.setCodeEditor(luaEditor);
+            self.luaController.setDebuggingLog(debuggingLog);
 
-        // Save luaEditor & debuggingLog objects to the luaController object
-        self.luaController.setCodeEditor(luaEditor);
-        self.luaController.setDebuggingLog(debuggingLog);
-
-        onSuccess();
+            onSuccess();
+        } catch(err) {
+            console.error('Caught Exception!!',err);
+        }
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
         // console.log('in onRegisterWrite',binding);
@@ -1525,8 +1543,11 @@ function module() {
             framework.moduleName
         );
         aceEditor = undefined;
+        self.aceEditor = undefined;
         luaEditor = undefined;
+        self.luaEditor = undefined;
         debuggingLog = undefined;
+        self.debuggingLog = undefined;
         onSuccess();
     };
     this.onLoadError = function(framework, description, onHandle) {

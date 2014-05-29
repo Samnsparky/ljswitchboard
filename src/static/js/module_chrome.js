@@ -12,6 +12,7 @@ var device_controller = require('./device_controller');
 var presenter = require('./presenter');
 var module_manager = require('./module_manager');
 
+var MODULE_CONTENTS_PLACEHOLDER_ELEMENT = '#module-chrome-contents';
 var MODULE_TAB_CONTAINER = '#module-list';
 var MODULE_TAB_CLASS = 'module-tab';
 var MODULE_TAB_ID_POSTFIX = '-module-tab';
@@ -50,7 +51,7 @@ var MODULE_WINDOW_RESIZE_LISTNERS = [];
  *
  * @param {String} name The name of the module to switch the user view to.
 **/
-function selectModule(name)
+function innerSelectModule(name)
 {
     $('.' + MODULE_TAB_CLASS).removeClass('selected');
     $('#' + name + MODULE_TAB_ID_POSTFIX).addClass('selected');
@@ -58,6 +59,7 @@ function selectModule(name)
     //     $('<img>').attr('src', MODULE_LOADING_IMAGE_SRC)
     // );
     $(MODULE_CONTENTS_ELEMENT).empty();
+
 
     fs_facade.getModuleInfo(
         name,
@@ -198,6 +200,9 @@ function selectModule(name)
             );
         }
     );
+}
+function selectModule(name) {
+    $(MODULE_CONTENTS_ELEMENT).fadeOut(100,function(){innerSelectModule(name)});
 }
 
 

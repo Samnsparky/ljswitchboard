@@ -251,6 +251,7 @@ function Framework() {
     var deviceSelectionListenersAttached = false;
     var jquery = null;
     var refreshRate = DEFAULT_REFRESH_RATE;
+    var errorRefreshRate = 1000; // Default to 1sec
     var configControls = [];
 
     var bindings = dict({});
@@ -279,6 +280,7 @@ function Framework() {
     this.deviceSelectionListenersAttached = deviceSelectionListenersAttached;
     this.jquery = jquery;
     this.refreshRate = refreshRate;
+    this.errorRefreshRate = errorRefreshRate;
     this.configControls = configControls;
 
     this.bindings = bindings;
@@ -511,7 +513,11 @@ function Framework() {
         if(moduleLibraries !== undefined) {
             moduleLibraries.forEach(function(element, index, array){
                 var delStr = 'delete ' + element;
-                eval(delStr);
+                try{
+                    eval(delStr);
+                } catch(err) {
+                    console.error('presenter_framework Error Deleting Element',element);
+                }
             });
         } else {
             // console.log('presenter_framework, "third_party_code_unload" undefined');
@@ -2016,7 +2022,7 @@ function Framework() {
         self.printTimingInfo('elapsedTime',elapsedTime);
         var delayTime = self.refreshRate;
 
-        if ((self.refreshRate - elapsedTime) < 0) {
+        if ((errorRefreshRate - elapsedTime) < 0) {
             if(self.loopErrorEncountered) {
                 self.printDAQLoopInfo('sdFramework DAQ Loop is slow (Due to error)...',elapsedTime);
             } else {

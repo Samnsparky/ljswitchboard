@@ -97,9 +97,7 @@ p, h1, h2, h3 {
 #device-selector th {
     padding: 2px;
 }
-
-#module-chrome-contents
-{
+#module-chrome-contents-holder {
     background-color: white;
 
     padding: 20px;
@@ -108,8 +106,21 @@ p, h1, h2, h3 {
     -webkit-box-shadow: 0 0 5px #000000;
     box-shadow: 0 0 5px #000000;
 
-    /*height: 500px;*/
     height:100%;
+}
+#module-chrome-contents
+{
+    height:100%;
+    width:100%;
+    /*background-color: white;
+
+    padding: 20px;
+    padding-right:5px;
+    -moz-box-shadow: 0 0 5px #000000;
+    -webkit-box-shadow: 0 0 5px #000000;
+    box-shadow: 0 0 5px #000000;
+
+    height:100%;*/
 }
 
 #alert-message
@@ -137,7 +148,7 @@ p, h1, h2, h3 {
     min-height:14px;
 }
 @media screen and (min-width: 968px) {
-    #module-chrome-contents{
+    #module-chrome-contents-holder{
         position:absolute;
         left:220px;
         right:20px;
@@ -145,7 +156,7 @@ p, h1, h2, h3 {
     }
 }
 @media screen and (max-width: 967px) {
-    #module-chrome-contents{
+    #module-chrome-contents-holder{
         position: inherit;
         width:76%;
     }
@@ -155,7 +166,7 @@ p, h1, h2, h3 {
         margin-left: -20px;
         margin-right: -10px;
     }
-    #module-chrome-contents{
+    #module-chrome-contents-holder{
         overflow: auto;
         /*position:absolute;
         left:22.92817679558011%;
@@ -173,7 +184,7 @@ p, h1, h2, h3 {
     #system-navigation {
         width: 100%;
     }
-    #module-chrome-contents {
+    #module-chrome-contents-holder {
         width: 100%;
         overflow: hidden;
     }

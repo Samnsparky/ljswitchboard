@@ -135,7 +135,7 @@ function module() {
         self.activeDevice = device;
 
         framework.clearConfigBindings();
-        framework.setStartupMessage('Waiting for Wifi Module to start');
+        framework.setStartupMessage('Reading Device Configuration');
         onSuccess();
     };
 
