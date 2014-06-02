@@ -1,12 +1,17 @@
 .ain-config-options {
     display:none;
 }
-#device-config-options-table {
+.optionsConfigTable {
 	margin-bottom: 15px;
 	background-color: transparent;
 	margin-top: -5px;
+	width:100%;
 }
-#device-config-options-table td {
+.optionsConfigTable thead {
+	border-bottom: none;
+	background-color: transparent;
+}
+.optionsConfigTable td {
 	background-color: transparent;
 }
 .displayed-icon {

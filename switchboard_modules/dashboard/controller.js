@@ -21,7 +21,7 @@
 
 // Constant that determines device polling rate.  Use an increased rate to aid
 // in user experience.
-var MODULE_UPDATE_PERIOD_MS = 500;
+var MODULE_UPDATE_PERIOD_MS = 1000;
 
 // Constant that can be set to disable auto-linking the module to the framework
 var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
@@ -312,7 +312,7 @@ function module() {
         onSuccess();
     };
     this.onRefresh = function(framework, registerNames, onError, onSuccess) {
-        // console.log('in onRefresh',framework.moduleName);
+        console.log('in onRefresh',framework.moduleName);
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {

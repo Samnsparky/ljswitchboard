@@ -28,7 +28,7 @@
 var sprintf = require('sprintf').sprintf;
 
 // Constant that determines device polling rate.
-var MODULE_UPDATE_PERIOD_MS = 1000;
+var MODULE_UPDATE_PERIOD_MS = 1500;
 
 // Constant that can be set to disable auto-linking the module to the framework
 var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
@@ -38,6 +38,25 @@ var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
  * When using the 'singleDevice' framework it is instantiated as sdModule.
  */
 function module() {
+    this.ENABLE_DEBUGGING = false;
+    this.moduleConstants = {};
+    this.moduleContext = {};
+    this.activeDevice = undefined;
+    this.framework = undefined;
+    this.defineDebuggingArrays = true;
+
+    this.currentValues = dict();
+    this.isValueNew = dict();
+    this.bufferedValues = dict();
+    this.newBufferedValues = dict();
+    this.bufferedOutputValues = dict();
+
+    this.ANALOG_INPUT_PRECISION = 6;
+
+    this.deviceConstants = {};
+    this.curDeviceOptions = dict();
+    this.regParser = dict();
+
     //Define nop (do-nothing) function
     var nop = function(){};
 
@@ -49,28 +68,162 @@ function module() {
     var baseRegisters = ljmmm_parse.expandLJMMMName(baseReg);
 
     // Define support analog input ef-types
-    var ain_ef_types = t7DeviceConstants.ainEFTypeOptions;
+    var ain_ef_types = globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions;
 
     // Supported analog input range options.
-    var ainRangeOptions = t7DeviceConstants.ainRangeOptions;
+    var ainRangeOptions = globalDeviceConstants.t7DeviceConstants.ainRangeOptions;
 
     // Supported analog input resolution options.
-    var ainResolutionOptions = t7DeviceConstants.ainResolutionOptions;
+    var ainResolutionOptions = globalDeviceConstants.t7DeviceConstants.ainResolutionOptions;
 
     // Supported analog input resolution options.
-    var ainSettlingOptions = t7DeviceConstants.ainSettlingOptions;
+    var ainSettlingOptions = globalDeviceConstants.t7DeviceConstants.ainSettlingOptions;
 
     // Supported analog input negative channel options
     var ainNegativeCHOptions = [{
         value: 199,
-        name: "GND",
-        selected:''
+        name: "GND"
     }];
+    this.getNegativeChOption = function(val){
+        if(val%2 === 0) {
+            return [
+                {value: 199,name: "GND"},
+                {value: val,name: 'AIN'+val.toString()}
+            ];
+        } else {
+            return [
+                {value: 199,name: "GND"}
+            ];
+        }
+    };
+
+    // Supported extra options
+    var extraAllAinOptions = globalDeviceConstants.t7DeviceConstants.extraAllAinOptions;
+
+    this.efTypeDict = dict();
+    this.rangeOptionsDict = dict();
+    this.resolutionOptionsDict = dict();
+    this.settlingOptionsDict = dict();
+    this.negativeChannelDict = dict();
 
     var overrideGraphRanges = false;
     var minGraphRange;
     var maxGraphRange;
 
+    this.pDict = function(dict) {
+        dict.forEach(function(value,name){
+            console.log(name,value);
+        })
+    }
+    this.expandLJMMMNameSync = 
+    this.setupTypeConversionDicts = function(target,destination) {
+        var setInfo = function(value,index){
+            destination.set(value.value.toString(),value.name);
+        };
+        target.forEach(setInfo);
+        var extraInfo = self.deviceConstants.extraAllAinOptions;
+        extraInfo.forEach(setInfo);
+    };
+    this.buildDataParsers = function() {
+        var parsers = self.deviceConstants.parsers;
+        parsers.forEach(function(name){
+            var dictName = name+'Dict';
+            self.deviceConstants[dictName] = dict();
+            if(typeof(self.deviceConstants[name].numbers) !== 'undefined'){
+                var options = [];
+                var base = self.deviceConstants[name];
+                base.numbers.forEach(function(num){
+                    options.push(base.func(num));
+                });
+                self.setupTypeConversionDicts(
+                    options,
+                    self.deviceConstants[dictName]
+                );
+            } else {
+                self.setupTypeConversionDicts(
+                    self.deviceConstants[name],
+                    self.deviceConstants[dictName]
+                );
+            }
+            // console.log('here!',self.deviceConstants[dictName].size);
+        });
+    };
+    this.buildRegParser = function() {
+        var configArray = self.deviceConstants.allConfigRegisters;
+        var chConfigArray = self.deviceConstants.configRegisters;
+        var addParser = function(data,index) {
+            var formatReg = handlebars.compile(data.register);
+            var compReg = formatReg(self.deviceConstants);
+            var addrList = ljmmm_parse.expandLJMMMNameSync(compReg);
+            if((data.options !== 'func') && (data.options !== 'raw')) {
+                var dataObj = self.deviceConstants[data.options+'Dict'];
+                var getData = function(val) {
+                    return {value: val, name: dataObj.get(val.toString())}
+                };
+                addrList.forEach(function(addr){
+                    self.regParser.set(addr,getData);
+                });
+            } else if (data.options === 'raw') {
+                addrList.forEach(function(addr){
+                    var getData = function(val) {
+                        return {name:addr,value:val};
+                    }
+                    self.regParser.set(addr,getData);
+                });
+            } else if (data.options === 'func') {
+                addrList.forEach(function(addr){
+                    var dataObj = self.deviceConstants[data.func];
+                    var getData = function(val) {
+                        return dataObj.func(val);
+                    };
+                    self.regParser.set(addr,getData);
+                });
+            }
+        };
+        configArray.forEach(addParser);
+        chConfigArray.forEach(addParser);
+        addParser({
+            register:self.deviceConstants.ainChannelNames,
+            options: 'raw'
+        });
+    }
+    this.buildOptionsDict = function() {
+        var configArray = self.deviceConstants.allConfigRegisters;
+        var chConfigArray = self.deviceConstants.configRegisters;
+
+        var addOptions = function(data) {
+            var formatReg = handlebars.compile(data.register);
+            var compReg = formatReg(self.deviceConstants);
+            var addrList = ljmmm_parse.expandLJMMMNameSync(compReg);
+            if (data.options !== 'func') {
+                addrList.forEach(function(addr){
+                    var menuOptions = [];
+                    menuOptions = self.deviceConstants[data.options];
+                    self.curDeviceOptions.set(addr,menuOptions);
+                });
+            } else if (data.options === 'func') {
+                var findNum = new RegExp("[0-9]{1,2}");
+                addrList.forEach(function(addr){
+                    var addrNum = findNum.exec(addr);
+                    var dataObj = self.deviceConstants[data.func];
+                    var menuOptions = dataObj.filter(addrNum);
+                    self.curDeviceOptions.set(addr,menuOptions);
+                });
+            }
+        };
+        configArray.forEach(addOptions);
+        chConfigArray.forEach(addOptions);
+    }
+
+    this.writeReg = function(address,value) {
+        self.activeDevice.qWrite(address,value)
+        .then(function(){
+            console.log('success',address,value);
+            self.bufferedOutputValues.set(address,value);
+        },function(err){
+            console.log('fail',address,err);
+        })
+    }
     /**
      * Function to handle ain reading formatting & updating the mini-graph.
      */
@@ -122,7 +275,168 @@ function module() {
 
         return sprintf('%10.6f',info.value);
     };
+    this.genericConfigCallback = function(data, onSuccess) {
+        // console.log('genericConfigCallback',data.binding.binding,data.value);
+        var name = data.binding.binding;
+        var value = data.value;
+        self.currentValues.set(name,value);
+        self.isValueNew.set(name,false);
+        onSuccess();
+    };
+    this.genericPeriodicCallback = function(data, onSuccess) {
+        // console.log('genericPeriodicCallback',data.binding.binding,data.value);
+        var name = data.binding.binding;
+        var value = data.value;
+        self.bufferedValues.set(name,value);
+        var oldValue = self.currentValues.get(name);
+        if(oldValue != value) {
+            self.isValueNew.set(name,true);
+            self.newBufferedValues.set(name,value);
+        } else {
+            self.isValueNew.set(name,false);
+            self.newBufferedValues.delete(name);
+        }
+        onSuccess();
+    };
+    this.optionsClickHandler = function(data, onSuccess) {
+        var clickId = '#'+data.binding.binding;
+        var objId = clickId.split('callback')[0]+'options';
+        var buttonId = clickId.split('-callback')[0];
+        var objEl = $(objId)
+        var buttonEl = $(buttonId);
+        if(objEl.css('display') === 'none') {
+            objEl.fadeIn(100,function(){
+                buttonEl.removeClass('icon-plus');
+                buttonEl.addClass('icon-minus');
+                buttonEl.attr('title','Hide Options');
+            });
+        } else {
+            objEl.fadeOut(100,function(){
+                buttonEl.removeClass('icon-minus');
+                buttonEl.addClass('icon-plus');
+                buttonEl.attr('title','Show Options');
+            });
+        }
+        onSuccess();
+    };
+    this.genericDropdownClickHandler = function(data, onSuccess) {
+        console.log('HERE@!@',data.binding,data.eventData);
+        var buttonType = data.eventData.toElement.id;
+        console.log('ID',data.eventData.toElement);
+            // if (buttonType === "save-button") {
+            //     self.luaController.saveLoadedScript()
+            //     .then(
+            //         self.handleIOSuccess(
+            //             setActiveScriptInfo(onSuccess),
+            //             'Script Saved to File (save)'
+            //         ),
+            //         self.handleIOError(
+            //             setActiveScriptInfo(onSuccess),
+            //             'Err: Script Not Saved to File (save)'
+            //         )
+            //     );
+            // } else if (buttonType === "saveAs-button") {
+            //     self.luaController.saveLoadedScriptAs()
+            //     .then(
+            //         self.handleIOSuccess(
+            //             setActiveScriptInfo(onSuccess),
+            //             'Script Saved to File (saveAs)'
+            //         ),
+            //         self.handleIOError(
+            //             setActiveScriptInfo(onSuccess),
+            //             'Err: Script Not Saved to File (saveAs)'
+            //         )
+            //     );
+            // } else {
+            //     onSuccess();
+            // }
+        onSuccess();
+    };
 
+    this.configureModule = function(onSuccess) {
+        var devT;
+        var devConstStr;
+        var baseReg;
+        try{
+            devT = self.activeDevice.getDeviceType();
+            devConstStr = globalDeviceConstantsSwitch[devT];
+            self.deviceConstants = globalDeviceConstants[devConstStr];
+            baseReg = self.deviceConstants.ainChannelNames;
+            if(typeof(self.deviceConstants)==='undefined'){
+                console.error('Selected Device is not defined!!');
+            }
+        } catch(err) {
+            console.error('Failed to configureModule',err);
+        }
+        // self.setupTypeConversionDicts(self.deviceConstants);
+        self.buildDataParsers();
+        self.buildRegParser();
+        self.buildOptionsDict();
+
+        // Define the module's setupBindings
+        var bindingList = [];
+        bindingList.push({"name": baseReg, "isPeriodic":true, "type":"FLOAT32"});
+        var addRegs = function(data) {
+            if(typeof(data.manual) === 'undefined') {
+                var formatReg = handlebars.compile(data.register);
+                var compReg = formatReg(self.deviceConstants);
+                bindingList.push({"name": compReg, "isPeriodic":true});
+            } else {
+                if(!data.manual) {
+                    var formatReg = handlebars.compile(data.register);
+                    var compReg = formatReg(self.deviceConstants);
+                    bindingList.push({"name": compReg, "isPeriodic":true});
+                }
+            }
+        };
+        self.deviceConstants.configRegisters.forEach(addRegs);
+        self.deviceConstants.allConfigRegisters.forEach(addRegs);
+
+        // Initialize smart register's array
+        var smartBindings = [];
+
+        // Add analog input registers
+        var addAINInputReg = function(newBinding) {
+            var binding = {};
+            binding.bindingName = newBinding.name;
+            if(newBinding.isPeriodic) {
+                binding.smartName = 'readRegister';
+            }
+            if(typeof(newBinding.type) !== 'undefined') {
+                if(newBinding.type === 'FLOAT32') {
+                    binding.format = '%.' ;
+                    binding.format += self.ANALOG_INPUT_PRECISION.toString();
+                    binding.format += 'f';
+                }
+            }
+            binding.periodicCallback = self.genericPeriodicCallback;
+            binding.configCallback = self.genericConfigCallback;
+            smartBindings.push(binding);
+
+            var clickBinding = {};
+            if(!(typeof(newBinding.type) !== 'undefined')) {
+                clickBinding.bindingName = newBinding.name+'-SELECT';
+                clickBinding.smartName = 'clickHandler';
+                clickBinding.callback = self.genericDropdownClickHandler;
+                smartBindings.push(clickBinding);
+            }
+            
+        }
+        bindingList.forEach(addAINInputReg);
+
+        var customSmartBindings = [
+            {
+                // Define binding to handle user click events on options button.
+                bindingName: baseReg+'-options-toggle-button', 
+                smartName: 'clickHandler',
+                callback: self.optionsClickHandler
+            }
+        ];
+
+        self.framework.putSmartBindings(smartBindings);
+        self.framework.putSmartBindings(customSmartBindings);
+        onSuccess();
+    }
     /**
      * Function is called once every time the module tab is selected, loads the module.
      * @param  {[type]} framework   The active framework instance.
@@ -130,24 +444,12 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onModuleLoaded = function(framework, onError, onSuccess) {
-        framework.enableLoopTimingAnalysis();
-        framework.enableLoopMonitorAnalysis();
-        // Define the module's setupBindings
-        var setupBindings = [
-            {bindingClass: baseReg+'_EF_INDEX', binding: baseReg+'_EF_INDEX', direction: 'read'},
-            {bindingClass: baseReg+'_RANGE', binding: baseReg+'_RANGE', direction: 'read'},
-            {bindingClass: baseReg+'_RESOLUTION_INDEX', binding: baseReg+'_RESOLUTION_INDEX', direction: 'read'},
-            {bindingClass: baseReg+'_SETTLING_US', binding: baseReg+'_SETTLING_US', direction: 'read'},
-            {bindingClass: baseReg+'_NEGATIVE_CH', binding: baseReg+'_NEGATIVE_CH', direction: 'read'},
-            {bindingClass: 'AIN_ALL_RANGE', binding: 'AIN_ALL_RANGE', direction: 'read'},
-            {bindingClass: 'AIN_ALL_RESOLUTION_INDEX', binding: 'AIN_ALL_RESOLUTION_INDEX', direction: 'read'},
-            {bindingClass: 'AIN_ALL_SETTLING_US', binding: 'AIN_ALL_SETTLING_US', direction: 'read'},
-            {bindingClass: 'AIN_ALL_NEGATIVE_CH', binding: 'AIN_ALL_NEGATIVE_CH', direction: 'read'},
-        ];
-
-        // Save the setupBindings to the framework instance.
-        framework.putSetupBindings(setupBindings);
-
+        self.framework = framework;
+        // Enable framework-timing debugging
+        if(self.ENABLE_DEBUGGING) {
+            framework.enableLoopTimingAnalysis();
+            framework.enableLoopMonitorAnalysis();
+        }
         onSuccess();
     };
     
@@ -159,456 +461,168 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
+        console.log('in onDeviceSelected');
+        self.activeDevice = device;
         framework.clearConfigBindings();
-        onSuccess();
-
+        framework.setStartupMessage('Reading Device Configuration');
+        self.configureModule(onSuccess);
     };
 
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
         // Initialize variable where module config data will go.
-        var moduleContext = {};
+        self.moduleContext = {};
+        var analogInputsDict = dict();
+        if(self.defineDebuggingArrays){
+            var analogInputs = [];
+        }
+        baseRegisters.forEach(function(reg,index){
+            var ainChannel = {
+                "name":reg,
+                "value":null,
+                "strVal":null,
+                "optionsDict":dict(),
+                "minGraphVal":null,
+                "maxGraphVal":null
+            };
+            if(self.defineDebuggingArrays){
+                ainChannel.options = [];
+            }
+            self.deviceConstants.configRegisters.forEach(function(configReg){
+                var options = {};
+                var menuOptions;
+                var formatReg = handlebars.compile(configReg.register);
+                var compReg = formatReg({ainChannelNames:reg});
 
-        // While configuring the device build a dict to be used for generating the
-        // module's template.
-        moduleContext.analogInputs = [];
-        var configuredEFType = [];
-        var configuredRange = [];
-        var configuredResolution = [];
-        var configuredSettlingUS = [];
-        var configuredNegativeCH = [];
-        var configuredAllAinRange = -9999;
-        var configuredAllAinResolution = -9999;
-        var configuredAllAinSettlingUS = -9999;
-        var configuredAllAinNegativeCH = -9999;
-
-        //by default don't show the efSystemStatusWarning message
-        var showEFSystemStatusWarning = false;
-
-        //Loop through results and save them appropriately.  
-        setupBindings.forEach(function(binding, key){
-            // console.log('key',key,'Address',binding.address,', Result: ',binding.result);
-            if (key.search('_EF_INDEX') > 0) {
-                if (binding.status === 'success') {
-                    // Read was successful, save AINx_EF_INDEX state
-                    configuredEFType.push(binding.result);
+                options.menuTitle = configReg.name;
+                options.reg = compReg;
+                options.curStr = null;
+                options.curVal = null;
+                // console.log('in configRegisters.forEach',configReg.title,configReg);
+                if(configReg.options !== 'func') {
+                    menuOptions = self.deviceConstants[configReg.options];
                 } else {
-                    // Read was not successful, on old devices this means 
-                    // AINx_EF_INDEX is un-configured
-                    configuredEFType.push(0);
+                    var menuGenFunc = self.deviceConstants[configReg.func].filter;
+                    menuOptions = menuGenFunc(index);
                 }
-            } else if (binding.status === 'success') {
-                if(key.search('AIN_ALL_RANGE') >= 0) {
-                    configuredAllAinRange = binding.result.toFixed(3);
-                } else if(key.search('AIN_ALL_RESOLUTION_INDEX') >= 0) {
-                    configuredAllAinResolution = binding.result;
-                } else if(key.search('AIN_ALL_SETTLING_US') >= 0) {
-                    configuredAllAinSettlingUS = binding.result;
-                } else if(key.search('AIN_ALL_NEGATIVE_CH') >= 0) {
-                    configuredAllAinNegativeCH = binding.result;
-                } else if (key.search('_RANGE') > 0) {
-                    configuredRange.push(binding.result.toFixed(3));
-                } else if (key.search('_RESOLUTION_INDEX') > 0) {
-                    configuredResolution.push(binding.result);
-                } else if (key.search('_SETTLING_US') > 0) {
-                    // console.log('settling: ',binding.result);
-                    configuredSettlingUS.push(binding.result);
-                } else if (key.search('_NEGATIVE_CH') > 0) {
-                    configuredNegativeCH.push(binding.result);
+                options.menuOptions = menuOptions;
+                
+                ainChannel.optionsDict.set(compReg,options);
+                if(self.defineDebuggingArrays){
+                    ainChannel.options.push(options);
                 }
+            });
+            if(self.defineDebuggingArrays){
+                analogInputs.push(ainChannel);
+            }
+            analogInputsDict.set(reg,ainChannel);
+        });
+
+        var findNum = new RegExp("[0-9]{1,2}");
+        var isFound = function(haystack,needle) {
+            return (haystack.indexOf(needle) != -1);
+        }
+        var getValStr = function(dict,val) {
+            var res = dict.get(val);
+            if(typeof(res) === 'undefined') {
+                return 'select';
             } else {
-                console.log(
-                    'SetupBinding Read Fail',
-                    binding.address, 
-                    binding.result
-                );
-            }
-        });
-    
-        var populateMenuArray = function(newArray, origArray) {
-            origArray.forEach(function(type){
-                newArray.push({
-                    name:type.name,
-                    value:type.value,
-                    selected:'',
-                    disp:true,
-                    style:''
-                });
-            });
-            return newArray;
-        }
-        var selectValue = function(array, value, debug) {
-            var i;
-            for(i = 0; i < array.length; i++) {
-                if(array[i].value == value){
-                    if(typeof(debug) === "boolean") {
-                        if(debug) {
-                            console.log('selecting...');
-                        }
-                    }
-                    array[i].selected = 'selected';
-                    return array;
-                }
+                return res;
             }
         }
 
-        baseRegisters.forEach( function (reg, index) {
-            var efSystemStatusMessage = "Not Configured";
-            var style = "color:black";
-            var ainRangeMenuOptions = [];
-            var ainResolutionMenuOptions = [];
-            var ainSettlingMenuOptions = [];
-            var negativeCHMenuOptions = [];
+        // setup data for ain-ef types
+        ainEFTypeInfo = {
+            val:0,
+            valStr: 'None'
 
-            var displayNegativeCh = false;
-            var efSystemStatus = {
-                message: 'Not Configured',
-                showWarning: false,
-                style: 'color:black',
-                class: ''
-            }
+        }
 
-            var efType = configuredEFType[index];
-            if (efType !== 0) {
-                var name = '';
-                ain_ef_types.forEach(function(type){
-                    if (type.value == efType) {
-                        name = type.name;
-                    }
-                });
-                if (name === '') {
-                    name = "Configured: " + efType.toString();
+        var configRegistersDict = dict();
+
+        self.moduleContext.allEFTypeVal = null;
+        self.moduleContext.allEFTypesSame = true;
+        self.moduleContext.allEFTypeOptions = ain_ef_types;
+
+        self.currentValues.forEach(function(value,name){
+            var dataObj = {};
+            dataObj.reg = name;
+            dataObj.val = value;
+            var strVal = value.toString();
+            // Switch on 
+            if(!findNum.test(name)) {
+                var newData = self.regParser.get(name)(value);
+                dataObj.curStr = newData.name;
+                dataObj.curVal = newData.value;
+                dataObj.menuOptions = self.curDeviceOptions.get(name);
+                configRegistersDict.set(name,dataObj);
+            } else {
+                var res = findNum.exec(name);
+                var index = Number(res[0]);
+                // Get currently saved values
+                var ainInfo = analogInputsDict.get('AIN'+index.toString());
+
+                var newData = self.regParser.get(name)(value);
+                if(isFound(name,'_')) {
+                    var menuOptions = ainInfo.optionsDict.get(name);
+                    menuOptions.curStr = newData.name;
+                    menuOptions.curVal = newData.value;
+                    ainInfo.optionsDict.set(name, menuOptions);
+                } else {
+                    var roundedRes = value.toFixed(self.ANALOG_INPUT_PRECISION);
+                    ainInfo.value = value;
+                    ainInfo.strVal = roundedRes + ' V';
                 }
-                efSystemStatus.message = name+': ('+efType.toString()+')';
-                efSystemStatus.style = "color:red";
-                efSystemStatus.showWarning = true;
-                showEFSystemStatusWarning = true;
-                efSystemStatus.class = 'text-warning';
+
+                // Update saved values
+                analogInputsDict.set('AIN'+index.toString(),ainInfo);
+                // if(isFound(name,'_RANGE')){
+                //     var convStr = self.rangeOptionsDict.get(strVal);
+                //     ainInfo.rangeVal = value;
+                //     ainInfo.range = convStr;
+                // } else if(isFound(name,'_RESOLUTION_INDEX')) {
+                //     var convStr = self.resolutionOptionsDict.get(strVal);
+                //     ainInfo.resolutionVal = value;
+                //     ainInfo.resolution = convStr;
+                // } else if(isFound(name,'_SETTLING_US')) {
+                //     var convStr = self.settlingOptionsDict.get(strVal);
+                //     ainInfo.settlingVal = value;
+                //     ainInfo.settling = convStr;
+                // } else if(isFound(name,'_NEGATIVE_CH')) {
+                //     var convStr = self.negativeChannelDict.get(strVal);
+                //     ainInfo.negativeChVal = value;
+                //     ainInfo.negativeCh = convStr;
+                //     ainInfo.negativeChOptions = self.getNegativeChOption(index);
+                // } else if(isFound(name,'_EF_INDEX')) {
+                //     var convStr = self.efTypeDict.get(strVal);
+                //     ainInfo.efConfigVal = value;
+                //     ainInfo.efConfig = convStr;
+                //     ainInfo.isEfConfigured = (value !== 0);
+                //     self.moduleContext.showEFSystemStatusWarning |= (value !== 0);
+
+                //     if(self.moduleContext.allEFTypeVal === null) {
+                //         self.moduleContext.allEFTypeVal = value;
+                //     } else {
+                //         var compVal = self.moduleContext.allEFTypeVal;
+                //         self.moduleContext.allEFTypesSame &= (value = compVal);
+                //     }
+                // } else {
+                    // var roundedRes = value.toFixed(self.ANALOG_INPUT_PRECISION);
+                    // ainInfo.value = value;
+                    // ainInfo.strVal = roundedRes + ' V';
+                // }
+                
             }
-
-            // Populate ainRangeMenuOptions
-            ainRangeMenuOptions = populateMenuArray(ainRangeMenuOptions, ainRangeOptions);
-
-            // Populate ainResolutionMenuOptions
-            ainResolutionMenuOptions = populateMenuArray(ainResolutionMenuOptions, ainResolutionOptions);
-
-            // Populate negativeCHMenuOptions
-            ainSettlingMenuOptions = populateMenuArray(ainSettlingMenuOptions, ainSettlingOptions);
-
-            // Populate negativeCHMenuOptions
-            negativeCHMenuOptions = populateMenuArray(negativeCHMenuOptions, ainNegativeCHOptions);
-
-            if ((index % 2) == 0) {
-                var displayNegativeCh = true;
-                negativeCHMenuOptions.push({
-                    value: index+1,
-                    name: "AIN"+(index+1).toString(),
-                    selected:''
-                });
-            }
-
-            // Select configured menu option for: ainRangeMenuOptions
-            selectValue(ainRangeMenuOptions, configuredRange[index]);
-
-            // Select configured menu option for: ainResolutionMenuOptions
-            selectValue(ainResolutionMenuOptions, configuredResolution[index]);
-
-            // Select configured menu option for: ainSettlingMenuOptions
-            selectValue(ainSettlingMenuOptions, configuredResolution[index]);
-
-            // Select configured menu option for: negativeCHMenuOptions
-            selectValue(negativeCHMenuOptions, configuredNegativeCH[index]);
-
-            moduleContext.analogInputs.push({
-                "name": reg,
-                "style": style,
-                "efSystemStatus": efSystemStatus,
-                "ainRangeMenuOptions": ainRangeMenuOptions,
-                "ainResolutionMenuOptions": ainResolutionMenuOptions,
-                "ainSettlingMenuOptions": ainSettlingMenuOptions,
-                "displayNegativeCh": displayNegativeCh,
-                "negativeCHMenuOptions": negativeCHMenuOptions,
-            });
-            
         });
-
-        var ainRangeMenuOptionsAll = [];
-        var ainResolutionMenuOptionsAll = [];
-        var ainSettlingMenuOptionsAll = [];
-        var ainNegativeCHMenuOptionsAll = [];
-
-        //Populate Menu's with Select Option & default value:
-        ainRangeMenuOptionsAll.push({
-            name: 'Select',
-            value: -9999,
-            selected: '',
-            disp: false,
-        });
-        ainResolutionMenuOptionsAll.push({
-            name: 'Select',
-            value: -9999,
-            selected: '',
-            disp: false,
-        });
-        ainSettlingMenuOptionsAll.push({
-            name: 'Select',
-            value: -9999,
-            selected: '',
-            disp: false,
-        });
-        ainNegativeCHMenuOptionsAll.push({
-            name: 'Select',
-            value: -9999,
-            selected: '',
-            disp: false,
-        });
-
-        // Populate Menu's with remaining options
-        ainRangeOptions = populateMenuArray(ainRangeMenuOptionsAll, ainRangeOptions);
-        ainResolutionOptions = populateMenuArray(ainResolutionMenuOptionsAll, ainResolutionOptions);
-        ainSettlingOptions = populateMenuArray(ainSettlingMenuOptionsAll, ainSettlingOptions);
-        ainNegativeCHOptions = populateMenuArray(ainNegativeCHMenuOptionsAll, ainNegativeCHOptions);
-
-        // Select appropriate values
-        selectValue(ainRangeOptions, configuredAllAinRange);
-        selectValue(ainResolutionOptions, configuredAllAinResolution);
-        selectValue(ainSettlingOptions, configuredAllAinSettlingUS);
-        selectValue(ainNegativeCHOptions, configuredAllAinNegativeCH);
-
-        
-        moduleContext.ainRangeMenuOptionsAll = ainRangeMenuOptionsAll;
-        moduleContext.ainResolutionMenuOptionsAll = ainResolutionMenuOptionsAll;
-        moduleContext.ainSettlingMenuOptionsAll = ainSettlingMenuOptionsAll;
-        moduleContext.ainNegativeCHMenuOptionsAll = ainNegativeCHMenuOptionsAll;
-        moduleContext.showEFSystemStatusWarning = showEFSystemStatusWarning;
-        framework.setCustomContext(moduleContext);
+        self.moduleContext.analogInputsDict = analogInputsDict;
+        self.moduleContext.configRegistersDict = configRegistersDict;
+        console.log('moduleContext',self.moduleContext);
+        framework.setCustomContext(self.moduleContext);
         onSuccess();
     };
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        // Define device-global device-configuration event handler function.
-        var configDeviceGlobal = function(data, onSuccess) {
-            var handleConfigError = function(err) {
-                console.log('configError',err,binding,value);
-                sdFramework.manageError(err);
-                onSuccess();
-            }
-            console.log(data.binding.bindingClass,'!event!');
-            var framework = data.framework;
-            var device = data.device;
-            var binding = data.binding.binding.split('-callback')[0];
-            var value = Number(data.value);
-            var className = data.binding.bindingClass.split('all-ain')[1];
-            className = '.analog-input' + className;
-
-            console.log('binding: ',binding,', value:',value, ', className: ',className);
-
-            if(value != -9999) {
-                // Update related selectors
-                $(className).val(value);
-
-                // Perform device I/O
-                device.qWrite(binding,value)
-                .then(onSuccess,handleConfigError)
-            } else {
-                onSuccess();
-            }
-        }
-
-        // Define individual channel device-configuration event handler function.
-        var configDevice = function(data, onSuccess) {
-            var handleConfigError = function(err) {
-                console.log('configError',err,binding,value);
-                onSuccess();
-            }
-            console.log(data.binding.bindingClass,'!event!');
-            var framework = data.framework;
-            var device = data.device;
-            var binding = data.binding.binding.split('-callback')[0];
-            var value = Number(data.value);
-            var className = data.binding.bindingClass.split('analog-input')[1];
-            className = '#all-ain' + className;
-
-            console.log('binding: ',binding,', value:',value);
-
-            // Update related selectors
-            $(className).val(-9999);
-
-            // Perform device I/O
-            device.qWrite(binding,value)
-            .then(onSuccess,handleConfigError)
-        };
-
-        // Define Generic Options Button Callback
-        var optionsButtonHandler = function(data, onSuccess) {
-            var binding = data.binding;
-            var value = data.value;
-            console.log('OptionsButton-event');
-            var btnObj = $('#'+binding.template);
-            // Switch based off icon state
-            if(btnObj.hasClass('icon-plus'))  {
-                btnObj.removeClass('icon-plus');
-                btnObj.addClass('icon-minus');
-                $('#'+binding.template+'-options').fadeIn(
-                    FADE_DURATION,
-                    onSuccess
-                    );
-            } else if(btnObj.hasClass('icon-minus'))  {
-                btnObj.removeClass('icon-minus');
-                btnObj.addClass('icon-plus');
-                $('#'+binding.template+'-options').fadeOut(
-                    FADE_DURATION,
-                    onSuccess
-                    );
-            } else {
-                onSuccess();
-            }
-        };
-
-        // Define the module's run-time bindings:
-        var moduleBindings = [
-            {
-                // Define binding to automatically read AINx Registers.
-                bindingClass: baseReg, 
-                template: baseReg, 
-                binding: baseReg, 
-                direction: 'read', 
-                format: 'customFormat', 
-                customFormatFunc: self.ainResultUpdate
-            },
-            // {
-            //     // Define binding to automatically read AINx_BINARY Registers.
-            //     bindingClass: baseReg+'_BINARY', 
-            //     template: baseReg+'_BINARY',   
-            //     binding: baseReg+'_BINARY',    
-            //     direction: 'read',  
-            //     format: '%d'
-            // },
-            {
-                // Define binding to handle AIN_ALL_RANGE user inputs.
-                bindingClass: 'all-ain-range-select',  
-                template: 'all-ain-range-select', 
-                binding: 'AIN_ALL_RANGE-callback',  
-                direction: 'write', 
-                event: 'change',
-                execCallback: true,
-                callback: configDeviceGlobal
-            },
-            {
-                // Define binding to handle AIN_ALL_RESOLUTION_INDEX user inputs.
-                bindingClass: 'all-ain-resolution-select',  
-                template: 'all-ain-resolution-select', 
-                binding: 'AIN_ALL_RESOLUTION_INDEX-callback',  
-                direction: 'write', 
-                event: 'change',
-                execCallback: true,
-                callback: configDeviceGlobal
-            },
-            {
-                // Define binding to handle AIN_ALL_SETTLING_US user inputs.
-                bindingClass: 'all-ain-settling-select',  
-                template: 'all-ain-settling-select', 
-                binding: 'AIN_ALL_SETTLING_US-callback',  
-                direction: 'write', 
-                event: 'change',
-                execCallback: true,
-                callback: configDeviceGlobal
-            },
-            {
-                // Define binding to handle AIN_ALL_NEGATIVE_CH user inputs.
-                bindingClass: 'all-ain-negative-channel-select',  
-                template: 'all-ain-negative-channel-select', 
-                binding: 'AIN_ALL_NEGATIVE_CH-callback',  
-                direction: 'write', 
-                event: 'change',
-                execCallback: true,
-                callback: configDeviceGlobal
-            },
-            {
-                // Define binding to handle AINx_RANGE user inputs.
-                bindingClass: baseReg+'-analog-input-range-select',  
-                template: baseReg+'-analog-input-range-select', 
-                binding: baseReg+'_RANGE-callback',  
-                direction: 'write', 
-                event: 'change',
-                execCallback: true,
-                callback: configDevice
-            },
-            {
-                // Define binding to handle AINx_RESOLUTION_INDEX user inputs.
-                bindingClass: baseReg+'-analog-input-resolution-select',  
-                template: baseReg+'-analog-input-resolution-select', 
-                binding: baseReg+'_RESOLUTION_INDEX-callback',  
-                direction: 'write', 
-                event: 'change',
-                execCallback: true,
-                callback: configDevice
-            },
-            {
-                // Define binding to handle AINx_SETTLING_US user inputs.
-                bindingClass: baseReg+'-analog-input-settling-select',  
-                template: baseReg+'-analog-input-settling-select', 
-                binding: baseReg+'_SETTLING_US-callback',  
-                direction: 'write', 
-                event: 'change',
-                execCallback: true,
-                callback: configDevice
-            },
-            {
-                // Define binding to handle AINx_NEGATIVE_CH user inputs.
-                bindingClass: baseReg+'-analog-input-negative-ch-select',  
-                template: baseReg+'-analog-input-negative-ch-select', 
-                binding: baseReg+'_NEGATIVE_CH-callback',  
-                direction: 'write', 
-                event: 'change',
-                execCallback: true,
-                callback: configDevice
-            },
-            {
-                // Define binding to handle graph button presses
-                bindingClass: 'Graph-Range-Options#(0:2)',
-                template: 'Graph-Range-Options#(0:2)',
-                binding: 'Graph-Range-Options#(0:2)-callback',
-                direction: 'write',
-                event: 'change',
-                execCallback: true,
-                callback: function(data, onSuccess) {
-                    console.log('data',data);
-                    onSuccess();
-                }
-            },
-            {
-                // Define binding to handle display/hide option-button presses.
-                bindingClass: 'module-options-toggle-button',  
-                template: 'module-options-toggle-button', 
-                binding: 'module-options-callback',  
-                direction: 'write', 
-                event: 'click',
-                execCallback: true,
-                callback: function(data, onSuccess) {
-                    //Use for reading checkbox:
-                    // $('').prop('checked',false) to set
-                    // $('').prop('checked') to read
-                    // for html:
-                    // <input type="checkbox" id="inlineCheckbox1" value="option1">
-                    optionsButtonHandler(data, onSuccess);
-                }
-            },
-            {
-                // Define binding to handle display/hide option-button presses.
-                bindingClass: baseReg+'-options-toggle-button',  
-                template: baseReg+'-options-toggle-button', 
-                binding: baseReg+'-callback',  
-                direction: 'write', 
-                event: 'click',
-                execCallback: true,
-                callback: function(data, onSuccess) {
-                    optionsButtonHandler(data, onSuccess);
-                }
-            },
-        ];
-
         // Save the bindings to the framework instance.
-        framework.putConfigBindings(moduleBindings);
+        // framework.putConfigBindings(moduleBindings);
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
@@ -621,11 +635,22 @@ function module() {
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        // console.log('Refreshed!',framework.moduleName);
+        // console.log('Refreshed!',framework.moduleName,self.bufferedValues.size,self.newBufferedValues.size);
+        self.bufferedOutputValues.forEach(function(value,name){
+            console.log('updating cur-val',name,value);
+            self.currentValues.set(name,value);
+            self.bufferedOutputValues.delete(name);
+        });
+        self.newBufferedValues.forEach(function(value,name){
+            if(name.indexOf('_') != -1){
+                console.log('Updating',name);
+            }
+            self.currentValues.set(name,value);
+            self.newBufferedValues.delete(name);
+        });
         onSuccess();
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
-        framework.clearConfigBindings();
         onSuccess();
     };
     this.onUnloadModule = function(framework, onError, onSuccess) {
@@ -641,6 +666,11 @@ function module() {
     };
     this.onRefreshError = function(framework, registerNames, description, onHandle) {
         console.log('in onRefreshError', description,framework.moduleName);
+        if(typeof(description.retError) === 'number') {
+            console.log('in onRefreshError',device_controller.ljm_driver.errToStrSync(description.retError));
+        } else {
+            console.log('Type of error',typeof(description.retError),description.retError);
+        }
         onHandle(true);
     };
 

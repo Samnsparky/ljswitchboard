@@ -4,16 +4,14 @@
     "ljmDeviceParameters":
     [
         {
+            "serialNumber":"470010610",
+            "connectionType":"USB"
+        },{
             "serialNumber":"470010548",
             "connectionType":"Ethernet"
-        },
-        {
-            "serialNumber":"470010563",
+        },{
+            "serialNumber":"1-470010563",
             "connectionType":"Ethernet"
-        },
-        {
-            "serialNumber":"470010117",
-            "connectionType":"USB"
         }
     ],
     "Labjack-T7s":
@@ -63,5 +61,5 @@
     ],
     "displayDevTools": true,
     "overrideAutoModuleLoad": true,
-    "moduleName": "dashboard"
+    "moduleName": "analog_inputs_fw"
 }

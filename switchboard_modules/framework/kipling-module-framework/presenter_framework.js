@@ -13,6 +13,11 @@ var sprintf = require('sprintf').sprintf;
 var ljmmm_parse = null;
 try {
     ljmmm_parse = require('ljmmm-parse');
+    ljmmm_parse.expandLJMMMNameSync = function (name) {
+        return ljmmm_parse.expandLJMMMEntrySync(
+            {name: name, address: 0, type: 'FLOAT32'}
+        ).map(function (entry) { return entry.name });
+    };
 } catch (err) {
     console.log('error loading ljmmm_parse');
 }

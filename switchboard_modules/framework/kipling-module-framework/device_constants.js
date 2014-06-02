@@ -1,29 +1,82 @@
-var t7DeviceConstants = {
-    ainRangeOptions: 
-        [
-            {"name": "-10 to 10V","value": 10},
-            {"name": "-1 to 1V","value": 1},
-            {"name": "-0.1 to 0.1V","value": 0.1},
-            {"name": "-0.01 to 0.01V","value": 0.01}
+var globalDeviceConstantsSwitch = {
+    "T7":"t7DeviceConstants"
+};
+var globalDeviceConstants = {
+    "t7DeviceConstants": {
+        hasEFSystem: true,
+        ainBitsPrecision: 6,
+        ainChannelNames: "AIN#(0:13)",
+        allConfigRegisters: [
+            {"name":"Range",            "register":"AIN_ALL_RANGE",                 "options":"ainRangeOptions",                    "manual":false},
+            {"name":"Resolution",       "register":"AIN_ALL_RESOLUTION_INDEX",      "options":"ainResolutionOptions",               "manual":false},
+            {"name":"Settling (us)",    "register":"AIN_ALL_SETTLING_US",           "options":"func","func":"ainSettlingOptions",   "manual":false},
+            {"name":"Negative Channel", "register":"AIN_ALL_NEGATIVE_CH",           "options":"func","func":"ainNegativeCHOptions", "manual":false},
+            {"name":"EF System",        "register":"{{ainChannelNames}}_EF_INDEX",  "options":"ainEFTypeOptions",                   "manual":true}
         ],
-    ainResolutionOptions: 
-        [
-            {"name": "Auto","value": 0},
-            {"name": "1","value": 1},
-            {"name": "2","value": 2},
-            {"name": "3","value": 3},
-            {"name": "4","value": 4},
-            {"name": "5","value": 5},
-            {"name": "6","value": 6},
-            {"name": "7","value": 7},
-            {"name": "8","value": 8},
-            {"name": "9","value": 9},
-            {"name": "10","value": 10},
-            {"name": "11","value": 11},
-            {"name": "12","value": 12},
+        configRegisters: [
+            {"name":"Range",            "register":"{{ainChannelNames}}_RANGE",            "options":"ainRangeOptions"},
+            {"name":"Resolution",       "register":"{{ainChannelNames}}_RESOLUTION_INDEX", "options":"ainResolutionOptions"},
+            {"name":"Settling (us)",    "register":"{{ainChannelNames}}_SETTLING_US",      "options":"func","func":"ainSettlingOptions"},
+            {"name":"Negative Channel", "register":"{{ainChannelNames}}_NEGATIVE_CH",      "options":"func","func":"ainNegativeCHOptions"},
+            {"name":"EF System",        "register":"{{ainChannelNames}}_EF_INDEX",         "options":"ainEFTypeOptions"}
         ],
-    ainSettlingOptions: 
-        [
+        extraAllAinOptions: [
+            {"name": "select","value": -9999}
+        ],
+        ainNegativeCHOptions: {
+            "numbers":[0,2,4,6,8,10,12,199],
+            func: function(val) {
+                if(val%2 === 0) {
+                    return {value: val,name: 'AIN'+val.toString()};
+                } else {
+                    return {value: 199,name: "GND"};
+                }
+            },
+            filter: function(val) {
+                if((typeof(val)==='undefined')||(val === null)) {
+                    return [{"value": 199,"name": "GND"}];
+                }
+                if(val%2 === 0) {
+                    return [
+                        {value: val,name: 'AIN'+val.toString()},
+                        {value: 199,name: "GND"}
+                    ];
+                } else {
+                    return [
+                        {value: 199,name: "GND"}
+                    ];
+                }
+            }
+        },
+        parsers: [
+            "ainRangeOptions",
+            "ainResolutionOptions",
+            "ainSettlingOptions",
+            "ainNegativeCHOptions",
+            "ainEFTypeOptions"
+        ],
+        ainRangeOptions: [
+            {"name": "-10 to 10V","value": 10,"timeMultiplier":1},
+            {"name": "-1 to 1V","value": 1,"timeMultiplier":1.25},
+            {"name": "-0.1 to 0.1V","value": 0.1,"timeMultiplier":1.5},
+            {"name": "-0.01 to 0.01V","value": 0.01,"timeMultiplier":3}
+        ],
+        ainResolutionOptions: [
+            {"name": "Auto","value": 0,"acquisitionTime": 50},
+            {"name": "1","value": 1, "acquisitionTime": 50},
+            {"name": "2","value": 2, "acquisitionTime": 50},
+            {"name": "3","value": 3, "acquisitionTime": 50},
+            {"name": "4","value": 4, "acquisitionTime": 50},
+            {"name": "5","value": 5, "acquisitionTime": 50},
+            {"name": "6","value": 6, "acquisitionTime": 50},
+            {"name": "7","value": 7, "acquisitionTime": 50},
+            {"name": "8","value": 8, "acquisitionTime": 50},
+            {"name": "9","value": 9, "acquisitionTime": 50},
+            {"name": "10","value": 10, "acquisitionTime": 200},
+            {"name": "11","value": 11, "acquisitionTime": 200},
+            {"name": "12","value": 12, "acquisitionTime": 200}
+        ],
+        ainSettlingOptions_RAW: [
             {"name": "Auto",    "value": 0},
             {"name": "10us",    "value": 10},
             {"name": "25us",    "value": 25},
@@ -36,31 +89,51 @@ var t7DeviceConstants = {
             {"name": "5ms",     "value": 5000},
             {"name": "10ms",    "value": 10000},
             {"name": "25ms",    "value": 25000},
-            {"name": "50ms",    "value": 50000},
+            {"name": "50ms",    "value": 50000}
         ],
-    ainEFTypeOptions:
-        [
-            {"name": "Not Configured", "value": 0, "selected": ''},
-            {"name": "TypeE","value": 20, "selected": ''},
-            {"name": "TypeJ","value": 21, "selected": ''},
-            {"name": "TypeK","value": 22, "selected": ''},
-            {"name": "TypeR","value": 23, "selected": ''},
-            {"name": "TypeT","value": 24, "selected": ''}
+        ainSettlingOptions: {
+            "numbers": [0,10,25,50,100,250,1000,2500,5000,10000,25000,50000],
+            func: function(val) {
+                if(val === 0) {
+                    return {value: val,name: 'Auto'};
+                } else if (val < 1000) {
+                    return {value: val,name: val.toString()+"us"};
+                } else {
+                    return {value: val,name: (val/1000).toString()+"ms"};
+                }
+            },
+            filter: function(val) {
+                return globalDeviceConstants.t7DeviceConstants.ainSettlingOptions_RAW;
+                // if(val === 0) {
+                //     return {value: val,name: 'Auto'};
+                // } else if (val < 1000) {
+                //     return {value: val,name: val.toString()+"us"};
+                // } else {
+                //     return {value: val,name: (val/1000).toString()+"ms"};
+                // } 
+            }
+        },
+        ainEFTypeOptions:[
+            {"name": "Input", "value": 0, "selected": '',"infoReg":"_EF_READ_A"},
+            {"name": "TypeE Thermocouple","value": 20, "selected": '',"infoReg":"_EF_READ_A"},
+            {"name": "TypeJ Thermocouple","value": 21, "selected": '',"infoReg":"_EF_READ_A"},
+            {"name": "TypeK Thermocouple","value": 22, "selected": '',"infoReg":"_EF_READ_A"},
+            {"name": "TypeR Thermocouple","value": 23, "selected": '',"infoReg":"_EF_READ_A"},
+            {"name": "TypeT Thermocouple","value": 24, "selected": '',"infoReg":"_EF_READ_A"}
         ],
-    thermocoupleTypes: 
-        [
+        thermocoupleTypes: [
             {"name": "TypeE","value": 20},
             {"name": "TypeJ","value": 21},
             {"name": "TypeK","value": 22},
             {"name": "TypeR","value": 23},
             {"name": "TypeT","value": 24}
         ],
-    thermocoupleTemperatureMetrics: 
-        [
+        thermocoupleTemperatureMetrics: [
             {"name": "K","value": 0},
             {"name": "C","value": 1},
             {"name": "F","value": 2}
-        ],
+        ]
+    }
 };
 
 
