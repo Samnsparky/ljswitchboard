@@ -547,6 +547,7 @@ function module() {
                 options.reg = compReg;
                 options.curStr = null;
                 options.curVal = null;
+                options.cssClass = configReg.cssClass;
                 // console.log('in configRegisters.forEach',configReg.title,configReg);
                 if(configReg.options !== 'func') {
                     menuOptions = self.deviceConstants[configReg.options];
@@ -625,42 +626,6 @@ function module() {
 
                 // Update saved values
                 analogInputsDict.set('AIN'+index.toString(),ainInfo);
-                // if(isFound(name,'_RANGE')){
-                //     var convStr = self.rangeOptionsDict.get(strVal);
-                //     ainInfo.rangeVal = value;
-                //     ainInfo.range = convStr;
-                // } else if(isFound(name,'_RESOLUTION_INDEX')) {
-                //     var convStr = self.resolutionOptionsDict.get(strVal);
-                //     ainInfo.resolutionVal = value;
-                //     ainInfo.resolution = convStr;
-                // } else if(isFound(name,'_SETTLING_US')) {
-                //     var convStr = self.settlingOptionsDict.get(strVal);
-                //     ainInfo.settlingVal = value;
-                //     ainInfo.settling = convStr;
-                // } else if(isFound(name,'_NEGATIVE_CH')) {
-                //     var convStr = self.negativeChannelDict.get(strVal);
-                //     ainInfo.negativeChVal = value;
-                //     ainInfo.negativeCh = convStr;
-                //     ainInfo.negativeChOptions = self.getNegativeChOption(index);
-                // } else if(isFound(name,'_EF_INDEX')) {
-                //     var convStr = self.efTypeDict.get(strVal);
-                //     ainInfo.efConfigVal = value;
-                //     ainInfo.efConfig = convStr;
-                //     ainInfo.isEfConfigured = (value !== 0);
-                //     self.moduleContext.showEFSystemStatusWarning |= (value !== 0);
-
-                //     if(self.moduleContext.allEFTypeVal === null) {
-                //         self.moduleContext.allEFTypeVal = value;
-                //     } else {
-                //         var compVal = self.moduleContext.allEFTypeVal;
-                //         self.moduleContext.allEFTypesSame &= (value = compVal);
-                //     }
-                // } else {
-                    // var roundedRes = value.toFixed(self.ANALOG_INPUT_PRECISION);
-                    // ainInfo.value = value;
-                    // ainInfo.strVal = roundedRes + ' V';
-                // }
-                
             }
         });
         self.moduleContext.analogInputsDict = analogInputsDict;

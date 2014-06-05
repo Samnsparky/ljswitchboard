@@ -1,13 +1,19 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'",
     "ljmDeviceParameters":
     [
         {
-            "serialNumber":"470010610",
+            "serialNumber":"1-470010610",
             "connectionType":"USB"
         },{
-            "serialNumber":"470010548",
+            "serialNumber":"1-470010548",
+            "connectionType":"Ethernet"
+        },{
+            "serialNumber":"470011064",
+            "connectionType":"Ethernet"
+        },{
+            "serialNumber":"470010604",
             "connectionType":"Ethernet"
         },{
             "serialNumber":"1-470010563",
@@ -61,5 +67,5 @@
     ],
     "displayDevTools": true,
     "overrideAutoModuleLoad": true,
-    "moduleName": "analog_inputs_fw"
+    "moduleName": "dashboard"
 }

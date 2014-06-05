@@ -71,7 +71,6 @@ function innerSelectModule(name)
             
         });
     // $('#cur-module-display').html(name.replace(/_/g, ' '));
-
     var src = name + '/view.html';
     var cssFile = name + '/style.css';
     var jsFile = name + '/controller.js';
@@ -100,16 +99,28 @@ function innerSelectModule(name)
     };
 
     //Function that loads a module with the singleDevice framework
-    var renderSingleDeviceFrameworkModule = function (thirdPartyJSList) {
+    var renderSingleDeviceFrameworkModule = function (moduleInfo) {
         //Get the file path for the presenter_framework that runs the 
         //  singleDevice framework.
         //File is found in the non-compiled switchboard_modules/frameworks 
         //  directory.
+        var thirdPartyJSList;
+        if(typeof(moduleInfo.third_party_code) !== 'undefined') {
+            thirdPartyJSList = moduleInfo.third_party_code;
+        } else {
+            thirdPartyJSList = [];
+        }
+        var jsLibFiles;
+        if(typeof(moduleInfo.jsFiles) !== 'undefined') {
+            jsLibFiles = moduleInfo.jsFiles;
+        } else {
+            jsLibFiles = [];
+        }
+        
         var device_constants = SINGLE_DEVICE_FRAMEWORK_DEVICE_CONSTANTS;
         var framework_location = SINGLE_DEVICE_FRAMEWORK_PRESENTER;
         var framework_connector = SINGLE_DEVICE_FRAMEWORK_CONNECTOR;
         var framework_style = SINGLE_DEVICE_FRAMEWORK_CSS;
-        var jsLibFiles = [];
         var jsLocalFiles = [
             device_constants,
             framework_location, 
@@ -125,7 +136,7 @@ function innerSelectModule(name)
             });
         }
         jsLibFiles.forEach(function(element, index, array){
-            jsFiles.push(element);
+            jsFiles.push(name + '/' + element);
         });
         jsLocalFiles.forEach(function(element, index, array){
             jsFiles.push(element);
@@ -179,7 +190,7 @@ function innerSelectModule(name)
                 if (moduleInfo.framework) {
                     if(moduleInfo.framework === 'singleDevice') {
                         //load the 'singleDevice' framework
-                        renderSingleDeviceFrameworkModule(moduleInfo.third_party_code);
+                        renderSingleDeviceFrameworkModule(moduleInfo);
                     } else {
                         //if no appropriate framework was found, load as if there 
                         //  was no framework requested

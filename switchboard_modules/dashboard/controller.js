@@ -45,8 +45,12 @@ function module() {
     this.bufferedValues = dict();
     this.bufferedOutputValues = dict();
 
-    
+    this.deviceDashboardController;
 
+    
+    this.roundReadings = function(reading) {
+        return Math.round(reading*1000)/1000;
+    }
     /**
      * Function is called once every time the module tab is selected, loads the module.
      * @param  {[type]} framework   The active framework instance.
@@ -62,6 +66,9 @@ function module() {
         self.interpretRegisters = framework.moduleConstants.interpretRegisters;
         self.REGISTER_OVERLAY_SPEC = framework.moduleConstants.REGISTER_OVERLAY_SPEC;
 
+        self.deviceDashboardController = new getDeviceDashboardController();
+
+        
         var genericConfigCallback = function(data, onSuccess) {
             console.log('genericConfigCallback');
             onSuccess();
@@ -69,7 +76,8 @@ function module() {
         var genericPeriodicCallback = function(data, onSuccess) {
             
             var name = data.binding.binding;
-            var value = Number(data.value.toFixed(self.DAC_CHANNEL_PRECISION));
+            var value = self.roundReadings(data.value);
+            // var value = Number(data.value.toFixed(self.DAC_CHANNEL_PRECISION));
             self.bufferedValues.set(name,value);
             // console.log('genericPeriodicCallback',data.binding.binding,value);
             onSuccess();
@@ -103,7 +111,9 @@ function module() {
 
         self.createProcessConfigStatesAndDirections();
 
-        onSuccess();
+        // Load file resources required for deviceDashboardController
+        self.deviceDashboardController.loadResources(onSuccess);
+        // onSuccess();
     };
 
     this.expandLJMMMNameSync = function (name) {
@@ -152,9 +162,7 @@ function module() {
         });
 
         var handleStates = function (states, address, viewRegInfoDict) {
-            console.log(address);
             var registers = registersByStateReg.get(address);
-            console.log(registers);
             registers.forEach(function (register) {
                 var state = states >> register.index & 0x1;
                 var viewRegInfo = viewRegInfoDict.get(register.name, {});
@@ -185,8 +193,6 @@ function module() {
             return haystack.indexOf(needle) != -1;
         };
 
-        console.log('here?');
-
         self.processConfigStatesAndDirections = function (registers,
             onSuccess) {
             var viewRegInfoDict = dict();
@@ -202,10 +208,10 @@ function module() {
 
             viewRegInfoDict.forEach(function (viewRegInfo, regAddress) {
                 //updateControl(viewRegInfo);
-                console.log(regAddress,viewRegInfo);
+                // console.log(regAddress,viewRegInfo);
             });
 
-            onSuccess();
+            onSuccess(viewRegInfoDict);
         };
     };
     
@@ -232,20 +238,18 @@ function module() {
             if(setupBinding.status === 'error') {
                 value = 0;
             } else {
-                value = setupBinding.result;
+                value = self.roundReadings(setupBinding.result);
             }
             self.currentValues.set(name,value);
-            console.log('Read Register:',name,value);
+            // console.log('Read Register:',name,value);
         });
-
-        self.currentValues.forEach(function(value,name){
-            console.log(name,value);
-        });
-
 
         // self.moduleContext.outputs = self.DACRegisters;
         //framework.setCustomContext(self.moduleContext);
-        self.processConfigStatesAndDirections(self.currentValues, onSuccess);
+        self.processConfigStatesAndDirections(self.currentValues, function(info){
+            console.log('Initialized Data...',info);
+            onSuccess();
+        });
     };
 
     this.formatVoltageTooltip = function(value) {
@@ -302,6 +306,8 @@ function module() {
     };
     this.onTemplateDisplayed = function(framework, onError, onSuccess) {
         console.log('in onTemplateDisplayed');
+        // drawDevice();
+        self.deviceDashboardController.drawDevice('#device-display-container');
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
@@ -312,14 +318,19 @@ function module() {
         onSuccess();
     };
     this.onRefresh = function(framework, registerNames, onError, onSuccess) {
-        console.log('in onRefresh',framework.moduleName);
+        // console.log('in onRefresh',framework.moduleName);
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
         self.bufferedValues.forEach(function(value,key){
             self.currentValues.set(key,value);
         });
-        onSuccess();
+        
+        self.processConfigStatesAndDirections(self.currentValues, function(newData){
+            // console.log('Updated Data...',newData);
+            self.deviceDashboardController.updateValues(newData);
+            onSuccess();
+        });
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
         // self.activeDevice.setDebugFlashErr(false);

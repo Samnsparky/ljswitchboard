@@ -8,18 +8,18 @@ var globalDeviceConstants = {
         ainBitsPrecision: 6,
         ainChannelNames: "AIN#(0:13)",
         allConfigRegisters: [
-            {"name":"Range",            "register":"AIN_ALL_RANGE",                 "options":"ainRangeOptions",                    "manual":false},
-            {"name":"Resolution",       "register":"AIN_ALL_RESOLUTION_INDEX",      "options":"ainResolutionOptions",               "manual":false},
-            {"name":"Settling (us)",    "register":"AIN_ALL_SETTLING_US",           "options":"func","func":"ainSettlingOptions",   "manual":false},
-            {"name":"Negative Channel", "register":"AIN_ALL_NEGATIVE_CH",           "options":"func","func":"ainNegativeCHOptions", "manual":false},
-            {"name":"EF System",        "register":"{{ainChannelNames}}_EF_INDEX",  "options":"ainEFTypeOptions",                   "manual":true}
+            {"name":"Range",            "cssClass":"range",             "register":"AIN_ALL_RANGE",                 "options":"ainRangeOptions",                    "manual":false},
+            {"name":"Resolution",       "cssClass":"resolution",        "register":"AIN_ALL_RESOLUTION_INDEX",      "options":"ainResolutionOptions",               "manual":false},
+            {"name":"Settling (us)",    "cssClass":"settling",          "register":"AIN_ALL_SETTLING_US",           "options":"func","func":"ainSettlingOptions",   "manual":false},
+            {"name":"Negative Channel", "cssClass":"negativeChannel",   "register":"AIN_ALL_NEGATIVE_CH",           "options":"func","func":"ainNegativeCHOptions", "manual":false},
+            {"name":"EF System",        "cssClass":"efSystem",          "register":"{{ainChannelNames}}_EF_INDEX",  "options":"ainEFTypeOptions",                   "manual":true}
         ],
         configRegisters: [
-            {"name":"Range",            "register":"{{ainChannelNames}}_RANGE",            "options":"ainRangeOptions"},
-            {"name":"Resolution",       "register":"{{ainChannelNames}}_RESOLUTION_INDEX", "options":"ainResolutionOptions"},
-            {"name":"Settling (us)",    "register":"{{ainChannelNames}}_SETTLING_US",      "options":"func","func":"ainSettlingOptions"},
-            {"name":"Negative Channel", "register":"{{ainChannelNames}}_NEGATIVE_CH",      "options":"func","func":"ainNegativeCHOptions"},
-            {"name":"EF System",        "register":"{{ainChannelNames}}_EF_INDEX",         "options":"ainEFTypeOptions"}
+            {"name":"Range",            "cssClass":"range",             "register":"{{ainChannelNames}}_RANGE",            "options":"ainRangeOptions"},
+            {"name":"Resolution",       "cssClass":"resolution",        "register":"{{ainChannelNames}}_RESOLUTION_INDEX", "options":"ainResolutionOptions"},
+            {"name":"Settling (us)",    "cssClass":"settling",          "register":"{{ainChannelNames}}_SETTLING_US",      "options":"func","func":"ainSettlingOptions"},
+            {"name":"Negative Channel", "cssClass":"negativeChannel",   "register":"{{ainChannelNames}}_NEGATIVE_CH",      "options":"func","func":"ainNegativeCHOptions"},
+            {"name":"EF System",        "cssClass":"efSystem",          "register":"{{ainChannelNames}}_EF_INDEX",         "options":"ainEFTypeOptions"}
         ],
         extraAllAinOptions: [
             {"name": "Select","value": -9999},

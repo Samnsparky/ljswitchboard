@@ -1,5 +1,32 @@
 <div id="dashboard">
 	Hello World
 	<!--<p>Read and control the devices analog output (DAC) channels.</p>-->
-	
+	<div id="device-display-container">
+	    <svg id="device-display-container-svg"></svg>
+	</div>
+	<div id="displayDivs" style="display:none">
+		
+		<div id="DYNAMIC-OUTPUT">
+			<div id="{{register}}-SELECT" class="btn-group direction-select">
+			    <a class="btn dropdown-toggle" data-toggle="dropdown"><span class="currentValue">Input</span><span class="caret"></span>
+			    </a>
+			    <ul class="dropdown-menu">
+			        <li>
+			            <a class="menuOption" value="Input">Input</a>
+			            <a class="menuOption" value="Output">Output</a>
+			        </li>
+			    </ul>
+			</div>
+			<div id="{{register}}-SELECT" class="btn-group direction-select">
+			    <a class="btn dropdown-toggle" data-toggle="dropdown"><span class="currentValue">Input</span><span class="caret"></span>
+			    </a>
+			    <ul class="dropdown-menu">
+			        <li>
+			            <a class="menuOption" value="Input">Input</a>
+			            <a class="menuOption" value="Output">Output</a>
+			        </li>
+			    </ul>
+			</div>
+		</div>
+	</div>
 </div>

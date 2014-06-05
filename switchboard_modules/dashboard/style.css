@@ -1,20 +1,28 @@
-.dacRow {
-	margin-top: 30px;
-}
-.subsection {
-    margin: 50px 0 50px 0;
+.register-overlay {
+    position: absolute;
+    font-size: 12px;
 }
 
-#analog-output-config .row-fluid {
-    margin: 30px 0 30px 0;
+.status-indicator {
+	padding:5px;
+	min-width:20px;
+	font-size: 10px;
+
 }
-.slider {
-    width: 90% !important;
+.state-indicator {
+padding: 5px;
+min-width: 20px;
+font-size: 10px;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, Sans-Serif;
 }
-.inputBar {
-	margin-top: 15px;
-	padding-left:20px;
+.state-indicator.active {
+	background-color:#5BB75B;
+	color: white;
 }
-.channelDescription {
-	margin-right:10px;
+.state-indicator.inactive {
+	background-color:#C0C0C0;
+	color: black;
+}
+#device-display-container-svg {
+    shape-rendering: crispEdges;
 }
