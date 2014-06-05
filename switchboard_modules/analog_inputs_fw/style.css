@@ -36,3 +36,13 @@
 #output-data-table td {
 	background-color: transparent;
 }
+.optionsConfigTable tr {
+	background-color: transparent;
+}
+.optionsConfigTable td {
+	background-color: transparent;
+}
+.ainConfigTable {
+	margin-left: 12%;
+	width: 88%;
+}

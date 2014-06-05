@@ -432,14 +432,14 @@ function updateFirmware (firmwareFileLocation) {
                         firmwareDisplaySelector += serial.toString();
                         firmwareDisplaySelector += '-firmware-display';
                         device.device = bundle.getDevice();
-                        console.log(device.device);
+                        console.log('device_updater, device.device:',device.device);
                         device.invalidateCache();
-                        numUpgraded++;
+                        numUpgraded+=1;
                         $(firmwareDisplaySelector).html(
                             bundle.getFirmwareVersion()
                         );
                         $('#complete-devices-display').html(numUpgraded);
-                        callback(null);
+                        callback();
                     },
                     function (err) {
                         callback(err);

@@ -55,7 +55,45 @@ function module() {
 
     this.deviceConstants = {};
     this.curDeviceOptions = dict();
+    this.regParserDict = dict();
     this.regParser = dict();
+    // this.regParser = {
+    //     set: function(name,value) {
+    //         return sdModule.regParserDict.set(name,value);
+    //     },
+    //     get: function(name) {
+    //         var data = sdModule.regParserDict.get(name);
+    //         if(typeof(data) === 'undefined') {
+    //             return sdModule.deviceConstants.extraAllAinOptions[0];
+    //         } else {
+    //             return data;
+    //         }
+    //     },
+    //     delete: function(name) {
+    //          return sdModule.regParserDict.delete(name);
+    //     },
+    //     forEach: function(func) {
+    //         return sdModule.regParserDict.forEach(func);
+    //     },
+    //     size: self.regParserDict.size
+    // };
+    this.initRegParser = function() {
+        self.regParser = {};
+        self.regParser.set = self.regParserDict.set;
+        self.regParser.get = function(name) {
+            var data = self.regParserDict.get(name);
+            if(typeof(data) === 'undefined') {
+                return self.deviceConstants.extraAllAinOptions[0];
+            } else {
+                return data;
+            }
+        };
+        self.regParser.delete = self.regParserDict.delete;
+        self.regParser.forEach = self.regParserDict.forEach;
+        self.regParser.size = self.regParserDict.size;
+        self.regParser.has = self.regParserDict.has;
+
+    }
 
     //Define nop (do-nothing) function
     var nop = function(){};
@@ -158,7 +196,8 @@ function module() {
             if((data.options !== 'func') && (data.options !== 'raw')) {
                 var dataObj = self.deviceConstants[data.options+'Dict'];
                 var getData = function(val) {
-                    return {value: val, name: dataObj.get(val.toString())}
+                    var value = Math.round(val*1000)/1000;
+                    return {value: val, name: dataObj.get(value.toString())}
                 };
                 addrList.forEach(function(addr){
                     self.regParser.set(addr,getData);
@@ -216,13 +255,17 @@ function module() {
     }
 
     this.writeReg = function(address,value) {
+        var ioDeferred = q.defer();
         self.activeDevice.qWrite(address,value)
         .then(function(){
-            console.log('success',address,value);
+            // console.log('success',address,value);
             self.bufferedOutputValues.set(address,value);
+            ioDeferred.resolve();
         },function(err){
-            console.log('fail',address,err);
+            // console.error('fail',address,err);
+            ioDeferred.reject(err);
         })
+        return ioDeferred.promise;
     }
     /**
      * Function to handle ain reading formatting & updating the mini-graph.
@@ -320,46 +363,52 @@ function module() {
         onSuccess();
     };
     this.genericDropdownClickHandler = function(data, onSuccess) {
-        console.log('HERE@!@',data.binding,data.eventData);
-        var buttonType = data.eventData.toElement.id;
-        console.log('ID',data.eventData.toElement);
-            // if (buttonType === "save-button") {
-            //     self.luaController.saveLoadedScript()
-            //     .then(
-            //         self.handleIOSuccess(
-            //             setActiveScriptInfo(onSuccess),
-            //             'Script Saved to File (save)'
-            //         ),
-            //         self.handleIOError(
-            //             setActiveScriptInfo(onSuccess),
-            //             'Err: Script Not Saved to File (save)'
-            //         )
-            //     );
-            // } else if (buttonType === "saveAs-button") {
-            //     self.luaController.saveLoadedScriptAs()
-            //     .then(
-            //         self.handleIOSuccess(
-            //             setActiveScriptInfo(onSuccess),
-            //             'Script Saved to File (saveAs)'
-            //         ),
-            //         self.handleIOError(
-            //             setActiveScriptInfo(onSuccess),
-            //             'Err: Script Not Saved to File (saveAs)'
-            //         )
-            //     );
-            // } else {
-            //     onSuccess();
-            // }
+        var rootEl = data.eventData.toElement;
+        var className = rootEl.className;
+        var buttonEl;
+        var buttonID = '';
+        var selectEl;
+        var register;
+        var value;
+        var newText = '';
+        var newTitle = '';
+
+
+        if(className === 'menuOption') {
+            buttonEl = rootEl.parentElement.parentElement.parentElement;
+            buttonID = buttonEl.id;
+            selectEl = buttonEl.children[0].children[0];
+            register = buttonID.split('-SELECT')[0];
+            value = Number(rootEl.getAttribute('value'));
+            newText = rootEl.text;
+            newTitle = register + ' is set to ' + value.toString();
+
+            
+            //Set title
+            selectEl.title = newTitle;
+            //Set new text
+            selectEl.innerText = newText;
+            console.log('ID',className,buttonID,register,value);
+            //Perform device IO
+            self.writeReg(register,value)
+            .then(function(){
+                console.log('Successfully wrote data!');
+            }, function(err){
+                console.log('Failed to write data :(',err,register,value);
+            });
+        }
         onSuccess();
     };
 
     this.configureModule = function(onSuccess) {
         var devT;
+        var subClass;
         var devConstStr;
         var baseReg;
         try{
             devT = self.activeDevice.getDeviceType();
-            devConstStr = globalDeviceConstantsSwitch[devT];
+            subclass = self.activeDevice.getSubclass();
+            devConstStr = globalDeviceConstantsSwitch[devT+subclass];
             self.deviceConstants = globalDeviceConstants[devConstStr];
             baseReg = self.deviceConstants.ainChannelNames;
             if(typeof(self.deviceConstants)==='undefined'){
@@ -369,6 +418,7 @@ function module() {
             console.error('Failed to configureModule',err);
         }
         // self.setupTypeConversionDicts(self.deviceConstants);
+        self.initRegParser();
         self.buildDataParsers();
         self.buildRegParser();
         self.buildOptionsDict();
@@ -643,7 +693,15 @@ function module() {
         });
         self.newBufferedValues.forEach(function(value,name){
             if(name.indexOf('_') != -1){
-                console.log('Updating',name);
+                console.log('Updating Select',name+'-SELECT');
+                var buttonID = '#' + name + '-SELECT';
+                var buttonEl = $(buttonID);
+                var selectEl = buttonEl.find('.currentValue');
+                var newText = self.regParser.get(name)(value);
+                var newTitle = name + ' is set to ' + value.toString();
+                console.log('New Data',newText,newTitle);
+                selectEl.text(newText.name);
+                selectEl.attr('title',newTitle);
             }
             self.currentValues.set(name,value);
             self.newBufferedValues.delete(name);

@@ -1343,7 +1343,11 @@ function Framework() {
                 var curFormat = binding.format;
                 if(typeof(value) === 'number') {
                     if(curFormat !== 'customFormat') {
-                        formattedValue = sprintf(curFormat, value);
+                        if(isNaN(value)) {
+                            formattedValue = value;
+                        } else {
+                            formattedValue = sprintf(curFormat, value);
+                        }
                     } else {
                         formattedValue = binding.formatFunc({
                             value: value,
@@ -2361,7 +2365,11 @@ function Framework() {
                         var curCustomFormatFunc = customFormatFuncs[index];
                         
                         if(curFormat !== 'customFormat') {
-                            stringVal = sprintf(curFormat, curValue);
+                            if(isNaN(curValue)){
+                                stringVal = curValue;
+                            } else {
+                                stringVal = sprintf(curFormat, curValue);
+                            }
                         } else {
                             stringVal = curCustomFormatFunc({
                                 value: curValue,

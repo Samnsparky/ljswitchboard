@@ -1052,7 +1052,10 @@ exports.waitForEnumeration = function(bundle)
     var deferred = q.defer();
     var ljmDriver = new labjack_nodejs.driver();
     var targetSerial = bundle.getSerialNumber();
-
+    this.targetSerial = targetSerial;
+    this.bundle = bundle;
+    console.log('t7_upgrade.js-Bundle...',bundle,targetSerial);
+    var self = this;
     var getAllConnectedSerials = function () {
         var innerDeferred = q.defer();
 
@@ -1068,32 +1071,42 @@ exports.waitForEnumeration = function(bundle)
 
         return innerDeferred.promise;
     };
+    this.getAllConnectedSerials = getAllConnectedSerials;
 
     var checkForDevice = function () {
-        getAllConnectedSerials().then(function (serialNumbers) {
+        self.getAllConnectedSerials().then(function (serialNumbers) {
             if (serialNumbers.indexOf(targetSerial) != -1) {
                 var newDevice = new labjack_nodejs.device();
-                try {
-                    console.log(bundle.getConnectionType(),targetSerial);
-                    newDevice.openSync(
-                        "LJM_dtT7",
-                        bundle.getConnectionType(),
-                        targetSerial.toString()
-                    );
-                } catch (e) {
-                    //safelyReject(deferred, e);
-                    console.log(e);
-                    setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
-                    return;
-                }
-                bundle.setDevice(newDevice);
-                deferred.resolve(bundle);
+                // try {
+                console.log('t7_upgrade.js-Trying to open device',bundle.getConnectionType(),targetSerial);
+                newDevice.open(
+                    "LJM_dtT7",
+                    bundle.getConnectionType(),
+                    targetSerial.toString(),
+                    function(err){
+                        console.log('t7_upgrade.js-Error...',err);
+                        console.log('t7_upgrade.js-Failed to connect',bundle.getConnectionType(),targetSerial.toString());
+                        setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
+                    },
+                    function(succ){
+                        console.log('t7_upgrade.js-Succeeded to connect!');
+                        console.log('t7_upgrade.js-Bundle...',bundle.getConnectionType(),targetSerial.toString());
+                        bundle.setDevice(newDevice);
+                        deferred.resolve(bundle);
+                    }
+                );
+                // } catch (e) {
+                //     //safelyReject(deferred, e);
+                //     console.log(e);
+                //     setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
+                //     return;
+                // }
             } else {
-                setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
+                setTimeout(self.checkForDevice, EXPECTED_REBOOT_WAIT);
             }
         });
     };
-
+    this.checkForDevice = checkForDevice;
     setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
 
     return deferred.promise;

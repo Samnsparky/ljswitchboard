@@ -1,5 +1,6 @@
 var globalDeviceConstantsSwitch = {
-    "T7":"t7DeviceConstants"
+    "T7":"t7DeviceConstants",
+    "T7Pro":"t7ProDeviceConstants"
 };
 var globalDeviceConstants = {
     "t7DeviceConstants": {
@@ -21,15 +22,18 @@ var globalDeviceConstants = {
             {"name":"EF System",        "register":"{{ainChannelNames}}_EF_INDEX",         "options":"ainEFTypeOptions"}
         ],
         extraAllAinOptions: [
-            {"name": "select","value": -9999}
+            {"name": "Select","value": -9999},
+            {"name": "Select","value": 65535}
         ],
         ainNegativeCHOptions: {
             "numbers":[0,2,4,6,8,10,12,199],
             func: function(val) {
-                if(val%2 === 0) {
+                if((val > -1)&&(val < 14)) {
                     return {value: val,name: 'AIN'+val.toString()};
-                } else {
+                } else if (val === 199) {
                     return {value: 199,name: "GND"};
+                } else {
+                    return {value: 65535, name: "Select"}
                 }
             },
             filter: function(val) {
@@ -38,7 +42,7 @@ var globalDeviceConstants = {
                 }
                 if(val%2 === 0) {
                     return [
-                        {value: val,name: 'AIN'+val.toString()},
+                        {value: (val+1),name: 'AIN'+(val+1).toString()},
                         {value: 199,name: "GND"}
                     ];
                 } else {
@@ -71,10 +75,7 @@ var globalDeviceConstants = {
             {"name": "6","value": 6, "acquisitionTime": 50},
             {"name": "7","value": 7, "acquisitionTime": 50},
             {"name": "8","value": 8, "acquisitionTime": 50},
-            {"name": "9","value": 9, "acquisitionTime": 50},
-            {"name": "10","value": 10, "acquisitionTime": 200},
-            {"name": "11","value": 11, "acquisitionTime": 200},
-            {"name": "12","value": 12, "acquisitionTime": 200}
+            {"name": "9","value": 9, "acquisitionTime": 50}
         ],
         ainSettlingOptions_RAW: [
             {"name": "Auto",    "value": 0},
@@ -96,10 +97,12 @@ var globalDeviceConstants = {
             func: function(val) {
                 if(val === 0) {
                     return {value: val,name: 'Auto'};
-                } else if (val < 1000) {
+                } else if ((val < 1000)&&(val > -1)) {
                     return {value: val,name: val.toString()+"us"};
-                } else {
+                } else if ((val > -1)&&(val < 1000000)){
                     return {value: val,name: (val/1000).toString()+"ms"};
+                } else {
+                    return {value: -9999, name: "Select"};
                 }
             },
             filter: function(val) {
@@ -133,8 +136,57 @@ var globalDeviceConstants = {
             {"name": "C","value": 1},
             {"name": "F","value": 2}
         ]
+    },
+    "t7ProDeviceConstants": {
+        "importedInfo":[
+            "hasEFSystem",
+            "ainBitsPrecision",
+            "ainChannelNames",
+            "allConfigRegisters",
+            "configRegisters",
+            "extraAllAinOptions",
+            "ainNegativeCHOptions",
+            "parsers",
+            "ainRangeOptions",
+            "ainResolutionOptions",
+            "ainSettlingOptions_RAW",
+            "ainSettlingOptions",
+            "ainEFTypeOptions",
+            "thermocoupleTypes",
+            "thermocoupleTemperatureMetrics"
+        ],
+        "extendedInfo":[
+            {"key":"ainResolutionOptions","values": [
+                    {"name": "10","value": 10, "acquisitionTime": 200},
+                    {"name": "11","value": 11, "acquisitionTime": 200},
+                    {"name": "12","value": 12, "acquisitionTime": 200}
+                ]
+            }
+        ]
     }
 };
+
+
+var linkGlobalDeviceConstants = function() {
+    var t7Pro = globalDeviceConstants.t7ProDeviceConstants;
+
+    t7Pro.importedInfo.forEach(function(attr){
+        var t7Info = globalDeviceConstants.t7DeviceConstants[attr];
+        globalDeviceConstants.t7ProDeviceConstants[attr] = t7Info;
+    });
+    t7Pro.extendedInfo.forEach(function(attr){
+        globalDeviceConstants.t7ProDeviceConstants[attr.key] = [];
+        globalDeviceConstants.t7DeviceConstants[attr.key].forEach(function(t7Data){
+            globalDeviceConstants.t7ProDeviceConstants[attr.key].push(t7Data);
+        });
+        console.log('proVals',attr.values);
+        var t7ProVals = attr.values;
+        t7ProVals.forEach(function(t7ProData){
+            globalDeviceConstants.t7ProDeviceConstants[attr.key].push(t7ProData);
+        });
+    });
+}
+linkGlobalDeviceConstants();
 
 
 
