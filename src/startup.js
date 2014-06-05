@@ -2,7 +2,7 @@ var gui = require('nw.gui');
 console.log('Hello World! -startup.js');
 console.log('window',window);
 console.log('gui',gui);
-console.log('process',process);
+console.log('process',process.version,process.arch,process.platform);
 
 function catchUncaughtExceptions(e) {
 	console.error('startup.js-uncaughtException',e);

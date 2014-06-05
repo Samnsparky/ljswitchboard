@@ -1,5 +1,5 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'",
     "ljmDeviceParameters":
     [
@@ -12,8 +12,8 @@
             "connectionType":"Ethernet"
         },
         {
-            "serialNumber":"470010533",
-            "connectionType":"Wifi"
+            "serialNumber":"470010117",
+            "connectionType":"USB"
         }
     ],
     "Labjack-T7s":
@@ -61,7 +61,7 @@
             "connectionType":"USB"
         }
     ],
-    "displayDevTools": false,
+    "displayDevTools": true,
     "overrideAutoModuleLoad": true,
-    "moduleName": "network_settings"
+    "moduleName": "dashboard"
 }
