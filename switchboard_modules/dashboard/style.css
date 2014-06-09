@@ -35,10 +35,12 @@
 }
 .digitalDisplayIndicator {
 	float:right;
+	padding-left: 2px;
 }
 .digitalSelectButton .dropdown-toggle {
 	font-size: 12px;
 	padding: 0px 5px 0px 5px;
+	min-width: 52px;
 	/*margin-bottom: -10px;*/
 }
 .dropdown-menu {
@@ -61,3 +63,31 @@
 	line-height: 20px;
 	width:90px;
 }
+/*--------- Digital Output Styling -------------*/
+.digitalControlObject .btn-group {
+	top: -1px;
+	margin: 0px;
+}
+.digitalControlObject .currentValue {
+	font-size: 12px;
+	padding: 0px;
+	font-weight: 300;
+}
+.digitalControlObject .button-toggle {
+	padding: 0px 0px 0px 2px;
+}
+.digitalControlObject .button-toggle .caret {
+	font-size: 12px;
+	padding: 0px 1px 0px 0px;
+}
+.digitalControlObject .digitalStateSelectButton{
+	margin-left:2px;
+}
+.digitalControlObject .digitalStateSelectButton .currentValue{
+	padding: 0px 2px 0px 0px;
+	min-width: 32px;
+}
+.digitalControlObject .digitalStateSelectButton .btn.dropdown-toggle {
+padding: 0px;
+}
+

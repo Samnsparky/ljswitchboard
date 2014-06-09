@@ -315,6 +315,18 @@ function module() {
             'stop': self.onVoltageSelected
         });
     };
+    this.dioChangeListner = function(event) {
+        self.dioEvent = event;
+        var className = event.toElement.className;
+        if(className === 'menuOption') {
+            console.log('Selected...',event);
+        }
+    };
+    this.attachDIOListners = function() {
+        var digitalObj = $('.digitalControlObject')
+        digitalObj.unbind();
+        digitalObj.bind('click', self.dioChangeListner);
+    };
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         console.log('in onTemplateLoaded');
         onSuccess();
@@ -332,6 +344,7 @@ function module() {
                 var setV = self.currentValues.get(reg);
                 self.writeDisplayedVoltage(reg,setV);
             });
+            self.attachDIOListners();
             onSuccess();
         });
     };
