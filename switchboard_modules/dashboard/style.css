@@ -2,7 +2,9 @@
     position: absolute;
     font-size: 12px;
 }
+.digitalDisplayIndicator {
 
+}
 .status-indicator {
 	padding:5px;
 	min-width:20px;
@@ -10,10 +12,10 @@
 
 }
 .state-indicator {
-padding: 5px;
-min-width: 20px;
-font-size: 10px;
-font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, Sans-Serif;
+	padding: 5px;
+	min-width: 20px;
+	font-size: 10px;
+	font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, Sans-Serif;
 }
 .state-indicator.active {
 	background-color:#5BB75B;
@@ -24,5 +26,38 @@ font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, Sans-Serif;
 	color: black;
 }
 #device-display-container-svg {
-    shape-rendering: crispEdges;
+    /*shape-rendering: crispEdges;*/
+}
+.digitalSelectButton {
+	float:left;
+	top: -1px;
+	margin-right: 2px;
+}
+.digitalDisplayIndicator {
+	float:right;
+}
+.digitalSelectButton .dropdown-toggle {
+	font-size: 12px;
+	padding: 0px 5px 0px 5px;
+	/*margin-bottom: -10px;*/
+}
+.dropdown-menu {
+	width: 90px;
+	padding: 0px;
+	min-width: 90px;
+}
+.dropdown-menu a {
+	padding:2px 0px 2px 5px;
+}
+.menuOption {
+	font-size: 12px;
+}
+.dac-output-spinner {
+	padding-top: 0px;
+}
+.dac-output-spinner input {
+	margin: 0px;
+	font-size: 12px;
+	line-height: 20px;
+	width:90px;
 }

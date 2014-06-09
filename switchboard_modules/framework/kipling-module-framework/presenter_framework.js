@@ -317,6 +317,7 @@ function Framework() {
     this.sdFrameworkDebugLoopErrors = false;
     this.sdFrameworkDebugTiming = false;
     this.sdFrameworkDebugDAQLoopMonitor = false;
+    this.sdFrameworkDebugDAQLoopMonitorInfo = true;
     this.numContinuousRegLoopIterations = 0;
     this.loopErrorEncountered = false;
     this.loopErrors = [];
@@ -390,7 +391,12 @@ function Framework() {
     };
     this.printDAQLoopInfo = function(functionName,info) {
         if(self.sdFrameworkDebugDAQLoopMonitor) {
-            self.print(functionName,info,'sdFrameworkDebugDAQLoopMonitor');
+            self.print(functionName,info,'sdFrameworkDebugDAQLoopInfo');
+        }
+    };
+    this.printDAQLoopMonitorInfo = function(functionName,info) {
+        if(self.sdFrameworkDebugDAQLoopMonitorInfo) {
+            self.print(functionName,info,'sdFrameworkDebugDAQLoopMonitorInfo');
         }
     };
     this.printTimingInfo = function(functionName,info) {
@@ -486,7 +492,7 @@ function Framework() {
                 console.log(
                     'Error firing: '+name, 
                     ' Error caught is: ',err.name, 
-                    'message: ',err.message);
+                    'message: ',err.message,err.stack);
                 try{
                     var isHandled = false;
                     if (err.name === 'Driver Operation Error') {
@@ -2020,7 +2026,7 @@ function Framework() {
     };
     this.daqMonitor = function() {
         if(!self.daqLoopFinished) {
-            self.printDAQLoopInfo('DAQ-Loop-Lock-Detected',self.daqLoopStatus);
+            self.printDAQLoopMonitorInfo('DAQ-Loop-Lock-Detected',self.daqLoopStatus);
         }
     };
     this.qConfigureTimer = function() {
@@ -2039,7 +2045,7 @@ function Framework() {
             }
             device_controller.ljm_driver.readLibrarySync('LJM_DEBUG_LOG_MODE');
             if(!self.ljmDriverLogEnabled) {
-                console.log('enabling LJM-log');
+                console.log('enabling LJM-log', elapsedTime);
                 self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',2);
                 self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_LEVEL',2);
                 var confTimeout = self.ljmDriver.readLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS');

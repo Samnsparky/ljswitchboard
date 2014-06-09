@@ -354,7 +354,7 @@ function onResized()
         $('#module-list').slideUp();
         $('#close-nav-dock').slideUp();
     }
-
+    var headerHeight = $('#system-navigation');
     var moduleChromeContentsEl = $('#module-chrome-contents');
     var windowHeight = $(window).height();
     var contents_height = windowHeight - MODULE_CONTENT_BOTTOM_BORDER_HEIGHT;

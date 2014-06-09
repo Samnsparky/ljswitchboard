@@ -10,7 +10,9 @@
     "toolbar": true,
     "width": 1090,
     "height": 730,
-    "min_width":535
+    "min_width":600,
+    "a-min_width":785,
+    "min_height":400
   },
   "nodejs": true,
   "dependencies": {

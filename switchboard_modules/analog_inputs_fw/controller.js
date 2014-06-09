@@ -47,7 +47,6 @@ function module() {
 
     this.currentValues = dict();
     this.isValueNew = dict();
-    this.bufferedValues = dict();
     this.newBufferedValues = dict();
     this.bufferedOutputValues = dict();
 
@@ -234,11 +233,15 @@ function module() {
             var formatReg = handlebars.compile(data.register);
             var compReg = formatReg(self.deviceConstants);
             var addrList = ljmmm_parse.expandLJMMMNameSync(compReg);
+            var deviceOptionsData = {};
+            deviceOptionsData.name = data.name;
+            deviceOptionsData.cssClass = data.cssClass;
             if (data.options !== 'func') {
                 addrList.forEach(function(addr){
                     var menuOptions = [];
                     menuOptions = self.deviceConstants[data.options];
-                    self.curDeviceOptions.set(addr,menuOptions);
+                    deviceOptionsData.menuOptions = menuOptions;
+                    self.curDeviceOptions.set(addr,deviceOptionsData);
                 });
             } else if (data.options === 'func') {
                 var findNum = new RegExp("[0-9]{1,2}");
@@ -246,7 +249,8 @@ function module() {
                     var addrNum = findNum.exec(addr);
                     var dataObj = self.deviceConstants[data.func];
                     var menuOptions = dataObj.filter(addrNum);
-                    self.curDeviceOptions.set(addr,menuOptions);
+                    deviceOptionsData.menuOptions = menuOptions;
+                    self.curDeviceOptions.set(addr,deviceOptionsData);
                 });
             }
         };
@@ -330,7 +334,6 @@ function module() {
         // console.log('genericPeriodicCallback',data.binding.binding,data.value);
         var name = data.binding.binding;
         var value = data.value;
-        self.bufferedValues.set(name,value);
         var oldValue = self.currentValues.get(name);
         if(oldValue != value) {
             self.isValueNew.set(name,true);
@@ -602,9 +605,12 @@ function module() {
             // Switch on 
             if(!findNum.test(name)) {
                 var newData = self.regParser.get(name)(value);
+                var optionsData = self.curDeviceOptions.get(name);
                 dataObj.curStr = newData.name;
                 dataObj.curVal = newData.value;
-                dataObj.menuOptions = self.curDeviceOptions.get(name);
+                dataObj.menuOptions = optionsData.menuOptions;
+                dataObj.name = optionsData.name;
+                dataObj.cssClass = optionsData.cssClass;
                 configRegistersDict.set(name,dataObj);
             } else {
                 var res = findNum.exec(name);
@@ -650,7 +656,7 @@ function module() {
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        // console.log('Refreshed!',framework.moduleName,self.bufferedValues.size,self.newBufferedValues.size);
+        // console.log('Refreshed!',framework.moduleName,self.newBufferedValues.size);
         self.bufferedOutputValues.forEach(function(value,name){
             console.log('updating cur-val',name,value);
             self.currentValues.set(name,value);

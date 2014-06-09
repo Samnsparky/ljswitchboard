@@ -2,7 +2,7 @@
     display:none;
 }
 .optionsConfigTable {
-	margin-bottom: 15px;
+	margin-bottom: 10px;
 	background-color: transparent;
 	margin-top: -5px;
 	width:100%;
@@ -42,7 +42,56 @@
 .optionsConfigTable td {
 	background-color: transparent;
 }
+.ain-config-options hr {
+	margin:0px;
+}
 .ainConfigTable {
 	margin-left: 14%;
 	width: 86%;
+}
+.range-header {
+	width: 108px;
+}
+.range-LINK {
+	width: 94px;
+}
+.resolution-header {
+	width: 62px;
+}
+.resolution-LINK {
+	width: 48px;
+}
+.settling-header {
+	width: 68px;
+}
+.settling-LINK {
+	width: 54px;
+}
+.negativeChannel-header {
+	/*width: 85px;*/
+	width: 13%;
+	min-width: 67px;
+	max-width: 150px;
+}
+.negativeChannel-LINK {
+	width: 48px;
+}
+.efSystem-LINK {
+	width: 130px;
+}
+.btn-group .currentValue {
+	float:left;
+}
+.btn-group .caret {
+	float:right;
+}
+.dropdown-menu {
+	min-width:0px;
+}
+.dropdown-menu li a {
+	padding: 3px 13px;
+}
+#advanced-ain-readout .dropdown-toggle {
+	padding-left: 5px;
+	padding-right: 5px;
 }

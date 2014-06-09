@@ -1170,7 +1170,6 @@ var unpackDeviceInfo = function (driverListingItem) {
         if((retDeviceInfo.specialImageSuffix === '') && (retDeviceInfo.type == 7)) {
             imgName = '';
         }
-        console.log('RSSI-Debug',driverListingItem.serialNumber,driverListingItem.connectionType,newRSSI,imgName);
         retDeviceInfo.wifiRSSIImgName = imgName;
         retDeviceInfo.wifiRSSIStr = avgRSSI.toString() + 'dB';
         retDeviceInfo.avgWiFiRSSI = avgRSSI;
@@ -1226,8 +1225,8 @@ var unpackDeviceInfo = function (driverListingItem) {
         'wifiRSSIStr': '0dB',
         'wifiRSSIImgName': '',
         'numInAvgWiFiRSSI': 0,
-        'wifiStatus': 'Un-Powered',
-        'wifiStatusStr': false
+        'wifiStatus': false,
+        'wifiStatusStr': 'Un-Powered'
     }
 
     driverListingItem.data.forEach(function (dataItem) {
@@ -1240,17 +1239,19 @@ var unpackDeviceInfo = function (driverListingItem) {
 
 var tryOpenDeviceConnection = function (deviceInfo, connection) {
     var deferred = q.defer();
-
+    console.log('Trying to open device',deviceInfo.serial,connection.type);
     openDeviceFromAttributes(
         deviceInfo.type,
         deviceInfo.serial,
         connection.ipAddress,
         connection.type,
         function (error) {
+            console.log('Failed to opened device',deviceInfo.serial,connection.type);
             connection.alreadyOpen = true;
             deferred.resolve();
         },
         function (device) {
+            console.log('Successfully to opened device',deviceInfo.serial,connection.type);
             device.close(function(){
                 console.error('Trying to close device-2',deviceInfo.serial,connection.type);
                 device.close(deferred.resolve, deferred.resolve);

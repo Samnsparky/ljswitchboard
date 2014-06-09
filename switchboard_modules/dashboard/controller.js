@@ -42,7 +42,7 @@ function module() {
     this.activeDevice = undefined;
 
     this.currentValues = dict();
-    this.bufferedValues = dict();
+    this.newBufferedValues = dict();
     this.bufferedOutputValues = dict();
 
     this.deviceDashboardController;
@@ -50,6 +50,19 @@ function module() {
     
     this.roundReadings = function(reading) {
         return Math.round(reading*1000)/1000;
+    }
+    this.writeReg = function(address,value) {
+        var ioDeferred = q.defer();
+        self.activeDevice.qWrite(address,value)
+        .then(function(){
+            // console.log('success',address,value);
+            self.bufferedOutputValues.set(address,value);
+            ioDeferred.resolve();
+        },function(err){
+            // console.error('fail',address,err);
+            ioDeferred.reject(err);
+        })
+        return ioDeferred.promise;
     }
     /**
      * Function is called once every time the module tab is selected, loads the module.
@@ -74,12 +87,15 @@ function module() {
             onSuccess();
         };
         var genericPeriodicCallback = function(data, onSuccess) {
-            
             var name = data.binding.binding;
-            var value = self.roundReadings(data.value);
-            // var value = Number(data.value.toFixed(self.DAC_CHANNEL_PRECISION));
-            self.bufferedValues.set(name,value);
-            // console.log('genericPeriodicCallback',data.binding.binding,value);
+            // var value = self.roundReadings(data.value);
+            var value = data.value;
+            var oldValue = self.currentValues.get(name);
+            if(oldValue != value) {
+                self.newBufferedValues.set(name,value);
+            } else {
+                self.newBufferedValues.delete(name);
+            }
             onSuccess();
         };
 
@@ -162,7 +178,7 @@ function module() {
         });
 
         var handleStates = function (states, address, viewRegInfoDict) {
-            var registers = registersByStateReg.get(address);
+            var registers = registersByStateReg.get(address, []);
             registers.forEach(function (register) {
                 var state = states >> register.index & 0x1;
                 var viewRegInfo = viewRegInfoDict.get(register.name, {});
@@ -173,7 +189,7 @@ function module() {
         };
 
         var handleDirections = function (directions, address, viewRegInfoDict) {
-            var registers = registersByDirectionReg.get(address);
+            var registers = registersByDirectionReg.get(address, []);
             registers.forEach(function (register) {
                 var direction = directions >> register.index & 0x1;
                 var viewRegInfo = viewRegInfoDict.get(register.name, {});
@@ -185,7 +201,11 @@ function module() {
         var handleOther = function (value, address, viewRegInfoDict) {
             var viewRegInfo = viewRegInfoDict.get(address, {});
             viewRegInfo.value = value;
-            viewRegInfo.type = 'static';
+            if(address.indexOf('DAC') !== -1) {
+                viewRegInfo.type = 'analogOutput';
+            } else {
+                viewRegInfo.type = 'analogInput';
+            }
             viewRegInfoDict.set(address, viewRegInfo);
         };
 
@@ -246,46 +266,42 @@ function module() {
 
         // self.moduleContext.outputs = self.DACRegisters;
         //framework.setCustomContext(self.moduleContext);
-        self.processConfigStatesAndDirections(self.currentValues, function(info){
-            console.log('Initialized Data...',info);
-            onSuccess();
-        });
+        onSuccess();
     };
 
     this.formatVoltageTooltip = function(value) {
         return sprintf.sprintf("%.2f V", value);
     };
     this.writeDisplayedVoltage = function(register, selectedVoltage) {
-        console.log(register,selectedVoltage);
-        $('#' + register + '_input_slider').slider('setValue', selectedVoltage);
+        $('#' + register + '_input_spinner').spinner('value', selectedVoltage);
     };
     this.onVoltageSelected = function(event) {
-        var firingID = event.target.id;
-        var selectedVoltage;
-        var isValidValue = false;
-        var register = firingID
-            .replace('_input_spinner', '')
-            .replace('_input_slider', '');
+        // var firingID = event.target.id;
+        // var selectedVoltage;
+        // var isValidValue = false;
+        // var register = firingID
+        //     .replace('_input_spinner', '')
+        //     .replace('_input_slider', '');
 
-        if (firingID.search('_input_spinner') > 0) {
-            var spinText = $('#'+firingID).val();
-            if(spinText !== null) {
-                isValidValue = (spinText !== null && spinText.match(/[\d]+(\.\d+)?$/g) !== null);
-                selectedVoltage = Number(spinText);
-            }
-        }
-        if(isValidValue) {
-            console.log('newVal',typeof(selectedVoltage),selectedVoltage,register);
-            $('#'+register+'_input_spinner').css('border', 'none');
-            self.writeDisplayedVoltage(register,selectedVoltage);
-        } else {
-            if (firingID.search('_input_spinner') > 0) {
-                var spinText = $('#'+firingID).val();
-                if (spinText !== null && !spinText.match(/\d+\./g)) {
-                    $('#'+register+'_input_spinner').css('border', '1px solid red');
-                }
-            }
-        }
+        // if (firingID.search('_input_spinner') > 0) {
+        //     var spinText = $('#'+firingID).val();
+        //     if(spinText !== null) {
+        //         isValidValue = (spinText !== null && spinText.match(/[\d]+(\.\d+)?$/g) !== null);
+        //         selectedVoltage = Number(spinText);
+        //     }
+        // }
+        // if(isValidValue) {
+        //     console.log('newVal',typeof(selectedVoltage),selectedVoltage,register);
+        //     $('#'+register+'_input_spinner').css('border', 'none');
+        //     self.writeDisplayedVoltage(register,selectedVoltage);
+        // } else {
+        //     if (firingID.search('_input_spinner') > 0) {
+        //         var spinText = $('#'+firingID).val();
+        //         if (spinText !== null && !spinText.match(/\d+\./g)) {
+        //             $('#'+register+'_input_spinner').css('border', '1px solid red');
+        //         }
+        //     }
+        // }
     };
     
     this.createSpinners = function() {
@@ -301,14 +317,23 @@ function module() {
     };
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         console.log('in onTemplateLoaded');
-        self.createSpinners();
         onSuccess();
     };
     this.onTemplateDisplayed = function(framework, onError, onSuccess) {
         console.log('in onTemplateDisplayed');
-        // drawDevice();
-        self.deviceDashboardController.drawDevice('#device-display-container');
-        onSuccess();
+        self.processConfigStatesAndDirections(self.currentValues, function(initializedData){
+            initializedData.forEach(function(value,name){
+                console.log(name,value);
+            })
+            self.deviceDashboardController.drawDevice('#device-display-container',initializedData);
+            self.createSpinners();
+            var regs = ['DAC0','DAC1'];
+            regs.forEach(function(reg){
+                var setV = self.currentValues.get(reg);
+                self.writeDisplayedVoltage(reg,setV);
+            });
+            onSuccess();
+        });
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
         // console.log('in onRegisterWrite',binding);
@@ -322,13 +347,43 @@ function module() {
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        self.bufferedValues.forEach(function(value,key){
-            self.currentValues.set(key,value);
+        var extraData = dict();
+        self.bufferedOutputValues.forEach(function(value,name){
+            console.log('updating cur-val',name,value);
+            self.currentValues.set(name,value);
+            self.bufferedOutputValues.delete(name);
         });
-        
-        self.processConfigStatesAndDirections(self.currentValues, function(newData){
+        self.newBufferedValues.forEach(function(value,name){
+            if(name.indexOf('AIN') == -1) {
+                console.log('Updating:',name,value);
+            }
+            if(name.indexOf('_STATE') > 0) {
+                var getName = name.split('_STATE')[0] + '_DIRECTION';
+                var getVal = self.currentValues.get(getName);
+                extraData.set(getName,getVal);
+            } else if(name.indexOf('_DIRECTION') > 0) {
+                var getName = name.split('_DIRECTION')[0] + '_STATE';
+                var getVal = self.currentValues.get(getName);
+                extraData.set(getName,getVal);
+            }
+        });
+        extraData.forEach(function(value,name){
+            if(!self.newBufferedValues.has(name)) {
+                self.newBufferedValues.set(name,value);
+            }
+        })
+        self.processConfigStatesAndDirections(self.newBufferedValues, function(newData){
             // console.log('Updated Data...',newData);
             self.deviceDashboardController.updateValues(newData);
+
+            //Delete Changed Values
+            self.newBufferedValues.forEach(function(value,name){
+                if(name.indexOf('AIN') == -1) {
+                    console.log('Updated',name,value);
+                }
+                self.currentValues.set(name,value);
+                self.newBufferedValues.delete(name);
+            });
             onSuccess();
         });
     };

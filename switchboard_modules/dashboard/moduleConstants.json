@@ -5,15 +5,15 @@
 	],
 	"startupRegList":[
 		{"name":"AIN#(0:13)","type":"FLOAT32","isConfig":true,"isPeriodic":true},
-		{"name":"DAC#(0:1)","type":"FLOAT32","isConfig":true,"isPeriodic":false},
-		{"name":"FIO_STATE","type":"bitMask","isConfig":true,"isPeriodic":false,"storeName":"FIO#(0:7)-state"},
-		{"name":"FIO_DIRECTION","type":"bitMask","isConfig":true,"isPeriodic":false,"storeName":"FIO#(0:7)-direction"},
-		{"name":"EIO_STATE","type":"bitMask","isConfig":true,"isPeriodic":false,"storeName":"EIO#(0:7)-state"},
-		{"name":"EIO_DIRECTION","type":"bitMask","isConfig":true,"isPeriodic":false,"storeName":"EIO#(0:7)-direction"},
-		{"name":"CIO_STATE","type":"bitMask","isConfig":true,"isPeriodic":false,"storeName":"CIO#(0:7)-state"},
-		{"name":"CIO_DIRECTION","type":"bitMask","isConfig":true,"isPeriodic":false,"storeName":"CIO#(0:7)-direction"},
-		{"name":"MIO_STATE","type":"bitMask","isConfig":true,"isPeriodic":false,"storeName":"MIO#(0:2)-state"},
-		{"name":"MIO_DIRECTION","type":"bitMask","isConfig":true,"isPeriodic":false,"storeName":"MIO#(0:2)-direction"}
+		{"name":"DAC#(0:1)","type":"FLOAT32","isConfig":true,"isPeriodic":true},
+		{"name":"FIO_STATE","type":"bitMask","isConfig":true,"isPeriodic":true,"storeName":"FIO#(0:7)-state"},
+		{"name":"FIO_DIRECTION","type":"bitMask","isConfig":true,"isPeriodic":true,"storeName":"FIO#(0:7)-direction"},
+		{"name":"EIO_STATE","type":"bitMask","isConfig":true,"isPeriodic":true,"storeName":"EIO#(0:7)-state"},
+		{"name":"EIO_DIRECTION","type":"bitMask","isConfig":true,"isPeriodic":true,"storeName":"EIO#(0:7)-direction"},
+		{"name":"CIO_STATE","type":"bitMask","isConfig":true,"isPeriodic":true,"storeName":"CIO#(0:7)-state"},
+		{"name":"CIO_DIRECTION","type":"bitMask","isConfig":true,"isPeriodic":true,"storeName":"CIO#(0:7)-direction"},
+		{"name":"MIO_STATE","type":"bitMask","isConfig":true,"isPeriodic":true,"storeName":"MIO#(0:2)-state"},
+		{"name":"MIO_DIRECTION","type":"bitMask","isConfig":true,"isPeriodic":true,"storeName":"MIO#(0:2)-direction"}
 	],
 	"interpretRegisters":[
 		{"name":"AIN#(0:13)"},

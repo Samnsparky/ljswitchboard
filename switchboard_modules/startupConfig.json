@@ -7,7 +7,7 @@
             "serialNumber":"1-470010610",
             "connectionType":"USB"
         },{
-            "serialNumber":"1-470010548",
+            "serialNumber":"470010548",
             "connectionType":"Ethernet"
         },{
             "serialNumber":"470011064",
@@ -16,7 +16,7 @@
             "serialNumber":"470010604",
             "connectionType":"Ethernet"
         },{
-            "serialNumber":"1-470010563",
+            "serialNumber":"470010563",
             "connectionType":"Ethernet"
         }
     ],
