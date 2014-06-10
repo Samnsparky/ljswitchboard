@@ -83,4 +83,16 @@
 .table-non-striped td {
     background-color: transparent;
 }
-
+#single-device-framework-obj #device-selector-table td p {
+    font-size:14px;
+}
+#single-device-framework-obj #device-selector-table td {
+    line-height: 15px;
+}
+#single-device-framework-obj .device-selector-table-device-type p {
+    margin-bottom: 0px;
+    line-height: 20px;
+}
+#single-device-framework-obj #device-selector-table label .radio{
+    margin-top: -2px;
+}
