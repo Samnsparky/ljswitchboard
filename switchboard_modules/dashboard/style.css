@@ -39,7 +39,7 @@
 }
 .digitalSelectButton .dropdown-toggle {
 	font-size: 12px;
-	padding: 0px 5px 0px 5px;
+	padding: 0px 0px 0px 5px;
 	min-width: 52px;
 	/*margin-bottom: -10px;*/
 }
@@ -84,8 +84,8 @@
 	margin-left:2px;
 }
 .digitalControlObject .digitalStateSelectButton .currentValue{
-	padding: 0px 2px 0px 0px;
-	min-width: 32px;
+	padding: 0px 4px 0px 4px;
+	min-width: 37px;
 }
 .digitalControlObject .digitalStateSelectButton .btn.dropdown-toggle {
 padding: 0px;

@@ -1,8 +1,7 @@
 /**
- * Goals for the Lua Script Debugger module.
- * This is a Lua script intro-app that performs a minimal number of scripting
- * operations.  It is simply capable of detecting whether or not a Lua script
- * is running and then prints out the debugging log to the window.  
+ * Goals for the dashboard module.
+ * To replace the current device_overview module with inline-edit options &
+ * read the current device values w/o modifying the devices current state. 
  *
  * @author Chris Johnson (LabJack Corp, 2014)
  *
@@ -10,14 +9,12 @@
  * No configuration of the device is required
  *
  * Periodic Processes:
- *     1. Read from "LUA_RUN" register to determine if a Lua script is running.
- *     2. Read from "LUA_DEBUG_NUM_BYTES" register to determine how much data is
- *         available in the debugging info buffer.
- *     3. If there is data available in the debugging buffer then get it from
- *         the device. 
+ *     1. Read from AIN(0:13) to update analog input channels
+ *     2. Read from DAC(0:1) to update DAC outputs (if device gets changed via 
+ *         script or other user)
+ *     3. Read FIO/EIO/CIO/MIO_STATE and FIO/EIO/CIO/MIO_DIRECTION bit masks to
+ *         update/display dio channels
 **/
-
-// TODO: Integrate http://jsfiddle.net/Vdsu2/8/
 
 // Constant that determines device polling rate.  Use an increased rate to aid
 // in user experience.
@@ -37,7 +34,6 @@ function module() {
     this.interpretRegisters = {};
     this.startupRegListDict = dict();
 
-    this.expanded
     this.moduleContext = {};
     this.activeDevice = undefined;
 
@@ -45,25 +41,24 @@ function module() {
     this.newBufferedValues = dict();
     this.bufferedOutputValues = dict();
 
-    this.deviceDashboardController;
+    this.deviceDashboardController = undefined;
 
     
     this.roundReadings = function(reading) {
         return Math.round(reading*1000)/1000;
-    }
+    };
     this.writeReg = function(address,value) {
         var ioDeferred = q.defer();
         self.activeDevice.qWrite(address,value)
         .then(function(){
-            // console.log('success',address,value);
             self.bufferedOutputValues.set(address,value);
             ioDeferred.resolve();
         },function(err){
             // console.error('fail',address,err);
             ioDeferred.reject(err);
-        })
+        });
         return ioDeferred.promise;
-    }
+    };
     /**
      * Function is called once every time the module tab is selected, loads the module.
      * @param  {[type]} framework   The active framework instance.
@@ -83,7 +78,6 @@ function module() {
 
         
         var genericConfigCallback = function(data, onSuccess) {
-            console.log('genericConfigCallback');
             onSuccess();
         };
         var genericPeriodicCallback = function(data, onSuccess) {
@@ -99,7 +93,7 @@ function module() {
             onSuccess();
         };
 
-        console.log('moduleConstants', self.moduleConstants);
+        // console.log('moduleConstants', self.moduleConstants);
         var smartBindings = [];
         var addSmartBinding = function(regInfo) {
             var binding = {};
@@ -135,7 +129,7 @@ function module() {
     this.expandLJMMMNameSync = function (name) {
         return ljmmm_parse.expandLJMMMEntrySync(
             {name: name, address: 0, type: 'FLOAT32'}
-        ).map(function (entry) { return entry.name });
+        ).map(function (entry) { return entry.name; });
     };
 
     this.createProcessConfigStatesAndDirections = function () {
@@ -225,12 +219,6 @@ function module() {
                     handleOther(regValue, regAddress, viewRegInfoDict);
                 }
             });
-
-            viewRegInfoDict.forEach(function (viewRegInfo, regAddress) {
-                //updateControl(viewRegInfo);
-                // console.log(regAddress,viewRegInfo);
-            });
-
             onSuccess(viewRegInfoDict);
         };
     };
@@ -261,11 +249,7 @@ function module() {
                 value = self.roundReadings(setupBinding.result);
             }
             self.currentValues.set(name,value);
-            // console.log('Read Register:',name,value);
         });
-
-        // self.moduleContext.outputs = self.DACRegisters;
-        //framework.setCustomContext(self.moduleContext);
         onSuccess();
     };
 
@@ -315,15 +299,114 @@ function module() {
             'stop': self.onVoltageSelected
         });
     };
+    this.isStringIn = function(baseStr, findStr) {
+        return baseStr.indexOf(findStr) !== -1;
+    };
     this.dioChangeListner = function(event) {
         self.dioEvent = event;
         var className = event.toElement.className;
-        if(className === 'menuOption') {
-            console.log('Selected...',event);
+        var baseEl = event.toElement;
+        if (self.isStringIn(className, 'menuOption')) {
+            var parentEl = baseEl.parentElement.parentElement.parentElement;
+            var id = parentEl.id;
+            var strVal = baseEl.innerHTML;
+            var val = baseEl.attributes.value.value;
+            var splitEls = id.split('-');
+            var activeReg = splitEls[0];
+            var selectType = splitEls[1];
+
+            if (selectType === 'DIRECTION') {
+                var curValObj = $('#'+id).find('.currentValue');
+                var curDirection = {
+                    'Input':0,
+                    'Output':1
+                }[curValObj.text()];
+                if(curDirection != val) {
+                    //Update GUI & write/read values to device
+                    curValObj.text(strVal);
+                    var inputDisplayId = '#' + activeReg + '-INDICATOR';
+                    var outputDisplayId = '#' + activeReg + '-STATE-SELECT';
+                    var outObj = $(outputDisplayId);
+                    var inObj = $(inputDisplayId);
+                    // Switch to perform either a read (if channel is becoming 
+                    // an input) or a write (if channel is becoming an output)
+                    if(Number(val) === 0) {
+                        outObj.hide();
+                        inObj.show();
+                        // Perform device read
+                        self.activeDevice.qRead(activeReg)
+                        .then(function(val) {
+                            // Update GUI with read value
+                            var inputStateId = '#' + activeReg + '-INDICATOR .currentValue';
+                            var inputStateObj = $(inputStateId);
+                            var state = {
+                                '0': {'status': 'inactive', 'text': 'Low'},
+                                '1': {'status': 'active', 'text': 'High'}
+                            }[val.toString()];
+                            inputStateObj.removeClass('active inactive')
+                            .addClass(state.status);
+                            inputStateObj.html(state.text);
+                        },function(err) {
+                            console.error('Error Reading',activeReg,err);
+                        });
+                    } else {
+                        inObj.hide();
+                        outObj.show();
+                        var outputStateId = '#' + activeReg + '-STATE-SELECT .currentValue';
+                        var outputStateObj = $(outputStateId);
+                        outputStateObj.html('High');
+
+                        // Perform device write, force to be high at start
+                        self.writeReg(activeReg,1)
+                        .then(function() {
+                        },function(err) {
+                            console.error('Error Writing to',activeReg,err);
+                        });
+                    }
+                }
+            } else if (selectType === 'STATE') {
+                var curValueObj = $('#'+id).find('.currentValue');
+                // Object to interpret text to device numbers
+                var curState = {
+                    'Low':0,
+                    'High':1
+                }[curValueObj.text()];
+                if(curState != val) {
+                    //Update GUI
+                    curValueObj.text(strVal);
+
+                    // Perform device write with user selected value
+                    self.writeReg(activeReg,Number(val))
+                    .then(function() {
+                    },function(err) {
+                        console.error('Error Setting State of',activeReg,err);
+                    });
+                }
+            }
+        } else if (self.isStringIn(className, 'toggleButton')) {
+            var parentEl = baseEl.parentElement;
+            var id = parentEl.id;
+            var activeReg = id.split('-')[0];
+            var curStr = baseEl.innerHTML;
+            //Set to opposite of actual to toggle the IO line
+            var newVal = {'High':0,'Low':1}[curStr];
+            var newStr = {'Low':'High','High':'Low'}[curStr];
+            var outputDisplayId = '#' + activeReg + '-STATE-SELECT .currentValue';
+            
+            // Update GUI
+            $(outputDisplayId).text(newStr);
+
+            // Perform device write with the opposite value that is currently 
+            // displayed by the gui, to "toggle" the output state
+            self.writeReg(activeReg,Number(newVal))
+            .then(function() {
+            },function(err) {
+                console.error('Error Toggling State of',activeReg,err);
+            });
         }
     };
     this.attachDIOListners = function() {
-        var digitalObj = $('.digitalControlObject')
+        var digitalObj = $('.digitalControlObject');
         digitalObj.unbind();
         digitalObj.bind('click', self.dioChangeListner);
     };
@@ -334,9 +417,6 @@ function module() {
     this.onTemplateDisplayed = function(framework, onError, onSuccess) {
         console.log('in onTemplateDisplayed');
         self.processConfigStatesAndDirections(self.currentValues, function(initializedData){
-            initializedData.forEach(function(value,name){
-                console.log(name,value);
-            })
             self.deviceDashboardController.drawDevice('#device-display-container',initializedData);
             self.createSpinners();
             var regs = ['DAC0','DAC1'];
@@ -361,15 +441,16 @@ function module() {
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
         var extraData = dict();
+        // Save buffered output values to the dict.
         self.bufferedOutputValues.forEach(function(value,name){
-            console.log('updating cur-val',name,value);
             self.currentValues.set(name,value);
             self.bufferedOutputValues.delete(name);
         });
+
+        // Check to see if any _STATE or _DIRECTION bit masks have changed.  If
+        // so add their counterpart as a later function needs all relevant
+        // information.
         self.newBufferedValues.forEach(function(value,name){
-            if(name.indexOf('AIN') == -1) {
-                console.log('Updating:',name,value);
-            }
             if(name.indexOf('_STATE') > 0) {
                 var getName = name.split('_STATE')[0] + '_DIRECTION';
                 var getVal = self.currentValues.get(getName);
@@ -380,20 +461,21 @@ function module() {
                 extraData.set(getName,getVal);
             }
         });
+        // Only add the counterpart-data if it isn't already there
         extraData.forEach(function(value,name){
             if(!self.newBufferedValues.has(name)) {
                 self.newBufferedValues.set(name,value);
             }
-        })
-        self.processConfigStatesAndDirections(self.newBufferedValues, function(newData){
-            // console.log('Updated Data...',newData);
-            self.deviceDashboardController.updateValues(newData);
+        });
 
-            //Delete Changed Values
+        // Execute function that expands all read bit-mask registers into 
+        // individually indexed (by register name) objects.  Also intelligently 
+        // combines data by channel for convenience.
+        self.processConfigStatesAndDirections(self.newBufferedValues, function(newData){
+            self.deviceDashboardController.updateValues(newData,self.currentValues);
+
+            //Delete Changed Values & update last-saved device values
             self.newBufferedValues.forEach(function(value,name){
-                if(name.indexOf('AIN') == -1) {
-                    console.log('Updated',name,value);
-                }
                 self.currentValues.set(name,value);
                 self.newBufferedValues.delete(name);
             });
