@@ -656,28 +656,33 @@ function module() {
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        // console.log('Refreshed!',framework.moduleName,self.newBufferedValues.size);
-        self.bufferedOutputValues.forEach(function(value,name){
-            console.log('updating cur-val',name,value);
-            self.currentValues.set(name,value);
-            self.bufferedOutputValues.delete(name);
-        });
-        self.newBufferedValues.forEach(function(value,name){
-            if(name.indexOf('_') != -1){
-                console.log('Updating Select',name+'-SELECT');
-                var buttonID = '#' + name + '-SELECT';
-                var buttonEl = $(buttonID);
-                var selectEl = buttonEl.find('.currentValue');
-                var newText = self.regParser.get(name)(value);
-                var newTitle = name + ' is set to ' + value.toString();
-                console.log('New Data',newText,newTitle);
-                selectEl.text(newText.name);
-                selectEl.attr('title',newTitle);
-            }
-            self.currentValues.set(name,value);
-            self.newBufferedValues.delete(name);
-        });
-        onSuccess();
+        try {
+            // console.log('Refreshed!',framework.moduleName,self.newBufferedValues.size);
+            self.bufferedOutputValues.forEach(function(value,name){
+                console.log('updating cur-val',name,value);
+                self.currentValues.set(name,value);
+                self.bufferedOutputValues.delete(name);
+            });
+            self.newBufferedValues.forEach(function(value,name){
+                if(name.indexOf('_') != -1){
+                    console.log('Updating Select',name+'-SELECT');
+                    var buttonID = '#' + name + '-SELECT';
+                    var buttonEl = $(buttonID);
+                    var selectEl = buttonEl.find('.currentValue');
+                    var newText = self.regParser.get(name)(value);
+                    var newTitle = name + ' is set to ' + value.toString();
+                    console.log('New Data',newText,newTitle);
+                    selectEl.text(newText.name);
+                    selectEl.attr('title',newTitle);
+                }
+                self.currentValues.set(name,value);
+                self.newBufferedValues.delete(name);
+            });
+            onSuccess();
+        } catch (err) {
+            console.error('Caught Error... in onRefreshed',err);
+            onSuccess();
+        }
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
         onSuccess();

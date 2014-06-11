@@ -476,9 +476,13 @@ function module() {
 
             //Delete Changed Values & update last-saved device values
             self.newBufferedValues.forEach(function(value,name){
+                if(name.indexOf('AIN') == -1) {
+                    console.log(name,value);
+                }
                 self.currentValues.set(name,value);
                 self.newBufferedValues.delete(name);
             });
+            console.log('Updated...');
             onSuccess();
         });
     };
