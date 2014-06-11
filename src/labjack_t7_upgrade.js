@@ -1032,7 +1032,14 @@ exports.restartAndUpgrade = function(bundle)
         driver_const.T7_REQUEST_FW_UPGRADE,
         createSafeReject(deferred),
         function () { 
-            device.close(function() {
+            device.close(function(err) {
+                console.error('Error Closing 1-restertAndUpgrade',err);
+                device.close(function(err){
+                    deferred.resolve(bundle);
+                },function() {
+                    deferred.resolve(bundle);
+                })
+            },function() {
                 deferred.resolve(bundle);
             }); 
         }
