@@ -1166,10 +1166,15 @@ exports.updateFirmware = function(device, firmwareFileLocation,
         innerDeferred.resolve(bundle);
         return innerDeferred.promise;
     };
-
-    var reportError = function (error) {
-        safelyReject(deferred, error);
-        throw error;
+    var reportError = function(message) {
+        var reportErrorFunc = function(error) {
+            safelyReject(deferred, error);
+            if(typeof(message) !== 'undefined') {
+                console.log('throwing error...',message);
+            }
+            throw error;
+        }
+        return reportErrorFunc;
     };
 
     var updateProgress = function (value) {
@@ -1183,6 +1188,7 @@ exports.updateFirmware = function(device, firmwareFileLocation,
     };
     var updateStatusText = function (value) {
         return function (bundle) {
+            console.log('Updating Status...',value);
             var innerDeferred = q.defer();
             progressListener.displayStatusText(value, function () {
                 innerDeferred.resolve(bundle);
@@ -1194,33 +1200,33 @@ exports.updateFirmware = function(device, firmwareFileLocation,
     globalProgressListener = progressListener;
 
     // 12 steps
-    exports.readFirmwareFile(firmwareFileLocation, reportError)
-    .then(injectDevice, reportError)
-    .then(exports.checkCompatibility, reportError)
-    .then(updateProgress(CHECKPOINT_ONE_PERCENT), reportError)
-    .then(updateStatusText('Erasing image...'), reportError)
-    .then(exports.eraseImage, reportError)
-    .then(exports.eraseImageInformation, reportError)
+    exports.readFirmwareFile(firmwareFileLocation, reportError('readingFirmwareFile'))
+    .then(injectDevice, reportError('readingFirmwareFile'))
+    .then(exports.checkCompatibility, reportError('injectDevice'))
+    .then(updateProgress(CHECKPOINT_ONE_PERCENT), reportError('checkCompatibility'))
+    .then(updateStatusText('Erasing image...'), reportError('updateProgress'))
+    .then(exports.eraseImage, reportError('updateStatusText'))
+    .then(exports.eraseImageInformation, reportError('eraseImage'))
     //.then(exports.checkErase, reportError)
-    .then(updateProgress(CHECKPOINT_TWO_PERCENT), reportError)
-    .then(updateStatusText('Writing image...'), reportError)
+    .then(updateProgress(CHECKPOINT_TWO_PERCENT), reportError('eraseImageInformation'))
+    .then(updateStatusText('Writing image...'), reportError('updateProgress'))
     .then(exports.writeImage(
         CHECKPOINT_TWO_PERCENT,
         CHECKPOINT_THREE_PERCENT
-    ), reportError)
+    ), reportError('updateStatusText'))
     .then(exports.writeImageInformation(
         CHECKPOINT_THREE_PERCENT,
         CHECKPOINT_FOUR_PERCENT
-    ), reportError)
+    ), reportError('writeImage'))
     //.then(exports.checkImageWrite, reportError)
-    .then(updateProgress(CHECKPOINT_FOUR_PERCENT), reportError)
-    .then(updateStatusText('Restarting...'), reportError)
-    .then(exports.restartAndUpgrade, reportError)
-    .then(updateStatusText('<br>Waiting for device(s)...'), reportError)
-    .then(exports.waitForEnumeration, reportError)
-    .then(exports.checkNewFirmware, reportError)
-    .then(updateProgress(CHECKPOINT_FIVE_PERCENT), reportError)
-    .then(deferred.resolve, reportError);
+    .then(updateProgress(CHECKPOINT_FOUR_PERCENT), reportError('writeImageInformation'))
+    .then(updateStatusText('Restarting...'), reportError('updateProgress'))
+    .then(exports.restartAndUpgrade, reportError('updateStatusText'))
+    .then(updateStatusText('<br>Waiting for device(s)...'), reportError('restartAndUpgrade'))
+    .then(exports.waitForEnumeration, reportError('updateStatusText'))
+    .then(exports.checkNewFirmware, reportError('waitForEnumeration'))
+    .then(updateProgress(CHECKPOINT_FIVE_PERCENT), reportError('checkNewFirmware'))
+    .then(deferred.resolve, reportError('updateProgress'));
 
     return deferred.promise;
 };
