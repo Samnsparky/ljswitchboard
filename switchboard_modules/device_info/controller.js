@@ -60,7 +60,17 @@ function showDevice(device, onSuccess)
         showAlert(
             'Failed to communicate with device: ' + e.toString()
         );
-        firmwareVersion = '[ could not read firmware ]'
+        firmwareVersion = '[ could not read firmware version]'
+    }
+    if(isPro) {
+        try {
+            wifiFirmwareVersion = device.getWifiFirmwareVersion().toFixed(4);
+        } catch (e) {
+            showAlert(
+                'Failed to communicate with device: ' + e.toString()
+            );
+            firmwareVersion = '[ could not read WiFi firmware version]'
+        }
     }
 
     try {
@@ -128,7 +138,8 @@ function showDevice(device, onSuccess)
         'powerEthernet': powerEthernet,
         'powerWifi': powerWifi,
         'powerAin': powerAin,
-        'powerLed': powerLed
+        'powerLed': powerLed,
+        'wifiFirmware': wifiFirmwareVersion
     };
 
     if (isPro) {

@@ -1128,6 +1128,7 @@ exports.checkNewFirmware = function(bundle)
     bundle.getDevice().read('FIRMWARE_VERSION',
         createSafeReject(deferred),
         function (firmwareVersion) {
+            console.log('Reported Firmware Version',firmwareVersion);
             var dif = bundle.getFirmwareVersion() - firmwareVersion;
             if(Math.abs(dif) > 0.0001) {
                 var errorMsg = 'New firmware version does not reflect upgrade.';

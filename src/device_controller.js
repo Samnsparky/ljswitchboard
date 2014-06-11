@@ -162,6 +162,7 @@ var Device = function (device, serial, connectionType, deviceType)
     this.invalidateCache = function() {
         this.cachedName = null;
         this.cachedFirmware = null;
+        this.cachedWifiFirmware = null;
     }
     /**
      * Get the serial number for this device.
@@ -226,6 +227,18 @@ var Device = function (device, serial, connectionType, deviceType)
         if (!this.cachedFirmware)
             this.cachedFirmware = this.device.readSync('FIRMWARE_VERSION');
         return this.cachedFirmware;
+    };
+
+    /**
+     * Get the version of firmware installed on this device.
+     *
+     * @return {float} The version of the firmware on this device.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
+    this.getWifiFirmwareVersion = function () {
+        if (!this.cachedWifiFirmware)
+            this.cachedWifiFirmware = this.device.readSync('WIFI_VERSION');
+        return this.cachedWifiFirmware;
     };
 
     /**

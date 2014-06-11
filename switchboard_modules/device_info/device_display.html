@@ -38,12 +38,20 @@
                 </span>
             </div>
             {{#if ../isPro }}
+            <div id="wifi-firmware-display-holder" class="device-detail">
+                WiFi Firmware version: 
+                <span id="bootloader-display">
+                    {{../../wifiFirmware}}
+                </span>
+            </div>
+            {{/if}}
             <div class="device-detail">
                 Ethernet IP Address: 
                 <span id="wifi-version-display">
-                    {{../../ethernetIP}}
+                    {{../ethernetIP}}
                 </span>
             </div>
+            {{#if ../isPro }}
             <div class="device-detail">
                 WiFi IP Address: 
                 <span id="wifi-version-display">
