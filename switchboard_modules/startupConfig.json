@@ -65,7 +65,7 @@
             "connectionType":"USB"
         }
     ],
-    "displayDevTools": true,
+    "displayDevTools": false,
     "overrideAutoModuleLoad": true,
     "moduleName": "dashboard"
 }
