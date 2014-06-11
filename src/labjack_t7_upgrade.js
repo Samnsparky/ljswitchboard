@@ -1030,10 +1030,22 @@ exports.restartAndUpgrade = function(bundle)
         driver_const.T7_MA_REQ_FWUPG,
         driver_const.T7_REQUEST_FW_UPGRADE,
         createSafeReject(deferred),
-        function () { device.closeSync(); deferred.resolve(bundle); }
+        function () { 
+            device.close(function() {
+                deferred.resolve(bundle);
+            }); 
+        }
     );
     return deferred.promise;
 };
+exports.pauseForClose = function(bundle) {
+    var deferred = q.defer();
+    var continueExec = function() {
+        deferred.resolve(bundle);
+    }
+    setTimeout(continueExec, EXPECTED_REBOOT_WAIT);
+    return deferred.promise;
+}
 
 
 /**
@@ -1130,23 +1142,23 @@ exports.checkNewFirmware = function(bundle)
         function (firmwareVersion) {
             console.log('Reported Firmware Version',firmwareVersion);
             var dif = bundle.getFirmwareVersion() - firmwareVersion;
-            // if(Math.abs(dif) > 0.0001) {
-            //     var errorMsg = 'New firmware version does not reflect upgrade.';
-            //     deferred.reject(new Error(errorMsg));
-            // } else {
-            //     deferred.resolve(bundle);
-            // }
             if(Math.abs(dif) > 0.0001) {
                 var errorMsg = 'New firmware version does not reflect upgrade.';
-                console.error('Reported Firmware Version',firmwareVersion);
-                if(bundle.getFirmwareVersion() > 0.96) {
-                    deferred.reject(new Error(errorMsg))
-                } else {
-                    deferred.resolve(bundle);
-                }
+                deferred.reject(new Error(errorMsg));
             } else {
                 deferred.resolve(bundle);
             }
+            // if(Math.abs(dif) > 0.0001) {
+            //     var errorMsg = 'New firmware version does not reflect upgrade.';
+            //     console.error('Reported Firmware Version',firmwareVersion);
+            //     if(bundle.getFirmwareVersion() > 0.96) {
+            //         deferred.reject(new Error(errorMsg))
+            //     } else {
+            //         deferred.resolve(bundle);
+            //     }
+            // } else {
+            //     deferred.resolve(bundle);
+            // }
         }
     );
 
@@ -1234,7 +1246,8 @@ exports.updateFirmware = function(device, firmwareFileLocation,
     .then(updateProgress(CHECKPOINT_FOUR_PERCENT), reportError('writeImageInformation'))
     .then(updateStatusText('Restarting...'), reportError('updateProgress'))
     .then(exports.restartAndUpgrade, reportError('updateStatusText'))
-    .then(updateStatusText('<br>Waiting for device(s)...'), reportError('restartAndUpgrade'))
+    .then(exports.pauseForClose, reportError('restartAndUpgrade'))
+    .then(updateStatusText('<br>Waiting for device(s)...'), reportError('pauseForClose'))
     .then(exports.waitForEnumeration, reportError('updateStatusText'))
     .then(exports.checkNewFirmware, reportError('waitForEnumeration'))
     .then(updateProgress(CHECKPOINT_FIVE_PERCENT), reportError('checkNewFirmware'))
