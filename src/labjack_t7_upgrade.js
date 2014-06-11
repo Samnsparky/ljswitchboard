@@ -23,6 +23,7 @@ var ALLOWED_IMAGE_INFO_DEVICE_TYPES = [
 ];
 var EXPECTED_ZEROED_MEM_VAL = 4294967295; // 0xFFFFFFFF
 var EXPECTED_REBOOT_WAIT = 1000;
+var EXPECTED_FIRMWARE_UPDATE_TIME = 5000;
 
 var CHECKPOINT_ONE_PERCENT = 10;
 var CHECKPOINT_TWO_PERCENT = 30;
@@ -1043,7 +1044,7 @@ exports.pauseForClose = function(bundle) {
     var continueExec = function() {
         deferred.resolve(bundle);
     }
-    setTimeout(continueExec, EXPECTED_REBOOT_WAIT);
+    setTimeout(continueExec, EXPECTED_FIRMWARE_UPDATE_TIME);
     return deferred.promise;
 }
 
@@ -1246,9 +1247,9 @@ exports.updateFirmware = function(device, firmwareFileLocation,
     .then(updateProgress(CHECKPOINT_FOUR_PERCENT), reportError('writeImageInformation'))
     .then(updateStatusText('Restarting...'), reportError('updateProgress'))
     .then(exports.restartAndUpgrade, reportError('updateStatusText'))
-    .then(exports.pauseForClose, reportError('restartAndUpgrade'))
-    .then(updateStatusText('<br>Waiting for device(s)...'), reportError('pauseForClose'))
-    .then(exports.waitForEnumeration, reportError('updateStatusText'))
+    .then(updateStatusText('<br>Waiting for device(s)...'), reportError('restartAndUpgrade'))
+    .then(exports.pauseForClose, reportError('updateStatusText'))
+    .then(exports.waitForEnumeration, reportError('pauseForClose'))
     .then(exports.checkNewFirmware, reportError('waitForEnumeration'))
     .then(updateProgress(CHECKPOINT_FIVE_PERCENT), reportError('checkNewFirmware'))
     .then(deferred.resolve, reportError('updateProgress'));
