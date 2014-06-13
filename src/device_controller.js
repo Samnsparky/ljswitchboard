@@ -1408,12 +1408,10 @@ var innerGetDevices = function (onError, onSuccess)
 
         lastPromise.then(function (newRetData) {
             retData = newRetData;
-            console.log('determining success...',hadError)
             if (hadError)
                 deferred.resolve(false);
             else
                 deferred.resolve(true);
-            console.log('here here here ***');
         }, innerOnError);
 
         return deferred.promise;
@@ -1464,8 +1462,6 @@ exports.getDevices = function (onError, onSuccess) {
 
     var decorateSelectorVals = function (continuation) {
         return function (deviceTypes) {
-            console.log('WHERE ARE WE????');
-            console.log(deviceTypes);
             deviceTypes.forEach(function (deviceType) {
                 deviceType.devices.forEach(function (device) {
                     device.connections.forEach(function (connection) {

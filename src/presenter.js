@@ -257,7 +257,6 @@ function includeDeviceDisplaySizes(deviceTypes)
 
 // Load native UI library
 try {
-    console.warn('in persenter.js');
     var gui = require('nw.gui');
 
     // Get the current window

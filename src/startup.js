@@ -1,5 +1,14 @@
 var gui = require('nw.gui');
-console.log('Hello World! -startup.js');
+require('getmac').getMac(function(err,macAddress){
+    if (err)  throw err;
+    process.curMacAddr = macAddress;
+    process.isInternalComputer = {
+        "00:25:4b:cf:1c:38": true               // Chris Mac (wifi?)
+    }[macAddress];
+    process.isDevComputer = {
+        "00:25:4b:cf:1c:38": true               // Chris Mac (wifi?)
+    }[macAddress];
+});
 console.log('window',window);
 console.log('gui',gui);
 console.log('process',process.version,process.arch,process.platform);

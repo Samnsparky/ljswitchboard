@@ -241,17 +241,20 @@ function kiplingStartupManager() {
     this.loadConfigData = function() {
         var innerDeferred = q.defer();
         var filePath = fs_facade.getExternalURI('startupConfig.json');
-
-        fs_facade.getJSON(
-            filePath,
-            function(){
-                console.log('startupConfig.json, fileNotFound');
-                innerDeferred.reject();
-            },
-            function(contents){
-                innerDeferred.resolve(contents);
-            }
-        );
+        if(gui.App.manifest.enableStartupConfig) {
+            fs_facade.getJSON(
+                filePath,
+                function(){
+                    console.log('startupConfig.json, fileNotFound');
+                    innerDeferred.reject();
+                },
+                function(contents){
+                    innerDeferred.resolve(contents);
+                }
+            );
+        } else {
+            innerDeferred.reject();
+        }
         return innerDeferred.promise;
     };
     var loadConfigData = this.loadConfigData;

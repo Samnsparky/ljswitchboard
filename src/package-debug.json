@@ -35,6 +35,6 @@
     "sprintf-js": "~0",
     "sprintf":  "~0.1.3"
   },
-  "enableStartupConfig":true,
-  "buildType": "develop"
+  "enableStartupConfig":false,
+  "buildType": "debug"
 }

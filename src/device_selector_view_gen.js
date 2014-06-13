@@ -115,8 +115,8 @@ trees.push({'val': 'button_title', 'tree': titleTree, 'target': 'connection'});
 
 exports.addDeviceSelectorVals = function (device, connection) {
 	var findTreeVal = function (treeInstruct, target) {
-		console.log(target);
-		console.log('--=-=====----');
+		// console.log(target);
+		// console.log('--=-=====----');
 		if (treeInstruct.subAttr) {
 			target = target[treeInstruct.subAttr];
 		}
@@ -152,7 +152,7 @@ exports.addDeviceSelectorVals = function (device, connection) {
 
 	device.connection = connection;
 	trees.forEach(function (treeSpec) {
-		console.log('Getting treeSpec',treeSpec);
+		// console.log('Getting treeSpec',treeSpec);
 		var newVal = findTreeVal(treeSpec.tree, device);
 		var strategies = {
 			'device': function () { device[treeSpec.val] = newVal; },
@@ -163,5 +163,5 @@ exports.addDeviceSelectorVals = function (device, connection) {
 			strategies[treeSpec.target]();
 		}
 	});
-	console.log('Out of tree navigation');
+	// console.log('Out of tree navigation');
 }
