@@ -46,6 +46,7 @@ var LOADED_MODULE_CONSTANTS_OBJECT;
 var MODULE_CONTENT_BOTTOM_BORDER_HEIGHT = 20;
 
 var MODULE_WINDOW_RESIZE_LISTNERS = [];
+
 /**
  * Switch the view to the given module.
  *

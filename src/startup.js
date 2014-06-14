@@ -3,11 +3,23 @@ require('getmac').getMac(function(err,macAddress){
     if (err)  throw err;
     process.curMacAddr = macAddress;
     process.isInternalComputer = {
-        "00:25:4b:cf:1c:38": true               // Chris Mac (wifi?)
+        "00:25:4b:cf:1c:38a": true               // Chris Mac (wifi?)
     }[macAddress];
     process.isDevComputer = {
-        "00:25:4b:cf:1c:38": true               // Chris Mac (wifi?)
+        "00:25:4b:cf:1c:38a": true               // Chris Mac (wifi?)
     }[macAddress];
+    if(typeof(process.isDevComputer) === 'undefined') {
+        process.isDevComputer = false;
+    }
+    if(typeof(process.isInternalComputer) === 'undefined') {
+        process.isInternalComputer = false;
+    }
+    console.log('Cur Mac:',macAddress);
+    if(typeof(gui.App.manifest.buildType) !== 'undefined') {
+        process.buildType = gui.App.manifest.buildType;
+    } else {
+        process.buildType = 'develop';
+    }
 });
 console.log('window',window);
 console.log('gui',gui);
