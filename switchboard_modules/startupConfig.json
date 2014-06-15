@@ -66,6 +66,6 @@
         }
     ],
     "displayDevTools": false,
-    "overrideAutoModuleLoad": false,
+    "overrideAutoModuleLoad": true,
     "moduleName": "dashboard"
 }

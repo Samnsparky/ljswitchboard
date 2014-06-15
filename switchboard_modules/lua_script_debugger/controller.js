@@ -809,7 +809,7 @@ function module() {
     };
 
     this.moduleWindowResizeListener = function (moduleHeight) {
-        console.log('Module Height:', moduleHeight);
+        // console.log('Module Height:', moduleHeight);
 
         // if only the LuaEditor is visible:
         var adjustEditor = self.isLuaDebuggerHidden && (!self.isLuaEditorHidden);
@@ -846,16 +846,16 @@ function module() {
 
         var newHeight = moduleHeight - heightAdjust;
         if (adjustEditor) {
-            console.log('adjustingHeight of editor');
+            // console.log('adjustingHeight of editor');
             self.luaController.codeEditor.setHeight(newHeight);
         } else if(adjustDebugger) {
-            console.log('adjustingHeight of debugger');
+            // console.log('adjustingHeight of debugger');
             if(isNarrow) {
                 newHeight += 10;
             }
             self.luaController.debuggingLog.setHeight(newHeight);
         } else {
-            console.log('Setting to default height');
+            // console.log('Setting to default height');
             self.luaController.codeEditor.setHeight(500);
             self.luaController.debuggingLog.setHeight(300);
         }

@@ -4,6 +4,7 @@
  * read the current device values w/o modifying the devices current state. 
  *
  * @author Chris Johnson (LabJack Corp, 2014)
+ * @author Sam Pottinger (LabJack Corp, 2013)
  *
  * Configuration:
  * No configuration of the device is required

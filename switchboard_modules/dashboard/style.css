@@ -1,6 +1,6 @@
 .register-overlay {
-    position: absolute;
     font-size: 12px;
+    position: absolute;
 }
 .digitalDisplayIndicator {
 
@@ -25,8 +25,20 @@
 	background-color:#C0C0C0;
 	color: black;
 }
+#device-display-container {
+	height: 525px;
+	width: 370px;
+}
 #device-display-container-svg {
     /*shape-rendering: crispEdges;*/
+    height: 525px;
+	width: 370px;
+	position: absolute;
+}
+#device-display-container-registers {
+	position: absolute;
+	width: 120px;
+	margin-top: -140px;
 }
 .digitalSelectButton {
 	float:left;
@@ -90,4 +102,13 @@
 .digitalControlObject .digitalStateSelectButton .btn.dropdown-toggle {
 padding: 0px;
 }
-
+/*@media screen and (min-width: 768px) {
+    #device-display-container-registers {
+    	top:0px;
+    }
+}
+@media screen and (max-width: 767px) {
+ 	 #device-display-container-registers {
+    	top:100px;
+    }  
+}*/

@@ -621,12 +621,20 @@ function Framework() {
 
     this.qExecOnTemplateDisplayed = function() {
         var innerDeferred = q.defer();
+        var rejectFunc = function(data) {
+            onResized();
+            innerDeferred.reject(data);
+        };
+        var resolveFunc = function(data) {
+            onResized();
+            innerDeferred.resolve(data);
+        }
         try{
             self.fire(
                 'onTemplateDisplayed',
                 [],
-                innerDeferred.reject,
-                innerDeferred.resolve
+                rejectFunc,
+                resolveFunc
             );
         } catch (err) {
             if(err.name === 'SyntaxError') {
@@ -640,12 +648,20 @@ function Framework() {
     
     this.qExecOnTemplateLoaded = function() {
         var innerDeferred = q.defer();
+        var rejectFunc = function(data) {
+            onResized();
+            innerDeferred.reject(data);
+        };
+        var resolveFunc = function(data) {
+            onResized();
+            innerDeferred.resolve(data);
+        }
         try{
             self.fire(
                 'onTemplateLoaded',
                 [],
-                innerDeferred.reject,
-                innerDeferred.resolve
+                rejectFunc,
+                resolveFunc
             );
         } catch (err) {
             if(err.name === 'SyntaxError') {

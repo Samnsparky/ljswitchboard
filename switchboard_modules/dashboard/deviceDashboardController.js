@@ -122,6 +122,7 @@ function getDeviceDashboardController() {
     this.drawDevice = function (containerID, initializedData) {
         DEVICE_D3_CONTAINER = containerID;
         DEVICE_IMAGE_CONTAINER = containerID + '-svg';
+        DEVICE_REGISTERS_CONTAINER = containerID + '-registers';
         var getOverlayYPos = function (registerInfo) {
             var yFromTopOfImage = registerInfo.yLocation * DEVICE_IMG_HEIGHT;
             return DEVICE_IMAGE_Y_OFFSET + yFromTopOfImage;
@@ -129,6 +130,8 @@ function getDeviceDashboardController() {
 
         var moduleContentsOffset = $('#module-chrome-contents').position().top;
         var deviceSelectorOffset = $('#device-view').position().top;
+        var marginTopVal = -1 * ($('#device-selector').height() +8);
+        $(DEVICE_REGISTERS_CONTAINER).css('margin-top', marginTopVal.toString() + 'px');
         var imageY = moduleContentsOffset + deviceSelectorOffset-20;
         console.log('IMAGE IMAGE IMAGE Y:', imageY);
         var getOverlayYPosWithPx = function (registerInfo) {
@@ -216,7 +219,7 @@ function getDeviceDashboardController() {
         // .attr('stroke-width', 1);
 
         // Create a DIV for each of the registers for the main device
-        var overlays = d3.select(DEVICE_D3_CONTAINER)
+        var overlays = d3.select(DEVICE_REGISTERS_CONTAINER)
         .selectAll('.register-overlay')
         .data(function () {
             return REGISTER_OVERLAY_SPEC.filter(function (registerInfo) {

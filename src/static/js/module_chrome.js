@@ -43,7 +43,7 @@ var OPERATION_FAIL_MESSAGE = handlebars.compile(
 var LOADED_MODULE_INFO_OBJECT;
 var LOADED_MODULE_CONSTANTS_OBJECT;
 
-var MODULE_CONTENT_BOTTOM_BORDER_HEIGHT = 20;
+var MODULE_CONTENT_BOTTOM_BORDER_HEIGHT = 20+10;
 
 var MODULE_WINDOW_RESIZE_LISTNERS = [];
 
@@ -346,26 +346,69 @@ function clearModuleWindowResizeListners() {
 function onResized()
 {
     // in the module_chrome.css file this magic number is 768 & 767
-    if ($(window).width() > 782) {
-        $('#device-nav-dock').slideUp();
-        $('#module-list').slideDown();
-        $('#close-nav-dock').slideUp();
-    } else {
-        $('#device-nav-dock').slideDown();
-        $('#module-list').slideUp();
-        $('#close-nav-dock').slideUp();
+    // 
+    var moduleList = $('#module-list');
+    var reCallFUnc = function() {
+            if(moduleList.css('display') !== 'none') {
+                onResized();
+        }
     }
+    if ($(window).width() > 768) {
+        $('#close-nav-dock').slideUp();
+        $('#device-nav-dock').slideUp(function(){
+            $('#module-list').slideDown();
+        });
+    } else {
+        $('#close-nav-dock').slideUp();
+        $('#device-nav-dock').slideDown();
+        $('#module-list').slideUp(reCallFUnc);
+        
+        
+    }
+    
     var headerHeight = $('#system-navigation');
     var moduleChromeContentsEl = $('#module-chrome-contents');
+    var moduleChromeContentsHolderEl = $('#module-chrome-contents-holder');
+    var activeModuleEl = moduleChromeContentsEl.children(0);
     var windowHeight = $(window).height();
     var contents_height = windowHeight - MODULE_CONTENT_BOTTOM_BORDER_HEIGHT;
-    if(moduleChromeContentsEl.css('overflow') !== 'hidden') {
-        $('#module-list').height((windowHeight - 75).toString() + 'px');
+    // if(moduleList.css('display') !== 'none') {
+    if ($(window).width() > 768) {
+        // $('#module-list').height((windowHeight - 75).toString() + 'px');
+        // if(contents_height > windowHeight*.9);
+        console.log('HERE0',contents_height);
         moduleChromeContentsEl.css(
             {'height': contents_height.toString() + 'px'}
         );
+        moduleChromeContentsHolderEl.css(
+            {'height': (windowHeight).toString() + 'px'}
+        );
     } else {
+        // var topHeight = $('#module-chrome-contents-holder').height();
+        var setHeight = 0;
         moduleChromeContentsEl.css({'height': '100%'});
+        var bodyHeight = activeModuleEl.height();
+        var moduleHeight = 9+bodyHeight+20;
+        var iconsHeight = $('#system-navigation').height();
+        var topHeight = $('#module-chrome-contents').children(0).offset().top;
+        // if(windowHeight < (setHeight + iconsHeight)){
+        //     console.log('HERE');
+            // setHeight = (windowHeight - topHeight + 9);
+        // } else {
+        //     console.log('HERE1')
+        // }
+        if((windowHeight - topHeight + 9) < (moduleHeight)) {
+            setHeight = moduleHeight;
+        } else {
+            setHeight = (windowHeight - topHeight + 9);
+        }
+        if(setHeight < (windowHeight - 130)){
+            setHeight = (windowHeight - 130);
+        }
+        console.log('HERE1',setHeight);
+        moduleChromeContentsHolderEl.css(
+            {'height': setHeight.toString()+'px'}
+        );
     }
 
     MODULE_WINDOW_RESIZE_LISTNERS.forEach(function(listener) {

@@ -205,7 +205,11 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
             appendToHead(jsHTML, fileLoc);
         });
 
-        $(dest).fadeIn();
+        $(dest).fadeIn(function(){
+            if(typeof(onResized) !== 'undefined') {
+                onResized();
+            }
+        });
     };
 
     var fileLoc;
