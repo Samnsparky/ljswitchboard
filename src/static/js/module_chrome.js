@@ -361,9 +361,7 @@ function onResized()
     } else {
         $('#close-nav-dock').slideUp();
         $('#device-nav-dock').slideDown();
-        $('#module-list').slideUp(reCallFUnc);
-        
-        
+        $('#module-list').slideUp(reCallFUnc);  
     }
     
     var headerHeight = $('#system-navigation');

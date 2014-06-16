@@ -39,6 +39,7 @@
 #device-display-container-registers {
 	position: relative;
 	width: 120px;
+	z-index: 1;
 }
 #db-display-container {
 	height: 525px;
