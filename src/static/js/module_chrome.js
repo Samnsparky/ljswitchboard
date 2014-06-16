@@ -374,8 +374,7 @@ function onResized()
     var contents_height = windowHeight - MODULE_CONTENT_BOTTOM_BORDER_HEIGHT;
     // if(moduleList.css('display') !== 'none') {
     if ($(window).width() > 768) {
-        // $('#module-list').height((windowHeight - 75).toString() + 'px');
-        // if(contents_height > windowHeight*.9);
+        $('#module-list').height((windowHeight - 75).toString() + 'px');
         console.log('HERE0',contents_height);
         moduleChromeContentsEl.css(
             {'height': contents_height.toString() + 'px'}

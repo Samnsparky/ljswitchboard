@@ -28,17 +28,22 @@
 #device-display-container {
 	height: 525px;
 	width: 370px;
+	display: inline-block;
 }
 #device-display-container-svg {
     /*shape-rendering: crispEdges;*/
     height: 525px;
 	width: 370px;
-	position: absolute;
+	position: relative;
 }
 #device-display-container-registers {
-	position: absolute;
+	position: relative;
 	width: 120px;
-	margin-top: -140px;
+}
+#db-display-container {
+	height: 525px;
+	width: 450px;
+	display: inline-block;
 }
 .digitalSelectButton {
 	float:left;

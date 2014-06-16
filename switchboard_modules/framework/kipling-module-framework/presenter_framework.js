@@ -1987,6 +1987,9 @@ function Framework() {
 
         // Report that the module's template has been displayed
         .then(self.qExecOnTemplateDisplayed, self.qExecOnLoadError)
+        
+        // Re-draw the window to prevent window-disapearing issues
+        .then(qRunRedraw, self.qExecOnLoadError)
 
         .then(deferred.resolve, deferred.reject);
         return deferred.promise;

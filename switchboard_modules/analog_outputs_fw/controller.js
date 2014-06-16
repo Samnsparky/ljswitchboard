@@ -65,8 +65,10 @@ function module() {
         var genericPeriodicCallback = function(data, onSuccess) {
             
             var name = data.binding.binding;
-            var value = Number(data.value.toFixed(self.DAC_CHANNEL_PRECISION));
-            self.bufferedValues.set(name,value);
+            if(typeof(data.value) !== 'undefined') {
+                var value = Number(data.value.toFixed(self.DAC_CHANNEL_PRECISION));
+                self.bufferedValues.set(name,value);
+            }
             // console.log('genericPeriodicCallback',data.binding.binding,value);
             onSuccess();
         };

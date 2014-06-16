@@ -157,7 +157,7 @@ p, h1, h2, h3 {
 }
 @media screen and (max-width: 967px) {
     #module-chrome-contents-holder{
-        position: inherit;
+        position: relative;
         width:76%;
     }
 }

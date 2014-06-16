@@ -2,11 +2,21 @@ function getDeviceDashboardController() {
     var DEVICE_D3_CONTAINER;
     var DEVICE_IMAGE_CONTAINER;
     this.displayTemplateData = {};
+    
+    // Device Image Info
     var LABJACK_OVERVIEW_IMG_SRC = './static/img/T7-cartoon.png';
     var DEVICE_IMAGE_X_OFFSET = 150;
     var DEVICE_IMAGE_Y_OFFSET = 10;
     var DEVICE_IMG_WIDTH = 225;
     var DEVICE_IMG_HEIGHT = 525;
+
+    // DB Image Info
+    var LABJACK_DB_IMG_SRC = './static/img/T7-DB-cartoon.png'
+    var DB_IMG_WIDTH = 225;
+    var DB_IMG_HEIGHT = 525;
+    var DB_IMAGE_X_OFFSET = 150;
+    var DB_IMAGE_Y_OFFSET = 10;
+
     var LINE_X_OFFSET = 120;
     var LINE_Y_OFFSET = 6;
     var DEVICE_IMAGE_X_OVERLAP = 30;
@@ -119,70 +129,142 @@ function getDeviceDashboardController() {
             }
         );
     };
-    this.drawDevice = function (containerID, initializedData) {
-        DEVICE_D3_CONTAINER = containerID;
-        DEVICE_IMAGE_CONTAINER = containerID + '-svg';
-        DEVICE_REGISTERS_CONTAINER = containerID + '-registers';
-        var getOverlayYPos = function (registerInfo) {
-            var yFromTopOfImage = registerInfo.yLocation * DEVICE_IMG_HEIGHT;
-            return DEVICE_IMAGE_Y_OFFSET + yFromTopOfImage;
-        };
+    this.drawDBs = function (containerID, initializedData) {
+        // Save the necessary ID's for creating the DBs D3 object
+        DB_D3_CONTAINER = containerID;
+        DB_IMAGE_CONTAINER = containerID + '-svg';
+        DB_REGISTERS_CONTAINER = containerID + '-registers';
 
+        // Define a function that returns the y-location of where each register
+        // should be placed in relation to the DB's image.
+        var getOverlayYPos = function(registerInfo) {
+            var yFromTopOfImage = registerInfo.yLocation * CB_IMG_HEIGHT;
+            return DB_IMAGE_Y_OFFSET + yFromTopOfImage;
+        };
+        // Get a few module-attributes needed to calculate imageY, a constant 
+        // required to calculate the y-location of where each register-object 
+        // should be placed
         var moduleContentsOffset = $('#module-chrome-contents').position().top;
         var deviceSelectorOffset = $('#device-view').position().top;
-        var marginTopVal = -1 * ($('#device-selector').height() +8);
-        $(DEVICE_REGISTERS_CONTAINER).css('margin-top', marginTopVal.toString() + 'px');
         var imageY = moduleContentsOffset + deviceSelectorOffset-20;
-        console.log('IMAGE IMAGE IMAGE Y:', imageY);
         var getOverlayYPosWithPx = function (registerInfo) {
             return imageY + getOverlayYPos(registerInfo) + 'px';
         };
 
-        // Add the image to the DIV containing the device visualization
-        var image = d3.select(DEVICE_IMAGE_CONTAINER)
-        .append('image')
-        .attr('xlink:href', LABJACK_OVERVIEW_IMG_SRC)
-        .attr('x', DEVICE_IMAGE_X_OFFSET)
-        .attr('y', DEVICE_IMAGE_Y_OFFSET)
+        // Add the image to the DIV containing the device visualization in order
+        // to add the device-cartoon.
+        var image = d3.select(DB_IMAGE_CONTAINER)                               // Tell D3 to insert data into the DEVICE_IMAGE_CONTAINER div-id
+        .append('image')                                                        // Tell D3 to make an image object
+        .attr('xlink:href', LABJACK_DB_IMG_SRC)                                 // Set the image src. to be the LABJACK_OVERVIEW_IMG_SRC
+        .attr('x', DB_IMAGE_X_OFFSET)                                           // Set the X-offset.  Padding added to the left of image.
+        .attr('y', DB_IMAGE_Y_OFFSET)                                           // Set the Y-offset.  Padding added to the top of image.
+        .attr('width', DB_IMG_WIDTH)
+        .attr('height', DB_IMG_HEIGHT);
+    }
+    this.drawDevice = function (containerID, initializedData) {
+        // Save the necessary ID's for creating the D3 object
+        DEVICE_D3_CONTAINER = containerID;
+        DEVICE_IMAGE_CONTAINER = containerID + '-svg';
+        DEVICE_REGISTERS_CONTAINER = containerID + '-registers';
+
+        // Define function that returns the y-location of where each register
+        // should be placed
+        var getOverlayYPos = function (registerInfo) {
+            var yFromTopOfImage = registerInfo.yLocation * DEVICE_IMG_HEIGHT;
+            return DEVICE_IMAGE_Y_OFFSET + yFromTopOfImage;
+        };
+        
+        // Determine the top-margin that should be applied to properly align the 
+        // registers.
+        var marginTopVal;
+        if($(window).width() < 768) {
+            marginTopVal = 0;//-1 * $(DEVICE_IMAGE_CONTAINER).position;             // Invalid???? oh gee...
+        } else {
+            marginTopVal = (-1 * $('#device-view').offset().top);
+        }
+
+        // Set the margin-top .css style of the registers-container.
+        $(DEVICE_REGISTERS_CONTAINER).css(
+            'margin-top', 
+            marginTopVal.toString() + 'px'
+        );
+        $(DEVICE_IMAGE_CONTAINER).css(
+            'margin-top', 
+            (-1 * marginTopVal).toString() + 'px'
+        );
+
+        // Get a few module-attributes needed to calculate imageY, a constant 
+        // required to calculate the y-location of where each register-object 
+        // should be placed
+        var moduleContentsOffset = $('#module-chrome-contents').position().top;
+        var deviceSelectorOffset = $('#device-view').position().top;
+        var imageY = moduleContentsOffset + deviceSelectorOffset-20;
+        if($(window).width() < 768) {
+            imageY -= $(DEVICE_IMAGE_CONTAINER).position().top;
+        }
+
+        var getOverlayYPosWithPx = function (registerInfo) {
+            return imageY + getOverlayYPos(registerInfo) + 'px';
+        };
+
+        // Add the image to the DIV containing the device visualization in order
+        // to add the device-cartoon.
+        var image = d3.select(DEVICE_IMAGE_CONTAINER)                           // Tell D3 to insert data into the DEVICE_IMAGE_CONTAINER div-id
+        .append('image')                                                        // Tell D3 to make an image object
+        .attr('xlink:href', LABJACK_OVERVIEW_IMG_SRC)                           // Set the image src. to be the LABJACK_OVERVIEW_IMG_SRC
+        .attr('x', DEVICE_IMAGE_X_OFFSET)                                       // Set the X-offset.  Padding added to the left of image.
+        .attr('y', DEVICE_IMAGE_Y_OFFSET)                                       // Set the Y-offset.  Padding added to the top of image.
         .attr('width', DEVICE_IMG_WIDTH)
         .attr('height', DEVICE_IMG_HEIGHT);
         
+        // Again, select the DIV containing the device visualization.  This time
+        // to draw the object that the lines protruding off to the left of the 
+        // device will go into.
         var lineGroup = d3.select(DEVICE_IMAGE_CONTAINER)
-        .selectAll('.connector-line')
-        .data(function () {
-            return REGISTER_OVERLAY_SPEC.filter(function (registerInfo) {
-                return registerInfo.board === 'device';
+        .selectAll('.connector-line')                                           // Not quite sure what is being select here...
+        .data(function () {                                                     // Adding data to the D3 object by...
+            return REGISTER_OVERLAY_SPEC.filter(function (registerInfo) {       // Filtering the REGISTER_OVERLAY_SPEC
+                return registerInfo.board === 'device';                         // To get only 'device' registers.
             });
         })
-        .enter()
-        .append('g')
-        .attr('transform', function (registerInfo) {
+        .enter()                                                                // Enter each data point defined above.
+        .append('g')                                                            // Create an html attribute called "g".  D3:
+        .attr('transform', function (registerInfo) {                            // Set the X and Y coordinates for where the base of the line should go
             var y = getOverlayYPos(registerInfo);
-            return TRANSLATE_TEMPLATE({x: 0, y: y});
+            return TRANSLATE_TEMPLATE({x: 0, y: y});                            // Define drawn X and Y coordinates
         });
 
+        // Define a function that places the "spline" lines.  These 4 points 
+        // are why the some of the lines are curvey & others aren't.  
         var lineFunction = function (coordSpec) {
             var yOffset = coordSpec.yOffset;
-            if (yOffset === undefined)
+            if (yOffset === undefined)                                          // if a yOffset is defined in REGISTER_OVERLAY_SPEC then use it.
                 yOffset = 0;
 
-            return PATH_TEMPALTE({
-                start: {x: CONNECTOR_SIZE_X, y: 0},
+            return PATH_TEMPALTE({                                              // Use the yOffset to make the curvey line.
+                start: {x: CONNECTOR_SIZE_X, y: 0},                             // Start line
                 coords: [
-                    {x: CONNECTOR_SIZE_X-40, y: 0},
-                    {x: LINE_X_OFFSET+40, y: yOffset},
-                    {x: LINE_X_OFFSET, y: yOffset}
+                    {x: CONNECTOR_SIZE_X-40, y: 0},                             // First "Spline" line
+                    {x: LINE_X_OFFSET+40, y: yOffset},                          // First "Spline" line
+                    {x: LINE_X_OFFSET, y: yOffset}                              // Finish line at this point
                 ]
             });
         };
 
+        // Determine if antialiasing should be used.  Antialiasing causes the
+        // "blured" straight lines instead of making them "crisp".
         var determineAntialiasing = function (spec) {
+            // If a yOffset is defined in the REGISTER_OVERLAY_SPEC then set to
+            // auto.
             if (spec.yOffset)
                 return 'auto';
             else
                 return 'crispEdges';
         };
-        
+
+        // Append Paths that each of the previously defined line objects should 
+        // follow. Draw the white line that goes in each of the defined line 
+        // groups. (3px tall)
         lineGroup.append('path')
         .attr('d', lineFunction)
         .attr('stroke', 'white')
@@ -190,6 +272,9 @@ function getDeviceDashboardController() {
         .attr('stroke-width', 3)
         .style('shape-rendering', determineAntialiasing);
         
+        // Append Paths that each of the previously defined line objects should 
+        // follow. Draw the black line that goes in each of the defined line 
+        // groups. (1px tall)
         lineGroup.append('path')
         .attr('d', lineFunction)
         .attr('stroke', 'black')
@@ -266,12 +351,6 @@ function getDeviceDashboardController() {
             }
             return self.displayTemplateData[loadname](registerInfo);
         });
-
-        /*overlays.append('span')
-        
-        .html(function (registerInfo, i) {
-            return i;
-        });*/
     };
     this.roundReadings = function(reading) {
         return Math.round(reading*1000)/1000;

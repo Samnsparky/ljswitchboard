@@ -419,6 +419,7 @@ function module() {
         console.log('in onTemplateDisplayed');
         self.processConfigStatesAndDirections(self.currentValues, function(initializedData){
             self.deviceDashboardController.drawDevice('#device-display-container',initializedData);
+            self.deviceDashboardController.drawDBs('#db-display-container', initializedData);
             self.createSpinners();
             var regs = ['DAC0','DAC1'];
             regs.forEach(function(reg){

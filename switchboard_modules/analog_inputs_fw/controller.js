@@ -669,7 +669,7 @@ function module() {
                     var buttonID = '#' + name + '-SELECT';
                     var buttonEl = $(buttonID);
                     var selectEl = buttonEl.find('.currentValue');
-                    var newText = self.regParser.get(name)(value);
+                    var newText = self.regParser.get(name,{'value':-9999,'name':'N/A'})(value);
                     var newTitle = name + ' is set to ' + value.toString();
                     console.log('New Data',newText,newTitle);
                     selectEl.text(newText.name);
@@ -680,7 +680,7 @@ function module() {
             });
             onSuccess();
         } catch (err) {
-            console.error('Caught Error... in onRefreshed',err);
+            console.error('Caught Error... in onRefreshed',err,err.stack);
             onSuccess();
         }
     };
