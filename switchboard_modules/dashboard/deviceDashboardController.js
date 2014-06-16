@@ -232,7 +232,8 @@ function getDeviceDashboardController() {
         .attr('transform', function (registerInfo) {                            // Set the X and Y coordinates for where the base of the line should go
             var y = getOverlayYPos(registerInfo);
             return TRANSLATE_TEMPLATE({x: 0, y: y});                            // Define drawn X and Y coordinates
-        });
+        })
+        .class('connector-line');
 
         // Define a function that places the "spline" lines.  These 4 points 
         // are why the some of the lines are curvey & others aren't.  
