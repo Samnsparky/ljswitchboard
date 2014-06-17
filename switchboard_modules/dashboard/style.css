@@ -1,12 +1,14 @@
 .register-overlay {
     font-size: 12px;
     position: absolute;
-    width: 120px;
+    width: 122px;
+    margin-left:-3px;
 }
 .device-register-overlay {
 	font-size: 12px;
     position: absolute;
-    width: 120px;
+    width: 122px;
+    margin-left:-3px;
 }
 .digitalDisplayIndicator {
 
