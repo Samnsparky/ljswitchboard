@@ -157,6 +157,13 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
         $('.late-js-' + safeDest).remove();
 
         $(dest).hide();
+        // $(dest).remove();
+
+        // -------------------- Cleanup Code --------------------
+        delete sdModule
+        delete sdFramework
+        delete ACTIVE_KIPLING_MODULE
+        // -------------------- End of Cleanup Code --------------------
         $(dest).html(renderedHTML);
 
         $.each(cssFiles, function (index, fileLoc)

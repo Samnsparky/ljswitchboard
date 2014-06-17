@@ -9,19 +9,24 @@ function getDeviceDashboardController() {
     var DEVICE_IMAGE_Y_OFFSET = 10;
     var DEVICE_IMG_WIDTH = 225;
     var DEVICE_IMG_HEIGHT = 525;
-
-    // DB Image Info
-    var LABJACK_DB_IMG_SRC = './static/img/T7-DB-cartoon.png'
-    var DB_IMG_WIDTH = 225;
-    var DB_IMG_HEIGHT = 525;
-    var DB_IMAGE_X_OFFSET = 150;
-    var DB_IMAGE_Y_OFFSET = 10;
-
     var LINE_X_OFFSET = 120;
     var LINE_Y_OFFSET = 6;
     var DEVICE_IMAGE_X_OVERLAP = 30;
     var CONNECTOR_SIZE_X = DEVICE_IMAGE_X_OFFSET + DEVICE_IMAGE_X_OVERLAP;
 
+    // DB Image Info
+    var LABJACK_DB_IMG_SRC = './static/img/T7-DB-cartoon.png'
+    var DB_IMG_WIDTH = 225;
+    var DB_IMG_HEIGHT = 525;
+    var DB_IMAGE_X_OFFSET = 110;
+    var DB_IMAGE_Y_OFFSET = 10;
+    var DB_LINE_X_OFFSET = DB_IMAGE_X_OFFSET + 10;
+    var DB_IMAGE_X_OVERLAP = 55;
+    var DB_RIGHT_SIDE_OFFSET = 155;
+    var DB_CONNECTOR_SIZE_X = DB_IMAGE_X_OFFSET + DB_IMAGE_X_OVERLAP; // 110 + 55 = 165
+    var DB_BUTTON_LEFT_PADDING = 5;
+
+    var DEVICE_REGISTER_DISPLAY_ID_TEMPLATE = handlebars.compile('{{register}}-device-display');
     var REGISTER_DISPLAY_ID_TEMPLATE = handlebars.compile('{{register}}-display');
     var TRANSLATE_TEMPLATE = handlebars.compile('translate({{x}},{{y}})');
     var STRATEGY_NAME_TEMPALTE = handlebars.compile('{{type}}-{{direction}}');
@@ -31,57 +36,65 @@ function getDeviceDashboardController() {
     var DIGITAL_CONTROL_HEADER = handlebars.compile(
         '<div id="{{register}}-digitalControl" class="digitalControlObject">'
     );
-
+    var bNum = 10;
     var REGISTER_OVERLAY_SPEC = [
-        {register: 'AIN0', yLocation: 0.783, type: null, board: 'device', side: 'left'},
-        {register: 'AIN1', yLocation: 0.757, type: null, board: 'device', side: 'left'},
-        {register: 'AIN2', yLocation: 0.664, type: null, board: 'device', side: 'left'},
-        {register: 'AIN3', yLocation: 0.639, type: null, board: 'device', side: 'left'},
-        {register: 'DAC0', yLocation: 0.545, yOffset: 6, type: 'dac', board: 'device', side: 'left'},
-        {register: 'DAC1', yLocation: 0.519, yOffset: -6, type: 'dac', board: 'device', side: 'left'},
-        {register: 'FIO0', yLocation: 0.428, type: 'dio', yOffset: 6, board: 'device', side: 'left'},
-        {register: 'FIO1', yLocation: 0.403, type: 'dio', yOffset: -6, board: 'device', side: 'left'},
-        {register: 'FIO2', yLocation: 0.308, yOffset: 6, type: 'dio', board: 'device', side: 'left'},
-        {register: 'FIO3', yLocation: 0.283, yOffset: -6, type: 'dio', board: 'device', side: 'left'},
-        {register: 'AIN1', yLocation: 0.900-0.01, type: null, board: 'connector', side: 'left'},
-        {register: 'AIN3', yLocation: 0.875-0.01, type: null, board: 'connector', side: 'left'},
-        {register: 'AIN5', yLocation: 0.850-0.01, type: null, board: 'connector', side: 'left'},
-        {register: 'AIN7', yLocation: 0.825-0.01, type: null, board: 'connector', side: 'left'},
-        {register: 'AIN9', yLocation: 0.800-0.01, type: null, board: 'connector', side: 'left'},
-        {register: 'AIN11', yLocation: 0.775-0.01, type: null, board: 'connector', side: 'left'},
-        {register: 'AIN13', yLocation: 0.750-0.01, type: null, board: 'connector', side: 'left'},
-        {register: 'DAC0', yLocation: 0.725-0.01, type: 'dac', board: 'connector', side: 'left'},
-        {register: 'MIO1', yLocation: 0.625-0.015, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'FIO0', yLocation: 0.600-0.015, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'FIO2', yLocation: 0.575-0.015, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'FIO4', yLocation: 0.550-0.015, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'FIO6', yLocation: 0.525-0.015, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'EIO6', yLocation: 0.275+0.020, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'EIO4', yLocation: 0.250+0.020, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'EIO2', yLocation: 0.225+0.020, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'EIO0', yLocation: 0.200+0.020, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'CIO1', yLocation: 0.175+0.020, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'CIO3', yLocation: 0.150+0.020, type: 'dio', board: 'connector', side: 'left'},
-        {register: 'AIN0', yLocation: 0.900 + 0.005, type: null, board: 'connector', side: 'right'},
-        {register: 'AIN2', yLocation: 0.875 + 0.005, type: null, board: 'connector', side: 'right'},
-        {register: 'AIN4', yLocation: 0.850 + 0.005, type: null, board: 'connector', side: 'right'},
-        {register: 'AIN6', yLocation: 0.825 + 0.005, type: null, board: 'connector', side: 'right'},
-        {register: 'AIN8', yLocation: 0.800 + 0.003, type: null, board: 'connector', side: 'right'},
-        {register: 'AIN10', yLocation: 0.775 + 0.003, type: null, board: 'connector', side: 'right'},
-        {register: 'AIN12', yLocation: 0.750 + 0.003, type: null, board: 'connector', side: 'right'},
-        {register: 'DAC1', yLocation: 0.700, type: 'dac', board: 'connector', side: 'right'},
-        {register: 'MIO2', yLocation: 0.625, type: 'dac', board: 'connector', side: 'right'},
-        {register: 'MIO0', yLocation: 0.600, type: 'dac', board: 'connector', side: 'right'},
-        {register: 'FIO1', yLocation: 0.575, type: 'dac', board: 'connector', side: 'right'},
-        {register: 'FIO3', yLocation: 0.550, type: 'dac', board: 'connector', side: 'right'},
-        {register: 'FIO5', yLocation: 0.525, type: 'dac', board: 'connector', side: 'right'},
-        {register: 'FIO7', yLocation: 0.500, type: 'dac', board: 'connector', side: 'right'},
-        {register: 'EIO7', yLocation: 0.300+0.010, type: 'dio', board: 'connector', side: 'right'},
-        {register: 'EIO5', yLocation: 0.275+0.010, type: 'dio', board: 'connector', side: 'right'},
-        {register: 'EIO3', yLocation: 0.250+0.010, type: 'dio', board: 'connector', side: 'right'},
-        {register: 'EIO1', yLocation: 0.225+0.010, type: 'dio', board: 'connector', side: 'right'},
-        {register: 'CIO2', yLocation: 0.175+0.010, type: 'dio', board: 'connector', side: 'right'},
-        {register: 'CIO0', yLocation: 0.150+0.010, type: 'dio', board: 'connector', side: 'right'}
+        {register: 'AIN0', yLocation: 0.783,                                type: null, board: 'device', side: 'left'},
+        {register: 'AIN1', yLocation: 0.757,                                type: null, board: 'device', side: 'left'},
+        {register: 'AIN2', yLocation: 0.664,                                type: null, board: 'device', side: 'left'},
+        {register: 'AIN3', yLocation: 0.639,                                type: null, board: 'device', side: 'left'},
+        {register: 'DAC0', yLocation: 0.545,            yOffset: 6,         type: 'dac', board: 'device', side: 'left'},
+        {register: 'DAC1', yLocation: 0.519,            yOffset: -6,        type: 'dac', board: 'device', side: 'left'},
+        {register: 'FIO0', yLocation: 0.428,            yOffset: 6,         type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO1', yLocation: 0.403,            yOffset: -6,        type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO2', yLocation: 0.308,            yOffset: 6,         type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO3', yLocation: 0.283,            yOffset: -6,        type: 'dio', board: 'device', side: 'left'},
+        
+        // Left Side, DB37
+        {register: 'AIN1', yLocation: 0.900-0.01,       yOffset:  4*bNum,   type: null, board: 'connector', side: 'left'},
+        {register: 'AIN3', yLocation: 0.875-0.01,       yOffset:  3*bNum,   type: null, board: 'connector', side: 'left'},
+        {register: 'AIN5', yLocation: 0.850-0.01,       yOffset:  2*bNum,   type: null, board: 'connector', side: 'left'},
+        {register: 'AIN7', yLocation: 0.825-0.01,       yOffset:  1*bNum,   type: null, board: 'connector', side: 'left'},
+        {register: 'AIN9', yLocation: 0.800-0.01,       yOffset:  0*bNum,   type: null, board: 'connector', side: 'left'},
+        {register: 'AIN11', yLocation: 0.775-0.01,      yOffset: -1*bNum,   type: null, board: 'connector', side: 'left'},
+        {register: 'AIN13', yLocation: 0.750-0.01,      yOffset: -2*bNum,   type: null, board: 'connector', side: 'left'},
+        {register: 'DAC0', yLocation: 0.725-0.01,       yOffset: -3*bNum,   type: 'dac', board: 'connector', side: 'left'},
+        {register: 'MIO1', yLocation: 0.625-0.015,      yOffset:  0*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'FIO0', yLocation: 0.600-0.015,      yOffset: -1*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'FIO2', yLocation: 0.575-0.015,      yOffset: -2*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'FIO4', yLocation: 0.550-0.015,      yOffset: -3*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'FIO6', yLocation: 0.525-0.015,      yOffset: -4*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        
+        // Left Side, DB15
+        {register: 'EIO6', yLocation: 0.275+0.020,      yOffset:  2*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'EIO4', yLocation: 0.250+0.020,      yOffset:  1*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'EIO2', yLocation: 0.225+0.020,      yOffset:  0*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'EIO0', yLocation: 0.200+0.020,      yOffset: -1*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'CIO3', yLocation: 0.175+0.020,      yOffset: -2*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        {register: 'CIO1', yLocation: 0.150+0.020,      yOffset: -3*bNum,   type: 'dio', board: 'connector', side: 'left'},
+        
+        // Right Side, DB37
+        {register: 'AIN0', yLocation: 0.900 + 0.005,    yOffset:  4*bNum,   type: null, board: 'connector', side: 'right'},
+        {register: 'AIN2', yLocation: 0.875 + 0.005,    yOffset:  3*bNum,   type: null, board: 'connector', side: 'right'},
+        {register: 'AIN4', yLocation: 0.850 + 0.005,    yOffset:  2*bNum,   type: null, board: 'connector', side: 'right'},
+        {register: 'AIN6', yLocation: 0.825 + 0.005,    yOffset:  1*bNum,   type: null, board: 'connector', side: 'right'},
+        {register: 'AIN8', yLocation: 0.800 + 0.003,    yOffset:  0*bNum,   type: null, board: 'connector', side: 'right'},
+        {register: 'AIN10', yLocation: 0.775 + 0.003,   yOffset: -1*bNum,   type: null, board: 'connector', side: 'right'},
+        {register: 'AIN12', yLocation: 0.750 + 0.003,   yOffset: -2*bNum,   type: null, board: 'connector', side: 'right'},
+        {register: 'DAC1', yLocation: 0.700,            yOffset: -1.5*bNum, type: 'dac', board: 'connector', side: 'right'},
+        {register: 'MIO2', yLocation: 0.625,            yOffset:  0*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'MIO0', yLocation: 0.600,            yOffset: -1*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'FIO1', yLocation: 0.575,            yOffset: -2*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'FIO3', yLocation: 0.550,            yOffset: -3*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'FIO5', yLocation: 0.525,            yOffset: -4*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'FIO7', yLocation: 0.500,            yOffset: -5*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        
+        // Right Side, DB15
+        {register: 'EIO7', yLocation: 0.300+0.010,      yOffset:  2*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'EIO5', yLocation: 0.275+0.010,      yOffset:  1*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'EIO3', yLocation: 0.250+0.010,      yOffset:  0*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'EIO1', yLocation: 0.225+0.010,      yOffset: -1*bNum,   type: 'dio', board: 'connector', side: 'right'},
+        {register: 'CIO2', yLocation: 0.170+0.010,      yOffset: -0.5*bNum, type: 'dio', board: 'connector', side: 'right'},
+        {register: 'CIO0', yLocation: 0.145+0.010,      yOffset: -1.5*bNum, type: 'dio', board: 'connector', side: 'right'}
     ];
 
     // console.log(JSON.stringify(REGISTER_OVERLAY_SPEC));
@@ -141,6 +154,24 @@ function getDeviceDashboardController() {
             var yFromTopOfImage = registerInfo.yLocation * DB_IMG_HEIGHT;
             return DB_IMAGE_Y_OFFSET + yFromTopOfImage;
         };
+        // Determine the top-margin that should be applied to properly align the 
+        // registers.
+        var marginTopVal;
+        if($(window).width() < 768) {
+            marginTopVal = $('#device-selector').height();
+        } else {
+            marginTopVal = $('#device-view').offset().top - 10;
+        }
+
+        // Set the margin-top .css style of the registers-container.
+        $(DB_REGISTERS_CONTAINER).css(
+            'margin-top', 
+            (-1 * marginTopVal).toString() + 'px'
+        );
+        $(DB_IMAGE_CONTAINER).css(
+            'margin-top', 
+            marginTopVal.toString() + 'px'
+        );
         // Get a few module-attributes needed to calculate imageY, a constant 
         // required to calculate the y-location of where each register-object 
         // should be placed
@@ -169,8 +200,7 @@ function getDeviceDashboardController() {
         .selectAll('.connector-line-left')                                      // Not quite sure what is being select here...
         .data(function () {                                                     // Adding data to the D3 object by...
             return REGISTER_OVERLAY_SPEC.filter(function (registerInfo) {       // Filtering the REGISTER_OVERLAY_SPEC
-                return (registerInfo.board === 'connector') 
-                && (registerInfo.side === 'left');                              // To get only 'device' registers.
+                return (registerInfo.board === 'connector')                     // To get only 'device' registers.
             });
         })
         .enter()                                                                // Enter each data point defined above.
@@ -178,7 +208,8 @@ function getDeviceDashboardController() {
         .attr('transform', function (registerInfo) {                            // Set the X and Y coordinates for where the base of the line should go
             var y = getOverlayYPos(registerInfo);
             return TRANSLATE_TEMPLATE({x: 0, y: y});                            // Define drawn X and Y coordinates
-        });
+        })
+        .attr('class','connector-line-left');
 
         // Define a function that places the "spline" lines.  These 4 points 
         // are why the some of the lines are curvey & others aren't.  
@@ -187,15 +218,19 @@ function getDeviceDashboardController() {
             if (yOffset === undefined)                                          // if a yOffset is defined in REGISTER_OVERLAY_SPEC then use it.
                 yOffset = 0;
             var xOffset = 0;
+            var offsetA = 0;
+            var offsetB = yOffset;
             if(coordSpec.side === 'right') {
-                xOffset = 100;
+                xOffset = DB_RIGHT_SIDE_OFFSET;
+                offsetB = 0;
+                offsetA = yOffset;
             }
             return PATH_TEMPALTE({                                              // Use the yOffset to make the curvey line.
-                start: {x: CONNECTOR_SIZE_X+xOffset, y: 0},                     // Start line
+                start: {x: DB_CONNECTOR_SIZE_X+xOffset, y: offsetA},            // Start line
                 coords: [
-                    {x: CONNECTOR_SIZE_X-40+xOffset, y: 0},                     // First "Spline" line
-                    {x: LINE_X_OFFSET+40+xOffset, y: yOffset},                  // First "Spline" line
-                    {x: LINE_X_OFFSET+xOffset, y: yOffset}                      // Finish line at this point
+                    {x: DB_CONNECTOR_SIZE_X-40+xOffset, y: offsetA},            // First "Spline" line
+                    {x: DB_LINE_X_OFFSET+40+xOffset, y: offsetB},               // First "Spline" line
+                    {x: DB_LINE_X_OFFSET+xOffset, y: offsetB}                   // Finish line at this point
                 ]
             });
         };
@@ -230,6 +265,64 @@ function getDeviceDashboardController() {
         .attr('fill', 'none')
         .attr('stroke-width', 1)
         .style('shape-rendering', determineAntialiasing);
+
+        // Create a DIV for each of the registers for the main device
+        var overlays = d3.select(DB_REGISTERS_CONTAINER)
+        .selectAll('.register-overlay')                                         // Try to replace any existing elements w/ this class
+        .data(function () {                                                     // fill all of the elements with data.
+            return REGISTER_OVERLAY_SPEC.filter(function (registerInfo) {
+                return registerInfo.board === 'connector';
+            });
+        })
+        .enter()
+        .append('div')
+        .attr('class', function (registerInfo) {
+            if (registerInfo.type === 'dio')
+                return 'register-overlay fio-overlay';
+            else
+                return 'register-overlay';
+        })
+        .style('top', function (registerInfo) {
+            var yFromTopOfImage = imageY + getOverlayYPos(registerInfo) - 9;
+            if (registerInfo.yOffset)
+                yFromTopOfImage += registerInfo.yOffset;
+            return yFromTopOfImage + 'px';
+        })
+        .style('left', function (registerInfo) {
+            var xOffset = 0;
+            if(registerInfo.side === 'right') {
+                xOffset = DB_RIGHT_SIDE_OFFSET;
+                xOffset += DB_CONNECTOR_SIZE_X;
+                xOffset += DB_BUTTON_LEFT_PADDING;
+            }
+            return xOffset + 'px';
+        })
+        .attr('id', function (registerInfo) {
+            return REGISTER_DISPLAY_ID_TEMPLATE(registerInfo);
+        })
+        .html(function (registerInfo) {
+            var curData = initializedData.get(registerInfo.register,{state:null,direction:null,type:null,value:null});
+            registerInfo.state = curData.state;
+            registerInfo.direction = curData.direction;
+            registerInfo.regType = curData.type;
+            registerInfo.value = curData.value;
+            try {
+                if(registerInfo.register.indexOf('DAC') !== -1) {
+                    registerInfo.value = registerInfo.value.toFixed(4);
+                } else if(registerInfo.register.indexOf('AIN') !== -1) {
+                    registerInfo.value = registerInfo.value.toFixed(6);
+                }
+            } catch(err) {
+                registerInfo.value = -9999;
+            }
+            var loadname = 'ain-in';
+            if (registerInfo.type === 'dio') {
+                loadname = 'dio';
+            } else if (registerInfo.type === 'dac') {
+                loadname = 'dac-out';
+            }
+            return self.displayTemplateData[loadname](registerInfo);
+        });
     }
     this.drawDevice = function (containerID, initializedData) {
         // Save the necessary ID's for creating the D3 object
@@ -303,7 +396,7 @@ function getDeviceDashboardController() {
             var y = getOverlayYPos(registerInfo);
             return TRANSLATE_TEMPLATE({x: 0, y: y});                            // Define drawn X and Y coordinates
         })
-        .class('connector-line');
+        .attr('class','connector-line');
 
         // Define a function that places the "spline" lines.  These 4 points 
         // are why the some of the lines are curvey & others aren't.  
@@ -376,7 +469,7 @@ function getDeviceDashboardController() {
 
         // Create a DIV for each of the registers for the main device
         var overlays = d3.select(DEVICE_REGISTERS_CONTAINER)
-        .selectAll('.register-overlay')                                         // Try to replace any existing elements w/ this class
+        .selectAll('.device-register-overlay')                                         // Try to replace any existing elements w/ this class
         .data(function () {                                                     // fill all of the elements with data.
             return REGISTER_OVERLAY_SPEC.filter(function (registerInfo) {
                 return registerInfo.board === 'device';
@@ -386,9 +479,9 @@ function getDeviceDashboardController() {
         .append('div')
         .attr('class', function (registerInfo) {
             if (registerInfo.type === 'dio')
-                return 'register-overlay fio-overlay';
+                return 'device-register-overlay fio-device-overlay';
             else
-                return 'register-overlay';
+                return 'device-register-overlay';
         })
         .style('top', function (registerInfo) {
             var yFromTopOfImage = imageY + getOverlayYPos(registerInfo);
@@ -397,7 +490,7 @@ function getDeviceDashboardController() {
             return yFromTopOfImage + 'px';
         })
         .attr('id', function (registerInfo) {
-            return REGISTER_DISPLAY_ID_TEMPLATE(registerInfo);
+            return DEVICE_REGISTER_DISPLAY_ID_TEMPLATE(registerInfo);
         })
         .html(function (registerInfo) {
             var curData = initializedData.get(registerInfo.register,{state:null,direction:null,type:null,value:null});
@@ -405,6 +498,9 @@ function getDeviceDashboardController() {
             registerInfo.direction = curData.direction;
             registerInfo.regType = curData.type;
             registerInfo.value = curData.value;
+            if(registerInfo.register.indexOf('-device') === -1) {
+                registerInfo.register += "-device";
+            }
             try {
                 if(registerInfo.register.indexOf('DAC') !== -1) {
                     registerInfo.value = registerInfo.value.toFixed(4);
@@ -459,15 +555,30 @@ function getDeviceDashboardController() {
         var outputStrategies = {
             'analogInput-': function (channel, register) {
                 var id = REGISTER_DISPLAY_ID_TEMPLATE({register: register});
+                var dID = DEVICE_REGISTER_DISPLAY_ID_TEMPLATE({register: register});
                 var ainVal = $('#'+id).find('.value');
+                var dAINVal = $('#'+dID).find('.value');
                 ainVal.html(Number(channel.value).toFixed(6));
+                dAINVal.html(Number(channel.value).toFixed(6));
             },
             'analogOutput-': function (channel, register) {
                 var val = channel.value;
-                $('#' + register + '_input_spinner').spinner('value', val);
+                if(val < 0) {
+                    val = 0;
+                }
+                $('#' + register + '_input_spinner')
+                    .val(val.toFixed(3));
+                $('#' + register + '-device_input_spinner')
+                    .val(val.toFixed(3));
             },
             'dynamic-0': function (channel, register) {
-                var id = REGISTER_DISPLAY_ID_TEMPLATE({register: register});
+                var ids = [];
+                ids.push(REGISTER_DISPLAY_ID_TEMPLATE({register: register}));
+                ids.push(DEVICE_REGISTER_DISPLAY_ID_TEMPLATE({register: register}));
+                var elems = [];
+                ids.forEach(function(id){
+                    elems.push($('#' + id));
+                });
                 var state = {
                     '0': {'status': 'inactive', 'text': 'Low'},
                     '1': {'status': 'active', 'text': 'High'}
@@ -475,47 +586,63 @@ function getDeviceDashboardController() {
                 // Get the previously set state & direction for current register
                 var curState = self.getCurInfo(register,currentValues);
                 if(curState.direction == 1) {
-                    // if the previous set direction was 1 (Output), configure GUI as input
-                    var inputDisplayId = '#' + register + '-INDICATOR';
-                    var outputDisplayId = '#' + register + '-STATE-SELECT';
-                    var dirDisplayId = '#' + register + '-DIRECTION-SELECT .currentValue';
-                    var outObj = $(outputDisplayId);
-                    var inObj = $(inputDisplayId);
-                    var dirObj = $(dirDisplayId);
-                    outObj.hide();
-                    inObj.show();
-                    dirObj.html('Input');
+                    console.log('HERE!')
+                    elems.forEach(function(elem){
+                        // if the previous set direction was 1 (Output), configure GUI as input
+                        var inputDisplayId = '.digitalDisplayIndicator';
+                        var outputDisplayId = '.digitalStateSelectButton';
+                        var dirDisplayId = '.digitalSelectButton .currentValue';
+                        var outObj = elem.find(outputDisplayId);
+                        var inObj = elem.find(inputDisplayId);
+                        var dirObj = elem.find(dirDisplayId);
+                        outObj.hide();
+                        inObj.show();
+                        dirObj.html('Input');
+                    });
                 }
                 // Update input GUI element text color and state-text
-                var topElement = $('#' + id);
-                var stateIndicator = topElement.find('.state-indicator')
-                .removeClass('active inactive')
-                .addClass(state.status);
-                stateIndicator.html(state.text);
+                elems.forEach(function(elem){
+                    var stateIndicator = elem.find('.state-indicator')
+                    .removeClass('active inactive')
+                    .addClass(state.status);
+                    stateIndicator.html(state.text);
+                });
             },
             'dynamic-1': function (channel, register) {
+                var ids = [];
+                ids.push(REGISTER_DISPLAY_ID_TEMPLATE({register: register}));
+                ids.push(DEVICE_REGISTER_DISPLAY_ID_TEMPLATE({register: register}));
+                var elems = [];
+                ids.forEach(function(id){
+                    elems.push($('#' + id));
+                });
+
                 // Get the previously set state & direction for current register
                 var curState = self.getCurInfo(register,currentValues);
                 if(curState.direction == 0) {
-                    // if the previous set direction was 0 (Input), configure GUI as output
-                    var inputDisplayId = '#' + register + '-INDICATOR';
-                    var outputDisplayId = '#' + register + '-STATE-SELECT';
-                    var dirDisplayId = '#' + register + '-DIRECTION-SELECT .currentValue';
-                    var outObj = $(outputDisplayId);
-                    var inObj = $(inputDisplayId);
-                    var dirObj = $(dirDisplayId);
-                    inObj.hide();
-                    outObj.show();
-                    dirObj.html('Output');
+                    elems.forEach(function(elem){
+                        // if the previous set direction was 0 (Input), configure GUI as output
+                        var inputDisplayId = '.digitalDisplayIndicator';
+                        var outputDisplayId = '.digitalStateSelectButton';
+                        var dirDisplayId = '.digitalSelectButton .currentValue';
+                        var outObj = elem.find(outputDisplayId);
+                        var inObj = elem.find(inputDisplayId);
+                        var dirObj = elem.find(dirDisplayId);
+                        inObj.hide();
+                        outObj.show();
+                        dirObj.html('Output');
+                    });
                 }
                 // Update the GUI element text High/Low
-                var statusId = '#' + register + '-STATE-SELECT .currentValue';
-                var statusEl = $(statusId);
-                var state = {
-                    '0': {'text': 'Low'},
-                    '1': {'text': 'High'}
-                }[channel.state.toString()];
-                statusEl.html(state.text);
+                elems.forEach(function(elem){
+                    var statusId = '.digitalStateSelectButton .currentValue';
+                    var statusEl = elem.find(statusId);
+                    var state = {
+                        '0': {'text': 'Low'},
+                        '1': {'text': 'High'}
+                    }[channel.state.toString()];
+                    statusEl.html(state.text);
+                });
             }
         };
 

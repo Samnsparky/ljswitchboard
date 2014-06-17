@@ -74,9 +74,6 @@ function module() {
         self.startupRegList = framework.moduleConstants.startupRegList;
         self.interpretRegisters = framework.moduleConstants.interpretRegisters;
         self.REGISTER_OVERLAY_SPEC = framework.moduleConstants.REGISTER_OVERLAY_SPEC;
-
-        self.deviceDashboardController = new getDeviceDashboardController();
-
         
         var genericConfigCallback = function(data, onSuccess) {
             onSuccess();
@@ -121,9 +118,6 @@ function module() {
         // framework.putSmartBindings(customSmartBindings);
 
         self.createProcessConfigStatesAndDirections();
-
-        // Load file resources required for deviceDashboardController
-        self.deviceDashboardController.loadResources(onSuccess);
         // onSuccess();
     };
 
@@ -237,6 +231,12 @@ function module() {
 
         framework.clearConfigBindings();
         framework.setStartupMessage('Reading Device Configuration');
+
+        // Get new deviceDashboardController instance
+        self.deviceDashboardController = new getDeviceDashboardController();
+        // Load file resources required for deviceDashboardController
+        self.deviceDashboardController.loadResources(onSuccess);
+
         onSuccess();
     };
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
@@ -257,10 +257,19 @@ function module() {
     this.formatVoltageTooltip = function(value) {
         return sprintf.sprintf("%.2f V", value);
     };
+    this.writeSpinner = function(spinner,value) {
+        if(value < 0) {
+            value = 0;
+        }
+        spinner.val(value.toFixed(3));
+    }
     this.writeDisplayedVoltage = function(register, selectedVoltage) {
-        $('#' + register + '_input_spinner').spinner('value', selectedVoltage);
+        var devEl = $('#' + register + '-device_input_spinner');
+        var dbEl = $('#' + register + '_input_spinner');
+        self.writeSpinner(devEl,selectedVoltage);
+        self.writeSpinner(dbEl,selectedVoltage);
     };
-    this.onVoltageSelected = function(event) {
+
         // var firingID = event.target.id;
         // var selectedVoltage;
         // var isValidValue = false;
@@ -287,18 +296,109 @@ function module() {
         //         }
         //     }
         // }
+    this.dacListerners = {
+        'DAC0-device_input_spinner':    {type:'',   timer:null, reg: 'DAC0'},
+        'DAC1-device_input_spinner':    {type:'',   timer:null, reg: 'DAC1'},
+        'DAC0_input_spinner':           {type:'',   timer:null, reg: 'DAC0'},
+        'DAC1_input_spinner':           {type:'',   timer:null, reg: 'DAC1'}
+    };
+    this.setVoltage = function(event,id,element) {
+        var setFunc = function() {
+            var type = self.dacListerners[id].type;
+            var isWrite = false;
+            if (type === 'scroll') {
+                element.blur();
+                isWrite = true;
+            } else if (type === 'enterButton') {
+                element.blur();
+                isWrite = true;
+            } else if (type === 'focusLeft') {
+                isWrite = true;
+            }
+            if(isWrite) {
+                var val = element.spinner('value');
+                var reg = self.dacListerners[id].reg;
+                if(typeof(val) === 'number') {
+                    if (val < 0) {
+                        val = 0;
+                    } else if (val > 5) {
+                        val = 5;
+                    }
+                    self.writeSpinner(element,val);
+                    self.writeReg(reg,val)
+                    .then(function() {
+                        console.log('onSuccess!');
+                    }, function(err) {
+                        console.log('Error...',err);
+                    });
+                } else {
+                    self.writeSpinner(element,self.currentValues.get(reg));
+                }
+                self.dacListerners[id].type = '';
+            }
+        };
+        return setFunc;
+    };
+    this.onVoltageSelectedSpinStop = function(event) {
+        if(typeof(event.currentTarget) !== 'undefined') {
+            var targetID = event.currentTarget.id;
+            var targetElement = $('#'+targetID);
+            clearTimeout(self.dacListerners[targetID].timer);
+            self.dacListerners[targetID].timer = setTimeout(
+                self.setVoltage(event,targetID,targetElement), 
+                500
+            );
+            self.spinStopData = event;
+        }
+    };
+    this.onVoltageSelectedSpin = function(event) {
+        if(typeof(event.currentTarget) !== 'undefined') {
+            var targetID = event.currentTarget.id;
+            self.dacListerners[targetID].type = 'scroll';
+            self.spinData = event;
+        }
+    };
+    this.onVoltageSelectedChange = function(event) {
+        if(typeof(event.currentTarget) !== 'undefined') {
+            var targetID = event.currentTarget.id;
+            var targetElement = $('#'+targetID)
+            var isFocused = targetElement.is(":focus");
+            if(self.dacListerners[targetID].type !== 'scroll') {
+                if(self.dacListerners[targetID].type !== 'enterButton') {
+                    clearTimeout(self.dacListerners[targetID].timer);
+                    if(!isFocused) {
+                        self.dacListerners[targetID].type = 'focusLeft';
+                        self.setVoltage(event,targetID,targetElement)();
+                    }
+                }
+            }
+        }
+    };
+    this.handleKeypress = function(event) {
+        var code = event.keyCode || event.which;
+        var targetID = event.currentTarget.id;
+        self.dacListerners[targetID].type = 'keyPress';
+        clearTimeout(self.dacListerners[targetID].timer);
+        if(code == 13) { //Enter keycode
+            var targetElement = $('#'+targetID);
+            self.dacListerners[targetID].type = 'enterButton';
+            clearTimeout(self.dacListerners[targetID].timer);
+            self.setVoltage(event,targetID,targetElement)();
+        }
     };
     
     this.createSpinners = function() {
         $( ".spinner" ).unbind();
         $( ".spinner" ).spinner({
             'step': 0.001,
-            'numberFormat': "nV",
+            'numberFormat': "n",
             'max': 5,
             'min': 0,
-            'spin': self.onVoltageSelected,
-            'stop': self.onVoltageSelected
+            'change': self.onVoltageSelectedChange,
+            'spin': self.onVoltageSelectedSpin,
+            'stop': self.onVoltageSelectedSpinStop
         });
+        $( ".spinner" ).bind('keypress', self.handleKeypress);
     };
     this.isStringIn = function(baseStr, findStr) {
         return baseStr.indexOf(findStr) !== -1;
@@ -310,12 +410,16 @@ function module() {
         if (self.isStringIn(className, 'menuOption')) {
             var parentEl = baseEl.parentElement.parentElement.parentElement;
             var id = parentEl.id;
+            var parentObj = $('#'+parentEl.parentElement.id);
+            console.log('parentObj',parentObj);
             var strVal = baseEl.innerHTML;
             var val = baseEl.attributes.value.value;
             var splitEls = id.split('-');
             var activeReg = splitEls[0];
             var selectType = splitEls[1];
-
+            if(selectType === 'device') {
+                selectType = splitEls[2];
+            }
             if (selectType === 'DIRECTION') {
                 var curValObj = $('#'+id).find('.currentValue');
                 var curDirection = {
@@ -325,10 +429,10 @@ function module() {
                 if(curDirection != val) {
                     //Update GUI & write/read values to device
                     curValObj.text(strVal);
-                    var inputDisplayId = '#' + activeReg + '-INDICATOR';
-                    var outputDisplayId = '#' + activeReg + '-STATE-SELECT';
-                    var outObj = $(outputDisplayId);
-                    var inObj = $(inputDisplayId);
+                    var inputDisplayId = '.digitalDisplayIndicator';
+                    var outputDisplayId = '.digitalStateSelectButton';
+                    var outObj = parentObj.find(outputDisplayId);
+                    var inObj = parentObj.find(inputDisplayId);
                     // Switch to perform either a read (if channel is becoming 
                     // an input) or a write (if channel is becoming an output)
                     if(Number(val) === 0) {
@@ -338,8 +442,8 @@ function module() {
                         self.activeDevice.qRead(activeReg)
                         .then(function(val) {
                             // Update GUI with read value
-                            var inputStateId = '#' + activeReg + '-INDICATOR .currentValue';
-                            var inputStateObj = $(inputStateId);
+                            var inputStateId = '.digitalDisplayIndicator .currentValue';
+                            var inputStateObj = parentObj.find(inputStateId);
                             var state = {
                                 '0': {'status': 'inactive', 'text': 'Low'},
                                 '1': {'status': 'active', 'text': 'High'}
@@ -353,8 +457,8 @@ function module() {
                     } else {
                         inObj.hide();
                         outObj.show();
-                        var outputStateId = '#' + activeReg + '-STATE-SELECT .currentValue';
-                        var outputStateObj = $(outputStateId);
+                        var outputStateId = '.digitalStateSelectButton .currentValue';
+                        var outputStateObj = parentObj.find(outputStateId);
                         outputStateObj.html('High');
 
                         // Perform device write, force to be high at start
@@ -388,11 +492,16 @@ function module() {
             var parentEl = baseEl.parentElement;
             var id = parentEl.id;
             var activeReg = id.split('-')[0];
+            var location = id.split('-')[1];
+            var registerName = activeReg;
+            if(location === 'device') {
+                registerName += location;
+            }
             var curStr = baseEl.innerHTML;
             //Set to opposite of actual to toggle the IO line
             var newVal = {'High':0,'Low':1}[curStr];
             var newStr = {'Low':'High','High':'Low'}[curStr];
-            var outputDisplayId = '#' + activeReg + '-STATE-SELECT .currentValue';
+            var outputDisplayId = '#' + registerName + '-STATE-SELECT .currentValue';
             
             // Update GUI
             $(outputDisplayId).text(newStr);
@@ -484,12 +593,18 @@ function module() {
                 self.currentValues.set(name,value);
                 self.newBufferedValues.delete(name);
             });
-            console.log('Updated...');
             onSuccess();
         });
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
         // self.activeDevice.setDebugFlashErr(false);
+        try {
+            delete self.deviceDashboardController;
+            self.deviceDashboardController = undefined;
+            $('#dashboard').remove();
+        } catch (err) {
+            console.log('Error Deleting Data',err);
+        }
         onSuccess();
     };
     this.onUnloadModule = function(framework, onError, onSuccess) {

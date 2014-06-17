@@ -168,10 +168,6 @@ p, h1, h2, h3 {
     }
     #module-chrome-contents-holder{
         overflow: auto;
-        tabsVisibilityStatus: visible;
-        /*position:absolute;
-        left:22.92817679558011%;
-        right:20px;*/
     }
     #system-navigation {
         max-width:220px;
@@ -187,8 +183,6 @@ p, h1, h2, h3 {
     }
     #module-chrome-contents-holder {
         width: 100%;
-        tabsVisibilityStatus: hidden;
-        /*overflow: hidden;*/
     }
     #system-navigation {
         max-width:100%;

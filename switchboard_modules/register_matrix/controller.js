@@ -7,6 +7,8 @@
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
+function ACTIVE_KIPLING_MODULE() {
+
 var async = require('async');
 var handlebars = require('handlebars');
 var simplesets = require('simplesets');
@@ -939,3 +941,6 @@ $('#register-matrix-holder').ready(function(){
         setTimeout(updateReadRegisters, REFRESH_DELAY);
     });
 });
+
+}
+var ACTIVE_KIPLING_MODULE = new ACTIVE_KIPLING_MODULE();
