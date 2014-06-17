@@ -58,7 +58,7 @@ function createDeviceMatcher (device) {
 			}
 		}
 		if (typeof(module.buildTypes) !== 'undefined') {
-			var lowestNum = 1000;
+			var lowestNum = -1;
 			module.buildTypes.forEach(function(type){
 				if(GET_KIPLING_BUILD_TYPE_NUMBER(type) < lowestNum) {
 					lowestNum = GET_KIPLING_BUILD_TYPE_NUMBER(type);
@@ -67,7 +67,7 @@ function createDeviceMatcher (device) {
 			var curBuildType = process.buildType;
 			var curBuildInt = GET_KIPLING_BUILD_TYPE_NUMBER(curBuildType);
 			if (curBuildInt > lowestNum) {
-				continueCheck = false;
+				// continueCheck = false;
 			}
 		}
 

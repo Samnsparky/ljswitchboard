@@ -7,7 +7,7 @@
     "supportedDevices": [{"type":"T7","subclass":["Pro",""],"minFW":"0.01"}],
     "jsFiles":["deviceDashboardController.js"],
     "third_party_code_unload":[],
-    "buildTypes":["develop","debug","release"],
+    "buildTypes":["develop","debug"],
     "internalCompOnly":false,
     "developCompOnly":false
 }
