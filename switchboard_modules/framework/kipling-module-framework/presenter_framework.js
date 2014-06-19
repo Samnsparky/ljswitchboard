@@ -16,7 +16,7 @@ try {
     ljmmm_parse.expandLJMMMNameSync = function (name) {
         return ljmmm_parse.expandLJMMMEntrySync(
             {name: name, address: 0, type: 'FLOAT32'}
-        ).map(function (entry) { return entry.name });
+        ).map(function (entry) { return entry.name; });
     };
 } catch (err) {
     console.log('error loading ljmmm_parse');
@@ -282,6 +282,10 @@ function Framework() {
     var iterationTime;
     var ljmDriverLogEnabled = false;
 
+    // Framework Deletion constant
+    var frameworkActive = true;
+    this.frameworkActive = frameworkActive;
+
     this.deviceSelectionListenersAttached = deviceSelectionListenersAttached;
     this.jquery = jquery;
     this.refreshRate = refreshRate;
@@ -322,7 +326,7 @@ function Framework() {
     this.loopErrorEncountered = false;
     this.loopErrors = [];
     this.daqLoopFinished = false;
-    this.daqLoopMonitorTimer;
+    this.daqLoopMonitorTimer = null;
     this.daqLoopStatus = 'un-initialized';
 
     this.pauseDAQLoop = false;
@@ -410,7 +414,6 @@ function Framework() {
         }
     };
     this.setStartupMessage = function(message) {
-        console.log('Configuring Message');
         var idString = '#single-device-framework-loading-message';
         $(idString).text(message);
     };
@@ -491,6 +494,10 @@ function Framework() {
             } catch (err) {
                 console.log(
                     'Error firing: '+name, 
+                    'currentTab: ', currentTab,
+                    'typeof sdModule: ', typeof(sdModule),
+                    'typeof sdFramework: ', typeof(sdFramework),
+                    'frameworkActive', self.frameworkActive,
                     ' Error caught is: ',err.name, 
                     'message: ',err.message,err.stack);
                 try{
@@ -628,7 +635,7 @@ function Framework() {
         var resolveFunc = function(data) {
             onResized();
             innerDeferred.resolve(data);
-        }
+        };
         try{
             self.fire(
                 'onTemplateDisplayed',
@@ -643,7 +650,7 @@ function Framework() {
             console.log('Error caught in qExecOnTemplateDisplayed',err);
         }
         return innerDeferred.promise;
-    }
+    };
     var qExecOnTemplateDisplayed = this.qExecOnTemplateDisplayed;
     
     this.qExecOnTemplateLoaded = function() {
@@ -655,7 +662,7 @@ function Framework() {
         var resolveFunc = function(data) {
             onResized();
             innerDeferred.resolve(data);
-        }
+        };
         try{
             self.fire(
                 'onTemplateLoaded',
@@ -2050,6 +2057,10 @@ function Framework() {
     };
     this.qConfigureTimer = function() {
         var innerDeferred = q.defer();
+        if(!self.frameworkActive) {
+            innerDeferred.reject();
+            return innerDeferred.promise;
+        }
         var d = new Date();
         var curTime = d.valueOf();
         var elapsedTime = curTime - self.iterationTime - self.refreshRate;
@@ -2105,7 +2116,9 @@ function Framework() {
         self.loopErrorEncountered = false;
         self.loopErrors = [];
         self.daqLoopStatus = 'timerConfigured';
-        setTimeout(self.loopIteration, self.refreshRate);
+        if((typeof(sdModule) !== 'undefined') && (typeof(sdFramework) !== 'undefined')) {
+            setTimeout(self.loopIteration, self.refreshRate);
+        }
         innerDeferred.resolve();
         return innerDeferred.promise;
     };
@@ -2113,15 +2126,15 @@ function Framework() {
 
     this.unpauseFramework = function() {
         self.isDAQLoopPaused = false;
-    }
+    };
     var unpauseFramework = this.unpauseFramework;
     this.pauseFramework = function(pauseNotification) {
         self.pauseDAQLoop = true;
         self.isPausedListenerFunc = pauseNotification;
         return function() {
             self.isDAQLoopPaused = false;
-        }
-    }
+        };
+    };
     var pauseFramework = this.pauseFramework;
     this.testPauseFramework = function() {
         self.pauseFramework(
@@ -2130,7 +2143,7 @@ function Framework() {
                 self.unpauseFramework();
             }
         );
-    }
+    };
     /**
      * Function to run a single iteration of the module's refresh loop.
      *
@@ -2140,6 +2153,10 @@ function Framework() {
     **/
     this.loopIteration = function () {
         var deferred = q.defer();
+        if(!self.frameworkActive) {
+            deferred.reject();
+            return deferred.promise;
+        }
         self.daqLoopFinished = false;
         self.daqLoopStatus = 'startingLoop';
         var getIsPausedChecker = function(unPauseLoop) {
@@ -2410,7 +2427,7 @@ function Framework() {
                         //Increment current index
                         curDeviceIOIndex += 1;
                     } else {
-                        if(binding.execCallback == false) {
+                        if(binding.execCallback === false) {
                             console.log('Warning, PeriodicFunction Found but not executing',binding);
                         }
                     }
@@ -2681,6 +2698,10 @@ function Framework() {
         self.module = moduleObj;
         module = moduleObj;
     };
+    this.killInstance = function () {
+        self.frameworkActive = false;
+    };
+    var killInstance = this.killInstance;
 }
 
 var singleDeviceFramework = Framework;

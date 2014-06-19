@@ -49,6 +49,7 @@ function module() {
     this.isValueNew = dict();
     this.newBufferedValues = dict();
     this.bufferedOutputValues = dict();
+    this.analogInputsDict = dict();
 
     this.ANALOG_INPUT_PRECISION = 6;
 
@@ -326,6 +327,9 @@ function module() {
         // console.log('genericConfigCallback',data.binding.binding,data.value);
         var name = data.binding.binding;
         var value = data.value;
+        if(name.indexOf('_RANGE') !== -1) {
+            value = Math.round(value * 100)/100;
+        }
         self.currentValues.set(name,value);
         self.isValueNew.set(name,false);
         onSuccess();
@@ -334,6 +338,9 @@ function module() {
         // console.log('genericPeriodicCallback',data.binding.binding,data.value);
         var name = data.binding.binding;
         var value = data.value;
+        if(name.indexOf('_RANGE') !== -1) {
+            value = Math.round(value * 100)/100;
+        }
         var oldValue = self.currentValues.get(name);
         if(oldValue != value) {
             self.isValueNew.set(name,true);
@@ -524,7 +531,7 @@ function module() {
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
         // Initialize variable where module config data will go.
         self.moduleContext = {};
-        var analogInputsDict = dict();
+        self.analogInputsDict = dict();
         if(self.defineDebuggingArrays){
             var analogInputs = [];
         }
@@ -568,7 +575,7 @@ function module() {
             if(self.defineDebuggingArrays){
                 analogInputs.push(ainChannel);
             }
-            analogInputsDict.set(reg,ainChannel);
+            self.analogInputsDict.set(reg,ainChannel);
         });
 
         var findNum = new RegExp("[0-9]{1,2}");
@@ -616,13 +623,19 @@ function module() {
                 var res = findNum.exec(name);
                 var index = Number(res[0]);
                 // Get currently saved values
-                var ainInfo = analogInputsDict.get('AIN'+index.toString());
+                var ainInfo = self.analogInputsDict.get('AIN'+index.toString());
 
                 var newData = self.regParser.get(name)(value);
                 if(isFound(name,'_')) {
                     var menuOptions = ainInfo.optionsDict.get(name);
                     menuOptions.curStr = newData.name;
                     menuOptions.curVal = newData.value;
+                    
+                    if(name.indexOf('_RANGE') !== -1) {
+                        var rangeStr = newData.value.toString();
+                        ainInfo.rangeVal = newData.value;
+                        ainInfo.rangeStr = name + ' is set to ' + rangeStr;
+                    }
                     ainInfo.optionsDict.set(name, menuOptions);
                 } else {
                     var roundedRes = value.toFixed(self.ANALOG_INPUT_PRECISION);
@@ -631,21 +644,135 @@ function module() {
                 }
 
                 // Update saved values
-                analogInputsDict.set('AIN'+index.toString(),ainInfo);
+                self.analogInputsDict.set('AIN'+index.toString(),ainInfo);
             }
         });
-        self.moduleContext.analogInputsDict = analogInputsDict;
+        
+        self.moduleContext.analogInputsDict = self.analogInputsDict;
         self.moduleContext.configRegistersDict = configRegistersDict;
         console.log('moduleContext',self.moduleContext);
         framework.setCustomContext(self.moduleContext);
         onSuccess();
     };
+    this.splitAinValue = function(value) {
+        var data = {pos: 0,neg: 0};
+        if(value < 0) {
+            neg = value;
+        } else {
+            pos = value;
+        }
+    }
+    this.getD3GraphWidth = function (value, range) {
+        var val;
+        switch (range) {
+            case 10:
+                val = value / (range + 0.8);
+                break;
+            case 1:
+                val = value / (range + 0.052);
+                break;
+            case 0.1:
+                val = value / (range + 0.0051);
+                break;
+            case 0.01:
+                val = value / (range + 0.0003);
+                break;
+            default:
+                break;
+        }
+        val = (Math.abs(val) * 100);
+        return val;
+    }
+    this.getSVGWidth = function(val) {
+        return function() {
+            if(val > 0) {
+                return '50%';
+            } else {
+                return '50%';
+            }
+        }
+    }
+    this.getSVGStyle = function(val,range) {
+        return function() {
+            var width;
+            if(val > 0) {
+                width = 50;
+            } else {
+                width = 50-self.getD3GraphWidth(val,range)/2;
+            }
+            return 'margin-left:'+width.toString() + '%;';
+        }
+    }
+    this.getFillColor = function(val) {
+        return function() {
+            if(val > 0) {
+                return '#01a31c';
+            } else {
+                return '#2d89f0';
+            }
+        }
+    }
+    this.initializeD3Graphs = function(onSuccess) {
+        // For each analog input channel, create graphs using D3!
+        self.analogInputsDict.forEach(function(val,name){
+            // Save the current value
+            var curVal = val.value;
 
+            // save the current range value
+            var curRange = val.rangeVal;
+
+            // Get the width of space allocated to rendering the d3 rectangles.
+            var svgID = '#' + name + '-graph';
+            var graphWidth = $(svgID).width();
+
+            // Calculate half the width and/or the offset to be used for the 
+            // second graph.
+            var halfWidth = graphWidth / 2;
+
+            // Select the svg element to be D3's target
+            var ainGraph = d3.select(svgID)
+            .attr('width', self.getSVGWidth(curVal))
+            .attr('height', '5px')
+            .attr('style',self.getSVGStyle(curVal,curRange))
+            .selectAll('.ainGraphLine')                                         // Select all elements with the class .ainGraphLine incase some already exist.
+            .data(function () {
+                return [curVal];                                                // Return array of data to be added to svg element
+            })
+            .enter()                                                            // for each data point....
+            .append('rect')                                                     // Draw a rectangle 'rect'
+            .attr('width', function (data) {
+                return self.getD3GraphWidth(curVal,curRange).toString() + '%';
+            })
+            .attr('height', '5')
+            .attr('fill', self.getFillColor(curVal))
+            .attr('class', 'ainGraphLine');
+
+            console.log(name,curVal,curRange,val);
+        });
+        if(typeof(onSuccess) !== 'undefined') {
+            onSuccess();
+        }
+    }
+    this.updateD3Graph = function(name,curVal) {
+        var curRange = self.currentValues.get(name + '_RANGE');
+        var svgID = '#' + name + '-graph';
+        var ainGraph = d3.select(svgID)
+        .attr('width', self.getSVGWidth(curVal))
+        .attr('style',self.getSVGStyle(curVal,curRange))
+
+        var ainGraphLine = d3.select(svgID + ' .ainGraphLine')
+        .attr('fill', self.getFillColor(curVal))
+        .attr('width', function (data) {
+            return self.getD3GraphWidth(curVal,curRange).toString() + '%';
+        })
+    }
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        // Save the bindings to the framework instance.
-        // framework.putConfigBindings(moduleBindings);
         onSuccess();
     };
+    this.onTemplateDisplayed = function(framework, onError, onSuccess) {
+        // Initialize the D3 Graphs
+        self.initializeD3Graphs(onSuccess);
+    }
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
         onSuccess();
     };
@@ -655,6 +782,7 @@ function module() {
     this.onRefresh = function(framework, registerNames, onError, onSuccess) {
         onSuccess();
     };
+    var findRangeRegisterRegex = new RegExp("AIN[0-9]{1,2}_RANGE");
     this.onRefreshed = function(framework, results, onError, onSuccess) {
         try {
             // console.log('Refreshed!',framework.moduleName,self.newBufferedValues.size);
@@ -664,16 +792,28 @@ function module() {
                 self.bufferedOutputValues.delete(name);
             });
             self.newBufferedValues.forEach(function(value,name){
+                // if the new value that is read is not an analog input aka a 
+                // channel config option do some special DOM stuff
                 if(name.indexOf('_') != -1){
-                    console.log('Updating Select',name+'-SELECT');
+                    // console.log('Updating Select',name+'-SELECT');
                     var buttonID = '#' + name + '-SELECT';
                     var buttonEl = $(buttonID);
                     var selectEl = buttonEl.find('.currentValue');
                     var newText = self.regParser.get(name,{'value':-9999,'name':'N/A'})(value);
-                    var newTitle = name + ' is set to ' + value.toString();
-                    console.log('New Data',newText,newTitle);
+                    var stringVal = value.toString();
+                    var newTitle = name + ' is set to ' + stringVal;
+                    var rangeReg = findRangeRegisterRegex.exec(name);
+                    if(rangeReg) {
+                        var reg = rangeReg[0].split('_RANGE')[0];
+                        // console.log('newText-Object: ',newText,'newTitle: ',newTitle);
+                        var obj = $('#' + reg + '-table-data .ain-range-val');
+                        console.log('Updating Range Reg:',reg,stringVal,obj);
+                        obj.html(stringVal);
+                    }
                     selectEl.text(newText.name);
                     selectEl.attr('title',newTitle);
+                } else {
+                    self.updateD3Graph(name,value);
                 }
                 self.currentValues.set(name,value);
                 self.newBufferedValues.delete(name);

@@ -1,10 +1,11 @@
-function getDeviceDashboardController() {
+function getDeviceDashboardController(deviceInfo) {
     var DEVICE_D3_CONTAINER;
     var DEVICE_IMAGE_CONTAINER;
     this.displayTemplateData = {};
     
     // Device Image Info
-    var LABJACK_OVERVIEW_IMG_SRC = './static/img/T7-cartoon.png';
+    var LABJACK_OVERVIEW_IMG_SRC = './static/img/' + deviceInfo.fullType + '-cartoon.png';
+    console.log('Loading Image:',LABJACK_OVERVIEW_IMG_SRC);
     var DEVICE_IMAGE_X_OFFSET = 150;
     var DEVICE_IMAGE_Y_OFFSET = 10;
     var DEVICE_IMG_WIDTH = 225;
@@ -186,7 +187,7 @@ function getDeviceDashboardController() {
         // to add the db-cartoon.
         var image = d3.select(DB_IMAGE_CONTAINER)                               // Tell D3 to insert data into the DEVICE_IMAGE_CONTAINER div-id
         .append('image')                                                        // Tell D3 to make an image object
-        .attr('xlink:href', LABJACK_DB_IMG_SRC)                                 // Set the image src. to be the LABJACK_OVERVIEW_IMG_SRC
+        .attr('xlink:href', LABJACK_DB_IMG_SRC)                                 // Set the image src. to be the LABJACK_DB_IMG_SRC
         .attr('x', DB_IMAGE_X_OFFSET)                                           // Set the X-offset.  Padding added to the left of image.
         .attr('y', DB_IMAGE_Y_OFFSET)                                           // Set the Y-offset.  Padding added to the top of image.
         .attr('width', DB_IMG_WIDTH)
@@ -541,7 +542,12 @@ function getDeviceDashboardController() {
         var directionVal = (directionMask >> offset) & 0x1;
         return {state:stateVal,direction:directionVal};
     };
-
+    this.fixVal = function(value) {
+        if(typeof(value) === 'undefined') {
+            value = -9999;
+        }
+        return value;
+    }
     /**
      * A function that gets called by the controller.js onRefreshed function 
      * that updates the GUI with changed values.  Allows other applications to
@@ -558,11 +564,12 @@ function getDeviceDashboardController() {
                 var dID = DEVICE_REGISTER_DISPLAY_ID_TEMPLATE({register: register});
                 var ainVal = $('#'+id).find('.value');
                 var dAINVal = $('#'+dID).find('.value');
-                ainVal.html(Number(channel.value).toFixed(6));
-                dAINVal.html(Number(channel.value).toFixed(6));
+                var val = self.fixVal(channel.value);
+                ainVal.html(Number(val).toFixed(6));
+                dAINVal.html(Number(val).toFixed(6));
             },
             'analogOutput-': function (channel, register) {
-                var val = channel.value;
+                var val = self.fixVal(channel.value);
                 if(val < 0) {
                     val = 0;
                 }

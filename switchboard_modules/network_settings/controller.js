@@ -1738,35 +1738,30 @@ function module() {
     
     /**
      * Function is called once every time a user selects a new device.  
-     * @param  {[type]} framework   The active framework instance.
+     * @param  {object} framework   The active framework instance.
      * @param  {[type]} device      The active framework instance.
      * @param  {[type]} onError     Function to be called if an error occurs.
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
-        console.log('in onDeviceSelected');
+        // Save the selected device as the module's activeDevice
         self.activeDevice = device;
+        // Save the devices current connection type
         self.connectionType = device.getConnectionType();
-        console.log('Connection Type',self.connectionType);
-        // self.activeDevice.setDebugFlashErr(true);
 
+        // Clear current config bindings to prevent from double-event listeners.
         framework.clearConfigBindings();
         framework.setStartupMessage('Reading Device Configuration');
-        var dummyQ = function() {
-            var deferred = q.defer();
-            deferred.resolve();
-            return deferred.promise;
-        };
-        // self.waitForWifiNotBlocking()
-        dummyQ()
-        .then(function(){
-            console.log('Successfully delayed start');
-            onSuccess();
-        },function(err) {
-            console.log('Error Delaying',err);
-            onSuccess();
-        });
+
+        // Indicate to the framework that it is ok to continue
+        onSuccess();
     };
+
+    /**
+     * Function to configure the module's view.html template.
+     * @param  {object} framework the sdFramework object returned by the 
+     * framework.
+    **/
     this.configureModuleContext = function(framework) {
         var ethernetWarningMessage = '';
         var wifiWarningMessage = '';
@@ -1796,11 +1791,6 @@ function module() {
         self.moduleContext.showWifiWarning = showWifiWarning;
         self.moduleContext.wifiWarningMessage = wifiWarningMessage;
         self.moduleContext.wifiPowerButtonWarning = wifiPowerButtonWarning;
-        
-
-        // Load configuration data & customize view
-        // self.moduleContext.ethernetIPRegisters = [];
-        // self.moduleContext.wifiIPRegisters = [];
 
         // Get and save wifiNetworkName
         var networkNameDefault = self.currentValues.get('WIFI_SSID_DEFAULT').fVal;
@@ -1857,10 +1847,6 @@ function module() {
         }
         self.moduleContext.dhcpDisabledText = self.dhcpText[0];
         self.moduleContext.dhcpEnabledText = self.dhcpText[1];
-        // console.log('Ethernet DHCP',
-        //     initialEthernetDHCPStatus,
-        //     self.moduleContext.ethernetDHCPStatusBool,
-        //     self.moduleContext.ethernetDHCPStatusString);
 
         var initialEthernetIP = self.currentValues.get('ETHERNET_IP').val;
         if(initialEthernetIP === 0) {
@@ -1905,13 +1891,12 @@ function module() {
         // console.log('Init context',self.moduleContext);
         framework.setCustomContext(self.moduleContext);
     };
+
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
         var isConfigError = false;
         var errorAddresses = [];
         var errorBindings = dict();
         setupBindings.forEach(function(setupBinding){
-            // console.log('Addr',setupBinding.address,'Status',setupBinding.status,'Val',setupBinding.result);
-            // console.log('Addr',setupBinding.address,':',setupBinding.formattedResult,setupBinding.result,setupBinding.status);
             if(setupBinding.status === 'error') {
                 isConfigError = true;
                 var addr = setupBinding.address;
@@ -1931,11 +1916,14 @@ function module() {
                 setupBinding.status
             );
         });
-        // console.log('Addresses Failed to Read:',errorAddresses);
+
+        // Asynchronously loop through the addresses that failed to read during 
+        // the modules initial load step.  This commonly happens when the T7's
+        // flash is un-available (wifi-module is starting) aka reading _DEFAULT 
+        // values.
         async.eachSeries(
             errorAddresses,
             function( addr, callback) {
-                // console.log('Failed to read:',addr,);
                 var binding = errorBindings.get(addr);
                 self.activeDevice.qRead(addr)
                 .then(function(result){
@@ -1953,25 +1941,19 @@ function module() {
                     callback();
                 });
             }, function(err){
-                // if any of the file processing produced an error, err would equal that error
-                if( err ) {
-                  // One of the iterations produced an error.
-                  // All processing will now stop.
-                  // console.log('An Addresses failed to process');
-                } else {
-                  // console.log('All Addresses have been processed successfully');
-                }
+                // When we are finished re-reading values call function to 
+                // configure the module's initial display context & return 
+                // control back to the framework.
                 self.configureModuleContext(framework);
                 onSuccess();
             });
-        // console.log('errorBindings:')
-        // errorBindings.forEach(function(b,name){
-        //     console.log(name,b);
-        // });
     };
 
-    this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        self.attachInputValidators();
+    /**
+     * Function to be called when template is loaded to automatically fill
+     * inputs with information.
+    **/
+    this.configureInputsForTesting = function() {
         // var os = require("os");
         // var computerName = os.hostname();
         // if(computerName === 'chris-johnsons-macbook-pro-2.local' && window.toolbar.visible) {
@@ -1984,7 +1966,19 @@ function module() {
         // self.setNetworkName('Courtyard_GUEST');
         // self.setWifiPassword('smgmtbmb3cmtbc');
         // self.setNetworkName('AAA');
-        
+    };
+
+    /**
+     * Function gets called by the framework when the module's template has
+     * been loaded.
+     * @param  {object} framework the framework object
+     * @param  {function} onError   function to be called if an error occurs.
+     * @param  {function} onSuccess function to be called when finished 
+     *                            successfully.
+    **/
+    this.onTemplateLoaded = function(framework, onError, onSuccess) {
+        // Attach the input validators to the ui boxes.
+        self.attachInputValidators();
 
         // force validations to occur
         self.selectivelyShowEthernetAlerts();
@@ -1993,22 +1987,18 @@ function module() {
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
-        // console.log('in onRegisterWrite',binding);
         onSuccess();
     };
     this.onRegisterWritten = function(framework, registerName, value, onError, onSuccess) {
         onSuccess();
     };
     this.onRefresh = function(framework, registerNames, onError, onSuccess) {
-        // console.log('in onRefresh',framework.moduleName);
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        // console.log('in onRefreshed',framework.moduleName);
         onSuccess();
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
-        // self.activeDevice.setDebugFlashErr(false);
         onSuccess();
     };
     this.onUnloadModule = function(framework, onError, onSuccess) {

@@ -117,16 +117,17 @@
 										</td>
 									</tr>
 									<tr>
-										<td>
-											<div class="ain-range-text"><span id="{{name}}-min-range-val">-10</span>V</div>
+										<td class="graphRange">
+											<div class="ain-range-text-left" title="{{rangeStr}}">-<span class="ain-range-val" id="{{name}}-min-range-val">{{rangeVal}}</span>V</div>
 										</td>
-										<td>
+										<td class="graphSlider">
 											<div>
-												<div class="custom-input-bar input-bar" id="{{name}}-input-bar"></div>
+												<!--<div class="custom-input-bar input-bar" id="{{name}}-input-bar"></div>-->
+												<svg width="50" height="50" class="analog-input-graph" id="{{name}}-graph"></svg>
 											</div>
 										</td>
-										<td>
-											<div class="ain-range-text"><span id="{{name}}-max-range-val">+10</span>V</div>
+										<td class="graphRange">
+											<div class="ain-range-text-right" title="{{rangeStr}}">+<span class="ain-range-val" id="{{name}}-max-range-val">{{rangeVal}}</span>V</div>
 										</td>
 									</tr>
 								</tbody>
@@ -178,4 +179,5 @@
 			</table>
 		</div>
 	</div>
+	<div style="height: 1px;"></div>
 </div>

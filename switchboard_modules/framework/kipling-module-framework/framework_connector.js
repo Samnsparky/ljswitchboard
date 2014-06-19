@@ -8,15 +8,15 @@
 // Check for user disabling automatic framework linking
 var autoLinkToFramework = true;
 if( typeof(DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE) === "boolean" ) {
-    if( DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE == true ) {
+    if( DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE === true ) {
         autoLinkToFramework = false;
     }
-};
+}
 
 if(autoLinkToFramework) {
 
 // Configure framework with jQueryWrapper
-sdFramework._SetJQuery(new JQueryWrapper);
+sdFramework._SetJQuery(new JQueryWrapper());
 
 // Create a variable for the user's module
 var sdModule = null;
@@ -145,8 +145,7 @@ $('#single-device-framework-obj').ready(function(){
 });
 
 //End bracket for autoLinkToFramework
-};
-
+}
 
 
 

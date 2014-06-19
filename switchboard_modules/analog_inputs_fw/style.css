@@ -23,18 +23,30 @@
     margin-top:8px;
     height:5px;
 }
-.ain-range-text {
-	font-size: xx-small;
-	width: 3px;
-}
 #output-data-table {
 	background-color: transparent;
 }
 #output-data-table .result-text p {
 	margin-bottom: -11px;
+	margin-left: 10px;
+	/*text-align: center;*/
 }
 #output-data-table td {
 	background-color: transparent;
+}
+.ain-range-text-left {
+	font-size: xx-small;
+	float:right;
+}
+.ain-range-text-right {
+	font-size: xx-small;
+	float:left;
+}
+#output-data-table .graphRange {
+	width: 5%;
+}
+#output-data-table .graphSlider {
+	width:90%;
 }
 .optionsConfigTable tr {
 	background-color: transparent;
@@ -59,7 +71,7 @@
 	width: 62px;
 }
 .resolution-LINK {
-	width: 48px;
+	width: 50px;
 }
 .settling-header {
 	width: 68px;
@@ -77,7 +89,7 @@
 	width: 48px;
 }
 .efSystem-LINK {
-	width: 130px;
+	width: 138px;
 }
 .btn-group .currentValue {
 	float:left;
@@ -94,4 +106,10 @@
 #advanced-ain-readout .dropdown-toggle {
 	padding-left: 5px;
 	padding-right: 5px;
+}
+.positiveResult {
+	margin-left:50%;
+}
+.negativeResult {
+	margin-left:0%;
 }

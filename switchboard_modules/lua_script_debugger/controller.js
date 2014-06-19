@@ -398,7 +398,7 @@ function luaDeviceController() {
         self.checkForCodeErrors()
 
         // Disable the LUA script
-        .then(self.stopLuaScript, checkForCodeErrors)
+        .then(self.stopLuaScript, self.catchError)
 
         // Set the LUA Source Size
         .then(self.writeLuaSourceSize, self.catchError)

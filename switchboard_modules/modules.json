@@ -9,7 +9,7 @@
     },
     {
         "name": "device_overview",
-        "active": true
+        "active": false
     },
     {
         "name": "dashboard",

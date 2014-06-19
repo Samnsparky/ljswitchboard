@@ -295,9 +295,21 @@ function displayActiveModulesWithEvents(activeModules, matchFunc, onError,
     });
 }
 
+/**
+ * Global function that can be called by any module if it needs to listen to the
+ * window resize listener.  Created because a timer is used to prevent the 
+ * spamming of the window.resize listener to decrease CPU load & increase 
+ * performance.
+ * @param {string} keyStr       A unique string to be used as a 'key' to 
+ *                              identify the listener.
+ * @param {function} callbackFunc The function that gets called by the resize 
+ *                                listener.
+ */
 function addModuleWindowResizeListner(keyStr, callbackFunc) {
+    // Make sure that the keyStr is a string and the callbackFunc is a function.    TODO: typeof(keyStr) won't necessairly be a string.  Thanks nodejs...
     if ((typeof(keyStr) === 'string') && (typeof(callbackFunc) === 'function')){
         var origIndex = 0;
+        // Figure out if the listener key is already being used.
         var addListener = MODULE_WINDOW_RESIZE_LISTNERS.every(function(listener,index) {
             if (listener.key === keyStr) {
                 origIndex = index;
@@ -305,21 +317,38 @@ function addModuleWindowResizeListner(keyStr, callbackFunc) {
             }
             return true;
         });
+
         if (addListener) {
-            console.log('Adding Listener',keyStr, 'duh...');
+            // if the key isn't already being used (in the list) add it.
             MODULE_WINDOW_RESIZE_LISTNERS.push({key:keyStr,callback:callbackFunc});
         } else {
-            console.log('Replacing Listener',origIndex);
+            // if the key is already in the list, replace the listener with this
+            //  new one
             MODULE_WINDOW_RESIZE_LISTNERS[origIndex] = {key:keyStr,callback:callbackFunc};
         }
     } else {
-            console.log('not Adding Listener');
-        }
+        // Not able to add the listener due to invalid inputs.
+        console.error(
+            'module_chrome.js-addModuleWindowResizeListner, invalid inputs',
+            'keyStr: ',keyStr,
+            'typeof keyStr: ',typeof(keyStr),
+            'typeof callbackFunc: ',typeof(callbackFunc)
+        );
+    }
 }
 
+/**
+ * Function to be called by the object who registered the listener when its no
+ * longer required.
+ * @param  {string} keyStr The unique string to identify the listener to be 
+ *                         removed.
+**/
 function removeModuleWindowResizeListner(keyStr) {
+    // Make sure the keyStr is of type string.  (This may eventually fail, fix later)
     if(typeof(keyStr) === 'string') {
         var origIndex = 0;
+
+        // Check to see if the listener keyStr is in the list.
         var isFound = MODULE_WINDOW_RESIZE_LISTNERS.some(function(listener,index) {
             if (listener.key === keyStr) {
                 origIndex = index;
@@ -328,14 +357,25 @@ function removeModuleWindowResizeListner(keyStr) {
             return false;
         });
         if (isFound) {
-            console.log('Removing Listener');
+            // if the listener is found then remove it
             MODULE_WINDOW_RESIZE_LISTNERS.splice(origIndex,1);
         } else {
+            // if the listener isn't found then don't remove it.
             console.log('Not Removing Listener',keyStr);
         }
+    }else {
+        // Not able to add the listener due to invalid inputs.
+        console.error(
+            'module_chrome.js-removeModuleWindowResizeListner, invalid input',
+            'keyStr: ',keyStr,
+            'typeof keyStr: ',typeof(keyStr)
+        );
     }
 }
 
+/**
+ * Function that clears the window.resize listeners list.
+**/
 function clearModuleWindowResizeListners() {
     MODULE_WINDOW_RESIZE_LISTNERS = [];
 }
@@ -346,7 +386,6 @@ function clearModuleWindowResizeListners() {
 function onResized()
 {
     // in the module_chrome.css file this magic number is 768 & 767
-    // 
     var moduleList = $('#module-list');
     var reCallFUnc = function() {
             if(moduleList.css('display') !== 'none') {
@@ -373,7 +412,6 @@ function onResized()
     // if(moduleList.css('display') !== 'none') {
     if ($(window).width() > 768) {
         $('#module-list').height((windowHeight - 75).toString() + 'px');
-        console.log('HERE0',contents_height);
         moduleChromeContentsEl.css(
             {'height': contents_height.toString() + 'px'}
         );
@@ -388,12 +426,6 @@ function onResized()
         var moduleHeight = 9+bodyHeight+20;
         var iconsHeight = $('#system-navigation').height();
         var topHeight = $('#module-chrome-contents').children(0).offset().top;
-        // if(windowHeight < (setHeight + iconsHeight)){
-        //     console.log('HERE');
-            // setHeight = (windowHeight - topHeight + 9);
-        // } else {
-        //     console.log('HERE1')
-        // }
         if((windowHeight - topHeight + 9) < (moduleHeight)) {
             setHeight = moduleHeight;
         } else {

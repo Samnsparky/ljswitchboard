@@ -179,7 +179,6 @@ var linkGlobalDeviceConstants = function() {
         globalDeviceConstants.t7DeviceConstants[attr.key].forEach(function(t7Data){
             globalDeviceConstants.t7ProDeviceConstants[attr.key].push(t7Data);
         });
-        console.log('proVals',attr.values);
         var t7ProVals = attr.values;
         t7ProVals.forEach(function(t7ProData){
             globalDeviceConstants.t7ProDeviceConstants[attr.key].push(t7ProData);
