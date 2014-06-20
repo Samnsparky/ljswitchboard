@@ -133,7 +133,7 @@ function innerSelectModule(name)
         // Add third party js files (if they are defined)
         if(thirdPartyJSList !== undefined) {
             thirdPartyJSList.forEach(function(element, index, array){
-                jsLibFiles.push('third_party_code/'+element);
+                jsLibFiles.push('../third_party_code/'+element);
             });
         }
         jsLibFiles.forEach(function(element, index, array){

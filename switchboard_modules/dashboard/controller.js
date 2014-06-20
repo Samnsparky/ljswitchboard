@@ -49,6 +49,8 @@ function module() {
 
     this.deviceDashboardController = undefined;
 
+    this.spinnerController;
+
     
     this.roundReadings = function(reading) {
         return Math.round(reading*1000)/1000;
@@ -72,7 +74,6 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onModuleLoaded = function(framework, onError, onSuccess) {
-        console.log('in onModuleLoaded');
         // device_controller.ljm_driver.writeLibrarySync('LJM_SEND_RECEIVE_TIMEOUT_MS',5000);
         // Save Module Constant objects
         self.moduleConstants = framework.moduleConstants;
@@ -231,7 +232,13 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
-        console.log('in onDeviceSelected');
+        var dacSpinnerInfo = [
+            {spinnerID:'DAC0-device_input_spinner', reg: 'DAC0'},
+            {spinnerID:'DAC1-device_input_spinner', reg: 'DAC1'},
+            {spinnerID:'DAC0_input_spinner', reg: 'DAC0'},
+            {spinnerID:'DAC1_input_spinner', reg: 'DAC1'}
+        ];
+        self.spinnerController = new customSpinners(self, dacSpinnerInfo,self.writeReg);
         self.activeDevice = device;
         var dt = device.getDeviceType();
         var ds = device.getSubclass();
@@ -255,7 +262,6 @@ function module() {
         onSuccess();
     };
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
-        console.log('in onDeviceConfigured');
         setupBindings.forEach(function(setupBinding){
             var name = setupBinding.address;
             var value;
@@ -272,177 +278,7 @@ function module() {
     this.formatVoltageTooltip = function(value) {
         return sprintf.sprintf("%.2f V", value);
     };
-    this.writeSpinner = function(spinner,value) {
-        if(value < 0) {
-            value = 0;
-        }
-        if(typeof(value) !== 'undefined') {
-            spinner.val(value.toFixed(3));
-        }
-    }
-    this.writeDisplayedVoltage = function(register, selectedVoltage) {
-        var devEl = $('#' + register + '-device_input_spinner');
-        var dbEl = $('#' + register + '_input_spinner');
-        self.writeSpinner(devEl,selectedVoltage);
-        self.writeSpinner(dbEl,selectedVoltage);
-    };
-
-        // var firingID = event.target.id;
-        // var selectedVoltage;
-        // var isValidValue = false;
-        // var register = firingID
-        //     .replace('_input_spinner', '')
-        //     .replace('_input_slider', '');
-
-        // if (firingID.search('_input_spinner') > 0) {
-        //     var spinText = $('#'+firingID).val();
-        //     if(spinText !== null) {
-        //         isValidValue = (spinText !== null && spinText.match(/[\d]+(\.\d+)?$/g) !== null);
-        //         selectedVoltage = Number(spinText);
-        //     }
-        // }
-        // if(isValidValue) {
-        //     console.log('newVal',typeof(selectedVoltage),selectedVoltage,register);
-        //     $('#'+register+'_input_spinner').css('border', 'none');
-        //     self.writeDisplayedVoltage(register,selectedVoltage);
-        // } else {
-        //     if (firingID.search('_input_spinner') > 0) {
-        //         var spinText = $('#'+firingID).val();
-        //         if (spinText !== null && !spinText.match(/\d+\./g)) {
-        //             $('#'+register+'_input_spinner').css('border', '1px solid red');
-        //         }
-        //     }
-        // }
-    this.dacListerners = {
-        'DAC0-device_input_spinner':    {type:'',   timer:null, reg: 'DAC0'},
-        'DAC1-device_input_spinner':    {type:'',   timer:null, reg: 'DAC1'},
-        'DAC0_input_spinner':           {type:'',   timer:null, reg: 'DAC0'},
-        'DAC1_input_spinner':           {type:'',   timer:null, reg: 'DAC1'}
-    };
-    this.setVoltage = function(event,id,element) {
-        var setFunc = function() {
-            var type = self.dacListerners[id].type;
-            var isWrite = false;
-            if (type === 'scroll') {
-                element.blur();
-                isWrite = true;
-            } else if (type === 'enterButton') {
-                element.blur();
-                isWrite = true;
-            } else if (type === 'focusLeft') {
-                isWrite = true;
-            } else if (type === 'increment') {
-                element.blur();
-                isWrite = true;
-            }
-            if(isWrite) {
-                var val = element.spinner('value');
-                var reg = self.dacListerners[id].reg;
-                if(typeof(val) === 'number') {
-                    if (val < 0) {
-                        val = 0;
-                    } else if (val > 5) {
-                        val = 5;
-                    }
-                    self.writeSpinner(element,val);
-                    self.writeReg(reg,val)
-                    .then(function() {
-                        console.log('onSuccess!');
-                    }, function(err) {
-                        console.log('Error...',err);
-                    });
-                } else {
-                    self.writeSpinner(element,self.currentValues.get(reg));
-                }
-                self.dacListerners[id].type = '';
-            }
-        };
-        return setFunc;
-    };
-    this.onVoltageSelectedSpinStop = function(event) {
-        if(typeof(event.currentTarget) !== 'undefined') {
-            var targetID = event.currentTarget.id;
-            var targetElement = $('#'+targetID);
-            if(typeof(self.dacListerners[targetID]) !== 'undefined') {
-                clearTimeout(self.dacListerners[targetID].timer);
-                self.dacListerners[targetID].timer = setTimeout(
-                    self.setVoltage(event,targetID,targetElement), 
-                    500
-                );
-                self.spinStopData = event;
-            } else {
-                var targetElement = event.currentTarget.parentElement.children[0];
-                var targetID = targetElement.id;
-                var targetObject = $('#'+targetID);
-                self.dacListerners[targetID].type = 'increment';
-                clearTimeout(self.dacListerners[targetID].timer);
-                // Enable this code for timeed blur events for up/down arrows
-                self.dacListerners[targetID].timer = setTimeout(
-                    self.setVoltage(targetElement,targetID,targetObject), 
-                    500
-                );
-                // Enable this code for immediate writes to up/down arrows
-                // self.setVoltage(targetElement,targetID,targetObject)();
-            }
-        }
-    };
-    this.onVoltageSelectedSpin = function(event) {
-        if(typeof(event.currentTarget) !== 'undefined') {
-            var targetID = event.currentTarget.id;
-            // console.log('id',targetID,event.currentTarget);
-            if(typeof(self.dacListerners[targetID]) !== 'undefined') {
-                self.dacListerners[targetID].type = 'scroll';
-                self.spinData = event;
-            } else {
-                var targetElement = event.currentTarget.parentElement.children[0];
-                var targetID = targetElement.id;
-                self.dacListerners[targetID].type = 'increment';
-                self.spinData = $('#'+targetID);
-            }
-        }
-    };
-    this.onVoltageSelectedChange = function(event) {
-        if(typeof(event.currentTarget) !== 'undefined') {
-            var targetID = event.currentTarget.id;
-            var targetElement = $('#'+targetID)
-            var isFocused = targetElement.is(":focus");
-            if(self.dacListerners[targetID].type !== 'scroll') {
-                if(self.dacListerners[targetID].type !== 'enterButton') {
-                    clearTimeout(self.dacListerners[targetID].timer);
-                    if(!isFocused) {
-                        self.dacListerners[targetID].type = 'focusLeft';
-                        self.setVoltage(event,targetID,targetElement)();
-                    }
-                }
-            }
-        }
-    };
-    this.handleKeypress = function(event) {
-        var code = event.keyCode || event.which;
-        var targetID = event.currentTarget.id;
-        self.dacListerners[targetID].type = 'keyPress';
-        clearTimeout(self.dacListerners[targetID].timer);
-        if(code == 13) { //Enter keycode
-            var targetElement = $('#'+targetID);
-            self.dacListerners[targetID].type = 'enterButton';
-            clearTimeout(self.dacListerners[targetID].timer);
-            self.setVoltage(event,targetID,targetElement)();
-        }
-    };
     
-    this.createSpinners = function() {
-        $( ".spinner" ).unbind();
-        $( ".spinner" ).spinner({
-            'step': 0.001,
-            'numberFormat': "n",
-            'max': 5,
-            'min': 0,
-            'change': self.onVoltageSelectedChange,
-            'spin': self.onVoltageSelectedSpin,
-            'stop': self.onVoltageSelectedSpinStop
-        });
-        $( ".spinner" ).bind('keypress', self.handleKeypress);
-    };
     this.isStringIn = function(baseStr, findStr) {
         return baseStr.indexOf(findStr) !== -1;
     };
@@ -564,33 +400,30 @@ function module() {
         digitalObj.bind('click', self.dioChangeListner);
     };
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        console.log('in onTemplateLoaded');
         onSuccess();
     };
     this.onTemplateDisplayed = function(framework, onError, onSuccess) {
-        console.log('in onTemplateDisplayed');
         self.processConfigStatesAndDirections(self.currentValues, function(initializedData){
             self.deviceDashboardController.drawDevice('#device-display-container',initializedData);
             self.deviceDashboardController.drawDBs('#db-display-container', initializedData);
-            self.createSpinners();
+            self.spinnerController.createSpinners();
+
             var regs = ['DAC0','DAC1'];
             regs.forEach(function(reg){
                 var setV = self.currentValues.get(reg);
-                self.writeDisplayedVoltage(reg,setV);
+                self.spinnerController.writeDisplayedVoltage(reg,setV);
             });
             self.attachDIOListners();
             onSuccess();
         });
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
-        // console.log('in onRegisterWrite',binding);
         onSuccess();
     };
     this.onRegisterWritten = function(framework, registerName, value, onError, onSuccess) {
         onSuccess();
     };
     this.onRefresh = function(framework, registerNames, onError, onSuccess) {
-        // console.log('in onRefresh',framework.moduleName);
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
@@ -626,13 +459,15 @@ function module() {
         // individually indexed (by register name) objects.  Also intelligently 
         // combines data by channel for convenience.
         self.processConfigStatesAndDirections(self.newBufferedValues, function(newData){
-            self.deviceDashboardController.updateValues(newData,self.currentValues);
+            if(typeof(self.deviceDashboardController) !== 'undefined') {
+                self.deviceDashboardController.updateValues(newData,self.currentValues);
 
-            //Delete Changed Values & update last-saved device values
-            self.newBufferedValues.forEach(function(value,name){
-                self.currentValues.set(name,value);
-                self.newBufferedValues.delete(name);
-            });
+                //Delete Changed Values & update last-saved device values
+                self.newBufferedValues.forEach(function(value,name){
+                    self.currentValues.set(name,value);
+                    self.newBufferedValues.delete(name);
+                });
+            }
             onSuccess();
         });
     };

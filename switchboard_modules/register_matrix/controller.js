@@ -45,6 +45,11 @@ var selectedDevice;
 var registerWatchList = [];
 var curTabID = getActiveTabID();
 
+var localRegistersList = [];
+this.getLocalRegistersList = function() {
+    return localRegistersList;
+}
+
 
 /**
  * Inform the user of an error via the GUI.
@@ -95,6 +100,7 @@ function expandLJMMMEntries(entries)
             if (error) {
                 deferred.reject(error);
             } else {
+                localRegistersList = newEntries;
                 deferred.resolve(newEntries);
             }
         }
@@ -115,8 +121,18 @@ function expandLJMMMEntries(entries)
 function getRegisterInfo()
 {
     var deferred = q.defer();
+    var ljmRegisters = [];
 
-    deferred.resolve(device_controller.ljm_driver.constants.origConstants.registers);
+    // Get and add the non-beta registers
+    device_controller.ljm_driver.constants.origConstants.registers.forEach(function(reg){
+        ljmRegisters.push(reg);
+    });
+
+    // Get and add the beta registers
+    device_controller.ljm_driver.constants.origConstants.registers_beta.forEach(function(reg){
+        ljmRegisters.push(reg);
+    });
+    deferred.resolve(ljmRegisters);
 
     return deferred.promise;
 }
@@ -534,7 +550,6 @@ function flattenEntries(entries)
     return deferred.promise;
 }
 
-
 /**
  * Convert the tags attribute of Objects with register info to a String.
  *
@@ -556,7 +571,11 @@ function flattenTags(registers)
         registers,
         function(register, callback){
             var newRegister = $.extend({}, register);
-            newRegister.flatTagStr = register.tags.join(',');
+            if(typeof(register.tags) !== 'undefined') {
+                newRegister.flatTagStr = register.tags.join(',');
+            } else {
+                newRegister.flatTagStr = '';
+            }
             callback(null, newRegister);
         },
         function(error, registers){
@@ -933,6 +952,7 @@ $('#register-matrix-holder').ready(function(){
     .then(flattenTags)
     .then(addRWInfo)
     .then(expandLJMMMEntries)
+    // .then(appendEntriesToSearchbox)
     .then(flattenEntries)
     .then(renderRegistersTable)
     .done(function () {

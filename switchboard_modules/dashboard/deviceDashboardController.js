@@ -5,7 +5,6 @@ function getDeviceDashboardController(deviceInfo) {
     
     // Device Image Info
     var LABJACK_OVERVIEW_IMG_SRC = './static/img/' + deviceInfo.fullType + '-cartoon.png';
-    console.log('Loading Image:',LABJACK_OVERVIEW_IMG_SRC);
     var DEVICE_IMAGE_X_OFFSET = 150;
     var DEVICE_IMAGE_Y_OFFSET = 10;
     var DEVICE_IMG_WIDTH = 225;

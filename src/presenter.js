@@ -270,34 +270,36 @@ function includeDeviceDisplaySizes(deviceTypes)
 }
 
 // Load native UI library
-try {
-    var gui = require('nw.gui');
+function attachWindowCloseListener() {
+    try {
+        var gui = require('nw.gui');
 
-    // Get the current window
-    var win = gui.Window.get();
+        // Get the current window
+        var win = gui.Window.get();
 
-    // Register callback to close devices on application close.
-    win.on('close', function() {
-        if (device_controller === null) {
-            win.close(true);
-            return;
-        }
-
-        async.each(
-            device_controller.getDeviceKeeper().getDevices(),
-            function (device, callback) {
-                device.close(
-                    callback,
-                    function() { callback(); }
-                );
-            },
-            function (err) {
+        // Register callback to close devices on application close.
+        win.on('close', function() {
+            if (device_controller === null) {
                 win.close(true);
+                return;
             }
-        );
-    });
-} catch (e) {
-    criticalErrorHandler(e);
+
+            async.each(
+                device_controller.getDeviceKeeper().getDevices(),
+                function (device, callback) {
+                    device.close(
+                        callback,
+                        function() { callback(); }
+                    );
+                },
+                function (err) {
+                    win.close(true);
+                }
+            );
+        });
+    } catch (e) {
+        criticalErrorHandler(e);
+    }
 }
 
 
@@ -333,6 +335,7 @@ function renderDeviceSelector()
         getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
         onDevicesLoaded
     );
+    attachWindowCloseListener();
 }
 
 

@@ -7,7 +7,11 @@
     "supportedDevices": [{"type":"T7","subclass":["Pro",""],"minFW":"0.01"}],
     "jsFiles":["deviceDashboardController.js"],
     "third_party_code_unload":[],
-    "buildTypes":["develop","debug"],
+    "buildTypes":["develop","debug","release"],
     "internalCompOnly":false,
-    "developCompOnly":false
+    "developCompOnly":false,
+    "third_party_code": [
+            "customSpinners.js"
+    ],
+    "a-third_party_code_unload":[]
 }
