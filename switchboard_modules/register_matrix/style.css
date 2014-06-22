@@ -226,4 +226,41 @@
 #register-matrix .typeTableColumn{
     width: 87px;
 }
+#register-matrix #ljm-register-search-box #search-box {
+    width:260px;
+}
+.tt-dropdown-menu {
+    margin-top: 12px;
+    padding: 8px 8px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    -webkit-border-radius: 8px;
+    -moz-border-radius:0px;
+    border-radius: 0px;
+    -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    box-shadow: 0 5px 10px rgba(0,0,0,.2);
+}
+.tt-suggestion {
+  /*padding: 3px 20px;*/
+  /*font-size: 18px;*/
+  padding: 1px 5px;
+  line-height: 24px;
+}
+.tt-suggestion.tt-cursor {
+  color: #fff;
+  background-color: #0097cf;
+}
+.tt-suggestion p {
+  margin: 0px;
+}
+.twitter-typeahead {
+    width: 200%;
+}
+.typeaheadRegInfo {
 
+}
+.typeaheadRegInfo strong {
+    font-weight: 300;
+}

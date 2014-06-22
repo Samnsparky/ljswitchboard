@@ -39,6 +39,16 @@ var WATCH_ROW_SELECTOR_TEMPLATE = handlebars.compile(
 var WRITE_INPUT_SELECTOR_TEMPLATE = handlebars.compile(
     WRITE_INPUT_SELECTOR_TEMPLATE_STR);
 
+var TYPEAHEAD_EMPTY_TEMPLATE = [
+        '<div class="empty-message">',
+        'Unable to find any registers that match the current query',
+        '</div>'
+    ].join('\n');
+var TYPEAHEAD_CUSTOM_TEMPLATE = handlebars.compile(
+        '<p>{{name}}<br><span class="typeaheadRegInfo">{{address}}: {{description}}</class></p>'
+    );
+var TYPEAHEAD_REGISTER_LIST_TT_ADAPTER;
+
 var REFRESH_DELAY = 1000;
 
 var selectedDevice;
@@ -49,7 +59,10 @@ var localRegistersList = [];
 this.getLocalRegistersList = function() {
     return localRegistersList;
 }
-
+var registerNames = [];
+this.getRegisterNames = function() {
+    return registerNames;
+}
 
 /**
  * Inform the user of an error via the GUI.
@@ -88,11 +101,14 @@ function showError(err) {
 function expandLJMMMEntries(entries)
 {
     var deferred = q.defer();
-
     async.map(
         entries,
         function(entry, callback){
             ljmmm.expandLJMMMEntry(entry, function(newEntries){
+                newEntries.forEach(function(entry){
+                    registerNames.push(entry.name);
+                    localRegistersList.push(entry);
+                });
                 callback(null, newEntries);
             });
         },
@@ -100,7 +116,6 @@ function expandLJMMMEntries(entries)
             if (error) {
                 deferred.reject(error);
             } else {
-                localRegistersList = newEntries;
                 deferred.resolve(newEntries);
             }
         }
@@ -379,8 +394,52 @@ function runRedraw()
     document.body.offsetHeight; // no need to store this anywhere, the reference is enough
     document.body.style.display='block';
 }
+/**
+ * Configure typeahead data upon startup
+ * @return {[type]} [description]
+**/
+function configureTypeaheadData(data) {
+    var deferred = q.defer();
+    // constructs the suggestion engine
+    var TYPEAHEAD_REGISTER_LIST = new Bloodhound({
+        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        local: $.map(localRegistersList, function(localRegister) { 
+            return { 
+                name: localRegister.name, 
+                address: localRegister.address,
+                description: localRegister.description
+            }; 
+        })
+    });
+    // kicks off the loading/processing of `local` and `prefetch`
+    TYPEAHEAD_REGISTER_LIST.initialize();
+    TYPEAHEAD_REGISTER_LIST_TT_ADAPTER = TYPEAHEAD_REGISTER_LIST.ttAdapter();
 
+    deferred.resolve(data);
+    return deferred.promise;
+}
+function initializeTypeahead() {
+    console.log('Initializing Typeahead');
 
+    $('#ljm-register-search-box .typeahead').typeahead({
+            hint: true,
+            highlight: true,
+            minLength: 1
+        },
+        {
+            name: 'registerNames',
+            displayKey: 'name',
+            valueKey: 'name',
+            // `ttAdapter` wraps the suggestion engine in an adapter that
+            // is compatible with the typeahead jQuery plugin
+            source: TYPEAHEAD_REGISTER_LIST_TT_ADAPTER,
+            templates: {
+                empty: TYPEAHEAD_EMPTY_TEMPLATE,
+                suggestion: TYPEAHEAD_CUSTOM_TEMPLATE
+            }
+    });
+}
 // TODO: LJMMM allows for 'all' to be a valid register name.
 /**
  * Render a table with information about registers.
@@ -457,6 +516,9 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
 
             // Redraw bug
             runRedraw();
+
+            // Initialize Typeahead
+            initializeTypeahead();
 
             deferred.resolve();
         }
@@ -952,7 +1014,7 @@ $('#register-matrix-holder').ready(function(){
     .then(flattenTags)
     .then(addRWInfo)
     .then(expandLJMMMEntries)
-    // .then(appendEntriesToSearchbox)
+    .then(configureTypeaheadData)
     .then(flattenEntries)
     .then(renderRegistersTable)
     .done(function () {
