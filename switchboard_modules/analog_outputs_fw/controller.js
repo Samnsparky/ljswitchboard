@@ -47,7 +47,7 @@ function module() {
     this.DAC_CHANNEL_PRECISION = 3;
 
     this.spinnerController;
-    this.updateDOM = false;
+    this.updateDOM = true;
 
     
 
@@ -199,9 +199,11 @@ function module() {
         self.writeReg(reg,val)
         .then(function() {
             self.writeDisplayedVoltage(register,selectedVoltage);
+            self.updateDOM = true;
         });
     }
     this.incrementalSpinerUpdateEventHandler = function (reg, val) {
+        self.updateDOM = false;
         self.bufferedOutputValues.set(reg,val);
         self.updateSliderVal(reg, val);
         self.hasChanges = true;
@@ -218,9 +220,11 @@ function module() {
         self.writeReg(register, selectedVoltage)
         .then(function() {
             self.writeDisplayedVoltage(register,selectedVoltage);
+            self.updateDOM = true;
         });
     };
     this.incrementalSliderUpdateEventHandler = function(event) {
+        self.updateDOM = false;
         var firingID = event.target.id;
         var register = firingID.replace('_input_slider', '');
         var selectedVoltage = Number(
@@ -254,11 +258,11 @@ function module() {
     };
     this.onTemplateDisplayed = function(framework, onError, onSuccess) {
         self.createSliders();
-        $('.inputBar').css('position','inherit')
         self.DACRegisters.forEach(function(register){
             var val = self.currentValues.get(register.register);
             self.writeDisplayedVoltage(register.register,val);
         });
+        $('#analog_outputs_fw_hider').css('position','inherit')
         onSuccess();
     }
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
@@ -274,7 +278,9 @@ function module() {
         // Loop through the new buffered values, save them, and display their 
         // changes
         self.newBufferedValues.forEach(function(value,key){
-            self.writeDisplayedVoltage(key,value);
+            if(self.updateDOM) {
+                self.writeDisplayedVoltage(key,value);
+            }
             self.currentValues.set(key,value);
             self.newBufferedValues.delete(key);
         });
