@@ -10,6 +10,7 @@
 
 var async = require('async');
 var handlebars = require('handlebars');
+var q = require('q');
 
 var fs_facade = require('./fs_facade');
 var device_controller = null;
@@ -101,7 +102,6 @@ var criticalErrorHandler = function(error)
         'restart Kipling.'
     );
 };
-
 
 /**
  * Render a template located within the application resources archive.
@@ -237,7 +237,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
     numTabChanges++;
     currentTab = name;
     try {
-        fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
+        fs_facade.renderTemplate(fileLoc, context, onErr,onRender);
     } catch(err) {
         console.log('error caught rendering template',err);
     }
@@ -307,7 +307,15 @@ function attachWindowCloseListener() {
  * Render the GUI for the device selector.
 **/
 function renderDeviceSelector()
-{
+{   
+    var finishDeviceControllerInit = function(devices) {
+        console.log('HERE-AA')
+        var continueLoad = function() {
+            console.log('here')
+            onDevicesLoaded(devices);
+        }
+        device_controller.finishInit(continueLoad);
+    }
     var onDevicesLoaded = function(devices) {
         var context = {'device_types': includeDeviceDisplaySizes(devices)};
         var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
@@ -333,7 +341,7 @@ function renderDeviceSelector()
 
     var devices = device_controller.getDevices(
         getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
-        onDevicesLoaded
+        finishDeviceControllerInit
     );
     attachWindowCloseListener();
 }

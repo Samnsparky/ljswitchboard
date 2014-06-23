@@ -9,12 +9,26 @@
 
 function ACTIVE_KIPLING_MODULE() {
 
-var async = require('async');
-var handlebars = require('handlebars');
-var simplesets = require('simplesets');
-var q = require('q');
+// Functions to analyze performance
+function addZero(x,n) {
+    if (x.toString().length < n) {
+        x = "0" + x;
+    }
+    return x;
+}
 
-var labjack_nodejs = require('labjack-nodejs');
+function reportTime(data) {
+    var d = new Date();
+    var h = addZero(d.getHours(), 2);
+    var m = addZero(d.getMinutes(), 2);
+    var s = addZero(d.getSeconds(), 2);
+    var ms = addZero(d.getMilliseconds(), 3);
+    console.log(data,h + ":" + m + ":" + s + ":" + ms);
+}
+reportTime('Initializing Module');
+
+var simplesets = require('simplesets');
+
 var ljmmm = require('./ljmmm');
 
 var REGISTERS_DATA_SRC = 'register_matrix/ljm_constants.json';
@@ -63,7 +77,20 @@ var registerNames = [];
 this.getRegisterNames = function() {
     return registerNames;
 }
+function runRedraw()
+{
+    document.body.style.display='none';
+    var h = document.body.offsetHeight; // no need to store this anywhere, the reference is enough
+    document.body.style.display='block';
+}
+function qRunRedraw() {
+    var innerDeferred = q.defer();
+    runRedraw();
+    innerDeferred.resolve();
+    return innerDeferred.promise; 
+}
 
+reportTime('After Initial Includes');
 /**
  * Inform the user of an error via the GUI.
  *
@@ -100,6 +127,7 @@ function showError(err) {
 **/
 function expandLJMMMEntries(entries)
 {
+    reportTime('expandingLJMMMEntries');
     var deferred = q.defer();
     async.map(
         entries,
@@ -136,18 +164,8 @@ function expandLJMMMEntries(entries)
 function getRegisterInfo()
 {
     var deferred = q.defer();
-    var ljmRegisters = [];
 
-    // Get and add the non-beta registers
-    device_controller.ljm_driver.constants.origConstants.registers.forEach(function(reg){
-        ljmRegisters.push(reg);
-    });
-
-    // Get and add the beta registers
-    device_controller.ljm_driver.constants.origConstants.registers_beta.forEach(function(reg){
-        ljmRegisters.push(reg);
-    });
-    deferred.resolve(ljmRegisters);
+    deferred.resolve(device_controller.fullRegisterList);
 
     return deferred.promise;
 }
@@ -176,7 +194,9 @@ function filterDeviceRegisters(registers, deviceName)
         function(register, callback){
             var devices = register.devices;
 
-            if (typeof devices == 'string' || devices instanceof String) {
+            if (typeof(devices) === 'string') {
+                callback(devices === deviceName);
+            } else if (devices instanceof String) {
                 callback(devices === deviceName);
             } else {
                 var names = devices.map(function(e){
@@ -209,6 +229,7 @@ function filterDeviceRegisters(registers, deviceName)
 function createDeviceFilter(device)
 {
     return function(registers){
+        reportTime('creatingDeviceFilter');
         return filterDeviceRegisters(registers, device);
     };
 }
@@ -272,6 +293,7 @@ function fwminSelector(registers, device)
 function createFwminSelector(device)
 {
     return function(registers){
+        reportTime('creatingFwminSelector');
         return fwminSelector(registers, device);
     };
 }
@@ -399,6 +421,7 @@ function runRedraw()
  * @return {[type]} [description]
 **/
 function configureTypeaheadData(data) {
+    reportTime('configureTypeaheadData');
     var deferred = q.defer();
     // constructs the suggestion engine
     var TYPEAHEAD_REGISTER_LIST = new Bloodhound({
@@ -461,6 +484,7 @@ function initializeTypeahead() {
 function renderRegistersTable(entries, tags, filteredEntries, currentTag,
     currentSearchTerm)
 {
+    reportTime('renderRegistersTable');
     var deferred = q.defer();
 
     var location = fs_facade.getExternalURI(REGISTERS_TABLE_TEMPLATE_SRC);
@@ -590,6 +614,7 @@ function searchRegisters(entries, allTags, tag, searchTerm)
 **/
 function flattenEntries(entries)
 {
+    reportTime('flatteningEntries');
     var deferred = q.defer();
     var retList = [];
 
@@ -628,6 +653,7 @@ function flattenEntries(entries)
 **/
 function flattenTags(registers)
 {
+    reportTime('flattening Tags');
     var deferred = q.defer();
 
     async.map(
@@ -669,7 +695,7 @@ function flattenTags(registers)
 function addRWInfo(registers)
 {
     var deferred = q.defer();
-
+    reportTime('addRWInfo');
     async.map(
         registers,
         function(register, callback){
@@ -922,6 +948,10 @@ function splitByRetType (registers)
 
 function updateReadRegisters ()
 {
+    if(LOADED_MODULE_INFO_OBJECT.name !== 'register_matrix') {
+        runRedraw();
+        return;
+    }
     var onError = function (err) {
         if (err) {
             showError(err);
@@ -977,7 +1007,13 @@ function updateReadRegisters ()
     });
 
     promise.then(
-        function () { setTimeout(updateReadRegisters, REFRESH_DELAY); },
+        function () { 
+            if(LOADED_MODULE_INFO_OBJECT.name !== 'register_matrix') {
+                runRedraw();
+                return;
+            }
+            setTimeout(updateReadRegisters, REFRESH_DELAY); 
+        },
         onError
     );
 }
@@ -998,13 +1034,14 @@ function setSelectedDevice (serial)
 
 // TODO: Need to select device filter based on selected device
 $('#register-matrix-holder').ready(function(){
+    reportTime('onReady');
     var filterByDevice = createDeviceFilter('T7');
     var selectFwmin = createFwminSelector('T7');
 
     $('.device-selection-radio').first().prop('checked', true);
     $('.device-selection-radio').change(function(){
-        $('#device-selector').hide();
-        $('#device-selector').fadeIn();
+        // $('#device-selector').hide();
+        // $('#device-selector').fadeIn();
         var serialNum = $('input[name=deviceSelectionRadios]:checked').val();
         setSelectedDevice(serialNum);
     });
@@ -1018,12 +1055,14 @@ $('#register-matrix-holder').ready(function(){
     .then(configureTypeaheadData)
     .then(flattenEntries)
     .then(renderRegistersTable)
+    .then(qRunRedraw)
     .done(function () {
+        reportTime('Finished!');
         var keeper = device_controller.getDeviceKeeper();
         selectedDevice = keeper.getDevices()[0];
         setTimeout(updateReadRegisters, REFRESH_DELAY);
     });
 });
-
+reportTime('After Initial Includes');
 }
 var ACTIVE_KIPLING_MODULE = new ACTIVE_KIPLING_MODULE();

@@ -10,6 +10,7 @@
 var async = require('async');
 var dict = require('dict');
 var q = require('q');
+var ljmmm = require('./ljmmm');
 var labjack_nodejs = require('labjack-nodejs');
 var device_selector_view_gen = require('./device_selector_view_gen');
 var labjack_driver = new labjack_nodejs.driver();
@@ -103,6 +104,35 @@ var WIFI_STATUS_DISPLAY_DATA = {
 
 var NUM_SCAN_RETRIES = 4;
 var LIST_ALL_SCAN_RETRY_ERROR = 1233;
+
+//----------------- Build Info for Register_Matrix Module ----------------------
+// Build a register list containing non-beta and beta registers
+var fullRegisterList = [];
+// Build register list pertaining to each device type:
+var registersByDevices = {};
+
+var finishInit = function(onFinish) {
+    // Get and add the non-beta registers
+    labjack_driver.constants.origConstants.registers.forEach(function(reg){
+        fullRegisterList.push(reg);
+    });
+
+    // Get and add the beta registers
+    labjack_driver.constants.origConstants.registers_beta.forEach(function(reg){
+        fullRegisterList.push(reg);
+    });
+
+    // Finish
+    console.log('HERE');
+    onFinish();
+}
+
+
+// Export various required information
+exports.fullRegisterList = fullRegisterList;
+exports.registersByDevices = registersByDevices;
+exports.finishInit = finishInit;
+//----------------- END Info for Register_Matrix Module ------------------------
 
 exports.labjack_nodejs = labjack_nodejs;
 exports.driver_const = labjack_nodejs.driver_const;

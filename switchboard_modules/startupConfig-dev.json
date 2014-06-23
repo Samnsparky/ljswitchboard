@@ -66,6 +66,6 @@
         }
     ],
     "displayDevTools": false,
-    "overrideAutoModuleLoad": true,
-    "moduleName": "analog_outputs_fw"
+    "overrideAutoModuleLoad": false,
+    "moduleName": "register_matrix"
 }
