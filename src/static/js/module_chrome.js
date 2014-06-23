@@ -439,33 +439,24 @@ function onResized()
             {'height': setHeight.toString()+'px'}
         );
     }
+    if(typeof(MODULE_WINDOW_RESIZE_LISTNERS) !== 'undefined') {
+        MODULE_WINDOW_RESIZE_LISTNERS.forEach(function(listener) {
+            if(typeof(listener.callback) === 'function') {
+                var moduleHeight = moduleChromeContentsEl.height();
+                var topPadding = moduleChromeContentsEl.css('padding-top');
+                var bottomPadding = moduleChromeContentsEl.css('padding-bottom');
 
-    MODULE_WINDOW_RESIZE_LISTNERS.forEach(function(listener) {
-        if(typeof(listener.callback) === 'function') {
-            var moduleHeight = moduleChromeContentsEl.height();
-            var topPadding = moduleChromeContentsEl.css('padding-top');
-            var bottomPadding = moduleChromeContentsEl.css('padding-bottom');
-
-            moduleHeight += parseInt(topPadding.slice(0,topPadding.search('px')));
-            moduleHeight += parseInt(bottomPadding.slice(0,bottomPadding.search('px')));
-            
-            listener.callback(moduleHeight);
-        } else {
-            console.log('Bad Window Resize Listener Found! (module_chrome.js)',listener);
-        }
-    });
-    // var topPos = $('#module-chrome-contents').position().top;
-    // var sidebar_height_diff = windowHeight - $('#module-list').height();
-    // if ($('#module-chrome-contents').height() >= contents_height) {
-    //     $('#module-chrome-contents').css(
-    //         {'height': contents_height.toString() + 'px'}
-    //     )
-    // } else {
-    //     $('#module-chrome-contents').animate(
-    //         {'height': contents_height.toString() + 'px'},
-    //         250
-    //     );
-    // }
+                moduleHeight += parseInt(topPadding.slice(0,topPadding.search('px')));
+                moduleHeight += parseInt(bottomPadding.slice(0,bottomPadding.search('px')));
+                
+                listener.callback(moduleHeight);
+            } else {
+                console.log('Bad Window Resize Listener Found! (module_chrome.js)',listener);
+            }
+        });
+    } else {
+        MODULE_WINDOW_RESIZE_LISTNERS = [];
+    }
 }
 
 

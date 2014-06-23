@@ -314,10 +314,14 @@ function renderDeviceSelector()
         console.log('in onDevicesLoaded',devices);
         var context = {'device_types': includeDeviceDisplaySizes(devices)};
         var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
+        console.log('HERE');
         context.ljmVersionNumber = ljmVersion;
+        var gui = require('nw.gui');
         var kiplingVersion = gui.App.manifest.version;
+        console.log('HERE');
         context.kiplingVersionNumber = kiplingVersion;
         var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
+        console.log('HERE');
         context.ljmWrapperVersionNumber = ljmWrapperVersion
         $('#device-search-msg').hide();
         if (devices.length === 0)
