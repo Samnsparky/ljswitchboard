@@ -126,6 +126,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
 {
     var onRender = function (renderedHTML)
     {
+        console.log('here onRender');
         var appendToHead = function(data, filePath) {
             try{
                 $('head').append(data);
@@ -236,8 +237,9 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
     
     numTabChanges++;
     currentTab = name;
+    console.log('here2');
     try {
-        fs_facade.renderTemplate(fileLoc, context, onErr,onRender);
+        fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
     } catch(err) {
         console.log('error caught rendering template',err);
     }
