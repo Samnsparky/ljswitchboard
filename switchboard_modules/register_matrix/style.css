@@ -264,3 +264,7 @@
 .typeaheadRegInfo strong {
     font-weight: 300;
 }
+#ljm-register-search-box .tt-dropdown-menu {
+  max-height: 350px;
+  overflow-y: auto;
+}

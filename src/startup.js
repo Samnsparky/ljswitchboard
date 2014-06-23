@@ -30,15 +30,15 @@ function catchUncaughtExceptions(e) {
 }
 function catchWindowErrors(e) {
 	var m;
-    console && console.error(errEvent);
+    console && console.error(e);
     m = 'startup.js-uncaughtException: '  +
-        errEvent.message + '\nfilename:"' +
-        (errEvent.filename ? errEvent.filename : 'app_front.js') +
-        '", line:' + errEvent.lineno
+        e.message + '\nfilename:"' +
+        (e.filename ? e.filename : 'app_front.js') +
+        '", line:' + e.lineno
     // show any errors early
     document.write('<pre><h2>' +
         m + '</h2><div style="color:white;background-color:red">' +
-        errEvent.error.stack + '</div></pre>'
+        e.error.stack + '</div></pre>'
     )
     console.error(m, e);
 }

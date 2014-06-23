@@ -1,4 +1,4 @@
-function customSpinners(owner, infoArray, writeFunc) {
+function customSpinners(owner, infoArray, writeFunc, updateFunc) {
     var dacListerners = {};
     infoArray.forEach(function(info){
         dacListerners[info.spinnerID] = {};
@@ -7,6 +7,14 @@ function customSpinners(owner, infoArray, writeFunc) {
         dacListerners[info.spinnerID].reg = info.reg;
     });
     this.dacListerners = dacListerners;
+    this.writeDACSpinner = function(spinner, value) {
+        if(value < 0) {
+            value = 0;
+        }
+        if(typeof(value) !== 'undefined') {
+            spinner.val(value.toFixed(3));
+        }
+    };
     this.writeSpinner = function(spinner,value) {
         if(value < 0) {
             value = 0;
@@ -14,7 +22,7 @@ function customSpinners(owner, infoArray, writeFunc) {
         if(typeof(value) !== 'undefined') {
             spinner.val(value.toFixed(3));
         }
-    }
+    };
     this.writeDisplayedVoltage = function(register, selectedVoltage) {
         var devEl = $('#' + register + '-device_input_spinner');
         var dbEl = $('#' + register + '_input_spinner');
@@ -48,11 +56,6 @@ function customSpinners(owner, infoArray, writeFunc) {
                     }
                     self.writeSpinner(element,val);
                     writeFunc(reg,val)
-                    .then(function() {
-                        console.log('onSuccess!');
-                    }, function(err) {
-                        console.log('Error...',err);
-                    });
                 } else {
                     self.writeSpinner(element,owner.currentValues.get(reg));
                 }
@@ -95,6 +98,12 @@ function customSpinners(owner, infoArray, writeFunc) {
             if(typeof(self.dacListerners[targetID]) !== 'undefined') {
                 self.dacListerners[targetID].type = 'scroll';
                 self.spinData = event;
+                if(typeof(updateFunc) !== 'undefined') {
+                    var targetElement = $('#'+targetID);
+                    var val = targetElement.spinner('value');
+                    var reg = self.dacListerners[targetID].reg;
+                    updateFunc(reg,val);
+                }
             } else {
                 var targetElement = event.currentTarget.parentElement.children[0];
                 var targetID = targetElement.id;
@@ -106,7 +115,7 @@ function customSpinners(owner, infoArray, writeFunc) {
     this.onVoltageSelectedChange = function(event) {
         if(typeof(event.currentTarget) !== 'undefined') {
             var targetID = event.currentTarget.id;
-            var targetElement = $('#'+targetID)
+            var targetElement = $('#'+targetID);
             var isFocused = targetElement.is(":focus");
             if(self.dacListerners[targetID].type !== 'scroll') {
                 if(self.dacListerners[targetID].type !== 'enterButton') {

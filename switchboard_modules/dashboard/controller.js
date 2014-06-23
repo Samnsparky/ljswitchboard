@@ -50,7 +50,6 @@ function module() {
     this.deviceDashboardController = undefined;
 
     this.spinnerController;
-
     
     this.roundReadings = function(reading) {
         return Math.round(reading*1000)/1000;
@@ -62,7 +61,7 @@ function module() {
             self.bufferedOutputValues.set(address,value);
             ioDeferred.resolve();
         },function(err){
-            // console.error('fail',address,err);
+            console.error('Dashboard-writeReg',address,err);
             ioDeferred.reject(err);
         });
         return ioDeferred.promise;
@@ -86,7 +85,6 @@ function module() {
         };
         var genericPeriodicCallback = function(data, onSuccess) {
             var name = data.binding.binding;
-            // var value = self.roundReadings(data.value);
             var value = data.value;
             var oldValue = self.currentValues.get(name);
             if(oldValue != value) {

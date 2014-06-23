@@ -45,7 +45,7 @@ var TYPEAHEAD_EMPTY_TEMPLATE = [
         '</div>'
     ].join('\n');
 var TYPEAHEAD_CUSTOM_TEMPLATE = handlebars.compile(
-        '<p>{{name}}<br><span class="typeaheadRegInfo">{{address}}: {{description}}</class></p>'
+        '<p>{{name}}<br><span class="typeaheadRegInfo">{{address}}: {{description}}</span></p>'
     );
 var TYPEAHEAD_REGISTER_LIST_TT_ADAPTER;
 
@@ -402,6 +402,7 @@ function configureTypeaheadData(data) {
     var deferred = q.defer();
     // constructs the suggestion engine
     var TYPEAHEAD_REGISTER_LIST = new Bloodhound({
+        limit: 10,
         datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         local: $.map(localRegistersList, function(localRegister) { 

@@ -2194,6 +2194,7 @@ function Framework() {
         var initLoopTimer = function() {
             var innerDeferred = q.defer();
             self.daqLoopStatus = 'startingLoopMonitorTimer';
+            clearTimeout(self.daqLoopMonitorTimer);
             self.daqLoopMonitorTimer = setTimeout(self.daqMonitor, 1000);
             innerDeferred.resolve();
             return innerDeferred.promise;
