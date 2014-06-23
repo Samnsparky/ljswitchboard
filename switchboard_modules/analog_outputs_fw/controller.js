@@ -271,10 +271,13 @@ function module() {
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        self.bufferedValues.forEach(function(value,key){
-            console.log('New Val Detected',key,val)
+        // Loop through the new buffered values, save them, and display their 
+        // changes
+        self.newBufferedValues.forEach(function(value,key){
+            self.writeDisplayedVoltage(key,value);
             self.currentValues.set(key,value);
-        })
+            self.newBufferedValues.delete(key);
+        });
         onSuccess();
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {

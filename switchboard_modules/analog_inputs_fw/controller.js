@@ -324,7 +324,6 @@ function module() {
         return sprintf('%10.6f',info.value);
     };
     this.genericConfigCallback = function(data, onSuccess) {
-        // console.log('genericConfigCallback',data.binding.binding,data.value);
         var name = data.binding.binding;
         var value = data.value;
         if(name.indexOf('_RANGE') !== -1) {
@@ -335,7 +334,6 @@ function module() {
         onSuccess();
     };
     this.genericPeriodicCallback = function(data, onSuccess) {
-        // console.log('genericPeriodicCallback',data.binding.binding,data.value);
         var name = data.binding.binding;
         var value = data.value;
         if(name.indexOf('_RANGE') !== -1) {

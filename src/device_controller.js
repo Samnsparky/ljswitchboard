@@ -123,7 +123,6 @@ var finishInit = function(onFinish) {
     });
 
     // Finish
-    console.log('HERE');
     onFinish();
 }
 
