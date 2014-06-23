@@ -36,7 +36,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "C:\Users\Rory\Desktop\rob_kipling_build\ljswitchboard\deploy\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+; NOTE: Don't use "Flags: ignoreversion" on any shared system files'
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{pf32}\{#MyAppName}\Kipling.ico"
@@ -122,7 +122,7 @@ begin
       'DisplayVersion', oldVersion);
     if (CompareVersion(oldVersion, '{#MyAppVersionNum}') <> 0) then
     begin
-      if MsgBox('Version ' + oldVersion + ' of {#MyAppName}V3 is already installed. Continue to use this old version? Yes will re-install Kipling, No will exit the installer.',
+      if MsgBox('Version ' + oldVersion + ' of {#MyAppName}V3 is already installed. Do you want to Uninstall and Re-install Kipling? Yes will re-install Kipling, No will exit the installer.',
         mbConfirmation, MB_YESNO) = IDYES then
       begin
         Result := True;
