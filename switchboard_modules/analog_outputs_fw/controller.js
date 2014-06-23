@@ -256,6 +256,13 @@ function module() {
         self.spinnerController.createSpinners();
         onSuccess();
     };
+    /**
+     * Function that gets executed after the module's template is displayed.
+     * @param  {object} framework framework object.
+     * @param  {function} onError   function to be called on error.
+     * @param  {function} onSuccess function to be called on success
+     * @return {[type]}           [description]
+     */
     this.onTemplateDisplayed = function(framework, onError, onSuccess) {
         self.createSliders();
         self.DACRegisters.forEach(function(register){
