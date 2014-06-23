@@ -126,7 +126,6 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
 {
     var onRender = function (renderedHTML)
     {
-        console.log('here onRender');
         var appendToHead = function(data, filePath) {
             try{
                 $('head').append(data);
@@ -237,7 +236,6 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
     
     numTabChanges++;
     currentTab = name;
-    console.log('here2');
     try {
         fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
     } catch(err) {
@@ -311,22 +309,17 @@ function attachWindowCloseListener() {
 function renderDeviceSelector()
 {   
     var onDevicesLoaded = function(devices) {
-        console.log('in onDevicesLoaded',devices);
         var context = {'device_types': includeDeviceDisplaySizes(devices)};
         var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
-        console.log('HERE');
         context.ljmVersionNumber = ljmVersion;
         var gui = require('nw.gui');
         var kiplingVersion = gui.App.manifest.version;
-        console.log('HERE');
         context.kiplingVersionNumber = kiplingVersion;
         var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
-        console.log('HERE');
         context.ljmWrapperVersionNumber = ljmWrapperVersion
         $('#device-search-msg').hide();
         if (devices.length === 0)
             context.noDevices = true;
-        console.log('onLoad Context',context);
         renderTemplate(
             'device_selector.html',
             context,
@@ -341,9 +334,7 @@ function renderDeviceSelector()
     var devices = device_controller.getDevices(
         getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
         function(devices) {
-            console.log('Finished ListAll',devices);
             device_controller.finishInit(function() {
-                console.log('here',onDevicesLoaded);
                 onDevicesLoaded(devices);
             });
         }
