@@ -308,15 +308,8 @@ function attachWindowCloseListener() {
 **/
 function renderDeviceSelector()
 {   
-    var finishDeviceControllerInit = function(devices) {
-        console.log('HERE-AA')
-        var continueLoad = function() {
-            console.log('here')
-            onDevicesLoaded(devices);
-        }
-        device_controller.finishInit(continueLoad);
-    }
     var onDevicesLoaded = function(devices) {
+        console.log('in onDevicesLoaded',devices);
         var context = {'device_types': includeDeviceDisplaySizes(devices)};
         var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
         context.ljmVersionNumber = ljmVersion;
@@ -341,7 +334,13 @@ function renderDeviceSelector()
 
     var devices = device_controller.getDevices(
         getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
-        finishDeviceControllerInit
+        function(devices) {
+            console.log('Finished ListAll',devices);
+            device_controller.finishInit(function() {
+                console.log('here',onDevicesLoaded);
+                onDevicesLoaded(devices);
+            });
+        }
     );
     attachWindowCloseListener();
 }
