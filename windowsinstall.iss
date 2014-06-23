@@ -122,10 +122,10 @@ begin
       'DisplayVersion', oldVersion);
     if (CompareVersion(oldVersion, '{#MyAppVersionNum}') <> 0) then
     begin
-      if MsgBox('Version ' + oldVersion + ' of {#MyAppName}V3 is already installed. Continue to use this old version? Yes will exit installer, No will overwrite currently installed program',
+      if MsgBox('Version ' + oldVersion + ' of {#MyAppName}V3 is already installed. Continue to use this old version? Yes will re-install Kipling, No will exit the installer.',
         mbConfirmation, MB_YESNO) = IDYES then
       begin
-        Result := False;
+        Result := True;
       end
       else
       begin
