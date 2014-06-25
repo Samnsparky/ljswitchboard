@@ -1179,6 +1179,11 @@ var unpackDeviceInfo = function (driverListingItem) {
         var ipStr = formatAsIP(dataItem.val);
         retDeviceInfo.ethernetIPAddress = ipStr;
         retDeviceInfo.ethernetSafeIPAddress = ipStr.replace(/\./g, '_');
+        if(dataItem.val === 0) {
+            retDeviceInfo.ethernetConnectionStatus = 'Not Connected';
+        } else {
+            retDeviceInfo.ethernetConnectionStatus = ipStr;
+        }
     };
     unpackStrategies['ETHERNET_IP'] = parseEthernetIPAddress;
 
@@ -1195,6 +1200,11 @@ var unpackDeviceInfo = function (driverListingItem) {
         var ipStr = formatAsIP(dataItem.val);
         retDeviceInfo.wifiIPAddress = ipStr;
         retDeviceInfo.wifiSafeIPAddress = ipStr.replace(/\./g, '_');
+        if(dataItem.val === 0) {
+            retDeviceInfo.wifiConnectionStatus = 'Not Connected';
+        } else {
+            retDeviceInfo.wifiConnectionStatus = ipStr;
+        } 
     };
     unpackStrategies['WIFI_IP'] = parseWiFiIPAddress;
     var parseWiFiIPAddress = function (dataItem) {
@@ -1268,7 +1278,9 @@ var unpackDeviceInfo = function (driverListingItem) {
         'wifiRSSIImgName': '',
         'numInAvgWiFiRSSI': 0,
         'wifiStatus': false,
-        'wifiStatusStr': 'Un-Powered'
+        'wifiStatusStr': 'Un-Powered',
+        'ethernetConnectionStatus': 'Not Connected',
+        'wifiConnectionStatus': 'Not Connected'
     }
 
     driverListingItem.data.forEach(function (dataItem) {

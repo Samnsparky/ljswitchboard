@@ -4,7 +4,8 @@
 .optionsConfigTable {
 	margin-bottom: 10px;
 	background-color: transparent;
-	margin-top: -5px;
+	margin-top: 0px;
+	margin-bottom: 5px;
 	width:100%;
 }
 .optionsConfigTable thead {
@@ -86,7 +87,7 @@
 	max-width: 150px;
 }
 .negativeChannel-LINK {
-	width: 50px;
+	width: 53px;
 }
 .efSystem-LINK {
 	width: 138px;
@@ -112,4 +113,7 @@
 }
 .negativeResult {
 	margin-left:0%;
+}
+.table-dataHeader th {
+	line-height: 12px;
 }

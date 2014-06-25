@@ -5,11 +5,14 @@
  * not bundled in the main executable.
  *
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
+ * @contributor Chris Johnson (LabJack, 2014)
 **/
 
+// Is not included in the DOM, therefore perform all includes
 var device_controller = require('./device_controller');
 var fs_facade = require('./fs_facade');
 var dict = require('dict');
+
 var KIPLING_BUILD_TYPE_NUMBERS = {
     "develop":0,
     "debug":1,

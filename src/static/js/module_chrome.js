@@ -5,11 +5,16 @@
  * modules and allow the user to move between them.
  *
  * @author Sam Pottinger (LabJack Corp, 2013)
+ * @contributor Chris Johnson (LabJack, 2014)
+ *
+ * Requires (from global_requires.js):
+ *     device_controller = require('./device_controller');
+ *     handlebars = require('handlebars');
+ *     fs_facade = require('./fs_facade');
 **/
 
-
-var device_controller = require('./device_controller');
-var presenter = require('./presenter');
+// Include module_manager that handles searching through switchboard_modules 
+// file for code.
 var module_manager = require('./module_manager');
 
 var MODULE_CONTENTS_PLACEHOLDER_ELEMENT = '#module-chrome-contents';
@@ -214,7 +219,11 @@ function innerSelectModule(name)
     );
 }
 function selectModule(name) {
-    $(MODULE_CONTENTS_ELEMENT).fadeOut(100,function(){innerSelectModule(name)});
+    $(MODULE_CONTENTS_ELEMENT).fadeOut(
+        100,
+        function() {
+            innerSelectModule(name);
+    });
 }
 
 
@@ -225,8 +234,7 @@ function selectModule(name) {
  *      element or elements that the tab should be added to.
  * @param {Object} module The information for the module to add a tab for.
 **/
-function addModuleTab(targetElement, module)
-{
+function addModuleTab(targetElement, module) {
     var tabID = module.name + MODULE_TAB_ID_POSTFIX;
     $(targetElement).append(
         $('<li>').attr('class', MODULE_TAB_CLASS).attr('id', tabID).html(
@@ -249,8 +257,7 @@ function addModuleTab(targetElement, module)
  * @param {function} onSuccess The callback to call after the modules display
  *      has been rendered.
 **/
-function displayActiveModules(activeModules, matchFunc, onError, onSuccess)
-{
+function displayActiveModules(activeModules, matchFunc, onError, onSuccess) {
     if(activeModules.length === 0)
     {
         onSuccess();
@@ -281,9 +288,7 @@ function displayActiveModules(activeModules, matchFunc, onError, onSuccess)
  * @param {function} onSuccess The callback to call after the display is
  *      rendered with event listeners. This is optional.
 **/
-function displayActiveModulesWithEvents(activeModules, matchFunc, onError,
-    onSuccess)
-{
+function displayActiveModulesWithEvents(activeModules, matchFunc, onError,onSuccess) {
     displayActiveModules(activeModules.slice(0), matchFunc, onError, function()
     {
         $('.' + MODULE_TAB_CLASS).click(function(event){
@@ -391,7 +396,7 @@ function onResized()
             if(moduleList.css('display') !== 'none') {
                 onResized();
         }
-    }
+    };
     if ($(window).width() > 768) {
         $('#close-nav-dock').slideUp();
         $('#device-nav-dock').slideUp(function(){
@@ -512,7 +517,7 @@ $('#module-chrome').ready(function(){
             var kiplingVersion = gui.App.manifest.version;
             context.kiplingVersionNumber = kiplingVersion;
             var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
-            context.ljmWrapperVersionNumber = ljmWrapperVersion
+            context.ljmWrapperVersionNumber = ljmWrapperVersion;
             $('#device-search-msg').hide();
             renderTemplate(
                 'device_selector.html',
@@ -598,5 +603,5 @@ window.addEventListener('error',function(errEvent){
 process.on('uncaughtException',function(err){
     console.error('module_chrome.js-uncaughtException:',err);
     console.error(err.stack);
-    alert('module_chrome.js-uncaughtException')
+    alert('module_chrome.js-uncaughtException');
 });

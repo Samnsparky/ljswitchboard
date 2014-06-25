@@ -83,7 +83,13 @@ function showDevice(device, onSuccess)
     }
 
     try {
-        ethernetIP = formatAsIP(device.read('ETHERNET_IP'));
+        var ethIPNum = device.read('ETHERNET_IP');
+        if(ethIPNum !== 0) {
+            ethernetIP = formatAsIP(ethIPNum);
+        } else {
+            ethernetIP = 'Not Connected';
+        }
+        
     } catch (e) {
         showAlert(
             'Failed to communicate with device: ' + e.toString()
@@ -92,7 +98,12 @@ function showDevice(device, onSuccess)
     }
 
     try {
-        wifiIP = formatAsIP(device.read('WIFI_IP'));
+        var wifiIPNum = device.read('WIFI_IP');
+        if(wifiIPNum !== 0) {
+            wifiIP = formatAsIP(wifiIPNum);
+        } else {
+            wifiIP = 'Not Connected';
+        }
     } catch (e) {
         showAlert(
             'Failed to communicate with device: ' + e.toString()

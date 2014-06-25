@@ -56,9 +56,15 @@ var classTree = {
 trees.push({'val': 'button_class', 'tree': classTree, 'target': 'connection'});
 
 var wifiIPTree = {
-	'name': 'wifiStatus',
-	'trueVal': '{{ device.wifiIPAddress }}',
-	'falseVal': '0.0.0.0'
+	// 'name': 'wifiStatus',
+	// 'trueVal': '{{ device.wifiIPAddress }}',
+	// 'falseVal': 'Not Connected'
+	'name': 'wifiStatusStr',
+	'vals': {
+		'Un-Powered': 'Un-Powered',
+		'Associated': '{{ device.wifiIPAddress }}'
+	},
+	'defaultVal': 'Not Connected'
 };
 trees.push({'val': 'displayWifiIPAddress', 'tree': wifiIPTree, 'target': 'device'});
 

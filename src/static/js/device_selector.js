@@ -2,13 +2,14 @@
  * Logic for the device selector integrated module.
  *
  * @author A. Samuel Pottinger (LabJack, 2013)
+ * @contributor Chris Johnson (LabJack, 2014)
+ *
+ * Requires (from global_requires.js):
+ *      handlebars = require('handlebars');
+ *      q = require('q');
+ *      device_controller = require('./device_controller');
+ *      gui = require('nw.gui');
 **/
-
-var handlebars = require('handlebars');
-var q = require('q');
-var gui = require('nw.gui');
-
-var device_controller = require('./device_controller');
 
 var OPEN_FAIL_MESSAGE = handlebars.compile(
     'Sorry. Failed to the open device. Please check the ' +
@@ -203,6 +204,9 @@ function refreshDevices()
         console.log('List All Screen Context',context);
         var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
         context.ljmVersionNumber = ljmVersion;
+        if(typeof(gui) === 'undefined') {
+            gui = require('nw.gui');
+        }
         var kiplingVersion = gui.App.manifest.version;
         context.kiplingVersionNumber = kiplingVersion;
         var ljmWrapperVersion = require('labjack-nodejs/package.json').version;

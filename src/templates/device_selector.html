@@ -63,7 +63,7 @@
                                         <tr><td class="device-attribute-label">Serial</td><td id="serial" class="device-attribute-value">{{serial}}</td></tr>
                                         <tr><td class="device-attribute-label">Name</td><td id="name" class="device-attribute-value">{{name}}</td></tr>
                                         {{#ethernetIPAddress}}
-                                        <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{.}}</td></tr>
+                                        <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{../ethernetConnectionStatus}}</td></tr>
                                         {{/ethernetIPAddress}}
                                         {{#if specialText}}{{#if ../wifiIPAddress }}
                                         <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value"><span class="wifiIPAddressText">{{../displayWifiIPAddress}}</span>{{{../button_image}}}</td></tr>

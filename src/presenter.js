@@ -8,21 +8,21 @@
  * @contributor Chris Johnson (LabJack, 2013)
 **/
 
-var async = require('async');
-var handlebars = require('handlebars');
-var q = require('q');
+// var async = require('async');
+// var handlebars = require('handlebars');
+// var q = require('q');
 
-var fs_facade = require('./fs_facade');
-var device_controller = null;
-try {
-    device_controller = require('./device_controller');
-} catch (e) {
-    showPrematureAlert(
-        '<b>Failed to load JSON constants file or LJM on your machine. Please '+
-        'check the install and restart Kipling</b>. Original error: '+
-        e.toString()
-    );
-}
+// var fs_facade = require('./fs_facade');
+// var device_controller = null;
+// try {
+//     device_controller = require('./device_controller');
+// } catch (e) {
+//     showPrematureAlert(
+//         '<b>Failed to load JSON constants file or LJM on your machine. Please '+
+//         'check the install and restart Kipling</b>. Original error: '+
+//         e.toString()
+//     );
+// }
 
 var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit': 'tall'};
 var CHROME_TEMPLATE_NAME = 'module_chrome.html';
@@ -94,7 +94,7 @@ var getCustomGenericErrorHandler = function(message) {
             ' please contact support@labjack.com. (Info: '+message.toString() +')'
         );
     };
-}
+};
 var criticalErrorHandler = function(error)
 {
     console.error(
@@ -163,9 +163,6 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
         if(typeof(sdFramework) !== 'undefined') {
             sdFramework.killInstance();
         }
-        // delete sdModule
-        // delete sdFramework
-        delete ACTIVE_KIPLING_MODULE
         // -------------------- End of Cleanup Code --------------------
         $(dest).html(renderedHTML);
 
@@ -279,6 +276,7 @@ function attachWindowCloseListener() {
 
         // Register callback to close devices on application close.
         win.on('close', function() {
+            // This function gets executed when the user quits the application.
             if (device_controller === null) {
                 win.close(true);
                 return;
@@ -316,7 +314,7 @@ function renderDeviceSelector()
         var kiplingVersion = gui.App.manifest.version;
         context.kiplingVersionNumber = kiplingVersion;
         var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
-        context.ljmWrapperVersionNumber = ljmWrapperVersion
+        context.ljmWrapperVersionNumber = ljmWrapperVersion;
         $('#device-search-msg').hide();
         if (devices.length === 0)
             context.noDevices = true;
@@ -349,4 +347,3 @@ function getActiveTabID()
         { 'name': currentTab, 'counter': numTabChanges }
     );
 }
-

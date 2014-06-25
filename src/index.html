@@ -13,14 +13,14 @@
         <link href="static/js/jquery-ui-1.10.4.custom/css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet">
     </head>
     <body>
+        <!-- Display initial element before other script includes -->
         <div id="device-search-msg">
             <div id="global-load-image-holder"><img src="static/img/progress-indeterminate.gif"></div>
             <div id="searching-devices-message">Searching for Devices</div>
             <div id="premature-error-holder"></div>
         </div>
-        <div id="content-holder">
-        </div>
 
+        <!-- Perform other script includes -->
         <script type="text/javascript" src="static/js/jquery-1.10.2.min.js"></script>
         <script src="static/js/jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.min.js"></script>
         <script src="static/js/jquery-ui-1.10.4.custom/development-bundle/external/jquery.mousewheel.js"></script>
@@ -36,7 +36,11 @@
         <script type='text/javascript' src="static/js/d3.js"></script>
         <script type='text/javascript' src="static/js/ace-builds-0.0.1/src-noconflict/ace.js"></script>
         <script type='text/javascript' src="static/js/typeahead.bundle.min.js"></script>
+        <script type="text/javascript" src="global_requires.js"></script>
 
+        
+        <div id="content-holder">
+        </div>
         <script type="text/javascript" src="presenter.js"></script>
         <script type="text/javascript">
             window.ondragover = function(e) {e.preventDefault();return false;};

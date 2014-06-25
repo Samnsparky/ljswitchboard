@@ -24,7 +24,13 @@ require('getmac').getMac(function(err,macAddress){
 console.log('window',window);
 console.log('gui',gui);
 console.log('process',process.version,process.arch,process.platform);
-
+function showAlert(errorMessage)
+{
+    var message = OPEN_FAIL_MESSAGE(errorMessage);
+    $('#error-display').html(message);
+    $('.device-selector-holder').css('margin-top', '0px');
+    $('#alert-message').fadeIn();
+}
 function catchUncaughtExceptions(e) {
 	console.error('startup.js-uncaughtException',e);
 }
@@ -36,11 +42,8 @@ function catchWindowErrors(e) {
         (e.filename ? e.filename : 'app_front.js') +
         '", line:' + e.lineno
     // show any errors early
-    document.write('<pre><h2>' +
-        m + '</h2><div style="color:white;background-color:red">' +
-        e.error.stack + '</div></pre>'
-    )
-    console.error(m, e);
+    showAlert(m + ': ' + e.error.stack);
+    console.error(m, e,e.error.stack);
 }
 process.on('uncaughtException', catchUncaughtExceptions);
 window.addEventListener('error' ,catchWindowErrors);
