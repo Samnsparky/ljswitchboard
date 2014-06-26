@@ -430,7 +430,12 @@ function onResized()
         var bodyHeight = activeModuleEl.height();
         var moduleHeight = 9+bodyHeight+20;
         var iconsHeight = $('#system-navigation').height();
-        var topHeight = $('#module-chrome-contents').children(0).offset().top;
+        var topHeight = 0;
+        try {
+            topHeight = $('#module-chrome-contents').children(0).offset().top;
+        } catch(e) {
+            topHeight = 0;
+        }
         if((windowHeight - topHeight + 9) < (moduleHeight)) {
             setHeight = moduleHeight;
         } else {

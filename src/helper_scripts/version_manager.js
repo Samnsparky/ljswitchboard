@@ -30,6 +30,8 @@ function labjackVersionManager() {
 	this.urlDict = {
 		"kipling": {
 			"type":"kipling",
+			"platformDependent": true,
+			"types": ['current','beta'],
 			"urls":[
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/kipling.txt", "type": "current_win"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/kipling.txt", "type": "current_mac"},
@@ -43,6 +45,8 @@ function labjackVersionManager() {
 		},
 		"ljm": {
 			"type":"ljmDownloadsPage",
+			"platformDependent": true,
+			"types": ['current'],
 			"urls":[
 				{"url": "http://labjack.com/support/ljm", "type": "current_win"},
 				{"url": "http://labjack.com/support/ljm", "type": "current_mac"},
@@ -52,6 +56,7 @@ function labjackVersionManager() {
 		},
 		"ljm_wrapper": {
 			"type":"ljm_wrapper",
+			"platformDependent": false,
 			"urls":[
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/ljm_wrapper.txt", "type": "current"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/ljm_wrapper.txt", "type": "beta"}
@@ -59,6 +64,7 @@ function labjackVersionManager() {
 		},
 		"t7": {
 			"type":"t7FirmwarePage",
+			"platformDependent": false,
 			"urls":[
 				{"url": "http://labjack.com/support/firmware/t7", "type": "current"},
 				{"url": "http://labjack.com/support/firmware/t7/beta", "type": "beta"},
@@ -67,6 +73,7 @@ function labjackVersionManager() {
 		},
 		"digit": {
 			"type":"digitFirmwarePage",
+			"platformDependent": false,
 			"urls":[
 				{"url": "http://labjack.com/support/firmware/digit", "type": "current"}
 			]
@@ -162,7 +169,11 @@ function labjackVersionManager() {
 	};
 	this.pageCache = dict();
 	this.infoCache = {};
+	this.dataCache = {};
 	this.isDataComplete = false;
+	this.isError = false;
+	this.errorInfo = null;
+	
 
 	/**
 	 * Function that prints out all urls to console.log
@@ -180,17 +191,34 @@ function labjackVersionManager() {
 			// for it
 			if(!self.pageCache.has(url)) {
 				// Perform request to get pageData/body
+				var options = {
+					'url': url,
+					'timeout': 2000,
+				}
 				request(
-					url,
+					options,
 					function (error, response, body) {
 						if (error) {
-              // Report a TCP Level error likely means computer is not
-              // connected to the internet.
-							callback({
+							// Report a TCP Level error likely means computer is not
+							// connected to the internet.
+							var message = '';
+							if (error.code === 'ENOTFOUND') {
+								message = "TCP Error, computer not connected to network: "
+							} else if(error.code === 'ETIMEDOUT') {
+								message = "TCP Error, no internet connection: "
+							} else {
+								message = "Unknown TCP Error: "
+							}
+							var err = {
 								"num": -1,
-								"str": "TCP level error" + error.toString(),
-								"quit": true
-							});
+								"str": message + error.toString(),
+								"quit": true,
+								"code": error.code,
+								"url": url
+							};
+							self.infoCache.isError = true;
+							self.infoCache.errors.push(err);
+							callback(err);
 						} else if (response.statusCode != 200) {
 							// Report a http error, likely is 404, page not found.
 							var message = "Got Code: ";
@@ -198,11 +226,15 @@ function labjackVersionManager() {
 							message += "; loading: " + url;
 							message += "; name: " + name;
 							message += "; type: " + urlInfo.type;
-							callback({
+							var err = {
 								"num": response.statusCode,
 								"str": message, 
-								"quit": false
-							});
+								"quit": false,
+								"url": url
+							};
+							self.infoCache.warning = true;
+							self.infoCache.warnings.push(err);
+							callback(err);
 						} else {
 							self.pageCache.set(url,body);
 							strategy(savedData, body, urlInfo, name);
@@ -220,9 +252,19 @@ function labjackVersionManager() {
 		return dataQuery;
 	};
 	this.saveTempData = function(name, infos) {
+		var systemType = self.getLabjackSystemType();
+		var platformDependent = self.urlDict[name].platformDependent;
+		
+		console.log('name',name);
+		console.log('is dependent',platformDependent);
+		console.log('systemType',systemType);
+		
 		self.infoCache[name] = {};
+		self.dataCache[name] = {};
 		infos.forEach(function(info) {
-			self.infoCache[name][info.type] = [];
+			if (typeof(self.infoCache[name][info.type]) === 'undefined') {
+				self.infoCache[name][info.type] = [];
+			}
 			var data = {
 				upgradeLink: info.upgradeLink,
 				version: info.version,
@@ -230,6 +272,23 @@ function labjackVersionManager() {
 				key: info.key
 			};
 			self.infoCache[name][info.type].push(data);
+			if (platformDependent) {
+				var isCurSys = info.type.search(systemType) > 0;
+				var curType = info.type.split('_'+systemType)[0];
+				if(isCurSys) {
+					// console.log('Current Type',info.type)
+					if (typeof(self.dataCache[name][curType]) === 'undefined') {
+						self.dataCache[name][curType] = [];
+					}
+					self.dataCache[name][curType].push(data);
+				}
+
+			} else {
+				if (typeof(self.dataCache[name][info.type]) === 'undefined') {
+					self.dataCache[name][info.type] = [];
+				}
+				self.dataCache[name][info.type].push(data);
+			}
 		});
 	};
 	this.queryForVersions = function(name) {
@@ -270,9 +329,7 @@ function labjackVersionManager() {
 						function(query, callback) {
 							query(callback);
 						}, function(err) {
-							if(err) {
-								self.infoCache.warning = true;
-								self.infoCache.warnings.push(err);
+							if(typeof(err) !== 'undefined') {
 								if(err.quit) {
 									defered.reject(err);
 								} else {
@@ -290,9 +347,7 @@ function labjackVersionManager() {
 						function(query, callback) {
 							query(callback);
 						}, function(err) {
-							if(err) {
-								self.infoCache.warning = true;
-								self.infoCache.warnings.push(err);
+							if(typeof(err) !== 'undefined') {
 								if(err.quit) {
 									defered.reject(err);
 								} else {
@@ -365,13 +420,19 @@ function labjackVersionManager() {
 	this.getAllVersions = function() {
 		// Re-set constants
 		self.infoCache = {};
+		self.dataCache = {};
 		self.infoCache.warning = false;
 		self.infoCache.warnings = [];
 		self.isDataComplete = false;
+		self.isError = false;
+		self.infoCache.isError = false;
+		self.infoCache.errors = [];
 		var errorFunc = function(err) {
 			var errDefered = q.defer();
 			if (err) {
 				if(err.quit) {
+					self.isError = true;
+					self.errorInfo = err;
 					defered.reject(err);
 					errDefered.reject();
 				} else {
@@ -399,6 +460,96 @@ function labjackVersionManager() {
 	this.getStatus = function() {
 		return self.isDataComplete;
 	};
+	this.isIssue = function() {
+		if(self.isDataComplete) {
+			return self.infoCache.warning || self.infoCache.isError;
+		} else {
+			return true;
+		}
+	};
+	this.getIssue = function() {
+		var issue;
+		if(self.isIssue()) {
+			if(self.infoCache.isError) {
+				issue = {"type": "error","data":self.infoCache.errors};
+			} else {
+				issue = {"type": "warning","data":self.infoCache.warnings};
+			}
+		} else {
+			issue = {"type": "none","data":null};
+		}
+		return issue;
+	}
+	this.waitForData = function() {
+		var defered = q.defer();
+		var checkInterval = 100;
+		var iteration = 0;
+		var maxCheck = 100;
+
+		// Define a function that can delays & re-calls itself until it errors
+		// out or resolves to the defered q object.
+		var isComplete = function() {
+			return !(self.isDataComplete || self.isError);
+		}
+		var finishFunc = function() {
+			console.log('version_manager.js - Num Iterations',iteration);
+			if(self.isError) {
+				defered.reject(self.errorInfo);
+			} else {
+				defered.resolve(self.infoCache);
+			}
+		}
+		var waitFunc = function() {
+			if(isComplete()) {
+				if (iteration < maxCheck) {
+					iteration += 1;
+					setTimeout(waitFunc,checkInterval);
+				} else {
+					defered.reject('Max Retries Exceeded');
+				}
+			} else {
+				finishFunc();
+			}
+		}
+
+		// if the data isn't complete then 
+		if(isComplete()) {
+			setTimeout(waitFunc,checkInterval);
+		} else {
+			finishFunc();
+		}
+		return defered.promise;
+	}
+	this.getLabjackSystemType = function() {
+		var ljSystemType = '';
+		var ljPlatformClass = {
+			'ia32': '32',
+		    'x64': '64',
+		    'arm': 'arm'
+		}[process.arch];
+		var ljPlatform = {
+			'linux': 'linux',
+		    'linux2': 'linux',
+		    'sunos': 'linux',
+		    'solaris': 'linux',
+		    'freebsd': 'linux',
+		    'openbsd': 'linux',
+		    'darwin': 'mac',
+		    'mac': 'mac',
+		    'win32': 'win',
+		}[process.platform];
+		if(typeof(ljPlatform) !== 'undefined') {
+			if(ljPlatform === 'linux') {
+				ljSystemType = ljPlatform + ljPlatformClass;
+			} else {
+				ljSystemType = ljPlatform;
+			}
+
+		} else {
+			console.error('Running Kipling on Un-supported System Platform');
+		}
+		return ljSystemType;
+	}
 	this.getInfoCache = function() {
 		return self.infoCache;
 	};
@@ -407,10 +558,18 @@ function labjackVersionManager() {
 var LABJACK_VERSION_MANAGER = new labjackVersionManager();
 
 LABJACK_VERSION_MANAGER.getAllVersions()
+LABJACK_VERSION_MANAGER.waitForData()
 .then(function(data) {
-	console.log('Info',data);
+	console.log('dataCache',LABJACK_VERSION_MANAGER.dataCache);
+	if(LABJACK_VERSION_MANAGER.isIssue()) {
+		var issue =LABJACK_VERSION_MANAGER.getIssue();
+		console.warn('LVM Warming',issue);
+	}
 },function(err) {
-	console.log('Failed',err);
+	if(LABJACK_VERSION_MANAGER.isIssue()) {
+		var issue =LABJACK_VERSION_MANAGER.getIssue();
+		console.error('LVM Error',issue);
+	}
 });
 
 if(typeof(exports) !== 'undefined') {

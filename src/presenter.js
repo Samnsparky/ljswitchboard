@@ -306,6 +306,14 @@ function attachWindowCloseListener() {
 **/
 function renderDeviceSelector()
 {   
+    var qOnDevicesLoaded = function(devices) {
+        return function() {
+            var defered = q.defer();
+            onDevicesLoaded(devices);
+            defered.resolve();
+            return defered.promise;
+        }
+    }
     var onDevicesLoaded = function(devices) {
         var context = {'device_types': includeDeviceDisplaySizes(devices)};
         var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
@@ -333,7 +341,9 @@ function renderDeviceSelector()
         getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
         function(devices) {
             device_controller.finishInit(function() {
-                onDevicesLoaded(devices);
+                var loadFunc = qOnDevicesLoaded(devices);
+                LABJACK_VERSION_MANAGER.waitForData()
+                .then(loadFunc,loadFunc);
             });
         }
     );
