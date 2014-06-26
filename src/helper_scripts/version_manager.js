@@ -44,7 +44,7 @@ function labjackVersionManager() {
 		"ljm": {
 			"type":"ljmDownloadsPage",
 			"urls":[
-				{"url": "http://labjack.com/support/ljma", "type": "current_win"},
+				{"url": "http://labjack.com/support/ljm", "type": "current_win"},
 				{"url": "http://labjack.com/support/ljm", "type": "current_mac"},
 				{"url": "http://labjack.com/support/ljm", "type": "current_linux32"},
 				{"url": "http://labjack.com/support/ljm", "type": "current_linux64"}
@@ -195,7 +195,9 @@ function labjackVersionManager() {
 							// Report a http error, likely is 404, page not found.
 							var message = "Got Code: ";
 							message += response.statusCode.toString();
-							message += " loading: " + url;
+							message += "; loading: " + url;
+							message += "; name: " + name;
+							message += "; type: " + urlInfo.type;
 							callback({
 								"num": response.statusCode,
 								"str": message, 
@@ -270,6 +272,7 @@ function labjackVersionManager() {
 						}, function(err) {
 							if(err) {
 								self.infoCache.warning = true;
+								self.infoCache.warnings.push(err);
 								if(err.quit) {
 									defered.reject(err);
 								} else {
@@ -289,6 +292,7 @@ function labjackVersionManager() {
 						}, function(err) {
 							if(err) {
 								self.infoCache.warning = true;
+								self.infoCache.warnings.push(err);
 								if(err.quit) {
 									defered.reject(err);
 								} else {
@@ -362,6 +366,7 @@ function labjackVersionManager() {
 		// Re-set constants
 		self.infoCache = {};
 		self.infoCache.warning = false;
+		self.infoCache.warnings = [];
 		self.isDataComplete = false;
 		var errorFunc = function(err) {
 			var errDefered = q.defer();
@@ -377,11 +382,11 @@ function labjackVersionManager() {
 			return errDefered.promise;
 		};
 		var defered = q.defer();
-		LVM.getLJMVersions()
-		.then(LVM.getKiplingVersions, errorFunc)
-		.then(LVM.getLJMWrapperVersions, errorFunc)
-		.then(LVM.getT7FirmwareVersions, errorFunc)
-		.then(LVM.getDigitFirmwareVersions, errorFunc)
+		self.getLJMVersions()
+		.then(self.getKiplingVersions, errorFunc)
+		.then(self.getLJMWrapperVersions, errorFunc)
+		.then(self.getT7FirmwareVersions, errorFunc)
+		.then(self.getDigitFirmwareVersions, errorFunc)
 		.then(function() {
 			self.isDataComplete = true;
 			defered.resolve(self.infoCache);
@@ -400,6 +405,13 @@ function labjackVersionManager() {
 	var self = this;
 }
 var LABJACK_VERSION_MANAGER = new labjackVersionManager();
+
+LABJACK_VERSION_MANAGER.getAllVersions()
+.then(function(data) {
+	console.log('Info',data);
+},function(err) {
+	console.log('Failed',err);
+});
 
 if(typeof(exports) !== 'undefined') {
 	exports.lvm = LABJACK_VERSION_MANAGER;
@@ -420,12 +432,7 @@ if(typeof(exports) !== 'undefined') {
 // .then(LVM.getT7FirmwareVersions)
 // .then(LVM.getDigitFirmwareVersions)
 // LVM.getAllVersions()
-// .then(function() {
-// 	// LVM.pBuf();
-// 	console.log('Info',LVM.infoCache);
-// },function(err) {
-// 	console.log('Failed',err);
-// });
+
 
 /*
 var vm = require('./helper_scripts/version_manager')
