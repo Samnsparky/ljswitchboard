@@ -36,11 +36,12 @@
         <script type='text/javascript' src="static/js/d3.js"></script>
         <script type='text/javascript' src="static/js/ace-builds-0.0.1/src-noconflict/ace.js"></script>
         <script type='text/javascript' src="static/js/typeahead.bundle.min.js"></script>
-        <script type="text/javascript" src="global_requires.js"></script>
 
+        <!-- Include helper functions -->
+        <script type="text/javascript" src="helper_scripts/global_requires.js"></script>
+        <script type="text/javascript" src="helper_scripts/version_manager.js"></script>
         
-        <div id="content-holder">
-        </div>
+        <div id="content-holder"></div>
         <script type="text/javascript" src="presenter.js"></script>
         <script type="text/javascript">
             window.ondragover = function(e) {e.preventDefault();return false;};

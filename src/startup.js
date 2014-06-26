@@ -1,4 +1,5 @@
 var gui = require('nw.gui');
+var q = require('q');
 require('getmac').getMac(function(err,macAddress){
     if (err)  throw err;
     process.curMacAddr = macAddress;
@@ -47,3 +48,5 @@ function catchWindowErrors(e) {
 }
 process.on('uncaughtException', catchUncaughtExceptions);
 window.addEventListener('error' ,catchWindowErrors);
+
+
