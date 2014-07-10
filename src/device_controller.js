@@ -112,15 +112,17 @@ var fullRegisterList = [];
 var registersByDevices = {};
 
 var finishInit = function(onFinish) {
-    // Get and add the non-beta registers
-    labjack_driver.constants.origConstants.registers.forEach(function(reg){
-        fullRegisterList.push(reg);
-    });
+    if(fullRegisterList.length === 0) {
+        // Get and add the non-beta registers
+        labjack_driver.constants.origConstants.registers.forEach(function(reg){
+            fullRegisterList.push(reg);
+        });
 
-    // Get and add the beta registers
-    labjack_driver.constants.origConstants.registers_beta.forEach(function(reg){
-        fullRegisterList.push(reg);
-    });
+        // Get and add the beta registers
+        labjack_driver.constants.origConstants.registers_beta.forEach(function(reg){
+            fullRegisterList.push(reg);
+        });
+    }
 
     // Finish
     onFinish();
@@ -1417,8 +1419,8 @@ var innerGetDevices = function (onError, onSuccess)
         var deferred = q.defer();
         var hadError = false;
 
-        var innerOnError = function () {
-            console.log('attempting to recover');
+        var innerOnError = function (err) {
+            console.log('attempting to recover',err);
         };
 
         if (wasAlreadySuccessful) {
@@ -1439,8 +1441,8 @@ var innerGetDevices = function (onError, onSuccess)
                 if (previousPromise === null)
                     return currentPromise([]);
                 else
-                    return previousPromise.then(currentPromise, function () {
-                        innerOnError();
+                    return previousPromise.then(currentPromise, function (err) {
+                        innerOnError(err);
                         hadError = true;
                     });
             },
@@ -1449,8 +1451,9 @@ var innerGetDevices = function (onError, onSuccess)
 
         lastPromise.then(function (newRetData) {
             retData = newRetData;
-            if (hadError)
+            if (hadError) {
                 deferred.resolve(false);
+            }
             else
                 deferred.resolve(true);
         }, innerOnError);
@@ -1516,7 +1519,10 @@ exports.getDevices = function (onError, onSuccess) {
     };
 
     innerGetDevices(
-        decorateCleanup(onError),
+        decorateCleanup(function(err){
+            console.error('HERE',err);
+            onError(err);
+        }),
         decorateSelectorVals(decorateCleanup(onSuccess))
     );
 }

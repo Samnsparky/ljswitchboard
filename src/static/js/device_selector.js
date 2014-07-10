@@ -197,38 +197,7 @@ function showAlert(errorMessage)
 
 function refreshDevices()
 {
-    $('#device-search-msg').show();
-    $('#content-holder').html('');
-    var onDevicesLoaded = function(devices) {
-        var context = {'device_types': includeDeviceDisplaySizes(devices)};
-        console.log('List All Screen Context',context);
-        var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
-        context.ljmVersionNumber = ljmVersion;
-        if(typeof(gui) === 'undefined') {
-            gui = require('nw.gui');
-        }
-        var kiplingVersion = gui.App.manifest.version;
-        context.kiplingVersionNumber = kiplingVersion;
-        var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
-        context.ljmWrapperVersionNumber = ljmWrapperVersion
-        if (devices.length === 0)
-            context.noDevices = true;
-        $('#device-search-msg').hide();
-        renderTemplate(
-            'device_selector.html',
-            context,
-            CONTENTS_ELEMENT,
-            true,
-            ['device_selector.css'],
-            ['device_selector.js'],
-            getCustomGenericErrorHandler('device_selector-refreshDevices')
-        );
-    };
-
-    var devices = device_controller.getDevices(
-        getCustomGenericErrorHandler('device_selector-refreshDevices.getDevices'),
-        onDevicesLoaded
-    );
+    renderDeviceSelector();
 }
 
 function kiplingStartupManager() {
@@ -462,14 +431,43 @@ function kiplingStartupManager() {
 /**
  * Callback that dyanmically handles window resizing.
 **/
-function onResized()
-{
+function onResized() {
     var decrement = 105;
     if($('.device-selector-holder h1').height() > 48) {
         decrement += 78;
     }
     var num = ($(window).height()-decrement);
     $('.device-pane').height((num-10).toString()+'px');
+}
+
+var LAST_UPGRADE_LINK_CLICKED = null;
+function attachUpgradeLinkListeners() {
+    console.log('HERE, device_selector.js');
+    $('.labjackVersions #showUpgradeLinks').unbind();
+    $('.labjackVersions #closeUpgradeLinkWindow').unbind();
+    $('.labjackVersions #showUpgradeLinks').bind('click',function() {
+        $('#versionNumbers').hide();
+        $('#lvm_upgrade_box').show();
+    });
+    $('.labjackVersions #closeUpgradeLinkWindow').bind('click',function() {
+        $('#lvm_upgrade_box').hide();
+        $('#versionNumbers').show();
+    });
+
+    $('.labjackVersions .upgradeButton').bind('click',function(event) {
+        LAST_UPGRADE_LINK_CLICKED = event;
+        console.log('Clicked!',event.toElement);
+
+        var href = event.toElement.attributes.href.value;
+        FILE_DOWNLOADER_UTILITY.downloadFile(href)
+        .then(function(info) {
+            console.log('success!',info);
+        }, function(error) {
+            console.log('Error :(',error);
+        });
+    });
+    
+
 }
 
 $('#device-selector-holder').ready(function(){
@@ -492,4 +490,6 @@ $('#device-selector-holder').ready(function(){
 
     var starter = new kiplingStartupManager();
     starter.autoStart();
+
+    attachUpgradeLinkListeners();
 });

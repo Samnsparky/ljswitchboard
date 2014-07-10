@@ -513,32 +513,7 @@ $('#module-chrome').ready(function(){
     $('#manage-link').click(function () {
         var keeper = device_controller.getDeviceKeeper();
         keeper.clearRecord();
-        $('#device-search-msg').show();
-        $('#content-holder').html('');
-        var onDevicesLoaded = function(devices) {
-            var context = {'device_types': includeDeviceDisplaySizes(devices)};
-            var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
-            context.ljmVersionNumber = ljmVersion;
-            var kiplingVersion = gui.App.manifest.version;
-            context.kiplingVersionNumber = kiplingVersion;
-            var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
-            context.ljmWrapperVersionNumber = ljmWrapperVersion;
-            $('#device-search-msg').hide();
-            renderTemplate(
-                'device_selector.html',
-                context,
-                CONTENTS_ELEMENT,
-                true,
-                ['device_selector.css'],
-                ['device_selector.js'],
-                getCustomGenericErrorHandler('module_chrome-ready.onDevicesLoaded')
-            );
-        };
-
-        var devices = device_controller.getDevices(
-            getCustomGenericErrorHandler('module_chrome-ready.getDevices'),
-            onDevicesLoaded
-        );
+        renderDeviceSelector();
     });
 
     $('#change-modules-link').click(function () {

@@ -33,7 +33,8 @@
     "request": "~2",
     "simplesets": "~1",
     "sprintf-js": "~0",
-    "sprintf":  "~0.1.3"
+    "sprintf":  "~0.1.3",
+    "status-bar": "~2"
   },
   "enableStartupConfig":false,
   "buildType": "debug"

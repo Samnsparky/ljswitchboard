@@ -1,22 +1,35 @@
 <div class="device-selector-holder">
     <div id="logo-holder"><img src="static/img/labjack-logo.png"></div>
     <h1>Select Devices <button id="refresh-button" class="btn btn-primary">Refresh Devices >></button><button id="finish-button" class="btn btn-primary">Continue >></button></h1>
-    <div id="versionNumbers">
+    <div id="versionNumbers" class="labjackVersions">
         <h4>Versions</hr>
         <table>
-            <tr>
-                <td class="ljVersionNumbers">LJM</td>
-                <td class="ljVersionNumbers">{{ljmVersionNumber}}</td>
+            <tr id="kipling" class="lvm_link">
+                <td class="ljVersionNumbers lvm_name">Kipling</td>
+                <td class="ljVersionNumbers lvm_version">{{kiplingVersionNumber}}</td>
             </tr>
-            <tr>
-                <td class="ljVersionNumbers">Kipling</td>
-                <td class="ljVersionNumbers">{{kiplingVersionNumber}}</td>
+            <tr id="ljm" class="lvm_link">
+                <td class="ljVersionNumbers lvm_name">LJM</td>
+                <td class="ljVersionNumbers lvm_version">{{ljmVersionNumber}}</td>
             </tr>
-            <tr>
-                <td class="ljVersionNumbers">LJM Wrapper</td>
-                <td class="ljVersionNumbers">{{ljmWrapperVersionNumber}}</td>
+            <tr id="ljm_wrapper" class="lvm_link">
+                <td class="ljVersionNumbers lvm_name">LJM Wrapper</td>
+                <td class="ljVersionNumbers lvm_version">{{ljmWrapperVersionNumber}}</td>
             </tr>
         </table>
+        <button id="showUpgradeLinks" class="upgradeGuiControlButton btn btn-info">View Updates</button>
+    </div>
+    <div id="lvm_upgrade_box" class="labjackVersions" style="display:none">
+        <h4>Available Upgrades</h4>
+        <table>
+            {{#upgradeLinks}}
+            <tr id="{{name}}" class="lvm_upgradeLinkljVersionNumbers">
+                <td class="ljVersionNumbers lvm_versionName">{{name}}</td>
+                <td class="ljVersionNumbers lvm_versionLink"><button class="upgradeButton btn btn-link" href="{{upgradeLink}}" title="Click to Download and Install, {{name}}: {{versionType}}, {{versionInfo}}">Download</button></td>
+            </tr>
+            {{/upgradeLinks}}
+        </table>
+        <button id="closeUpgradeLinkWindow" class="upgradeGuiControlButton btn btn-info">Close</button>
     </div>
     <div id="alert-message" class="alert">
       <button type="button" class="close close-alert-button"></button>

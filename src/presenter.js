@@ -267,36 +267,40 @@ function includeDeviceDisplaySizes(deviceTypes)
 }
 
 // Load native UI library
+var isWindowCloseListenerAttacyed = false;
 function attachWindowCloseListener() {
-    try {
-        var gui = require('nw.gui');
+    if(!isWindowCloseListenerAttacyed) {
+        try {
+            var gui = require('nw.gui');
 
-        // Get the current window
-        var win = gui.Window.get();
+            // Get the current window
+            var win = gui.Window.get();
 
-        // Register callback to close devices on application close.
-        win.on('close', function() {
-            // This function gets executed when the user quits the application.
-            if (device_controller === null) {
-                win.close(true);
-                return;
-            }
-
-            async.each(
-                device_controller.getDeviceKeeper().getDevices(),
-                function (device, callback) {
-                    device.close(
-                        callback,
-                        function() { callback(); }
-                    );
-                },
-                function (err) {
+            // Register callback to close devices on application close.
+            win.on('close', function() {
+                // This function gets executed when the user quits the application.
+                if (device_controller === null) {
                     win.close(true);
+                    return;
                 }
-            );
-        });
-    } catch (e) {
-        criticalErrorHandler(e);
+
+                async.each(
+                    device_controller.getDeviceKeeper().getDevices(),
+                    function (device, callback) {
+                        device.close(
+                            callback,
+                            function() { callback(); }
+                        );
+                    },
+                    function (err) {
+                        win.close(true);
+                    }
+                );
+            });
+            isWindowCloseListenerAttacyed = true;
+        } catch (e) {
+            criticalErrorHandler(e);
+        }
     }
 }
 
@@ -306,6 +310,11 @@ function attachWindowCloseListener() {
 **/
 function renderDeviceSelector()
 {   
+    $('#device-search-msg').show();
+    $('#content-holder').html('');
+
+    // Function to be called after link-info has been updated to call the 
+    // continuation function, "onDevicesLoaded" to perform rendering process.
     var qOnDevicesLoaded = function(devices) {
         return function() {
             var defered = q.defer();
@@ -314,18 +323,91 @@ function renderDeviceSelector()
             return defered.promise;
         }
     }
-    var onDevicesLoaded = function(devices) {
+    function onDevicesLoaded(devices) {
+        // Define a context variable that will be used to render the 
+        // device_selector.html file
         var context = {'device_types': includeDeviceDisplaySizes(devices)};
+
+        // Get and save LJM's version number
         var ljmVersion = device_controller.ljm_driver.installedDriverVersion;
         context.ljmVersionNumber = ljmVersion;
-        var gui = require('nw.gui');
+
+        // Get and save Kipling's version number in the package.json file
+        if (typeof(gui) === 'undefined') {
+            // if the gui reference was garbage collected, re-link to it.
+            gui = require('nw.gui');
+        }
         var kiplingVersion = gui.App.manifest.version;
         context.kiplingVersionNumber = kiplingVersion;
+
+        // Get and save the LJM_Wrapper version number
         var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
-        context.ljmWrapperVersionNumber = ljmWrapperVersion;
-        $('#device-search-msg').hide();
+        context.ljmWrapperVersionNumber = ljmWrapperVersion
         if (devices.length === 0)
             context.noDevices = true;
+
+        // Define variable to hold available upgrade options for K3 and LJM
+        var upgradeLinks = [];
+
+        // If there wasn't an issue collecting online fw versions etc. 
+        if(!LABJACK_VERSION_MANAGER.isIssue()) {
+            // Function to help discover what isn't undefined & prevent errors.
+            var isReal = function(objA, objB, objC) {
+                var retVar = typeof(objA) !== 'undefined';
+                retVar &= typeof(objB) !== 'undefined';
+                retVar &= typeof(objC) !== 'undefined';
+                return retVar;
+            }
+            // Function to capitalize first letter of string.
+            var formatUpgradeName = function(upgradeName) {
+                var retStr = upgradeName.substring(0, 1).toUpperCase()
+                retStr += upgradeName.substring(1);
+                return retStr;
+            }
+            // Function to parse & add to linkInfo object.
+            var appendInfo = function(linkInfo) {
+                var key = linkInfo.key;
+                var splitDataA = key.split('_');
+                var versionType = formatUpgradeName(splitDataA[0]);
+                var splitDataB = splitDataA[1].split('-');
+                var platformInfo = formatUpgradeName(splitDataB[0]);
+                var versionInfo = splitDataB[1];
+
+                // Add formatted info to the linkInfo object
+                linkInfo.versionType = versionType;
+                linkInfo.platformInfo = platformInfo;
+                linkInfo.versionInfo = versionInfo;
+                return linkInfo;
+            }
+
+            // Save reference to info for shorter names
+            var info = LABJACK_VERSION_MANAGER.dataCache;
+
+            // Check to make sure each link and data exists before adding it
+            
+            // Check and add Kipling info
+            if (isReal(info.kipling, info.kipling.beta, info.kipling.beta[0])) {
+                var k3 = info.kipling.beta[0];
+                k3 = appendInfo(k3);
+                k3.name = "Kipling";
+                upgradeLinks.push(k3);
+            }
+
+            // Check and add LJM info
+            if (isReal(info.ljm, info.ljm.current, info.ljm.current[0])) {
+                var ljm = info.ljm.current[0];
+                ljm = appendInfo(ljm);
+                ljm.name = "LJM";
+                upgradeLinks.push(ljm);
+            }
+        }
+        // Save the upgradeLinks array to the context that used during rendering
+        console.log('upgradeLinks', upgradeLinks);
+        context.upgradeLinks = upgradeLinks;
+
+        // Just before rendering the template, hide the "searching for devices"
+        // message
+        $('#device-search-msg').hide();
         renderTemplate(
             'device_selector.html',
             context,
@@ -333,9 +415,9 @@ function renderDeviceSelector()
             true,
             ['device_selector.css'],
             ['device_selector.js'],
-            getCustomGenericErrorHandler('presenter.js-renderDeviceSelector-renderTemplate')
+            getCustomGenericErrorHandler('presenter.js-deviceSelectorFunc')
         );
-    };
+    }
 
     var devices = device_controller.getDevices(
         getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
@@ -349,7 +431,6 @@ function renderDeviceSelector()
     );
     attachWindowCloseListener();
 }
-
 
 function getActiveTabID()
 {

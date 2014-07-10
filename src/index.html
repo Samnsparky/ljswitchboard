@@ -20,6 +20,34 @@
             <div id="premature-error-holder"></div>
         </div>
 
+        <!-- Element that allows user friendly downloads w/ progress bars -->
+        <div id="lvmDownloadBox" class="downloadBox" style="display:none;">
+            <h4>Download Progress</h4>
+            <div id="currentDownloads">
+                <div id="examplePrgressBar" style="display:none;">
+                    <div id="lvmProgressBar" class=" progress">
+                        <div class="bar" style="width: 0%;"></div>
+                    </div>
+                    <table>
+                        <tr>
+                            <td>File Name:</td>
+                            <td id="fileName"></td>
+                        </tr>
+                        <tr>
+                            <td>Size:</td>
+                            <td id="fileSize"></td>
+                        </tr>
+                        <tr>
+                            <td>Speed:</td>
+                            <td id="downloadSpeed"></td>
+                        </tr>
+                    </table>
+                    <button id="showInFinderButton" class="btn btn-mini btn-link">Show In Finder</button>
+                </div>
+            </div>
+            <button id="closeDownloaderWindowButton" class="btn btn-mini btn-info">Close</button>
+        </div>
+
         <!-- Perform other script includes -->
         <script type="text/javascript" src="static/js/jquery-1.10.2.min.js"></script>
         <script src="static/js/jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.min.js"></script>
@@ -40,6 +68,7 @@
         <!-- Include helper functions -->
         <script type="text/javascript" src="helper_scripts/global_requires.js"></script>
         <script type="text/javascript" src="helper_scripts/version_manager.js"></script>
+        <script type="text/javascript" src="helper_scripts/file_downloader.js"></script>
         
         <div id="content-holder"></div>
         <script type="text/javascript" src="presenter.js"></script>
@@ -47,6 +76,11 @@
             window.ondragover = function(e) {e.preventDefault();return false;};
             window.ondrop = function(e) {e.preventDefault();return false;};
             $(document).ready(function() {
+                FILE_DOWNLOADER_UTILITY.initializeFileDownloader(
+                    'lvmDownloadBox',
+                    'currentDownloads',
+                    'closeDownloaderWindowButton');
+
                 renderDeviceSelector();
             });
         </script>
