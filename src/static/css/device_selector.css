@@ -3,8 +3,8 @@ body {
 }
 #versionNumbers {
     position:absolute;
-    top:0px;
-    right:0px;
+    top: 0;
+    right: 0;
     width: 120px;
 }
 #lvm_upgrade_box {
@@ -15,7 +15,7 @@ body {
     display:none;
 }
 .labjackVersions {
-    height: 100px;
+    height: 105px;
 }
 .labjackVersions table {
     width: 100%;
@@ -29,33 +29,35 @@ body {
     font-weight: 200;
     font-size: 10px;
     line-height: normal;
+    padding: 1px 0px;
 }
 .labjackVersions .lvm_link {
     display: block;
-    padding: 0px;
+    padding: 0;
     height: 14px;
     width: 96%;
+    margin-top: 2px;
 }
 .labjackVersions .lvm_name {
     float: left;
     text-align: left;
-    width: 66%;
-    padding: 0px;
-    margin: 0px;
+    width: 56%;
+    margin: 0;
+    padding-left:5%;
 }
 .labjackVersions .lvm_version {
     text-align: right;
     float: right;
     width: 34%;
-    padding: 0px;
-    margin: 0px;
+    margin: 0;
+    padding-right:5%;
 }
 .labjackVersions .lvm_upgrade_link {
     position:absolute;
     width:100px;
     height:80px;
 }
-.ljVersionNumbers.lvm_versionLink {
+.ljVersionNumbers .lvm_versionLink {
     text-align: right;
 }
 .labjackVersions .upgradeGuiControlButton {
@@ -70,8 +72,8 @@ body {
 .labjackVersions .upgradeButton {
     font-size: 10px;
     line-height: 14px;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
 }
 .labjackVersions #showUpgradeLinks {
     float: right;
@@ -107,8 +109,8 @@ body {
 }
 .devices-enumeration-scroller .well {
     border: none;
-    margin-bottom: 0px;
-    padding-right: 0px;
+    margin-bottom: 0;
+    padding-right: 0;
 }
 .header
 {
@@ -125,7 +127,6 @@ body {
     overflow: auto;
 }
 .device-pane-section {
-    width:100%;
     width: 100%;
     margin-bottom: 20px;
 }
@@ -147,12 +148,12 @@ body {
     left: 140px;*/
 }
 
-.devices-enumeration.tall
+.devices-enumeration .tall
 {
     /*height: 500px;*/
 }
 
-.devices-enumeration.short
+.devices-enumeration .short
 {
     height: 100px;
 }
@@ -245,6 +246,19 @@ body {
     -webkit-animation-iteration-count: infinite;
 }
 
+.lvm_version_warning {
+    color: #FFF;
+    -webkit-animation-name: versionWarning;
+    -webkit-animation-duration: 2s;
+    -webkit-animation-iteration-count: infinite;
+}
+.lvm_version_error {
+    color: #FFF;
+    -webkit-animation-name: versionError;
+    -webkit-animation-duration: 2s;
+    -webkit-animation-iteration-count: infinite;
+}
+
 #alert-message
 {
     display: none;
@@ -279,7 +293,18 @@ body {
 
 
 @-webkit-keyframes pulse {
-  from { background-color: #49025D; -webkit-box-shadow: 0 0 9px #333; border-color: #49025D;}
-  50% { background-color: #872EA0; -webkit-box-shadow: 0 0 18px #000; border-color: #872EA0;}
-  to { background-color: #49025D; -webkit-box-shadow: 0 0 9px #333; border-color: #49025D;}
+    from { background-color: #49025D; -webkit-box-shadow: 0 0 9px #333; border-color: #49025D;}
+    50% { background-color: #872EA0; -webkit-box-shadow: 0 0 18px #000; border-color: #872EA0;}
+    to { background-color: #49025D; -webkit-box-shadow: 0 0 9px #333; border-color: #49025D;}
+}
+
+@-webkit-keyframes versionWarning {
+    from { background-color: #2D89F0; -webkit-box-shadow: 0 0 3px #333; border-color: #2D89F0;}
+    50% { background-color: #0F6BD2; -webkit-box-shadow: 0 0 6px #000; border-color: #0F6BD2;}
+    to { background-color: #2D89F0; -webkit-box-shadow: 0 0 3px #333; border-color: #2D89F0;}
+}
+@-webkit-keyframes versionError {
+    from { background-color: #DA4F49; -webkit-box-shadow: 0 0 3px #333; border-color: #DA4F49;}
+    50% { background-color: #BD362F; -webkit-box-shadow: 0 0 6px #000; border-color: #BD362F;}
+    to { background-color: #DA4F49; -webkit-box-shadow: 0 0 3px #333; border-color: #DA4F49;}
 }

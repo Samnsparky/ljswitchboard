@@ -42,31 +42,31 @@ function fileDownloaderUtility() {
 	this.closeID = '';
 	this.closeEl = null;
 
-	var dlTemplate = ''
-	+ '<div id="{{newID}}">'
-	+ '<div id="lvmProgressBar" class="curProgressBar progress">'
-	+ '<div class="bar" style="width: 0%;"></div>'
-	+ '</div>'
-	+ '<table>'
-	+ '<tr>'
-	+ '<td>File Name:</td>'
-	+ '<td id="fileName" class="curFileName">{{fileName}}</td>'
-	+ '</tr>'
-	+ '<tr>'
-	+ '<td>Size:</td>'
-	+ '<td id="fileSize" class="curFileSize">{{fileSize}}</td>'
-	+ '</tr>'
-	+ '<tr>'
-	+ '<td>Speed:</td>'
-	+ '<td id="downloadSpeed" class="curDownloadSpeed"></td>'
-	+ '</tr>'
-	+ '<tr>'
-	+ '<td>Time Remaining:</td>'
-	+ '<td id="timeRemaining" class="curTimeRemaining"></td>'
-	+ '</tr>'
-	+ '</table>'
-	+ '<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">Show In Finder</button>'
-	+ '</div>';
+	var dlTemplate = '' +
+	'<div id="{{newID}}">' +
+	'<div id="lvmProgressBar" class="curProgressBar progress">' +
+	'<div class="bar" style="width: 0%;"></div>' +
+	'</div>' +
+	'<table>' +
+	'<tr>' +
+	'<td>File Name:</td>' +
+	'<td id="fileName" class="curFileName">{{fileName}}</td>' +
+	'</tr>' +
+	'<tr>' +
+	'<td>Size:</td>' +
+	'<td id="fileSize" class="curFileSize">{{fileSize}}</td>' +
+	'</tr>' +
+	'<tr>' +
+	'<td>Speed:</td>' +
+	'<td id="downloadSpeed" class="curDownloadSpeed"></td>' +
+	'</tr>' +
+	'<tr>' +
+	'<td>Time Remaining:</td>' +
+	'<td id="timeRemaining" class="curTimeRemaining"></td>' +
+	'</tr>' +
+	'</table>' +
+	'<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">Show In Finder</button>' +
+	'</div>';
 	this.downloadTemplate = handlebars.compile(dlTemplate);
 
 	this.setDebugMode = function(val) {
@@ -74,14 +74,14 @@ function fileDownloaderUtility() {
 			self.isDebugMode = true;
 		else
 			self.isDebugMode = false;
-	}
+	};
 	var isDefined = function(obj) {
 		if (typeof(obj) !== 'undefined') {
 			return true;
-		} else { 
+		} else {
 			return false;
 		}
-	}
+	};
 
 	var getWindowsDownloadsPath = function() {
 		var userDirectory = process.env.HOMEPATH;
@@ -96,7 +96,7 @@ function fileDownloaderUtility() {
 			}
 		}
 		return '';
-	}
+	};
 	var getNixDownloadsPath = function() {
 		var userDirectory = process.env.HOME;
 		if (isDefined(userDirectory)) {
@@ -106,7 +106,7 @@ function fileDownloaderUtility() {
 			}
 		}
 		return '';
-	}
+	};
 	var windowsPath = getWindowsDownloadsPath();
 	var nixPath = getNixDownloadsPath();
 	var defaultDownloadDirectory = {
@@ -133,7 +133,7 @@ function fileDownloaderUtility() {
 		} else {
 			return (numBytes/gb).toPrecision(2) + 'GB';
 		}
-	}
+	};
 	var onStartDefaultFunc = function(info) {
 		var pageElements = null;
 		if(self.isInitialized) {
@@ -187,7 +187,7 @@ function fileDownloaderUtility() {
 				statusBar.format.percentage (stats.percentage)
 			);
 			process.stdout.cursorTo (0);
-		}
+		};
 		if(self.isInitialized) {
 			if(isDefined($)) {
 				console.log('Update Func...',stats.currentSize,stats.remainingTime);
@@ -232,7 +232,7 @@ function fileDownloaderUtility() {
 		} else if (url.search('https://') !== -1) {
 			reqLib = https;
 		} else {
-			console.error('Bad Url, http/https not found')
+			console.error('Bad Url, http/https not found');
 			defered.reject();
 		}
 
@@ -245,12 +245,12 @@ function fileDownloaderUtility() {
 
 			var toMegabytes = function(numBytes) {
 				return Number((body.length/Math.pow(2,20)).toPrecision(3));
-			}
+			};
 			var fileSize = res.headers["content-length"];
 
 			try {
-				bar = statusBar.create ({  
-					total: res.headers["content-length"] 
+				bar = statusBar.create ({
+					total: res.headers["content-length"]
 				});
 
 				bar.on ("render", function (stats){
@@ -258,7 +258,7 @@ function fileDownloaderUtility() {
 				});
 				res.pipe (bar);
 			} catch (err) {
-				console.log('Error Encountered',err)
+				console.log('Error Encountered',err);
 			}
 			res.on('data', function (chunk) {
 				bodyNum += 1;
@@ -302,12 +302,13 @@ function fileDownloaderUtility() {
 				newID:safeName,
 				statusCode:res.statusCode,
 				headers:res.headers
-			})
+			});
 		};
 		var handleRequest = function(res) {
 			if (res.statusCode === 200) {
 				handleResponse(res);
 			} else {
+				curRequest.end();
 				curRequest.abort();
 				defered.reject({
 					// result:res,
@@ -319,16 +320,22 @@ function fileDownloaderUtility() {
 			var curRequest = reqLib.get(url, handleRequest)
 			.on ("error", function(error) {
 				if (bar) bar.cancel ();
-				console.error('file_downloader.js error',error);
 				defered.reject(error);
-			})
+			});
+			curRequest.setTimeout( 5000, function( ) {
+				if (bar) bar.cancel ();
+				console.error('file_downloader.js timeout');
+				curRequest.end();
+				curRequest.abort();
+				defered.reject('timeout-err');
+			});
 		} else {
 			var errStr = 'defaultDownloadDirectory is blank';
 			console.error(errStr);
 			defered.reject(errStr);
 		}
 		return defered.promise;
-	}
+	};
 
 	// Define functions so utility can automaticaly configure/control the 
 	// downloads bar of K3.
@@ -349,8 +356,8 @@ function fileDownloaderUtility() {
 		console.log('file_downloader.js closeButton');
 		self.htmlEl.slideUp(function() {
 			self.downloadEl.html('');
-		});	
-	}
+		});
+	};
 	
 	// Define self object as 'this' to mimic python
 	var self = this;
@@ -365,26 +372,12 @@ if(FILE_DOWNLOADER_UTILITY.isDebugMode) {
 	// var url = "http://labjack.com/robots.txt";
 
 	FILE_DOWNLOADER_UTILITY.setDebugMode(true);
-	// FILE_DOWNLOADER_UTILITY.downloadFile(url, {
-	// 	"onUpdate": function(stats,statusBar) {
-	// 		process.stdout.write (
-	// 			path.basename (url) + " " +
-	// 			statusBar.format.storage (stats.currentSize) + " " +
-	// 			statusBar.format.speed (stats.speed) + " " +
-	// 			statusBar.format.time (stats.elapsedTime) + " " +
-	// 			statusBar.format.time (stats.remainingTime) + " [" +
-	// 			statusBar.format.progressBar (stats.percentage) + "] " +
-	// 			statusBar.format.percentage (stats.percentage)
-	// 		);
-	// 		process.stdout.cursorTo (0);
-	// 	}
-	// })
 	FILE_DOWNLOADER_UTILITY.downloadFile(url)
 	.then(function(info) {
 		console.log('success!',info);
 	}, function(error) {
 		console.log('Error :(',error);
-	})
+	});
 } else {
 	console.log('file_downloader.js runing in html mode');
 }

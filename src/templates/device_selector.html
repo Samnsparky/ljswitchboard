@@ -3,32 +3,25 @@
     <h1>Select Devices <button id="refresh-button" class="btn btn-primary">Refresh Devices >></button><button id="finish-button" class="btn btn-primary">Continue >></button></h1>
     <div id="versionNumbers" class="labjackVersions">
         <h4>Versions</hr>
-        <table>
-            <tr id="kipling" class="lvm_link">
+        <table class="table">
+            <tr id="kipling" class="lvm_link" title="Up to date">
                 <td class="ljVersionNumbers lvm_name">Kipling</td>
                 <td class="ljVersionNumbers lvm_version">{{kiplingVersionNumber}}</td>
             </tr>
-            <tr id="ljm" class="lvm_link">
+            <tr id="ljm" class="lvm_link" title="Up to date">
                 <td class="ljVersionNumbers lvm_name">LJM</td>
                 <td class="ljVersionNumbers lvm_version">{{ljmVersionNumber}}</td>
             </tr>
-            <tr id="ljm_wrapper" class="lvm_link">
+            <tr id="ljm_wrapper" class="lvm_link" title="Up to date">
                 <td class="ljVersionNumbers lvm_name">LJM Wrapper</td>
                 <td class="ljVersionNumbers lvm_version">{{ljmWrapperVersionNumber}}</td>
             </tr>
         </table>
-        <button id="showUpgradeLinks" class="upgradeGuiControlButton btn btn-info">View Updates</button>
+        <button id="showUpgradeLinks" class="upgradeGuiControlButton btn btn-info" style="display:none">View Updates</button>
     </div>
     <div id="lvm_upgrade_box" class="labjackVersions" style="display:none">
         <h4>Available Upgrades</h4>
-        <table>
-            {{#upgradeLinks}}
-            <tr id="{{name}}" class="lvm_upgradeLinkljVersionNumbers">
-                <td class="ljVersionNumbers lvm_versionName">{{name}}</td>
-                <td class="ljVersionNumbers lvm_versionLink"><button class="upgradeButton btn btn-link" href="{{upgradeLink}}" title="Click to Download and Install, {{name}}: {{versionType}}, {{versionInfo}}">Download</button></td>
-            </tr>
-            {{/upgradeLinks}}
-        </table>
+        <table id="upgradeLinksList"></table>
         <button id="closeUpgradeLinkWindow" class="upgradeGuiControlButton btn btn-info">Close</button>
     </div>
     <div id="alert-message" class="alert">

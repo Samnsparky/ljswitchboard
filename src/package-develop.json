@@ -36,5 +36,6 @@
     "sprintf":  "~0.1.3"
   },
   "enableStartupConfig":true,
-  "buildType": "develop"
+  "buildType": "develop",
+  "frame": false
 }

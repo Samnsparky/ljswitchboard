@@ -346,65 +346,6 @@ function renderDeviceSelector()
         if (devices.length === 0)
             context.noDevices = true;
 
-        // Define variable to hold available upgrade options for K3 and LJM
-        var upgradeLinks = [];
-
-        // If there wasn't an issue collecting online fw versions etc. 
-        if(!LABJACK_VERSION_MANAGER.isIssue()) {
-            // Function to help discover what isn't undefined & prevent errors.
-            var isReal = function(objA, objB, objC) {
-                var retVar = typeof(objA) !== 'undefined';
-                retVar &= typeof(objB) !== 'undefined';
-                retVar &= typeof(objC) !== 'undefined';
-                return retVar;
-            }
-            // Function to capitalize first letter of string.
-            var formatUpgradeName = function(upgradeName) {
-                var retStr = upgradeName.substring(0, 1).toUpperCase()
-                retStr += upgradeName.substring(1);
-                return retStr;
-            }
-            // Function to parse & add to linkInfo object.
-            var appendInfo = function(linkInfo) {
-                var key = linkInfo.key;
-                var splitDataA = key.split('_');
-                var versionType = formatUpgradeName(splitDataA[0]);
-                var splitDataB = splitDataA[1].split('-');
-                var platformInfo = formatUpgradeName(splitDataB[0]);
-                var versionInfo = splitDataB[1];
-
-                // Add formatted info to the linkInfo object
-                linkInfo.versionType = versionType;
-                linkInfo.platformInfo = platformInfo;
-                linkInfo.versionInfo = versionInfo;
-                return linkInfo;
-            }
-
-            // Save reference to info for shorter names
-            var info = LABJACK_VERSION_MANAGER.dataCache;
-
-            // Check to make sure each link and data exists before adding it
-            
-            // Check and add Kipling info
-            if (isReal(info.kipling, info.kipling.beta, info.kipling.beta[0])) {
-                var k3 = info.kipling.beta[0];
-                k3 = appendInfo(k3);
-                k3.name = "Kipling";
-                upgradeLinks.push(k3);
-            }
-
-            // Check and add LJM info
-            if (isReal(info.ljm, info.ljm.current, info.ljm.current[0])) {
-                var ljm = info.ljm.current[0];
-                ljm = appendInfo(ljm);
-                ljm.name = "LJM";
-                upgradeLinks.push(ljm);
-            }
-        }
-        // Save the upgradeLinks array to the context that used during rendering
-        console.log('upgradeLinks', upgradeLinks);
-        context.upgradeLinks = upgradeLinks;
-
         // Just before rendering the template, hide the "searching for devices"
         // message
         $('#device-search-msg').hide();

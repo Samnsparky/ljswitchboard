@@ -11,6 +11,8 @@ var request = require('request');
 var async = require('async');
 var dict = require('dict');
 
+var handlebars = require('handlebars');
+
 function labjackVersionManager() {
 	this.kiplingUpdateLinks = {
 		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling_win.exe",
@@ -194,22 +196,23 @@ function labjackVersionManager() {
 				var options = {
 					'url': url,
 					'timeout': 2000,
-				}
+				};
 				request(
 					options,
 					function (error, response, body) {
+						var message = '';
+						var err = null;
 						if (error) {
 							// Report a TCP Level error likely means computer is not
 							// connected to the internet.
-							var message = '';
 							if (error.code === 'ENOTFOUND') {
-								message = "TCP Error, computer not connected to network: "
+								message = "TCP Error, computer not connected to network: ";
 							} else if(error.code === 'ETIMEDOUT') {
-								message = "TCP Error, no internet connection: "
+								message = "TCP Error, no internet connection: ";
 							} else {
-								message = "Unknown TCP Error: "
+								message = "Unknown TCP Error: ";
 							}
-							var err = {
+							err = {
 								"num": -1,
 								"str": message + error.toString(),
 								"quit": true,
@@ -221,14 +224,14 @@ function labjackVersionManager() {
 							callback(err);
 						} else if (response.statusCode != 200) {
 							// Report a http error, likely is 404, page not found.
-							var message = "Got Code: ";
+							message = "Got Code: ";
 							message += response.statusCode.toString();
 							message += "; loading: " + url;
 							message += "; name: " + name;
 							message += "; type: " + urlInfo.type;
-							var err = {
+							err = {
 								"num": response.statusCode,
-								"str": message, 
+								"str": message,
 								"quit": false,
 								"url": url
 							};
@@ -255,9 +258,9 @@ function labjackVersionManager() {
 		var systemType = self.getLabjackSystemType();
 		var platformDependent = self.urlDict[name].platformDependent;
 		
-		console.log('name',name);
-		console.log('is dependent',platformDependent);
-		console.log('systemType',systemType);
+		// console.log('name',name);
+		// console.log('is dependent',platformDependent);
+		// console.log('systemType',systemType);
 		
 		self.infoCache[name] = {};
 		self.dataCache[name] = {};
@@ -479,7 +482,7 @@ function labjackVersionManager() {
 			issue = {"type": "none","data":null};
 		}
 		return issue;
-	}
+	};
 	this.waitForData = function() {
 		var defered = q.defer();
 		var checkInterval = 100;
@@ -490,7 +493,7 @@ function labjackVersionManager() {
 		// out or resolves to the defered q object.
 		var isComplete = function() {
 			return !(self.isDataComplete || self.isError);
-		}
+		};
 		var finishFunc = function() {
 			console.log('version_manager.js - Num Iterations',iteration);
 			if(self.isError) {
@@ -498,7 +501,7 @@ function labjackVersionManager() {
 			} else {
 				defered.resolve(self.infoCache);
 			}
-		}
+		};
 		var waitFunc = function() {
 			if(isComplete()) {
 				if (iteration < maxCheck) {
@@ -510,7 +513,7 @@ function labjackVersionManager() {
 			} else {
 				finishFunc();
 			}
-		}
+		};
 
 		// if the data isn't complete then 
 		if(isComplete()) {
@@ -519,24 +522,24 @@ function labjackVersionManager() {
 			finishFunc();
 		}
 		return defered.promise;
-	}
+	};
 	this.getLabjackSystemType = function() {
 		var ljSystemType = '';
 		var ljPlatformClass = {
 			'ia32': '32',
-		    'x64': '64',
-		    'arm': 'arm'
+			'x64': '64',
+			'arm': 'arm'
 		}[process.arch];
 		var ljPlatform = {
 			'linux': 'linux',
-		    'linux2': 'linux',
-		    'sunos': 'linux',
-		    'solaris': 'linux',
-		    'freebsd': 'linux',
-		    'openbsd': 'linux',
-		    'darwin': 'mac',
-		    'mac': 'mac',
-		    'win32': 'win',
+			'linux2': 'linux',
+			'sunos': 'linux',
+			'solaris': 'linux',
+			'freebsd': 'linux',
+			'openbsd': 'linux',
+			'darwin': 'mac',
+			'mac': 'mac',
+			'win32': 'win',
 		}[process.platform];
 		if(typeof(ljPlatform) !== 'undefined') {
 			if(ljPlatform === 'linux') {
@@ -549,15 +552,205 @@ function labjackVersionManager() {
 			console.error('Running Kipling on Un-supported System Platform');
 		}
 		return ljSystemType;
-	}
+	};
 	this.getInfoCache = function() {
 		return self.infoCache;
+	};
+
+	var isDefined = function(ele) {
+		if(typeof(ele) !== 'undefined') {
+			return true;
+		} else {
+			return false;
+		}
+	};
+
+	this.upgradeLinkTemplate = handlebars.compile(
+		'<tr id="{{name}}" class="lvm_upgradeLinkljVersionNumbers">' +
+			'<td class="ljVersionNumbers lvm_versionName">{{name}}</td>' +
+			'<td class="ljVersionNumbers lvm_versionLink">' +
+				'<button ' +
+					'class="upgradeButton btn btn-link" ' +
+					'href="{{upgradeLink}}" ' +
+					'title="Click to Download and Install, ' +
+						'{{name}}: {{versionType}}, {{versionInfo}}"' +
+					'>Download' +
+				'</button>' +
+			'</td>' +
+		'</tr>'
+	);
+	this.controls = {};
+	this.initializeLVM = function(pageElements) {
+		// Save the versionNumbers id and element
+		var versionNumbersID = '#' + pageElements.versionNumbersID;
+		self.controls.versionNumbersID = versionNumbersID;
+		self.controls.versionNumbersEl = $(versionNumbersID);
+
+		// Save the showLinksButton id and element
+		var showLinksButtonID = '#' + pageElements.showLinksButtonID;
+		self.controls.showLinksID = showLinksButtonID;
+		self.controls.showLinksEl = $(versionNumbersID +' '+ showLinksButtonID);
+
+		// Save the upgradeLinks id and element
+		var upgradeLinksID = '#' + pageElements.upgradeLinksID;
+		self.controls.upgradeLinksID = pageElements.upgradeLinksID;
+		self.controls.upgradeLinksEl = $(upgradeLinksID);
+
+		// Save the linksList id and element
+		var linksListID = '#' + pageElements.linksListID;
+		self.controls.linksListID = pageElements.linksListID;
+		self.controls.linksListEl = $(upgradeLinksID +' '+ linksListID);
+
+		// Save the hideLinksButton id and element
+		var hideLinksButtonID = '#' + pageElements.hideLinksButtonID;
+		self.controls.hideLinksID = pageElements.hideLinksButtonID;
+		self.controls.hideLinksEl = $(upgradeLinksID +' '+ hideLinksButtonID);
+
+		// Unbind button listeners
+		self.controls.showLinksEl.unbind();
+		self.controls.hideLinksEl.unbind();
+
+		// Bind new listeners
+		self.controls.showLinksEl.bind('click', function() {
+			self.controls.versionNumbersEl.hide();
+			self.controls.upgradeLinksEl.show();
+		});
+		self.controls.hideLinksEl.bind('click', function() {
+			self.controls.upgradeLinksEl.hide();
+			self.controls.versionNumbersEl.show();
+		});
+
+		//--------------- Populate list of upgrade links -----------------------
+		// Clear previous elements from list
+		self.controls.linksListEl.html('');
+
+		var initializeLVMListing = function() {
+			var upgradeLinks = [];
+			var linksStr = '';
+
+			// Function to help discover what isn't undefined & prevent errors.
+			var isReal = function(objA, objB, objC) {
+				var retVar = typeof(objA) !== 'undefined';
+				retVar &= typeof(objB) !== 'undefined';
+				retVar &= typeof(objC) !== 'undefined';
+				return retVar;
+			};
+			// Function to capitalize first letter of string.
+			var formatUpgradeName = function(upgradeName) {
+				var retStr = upgradeName.substring(0, 1).toUpperCase();
+				retStr += upgradeName.substring(1);
+				return retStr;
+			};
+			// Function to parse & add to linkInfo object.
+			var appendInfo = function(linkInfo) {
+				var key = linkInfo.key;
+				var splitDataA = key.split('_');
+				var versionType = formatUpgradeName(splitDataA[0]);
+				var splitDataB = splitDataA[1].split('-');
+				var platformInfo = formatUpgradeName(splitDataB[0]);
+				var versionInfo = splitDataB[1];
+
+				// Add formatted info to the linkInfo object
+				linkInfo.versionType = versionType;
+				linkInfo.platformInfo = platformInfo;
+				linkInfo.versionInfo = versionInfo;
+				return linkInfo;
+			};
+			var clearHighlighting = function(ele) {
+				var classNames = ['error','success','info','warning','lvm_version_error','lvm_version_warning'];
+				classNames.forEach(function(className) {
+					ele.removeClass(className);
+				});
+			};
+			var showWarning = function(ele) {
+				clearHighlighting(ele);
+				ele.addClass('lvm_version_warning');
+				ele.attr('title', 'New beta version available');
+			};
+			var showError = function(ele) {
+				clearHighlighting(ele);
+				ele.addClass('lvm_version_error');
+				ele.attr('title', 'New version available');
+			};
+			// Save reference to info for shorter names
+			var info = LABJACK_VERSION_MANAGER.dataCache;
+
+			// Check to make sure each link and data exists before adding it
+
+			// Check and add Kipling info
+			if (isReal(info.kipling, info.kipling.beta, info.kipling.beta[0])) {
+				var k3 = info.kipling.beta[0];
+				k3 = appendInfo(k3);
+				k3.name = "Kipling";
+				upgradeLinks.push(k3);
+
+				var kiplingEl =self.controls.versionNumbersEl.find('#kipling');
+				showError(kiplingEl);
+			}
+
+			// Check and add LJM info
+			if (isReal(info.ljm, info.ljm.current, info.ljm.current[0])) {
+				var ljm = info.ljm.current[0];
+				ljm = appendInfo(ljm);
+				ljm.name = "LJM";
+				upgradeLinks.push(ljm);
+
+				var ljmElement = self.controls.versionNumbersEl.find('#ljm');
+				showWarning(ljmElement);
+			}
+
+			console.log('version_manager.js links:',upgradeLinks);
+
+			// Build linksStr which will get inserted into the linksList element
+			upgradeLinks.forEach(function(linkInfo) {
+				linksStr += self.upgradeLinkTemplate(linkInfo);
+			});
+
+			// Insert HTML string into the list element
+			self.controls.linksListEl.html(linksStr);
+
+			// Show button allowing user to navigate to upgrade links window
+			self.controls.showLinksEl.fadeIn();
+
+			// Connect upgrade button listeners
+			self.controls.linksListEl.find('.upgradeButton')
+			.bind('click',function(event) {
+				console.log('Clicked!',event.toElement);
+
+				var href = event.toElement.attributes.href.value;
+				FILE_DOWNLOADER_UTILITY.downloadFile(href)
+				.then(function(info) {
+					console.log('success!',info);
+				}, function(error) {
+					console.log('Error :(',error);
+				});
+			});
+		};
+		// Check to see if links were acquired appropriately
+		if(!self.isIssue()) {
+			initializeLVMListing();
+		} else {
+			// Perform fail-operations
+			self.getAllVersions()
+			.then(function(data) {
+				initializeLVMListing();
+				if(self.isIssue()) {
+					var issue =self.getIssue();
+					console.warn('!! - LVM Warming',issue);
+				}
+			}, function(err) {
+				if (self.isIssue()) {
+					var issue =self.getIssue();
+					console.error('!! - LVM Error',issue);
+				}
+			});
+		}
 	};
 	var self = this;
 }
 var LABJACK_VERSION_MANAGER = new labjackVersionManager();
 
-LABJACK_VERSION_MANAGER.getAllVersions()
+LABJACK_VERSION_MANAGER.getAllVersions();
 LABJACK_VERSION_MANAGER.waitForData()
 .then(function(data) {
 	console.log('dataCache',LABJACK_VERSION_MANAGER.dataCache);

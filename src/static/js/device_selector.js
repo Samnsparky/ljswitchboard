@@ -440,7 +440,6 @@ function onResized() {
     $('.device-pane').height((num-10).toString()+'px');
 }
 
-var LAST_UPGRADE_LINK_CLICKED = null;
 function attachUpgradeLinkListeners() {
     console.log('HERE, device_selector.js');
     $('.labjackVersions #showUpgradeLinks').unbind();
@@ -455,7 +454,6 @@ function attachUpgradeLinkListeners() {
     });
 
     $('.labjackVersions .upgradeButton').bind('click',function(event) {
-        LAST_UPGRADE_LINK_CLICKED = event;
         console.log('Clicked!',event.toElement);
 
         var href = event.toElement.attributes.href.value;
@@ -491,5 +489,12 @@ $('#device-selector-holder').ready(function(){
     var starter = new kiplingStartupManager();
     starter.autoStart();
 
-    attachUpgradeLinkListeners();
+    // attachUpgradeLinkListeners();
+    LABJACK_VERSION_MANAGER.initializeLVM({
+        'versionNumbersID':'versionNumbers',
+        'showLinksButtonID':'showUpgradeLinks',
+        'upgradeLinksID':'lvm_upgrade_box',
+        'linksListID':'upgradeLinksList',
+        'hideLinksButtonID':'closeUpgradeLinkWindow'
+    });
 });
