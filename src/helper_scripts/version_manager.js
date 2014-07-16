@@ -104,8 +104,17 @@ function labjackVersionManager() {
 		ljmDownloadsPage: function(listingArray, pageData, urlInfo, name) {
 			var LJM_REGEX;
 			var platform = urlInfo.type.split('_')[1];
+			console.log('Platform',platform);
+			var match;
+			var getMatch = true;
 			if (platform === 'win') {
 				LJM_REGEX = /href=\".*LabJackMUpdate-([\d]\.[\d]+)\.exe(?=\"\stype)/g;
+				match = LJM_REGEX.exec(pageData);
+				if(!match) {
+					LJM_REGEX = /href=\".*LabJackMUpgrade-([\d]\.[\d]+)\.exe(?=\"\stype)/g;
+					match = LJM_REGEX.exec(pageData);
+				}
+				getMatch = false;
 			} else if (platform === 'mac') {
 				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-Mac\.tgz(?=\"\stype)/g;
 			} else if (platform === 'linux32') {
@@ -113,15 +122,23 @@ function labjackVersionManager() {
 			} else if (platform === 'linux64') {
 				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-Ubuntu.*-x86\_64.*.gz(?=\"\stype)/g;
 			}
-			var match = LJM_REGEX.exec(pageData);
-			var targetURL = match[0].replace(/href\=\"/g, '');
-			var version = match[1];
-			listingArray.push({
-					"upgradeLink":targetURL,
-					"version":version,
-					"type":urlInfo.type,
-					"key":urlInfo.type + '-' + version
-				});
+			if(getMatch) {
+				match = LJM_REGEX.exec(pageData);
+			}
+
+			if(match) {
+				var targetURL = match[0].replace(/href\=\"/g, '');
+				var version = match[1];
+				console.log('Url:',targetURL);
+				listingArray.push({
+						"upgradeLink":targetURL,
+						"version":version,
+						"type":urlInfo.type,
+						"key":urlInfo.type + '-' + version
+					});
+			} else {
+				console.error('Bad LJM_REGEX strings');
+			}
 			return;
 		},
 		/**
@@ -566,7 +583,7 @@ function labjackVersionManager() {
 	};
 
 	this.upgradeLinkTemplate = handlebars.compile(
-		'<tr id="{{name}}" class="lvm_upgradeLinkljVersionNumbers">' +
+		'<tr id="{{safe_name}}" class="lvm_upgradeLinkljVersionNumbers">' +
 			'<td class="ljVersionNumbers lvm_versionName">{{name}}</td>' +
 			'<td class="ljVersionNumbers lvm_versionLink">' +
 				'<button ' +
@@ -673,19 +690,33 @@ function labjackVersionManager() {
 				ele.attr('title', 'New version available');
 			};
 			// Save reference to info for shorter names
-			var info = LABJACK_VERSION_MANAGER.dataCache;
+			var info = self.dataCache;
 
 			// Check to make sure each link and data exists before adding it
-
 			// Check and add Kipling info
+			var kiplingEl;
 			if (isReal(info.kipling, info.kipling.beta, info.kipling.beta[0])) {
-				var k3 = info.kipling.beta[0];
-				k3 = appendInfo(k3);
-				k3.name = "Kipling";
-				upgradeLinks.push(k3);
+				var k3Beta = info.kipling.beta[0];
+				k3Beta = appendInfo(k3Beta);
+				k3Beta.name = "Kipling (Beta)";
+				k3Beta.safe_name = "kipling_beta";
 
-				var kiplingEl =self.controls.versionNumbersEl.find('#kipling');
-				showError(kiplingEl);
+				if (k3Beta.version > pageElements.kiplingVersion) {
+					upgradeLinks.push(k3Beta);
+					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
+					showWarning(kiplingEl.find('.lvm_version'));
+				}
+			}
+			if (isReal(info.kipling, info.kipling.current, info.kipling.current[0])) {
+				var k3Current = info.kipling.current[0];
+				k3Current = appendInfo(k3Current);
+				k3Current.name = "Kipling";
+				k3Current.safe_name = "kipling_current";
+				if (k3Current.version > pageElements.kiplingVersion) {
+					upgradeLinks.push(k3Current);
+					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
+					showError(kiplingEl.find('.lvm_version'));
+				}
 			}
 
 			// Check and add LJM info
@@ -693,10 +724,14 @@ function labjackVersionManager() {
 				var ljm = info.ljm.current[0];
 				ljm = appendInfo(ljm);
 				ljm.name = "LJM";
-				upgradeLinks.push(ljm);
+				ljm.safe_name = "ljm";
 
-				var ljmElement = self.controls.versionNumbersEl.find('#ljm');
-				showWarning(ljmElement);
+				if (ljm.version > pageElements.ljmVersion) {
+					upgradeLinks.push(ljm);
+
+					var ljmElement = self.controls.versionNumbersEl.find('#ljm');
+					showError(ljmElement.find('.lvm_version'));
+				}
 			}
 
 			console.log('version_manager.js links:',upgradeLinks);
@@ -710,7 +745,9 @@ function labjackVersionManager() {
 			self.controls.linksListEl.html(linksStr);
 
 			// Show button allowing user to navigate to upgrade links window
-			self.controls.showLinksEl.fadeIn();
+			if (upgradeLinks.length > 0) {
+				self.controls.showLinksEl.fadeIn();
+			}
 
 			// Connect upgrade button listeners
 			self.controls.linksListEl.find('.upgradeButton')

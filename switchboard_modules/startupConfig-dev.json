@@ -1,5 +1,5 @@
 {
-    "autoConnectToDevices": false,
+    "autoConnectToDevices": true,
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'",
     "ljmDeviceParameters":
     [
@@ -66,6 +66,6 @@
         }
     ],
     "displayDevTools": false,
-    "overrideAutoModuleLoad": false,
-    "moduleName": "analog_outputs_fw"
+    "overrideAutoModuleLoad": true,
+    "moduleName": "register_matrix"
 }

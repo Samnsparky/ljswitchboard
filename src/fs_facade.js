@@ -8,6 +8,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var dict = require('dict');
 
 var handlebars = require('handlebars');
 var os = require('os');
@@ -24,6 +25,7 @@ var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
 
 var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
 
+var FS_FACADE_TEMPLATE_CACHE = dict();
 var fileSaveAsID = "#file-save-dialog-hidden";
 var getFileLoadID = "#file-dialog-hidden";
 
@@ -181,21 +183,26 @@ exports.getParentDir = function() {
  *      be the String rendred html.
 **/
 exports.renderTemplate = function(location, context, onError, onSuccess) {
-    fs.exists(location, function(exists) {
-        if (exists) {
-            fs.readFile(location, 'utf8',
-                function (error, template) {
-                    if (error) {
-                        onError(error);
-                    } else {
-                        onSuccess(handlebars.compile(template)(context));
+    if (FS_FACADE_TEMPLATE_CACHE.has(location)) {
+        var template = FS_FACADE_TEMPLATE_CACHE.get(location);
+        onSuccess(handlebars.compile(template)(context));
+    } else {
+        fs.exists(location, function(exists) {
+            if (exists) {
+                fs.readFile(location, 'utf8',
+                    function (error, template) {
+                        if (error) {
+                            onError(error);
+                        } else {
+                            onSuccess(handlebars.compile(template)(context));
+                        }
                     }
-                }
-            );
-        } else {
-            onError(new Error('Template ' + location + ' could not be found.'));
-        }
-    });
+                );
+            } else {
+                onError(new Error('Template ' + location + ' could not be found.'));
+            }
+        });
+    }
 };
 
 // TODO: Move to module manager

@@ -21,10 +21,25 @@
     color: #888888;
     cursor: pointer;
 }
+#search-button {
+    float:left;
+}
+.search-progress-status {
+    float: left;
+    height: 30px;
+    margin-top: -3px;
+}
 
 .close-value-editor-button
 {
     margin-bottom: 1px;
+    width: 20px;
+}
+.register-value-obj {
+    max-width: 90px;
+}
+.value-edit-object {
+    display: inline-block;
 }
 
 .write-value-editor-button
@@ -42,25 +57,25 @@
 
 .value-editor-button:hover
 {
-    background-color: #AAAAAA;
+    background-color: #AAAAAA;margin-top: -4px;
     cursor: pointer;
 }
 
 .write-controls-holder
 {
-    height: 11px;
-    width: 120px;
-    font-size: 12px;
+    height: 24px;
+    width: 70px;
+    font-size: 22px;
 }
 
 .write-controls-holder .write-confirm-msg
 {
-    float: left;
+    float: right;
+    height: 33px;
 }
 
 .write-controls-holder .write-value-editor-button
 {
-    float: right;
 }
 
 .value-edit-controls
@@ -82,7 +97,7 @@
 
 .write-confirm-msg
 {
-    margin-top: 4px;
+    margin-top: -4px;
 }
 
 .register-description
@@ -209,7 +224,7 @@
     border-style: solid;
     border-color: black transparent transparent transparent;
     top: 30px;
-    left: 0px;
+    left: 0;
 }
 
 #register-matrix-body table
@@ -236,8 +251,8 @@
     border: 1px solid #ccc;
     border: 1px solid rgba(0, 0, 0, 0.2);
     -webkit-border-radius: 8px;
-    -moz-border-radius:0px;
-    border-radius: 0px;
+    -moz-border-radius:0;
+    border-radius: 0;
     -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
     -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
     box-shadow: 0 5px 10px rgba(0,0,0,.2);
@@ -253,7 +268,7 @@
   background-color: #0097cf;
 }
 .tt-suggestion p {
-  margin: 0px;
+  margin: 0;
 }
 .twitter-typeahead {
     width: 200%;
@@ -266,5 +281,6 @@
 }
 #ljm-register-search-box .tt-dropdown-menu {
   max-height: 350px;
+  max-width:65%;
   overflow-y: auto;
 }

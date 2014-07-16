@@ -6,7 +6,15 @@
         <!-- <div id="the-basics">
             <input class="typeahead" type="text" placeholder="States of USA">
         </div> -->
-        <div><button id="search-button" class="btn">search</button></div>
+        <div>
+            <button id="search-button" class="btn">search</button>
+            <div id="searching-status" class="search-progress-status" style="display:none;">
+                <div class="progress progress-indeterminate">
+                    <div class="win-ring small"></div>
+                </div>
+            </div>
+        </div>
+        
     </div>
     <div class="span5" id="tag-dropdown-holder">
         Tag: <div class="btn-toolbar">
@@ -44,6 +52,7 @@
             </tr>
         </thead>
         <tbody>
+            {{!--
             {{#registers}}
             <tr class="register-row big-table-row register-overview-row">
                 <td>{{address}}</td>
@@ -68,24 +77,28 @@
                 </td>
             </tr>
             {{/registers}}
+            --}}
         </tbody>
     </table>
+    <div id="page-content" class="well"></div>
+    <div class="text-center">
+        <ul id="pagination-demo" class="pagination-sm"></ul>
+    </div>
     {{^hasRegisters}}
     <div id="no-reg-msg">No registers found.</div>
     {{/hasRegisters}}
 </div>
 <script>
 $('#register-matrix-body').ready(function () {
-    var options = {
-        rowsPerPage : 10,
-        firstArrow : (new Image()).src="static/img/first.gif",
-        prevArrow : (new Image()).src="static/img/prev.gif",
-        lastArrow : (new Image()).src="static/img/last.gif",
-        nextArrow : (new Image()).src="static/img/next.gif",
-        ignoreRows : $('tbody tr:odd', $('#register-matrix')),
-        topNav : false
-    };
-
-    $('#register-matrix').tablePagination(options);
+    // var options = {
+    //     rowsPerPage : 10,
+    //     firstArrow : (new Image()).src="static/img/first.gif",
+    //     prevArrow : (new Image()).src="static/img/prev.gif",
+    //     lastArrow : (new Image()).src="static/img/last.gif",
+    //     nextArrow : (new Image()).src="static/img/next.gif",
+    //     ignoreRows : $('tbody tr:odd', $('#register-matrix')),
+    //     topNav : false
+    // };
+    // $('#register-matrix').tablePagination(options);
 });
 </script>

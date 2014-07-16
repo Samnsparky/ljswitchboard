@@ -93,8 +93,7 @@ function connectNewDevice(event)
  *      the form serial-.... The serial number will be parsed and that device
  *      will be disconnected. AngularJS or equivalent should be used next time.
 **/
-function disconnectDevice(event)
-{
+function disconnectDevice(event) {
     var deviceInfo = event.target.id.split('-');
     var jqueryID = '#' + event.target.id;
     var serial = deviceInfo[0];
@@ -105,15 +104,13 @@ function disconnectDevice(event)
 
     var device = device_controller.getDeviceKeeper().getDevice(serial);
 
-    var onDeviceClosed = function(device)
-    {
+    var onDeviceClosed = function(device) {
         var deviceKeeper = device_controller.getDeviceKeeper();
 
         deviceKeeper.removeDevice(device);
         container.children('#connect-buttons').slideDown();
 
-        if(deviceKeeper.getNumDevices() === 0)
-        {
+        if(deviceKeeper.getNumDevices() === 0) {
             hideFinishButton();
         }
     };
@@ -128,8 +125,7 @@ function disconnectDevice(event)
  * Convenience function to show the button that allows the user to move past the
  * device selector. Should only be shown when >0 devices are connected.
 **/
-function showFinishButton()
-{
+function showFinishButton() {
     $('#finish-button').slideDown();
 }
 
@@ -140,8 +136,7 @@ function showFinishButton()
  * Convenience function to hide the button that allows the user to move past the
  * device selector. Should only be hidden when <1 devices are connected.
 **/
-function hideFinishButton()
-{
+function hideFinishButton() {
     $('#finish-button').slideUp();
 }
 
@@ -149,9 +144,8 @@ function hideFinishButton()
 /**
  * Hide the alert error display at the top of the screen.
 **/
-function closeAlert()
-{
-    $('#alert-message').fadeOut(function(){
+function closeAlert() {
+    $('#alert-message').fadeOut(function() {
         $('.device-selector-holder').css('margin-top', '45px');
     });
 }
@@ -163,8 +157,7 @@ function closeAlert()
  * Transition away from the device selector and replace it with the module
  * chome and starting module.
 **/
-function moveToModules()
-{
+function moveToModules() {
     renderTemplate(
         'module_chrome.html',
         {},
@@ -186,8 +179,7 @@ function moveToModules()
  *
  * @param {String} errorMessage The message to display.
 **/
-function showAlert(errorMessage)
-{
+function showAlert(errorMessage) {
     var message = OPEN_FAIL_MESSAGE(errorMessage);
     $('#error-display').html(message);
     $('.device-selector-holder').css('margin-top', '0px');
@@ -195,8 +187,7 @@ function showAlert(errorMessage)
 }
 
 
-function refreshDevices()
-{
+function refreshDevices() {
     renderDeviceSelector();
 }
 
@@ -214,14 +205,14 @@ function kiplingStartupManager() {
     this.loadConfigData = function() {
         var innerDeferred = q.defer();
         var filePath = fs_facade.getExternalURI('startupConfig.json');
-        if(gui.App.manifest.enableStartupConfig) {
+        if (gui.App.manifest.enableStartupConfig) {
             fs_facade.getJSON(
                 filePath,
-                function(){
+                function() {
                     console.log('startupConfig.json, fileNotFound');
                     innerDeferred.reject();
                 },
-                function(contents){
+                function(contents) {
                     innerDeferred.resolve(contents);
                 }
             );
@@ -234,7 +225,7 @@ function kiplingStartupManager() {
 
     this.startDevTools = function(configData) {
         var innerDeferred = q.defer();
-        if(typeof(configData.displayDevTools) === "boolean") {
+        if (typeof(configData.displayDevTools) === "boolean") {
             if(configData.displayDevTools){
                 // Display Dev-tools window, code ref:
                 // https://github.com/rogerwang/node-webkit/wiki/Debugging-with-devtools
@@ -248,8 +239,8 @@ function kiplingStartupManager() {
 
     this.checkIfAutoConfigure = function(configData) {
         var innerDeferred = q.defer();
-        if(configData.autoConnectToDevices !== undefined) {
-            if(configData.autoConnectToDevices){
+        if (configData.autoConnectToDevices !== undefined) {
+            if (configData.autoConnectToDevices){
                 innerDeferred.resolve(configData);
             } else {
                 innerDeferred.reject();
@@ -490,11 +481,14 @@ $('#device-selector-holder').ready(function(){
     starter.autoStart();
 
     // attachUpgradeLinkListeners();
+    console.log('HERE!');
     LABJACK_VERSION_MANAGER.initializeLVM({
-        'versionNumbersID':'versionNumbers',
-        'showLinksButtonID':'showUpgradeLinks',
-        'upgradeLinksID':'lvm_upgrade_box',
-        'linksListID':'upgradeLinksList',
-        'hideLinksButtonID':'closeUpgradeLinkWindow'
+        'versionNumbersID': 'versionNumbers',
+        'showLinksButtonID': 'showUpgradeLinks',
+        'upgradeLinksID': 'lvm_upgrade_box',
+        'linksListID': 'upgradeLinksList',
+        'hideLinksButtonID': 'closeUpgradeLinkWindow',
+        'ljmVersion': device_controller.ljm_driver.installedDriverVersion,
+        'kiplingVersion': gui.App.manifest.version
     });
 });

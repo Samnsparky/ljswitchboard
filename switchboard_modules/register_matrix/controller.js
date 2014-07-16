@@ -16,14 +16,20 @@ function addZero(x,n) {
     }
     return x;
 }
-
+var PRINTED_TIME_POSITION = 40;
 function reportTime(data) {
     var d = new Date();
     var h = addZero(d.getHours(), 2);
     var m = addZero(d.getMinutes(), 2);
     var s = addZero(d.getSeconds(), 2);
     var ms = addZero(d.getMilliseconds(), 3);
-    console.log(data,h + ":" + m + ":" + s + ":" + ms);
+    
+    var numTabs = PRINTED_TIME_POSITION-data.length;
+    var tabStr = '';
+    for (i = 0; i < numTabs; i++) {
+        tabStr += ' ';
+    }
+    console.log(data, tabStr + h + ":" + m + ":" + s + ":" + ms);
 }
 reportTime('Initializing Module');
 
@@ -36,6 +42,7 @@ var REGISTERS_TABLE_TEMPLATE_SRC = 'register_matrix/matrix.html';
 var REGISTER_WATCH_LIST_TEMPLATE_SRC = 'register_matrix/watchlist.html';
 
 var REGISTER_MATRIX_SELECTOR = '#register-matrix';
+var REGISTER_MATRIX_SELECTOR_OBJ = null;
 var REGISTER_WATCHLIST_SELECTOR = '#register-watchlist';
 
 var DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR =
@@ -507,47 +514,76 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
         'currentSearchTerm': currentSearchTerm
     };
 
+    var renderModule = function(renderedHTML) {
+        reportTime('renderRegisters-templateRendered');
+        if(REGISTER_MATRIX_SELECTOR_OBJ) {
+            REGISTER_MATRIX_SELECTOR_OBJ.html(renderedHTML);
+        } else {
+            REGISTER_MATRIX_SELECTOR_OBJ = $(REGISTER_MATRIX_SELECTOR);
+            REGISTER_MATRIX_SELECTOR_OBJ.html(renderedHTML);
+        }
+
+        // Initialize pagination table
+        $('#pagination-demo').twbsPagination({
+            totalPages: 35,
+            visiblePages: 7,
+            onPageClick: function (event, page) {
+                $('#page-content').text('Page ' + page);
+            }
+        });
+        
+        reportTime('renderRegisters-bindToToggles');
+        $('.toggle-info-button').unbind();
+        $('.toggle-info-button').bind('click',toggleRegisterInfo);
+
+        reportTime('renderRegisters-bindToLists');
+        $('.add-to-list-button').unbind();
+        $('.add-to-list-button').bind('click',function(event){
+            addToWatchList(event, entriesByAddress);
+        });
+
+        reportTime('renderRegisters-bindToTags');
+        $('.tag-selection-link').unbind();
+        $('.tag-selection-link').bind('click',function(event){
+            var tag = event.target.id.replace('-tag-selector', '');
+            searchRegisters(entries, tags, tag, currentSearchTerm);
+        });
+
+        reportTime('renderRegisters-bindToSearchButton');
+        $('#search-button').unbind();
+        $('#search-button').bind('click',function(event){
+            $('.typeahead').blur();
+            var term = $('#search-box').val();
+            searchRegisters(entries, tags, currentTag, term);
+        });
+
+        reportTime('renderRegisters-bindToSearchBox');
+        $('#search-box').keypress(function (e) {
+            if (e.which != 13)
+                return;
+            $('.typeahead').blur();
+            var term = $('#search-box').val();
+            searchRegisters(entries, tags, currentTag, term);
+        });
+        reportTime('renderRegisters-templateConnected');
+
+        // Redraw bug
+        runRedraw();
+
+        // Initialize Typeahead
+        initializeTypeahead();
+
+        deferred.resolve();
+    };
+
+    reportTime('renderRegisters-renderTemplate');
     fs_facade.renderTemplate(
         location,
         templateVals,
         showError,
-        function(renderedHTML)
-        {
-            $(REGISTER_MATRIX_SELECTOR).html(renderedHTML);
-
-            $('.toggle-info-button').click(toggleRegisterInfo);
-
-            $('.add-to-list-button').click(function(event){
-                addToWatchList(event, entriesByAddress);
-            });
-
-            $('.tag-selection-link').click(function(event){
-                var tag = event.target.id.replace('-tag-selector', '');
-                searchRegisters(entries, tags, tag, currentSearchTerm);
-            });
-
-            $('#search-button').click(function(event){
-                var term = $('#search-box').val();
-                searchRegisters(entries, tags, currentTag, term);
-            });
-
-            $('#search-box').keypress(function (e) {
-                if (e.which != 13)
-                    return;
-
-                var term = $('#search-box').val();
-                searchRegisters(entries, tags, currentTag, term);
-            });
-
-            // Redraw bug
-            runRedraw();
-
-            // Initialize Typeahead
-            initializeTypeahead();
-
-            deferred.resolve();
-        }
+        renderModule
     );
+    
 
     return deferred.promise;
 }
@@ -571,13 +607,20 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
 function searchRegisters(entries, allTags, tag, searchTerm)
 {
     var filteredEntries = entries;
-
+    $('#searching-status').show();
+    console.log('HERE 0');
     if(tag !== 'all')
     {
         filteredEntries = filteredEntries.filter(function(e){
-            return e.tags.indexOf(tag) != -1;
+            if(typeof(e.tags) === 'undefined') {
+                console.log('HERE!!',e,e.tags);
+                return false;
+            } else {
+                return e.tags.indexOf(tag) != -1;
+            }
         });
     }
+    console.log('HERE 1');
 
     var termLow = searchTerm.toLowerCase();
 
@@ -598,7 +641,12 @@ function searchRegisters(entries, allTags, tag, searchTerm)
         });
     }
 
-    renderRegistersTable(entries, allTags, filteredEntries, tag, searchTerm);
+    renderRegistersTable(entries, allTags, filteredEntries, tag, searchTerm)
+    .then(function() {
+        $('#searching-status').hide();
+    },function() {
+        $('#searching-status').hide();
+    });
 }
 
 
@@ -812,14 +860,14 @@ function refreshWatchList()
                         convValue = Number(value);
                     }
 
-                    $(rowSelector).find('.write-confirm-msg').slideDown(
+                    $(rowSelector).find('.write-confirm-msg').fadeIn(
                         function () {
                             selectedDevice.writeAsync(addressNum, convValue)
                             .then(
                                 function () {
                                     $(rowSelector).find(
                                         '.write-confirm-msg'
-                                    ).slideUp();
+                                    ).fadeOut();
                                 },
                                 function (err) {
                                     showError(err);

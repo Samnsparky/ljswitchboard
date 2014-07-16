@@ -34,7 +34,8 @@
     "simplesets": "~1",
     "sprintf-js": "~0",
     "sprintf":  "~0.1.3",
-    "status-bar": "~2"
+    "status-bar": "~2",
+    "tar":"~0.1"
   },
   "enableStartupConfig":false,
   "buildType": "debug"

@@ -124,10 +124,9 @@ var criticalErrorHandler = function(error)
 **/
 function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
 {
-    var onRender = function (renderedHTML)
-    {
+    var onRender = function (renderedHTML) {
         var appendToHead = function(data, filePath) {
-            try{
+            try {
                 $('head').append(data);
             } catch (err) {
                 var fpArray = filePath.split('/');
@@ -166,15 +165,13 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
         // -------------------- End of Cleanup Code --------------------
         $(dest).html(renderedHTML);
 
-        $.each(cssFiles, function (index, fileLoc)
-        {
-            if(internal)
+        $.each(cssFiles, function (index, fileLoc) {
+            if (internal)
                 fileLoc = fs_facade.getInternalURI(fileLoc);
             else
                 fileLoc = fs_facade.getExternalURI(fileLoc);
 
-            if(fileLoc === null)
-            {
+            if (fileLoc === null) {
                 onErr(new Error('Could not find ' + fileLoc + ' .'));
                 return;
             }
@@ -182,7 +179,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
                 cssHTML = LATE_LOADED_CSS_TEMPLATE({
                     'href': fileLoc,
                     'type': safeDest
-                }); 
+                });
             } catch (err) {
                 console.log('Error compiling cssHTML presenter.js');
             }
@@ -190,8 +187,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
             appendToHead(cssHTML, fileLoc);
         });
 
-        $.each(jsFiles, function (index, fileLoc)
-        {
+        $.each(jsFiles, function (index, fileLoc) {
             if(internal) {
                 fileLoc = fs_facade.getInternalURI(fileLoc);
             } else {
@@ -212,7 +208,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
             appendToHead(jsHTML, fileLoc);
         });
 
-        $(dest).fadeIn(function(){
+        $(dest).fadeIn(function() {
             if(typeof(onResized) !== 'undefined') {
                 onResized();
             }
@@ -225,8 +221,7 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
     else
         fileLoc = fs_facade.getExternalURI(name);
 
-    if(fileLoc === null)
-    {
+    if(fileLoc === null) {
         onErr(new Error('Could not find ' + fileLoc + ' .'));
         return;
     }
@@ -257,9 +252,8 @@ function renderTemplateFramework(frameworkName, name, context, dest, internal, c
  *      would be returned by device_controller.getDevices) to add size
  *      information to.
  * @return {Object} The modified device information passed in as deviceTypes.
-**/ 
-function includeDeviceDisplaySizes(deviceTypes)
-{
+**/
+function includeDeviceDisplaySizes(deviceTypes) {
     return deviceTypes.map(function(e){
         e.size = DEVICE_TYPE_DISPLAY_HEIGHTS[e.name];
         return e;
@@ -308,8 +302,7 @@ function attachWindowCloseListener() {
 /**
  * Render the GUI for the device selector.
 **/
-function renderDeviceSelector()
-{   
+function renderDeviceSelector() {
     $('#device-search-msg').show();
     $('#content-holder').html('');
 
@@ -321,8 +314,8 @@ function renderDeviceSelector()
             onDevicesLoaded(devices);
             defered.resolve();
             return defered.promise;
-        }
-    }
+        };
+    };
     function onDevicesLoaded(devices) {
         // Define a context variable that will be used to render the 
         // device_selector.html file
@@ -342,7 +335,7 @@ function renderDeviceSelector()
 
         // Get and save the LJM_Wrapper version number
         var ljmWrapperVersion = require('labjack-nodejs/package.json').version;
-        context.ljmWrapperVersionNumber = ljmWrapperVersion
+        context.ljmWrapperVersionNumber = ljmWrapperVersion;
         if (devices.length === 0)
             context.noDevices = true;
 
@@ -373,8 +366,7 @@ function renderDeviceSelector()
     attachWindowCloseListener();
 }
 
-function getActiveTabID()
-{
+function getActiveTabID() {
     return ACTIVE_TAB_STR_TEMPLATE(
         { 'name': currentTab, 'counter': numTabChanges }
     );

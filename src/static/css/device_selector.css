@@ -15,7 +15,7 @@ body {
     display:none;
 }
 .labjackVersions {
-    height: 105px;
+    height: 110px;
 }
 .labjackVersions table {
     width: 100%;
@@ -71,7 +71,7 @@ body {
 }
 .labjackVersions .upgradeButton {
     font-size: 10px;
-    line-height: 14px;
+    line-height: 12px;
     padding: 0;
     margin: 0;
 }
