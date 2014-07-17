@@ -6,7 +6,9 @@
  *
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
-
+var curTemplateVals = null;
+var curPaginationObj = null;
+var latestKeypress = null;
 function ACTIVE_KIPLING_MODULE() {
 
 // Functions to analyze performance
@@ -40,6 +42,7 @@ var ljmmm = require('./ljmmm');
 var REGISTERS_DATA_SRC = 'register_matrix/ljm_constants.json';
 var REGISTERS_TABLE_TEMPLATE_SRC = 'register_matrix/matrix.html';
 var REGISTER_WATCH_LIST_TEMPLATE_SRC = 'register_matrix/watchlist.html';
+var REGISTER_TABLE_LIST_TEMPLATE_SRC = 'register_matrix/table_list.html';
 
 var REGISTER_MATRIX_SELECTOR = '#register-matrix';
 var REGISTER_MATRIX_SELECTOR_OBJ = null;
@@ -79,22 +82,27 @@ var curTabID = getActiveTabID();
 var localRegistersList = [];
 this.getLocalRegistersList = function() {
     return localRegistersList;
-}
+};
+
 var registerNames = [];
 this.getRegisterNames = function() {
     return registerNames;
-}
+};
+
+/**
+ * Force a redraw on the rendering engine.
+**/
 function runRedraw()
 {
     document.body.style.display='none';
-    var h = document.body.offsetHeight; // no need to store this anywhere, the reference is enough
+    var h = document.body.offsetHeight;
     document.body.style.display='block';
 }
 function qRunRedraw() {
     var innerDeferred = q.defer();
     runRedraw();
     innerDeferred.resolve();
-    return innerDeferred.promise; 
+    return innerDeferred.promise;
 }
 
 reportTime('After Initial Includes');
@@ -413,16 +421,6 @@ function getTagSet(entries)
     return tagSet.array();
 }
 
-
-/**
- * Force a redraw on the rendering engine.
-**/
-function runRedraw()
-{
-    document.body.style.display='none';
-    document.body.offsetHeight; // no need to store this anywhere, the reference is enough
-    document.body.style.display='block';
-}
 /**
  * Configure typeahead data upon startup
  * @return {[type]} [description]
@@ -435,12 +433,12 @@ function configureTypeaheadData(data) {
         limit: 10,
         datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        local: $.map(localRegistersList, function(localRegister) { 
-            return { 
-                name: localRegister.name, 
+        local: $.map(localRegistersList, function(localRegister) {
+            return {
+                name: localRegister.name,
                 address: localRegister.address,
                 description: localRegister.description
-            }; 
+            };
         })
     });
     // kicks off the loading/processing of `local` and `prefetch`
@@ -511,7 +509,8 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
         'hasRegisters': filteredEntries.length > 0,
         'tags': tags,
         'currentTag': currentTag,
-        'currentSearchTerm': currentSearchTerm
+        'currentSearchTerm': currentSearchTerm,
+        'currentRegisters': null
     };
 
     var renderModule = function(renderedHTML) {
@@ -523,23 +522,70 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
             REGISTER_MATRIX_SELECTOR_OBJ.html(renderedHTML);
         }
 
-        // Initialize pagination table
-        $('#pagination-demo').twbsPagination({
-            totalPages: 35,
-            visiblePages: 7,
-            onPageClick: function (event, page) {
-                $('#page-content').text('Page ' + page);
-            }
-        });
-        
-        reportTime('renderRegisters-bindToToggles');
-        $('.toggle-info-button').unbind();
-        $('.toggle-info-button').bind('click',toggleRegisterInfo);
+        var bindToTableListElements = function() {
+            reportTime('renderRegisters-bindToToggles');
+            $('.toggle-info-button').unbind();
+            $('.toggle-info-button').bind('click',toggleRegisterInfo);
 
-        reportTime('renderRegisters-bindToLists');
-        $('.add-to-list-button').unbind();
-        $('.add-to-list-button').bind('click',function(event){
-            addToWatchList(event, entriesByAddress);
+            reportTime('renderRegisters-bindToLists');
+            $('.add-to-list-button').unbind();
+            $('.add-to-list-button').bind('click',function(event){
+                addToWatchList(event, entriesByAddress);
+            });
+        };
+
+        var getAppendTableText = function(curPage, numPerPage) {
+            var appendTableText = function(info) {
+                $('#page-content').html(info);
+                bindToTableListElements();
+            };
+            return appendTableText;
+        };
+
+        // Initialize pagination table
+        var NUM_ITEMS_PER_PAGE = 10;
+        var numPartialPages = templateVals.registers.length/NUM_ITEMS_PER_PAGE;
+        var numPages = Math.ceil(numPartialPages);
+        var getPageClickFunc = function(templateVals) {
+            var pageClickFunc = function(event, page) {
+                var curIndex = page - 1;
+                var startIndex = curIndex * NUM_ITEMS_PER_PAGE;
+                var endIndex = startIndex + NUM_ITEMS_PER_PAGE;
+                var curPageInfo = templateVals.registers.slice(startIndex,endIndex);
+                console.log('Cur Page Info',curPageInfo);
+
+                templateVals.currentRegisters = curPageInfo;
+                curTemplateVals = curPageInfo;
+
+                var tableListLocation = fs_facade.getExternalURI(REGISTER_TABLE_LIST_TEMPLATE_SRC);
+                fs_facade.renderTemplate(
+                    tableListLocation,
+                    templateVals,
+                    showError,
+                    getAppendTableText(curIndex,NUM_ITEMS_PER_PAGE)
+                );
+            };
+            return pageClickFunc;
+        };
+
+        // Create Footer Element
+        var footerElement = $('#module-chrome-contents-footer');
+        var footerText = '';
+        footerText += '<div class="text-center">';
+        footerText += '<ul id="pagination-demo" class="pagination-sm"></ul>';
+        footerText += '</div>';
+        footerElement.empty();
+        footerElement.html(footerText);
+        footerElement.show();
+
+        /**
+         * Using the twbsPagination library:
+         * url: http://esimakin.github.io/twbs-pagination/
+        **/
+        curPaginationObj = $('#pagination-demo').twbsPagination({
+            totalPages: numPages,
+            visiblePages: 7,
+            onPageClick: getPageClickFunc(templateVals)
         });
 
         reportTime('renderRegisters-bindToTags');
@@ -842,6 +888,7 @@ function refreshWatchList()
                     var address = event.target.id;
                     address = address.replace('write-reg-', '');
                     address = address.replace('icon-', '');
+                    address = address.replace('-input','');
                     var isString = $('#' + address.toString() + '-type-display').html() === 'STRING';
                     var rowSelector = WATCH_ROW_SELECTOR_TEMPLATE({
                         'address': address
@@ -859,6 +906,7 @@ function refreshWatchList()
                     } else {
                         convValue = Number(value);
                     }
+                    console.log('hERE',rowSelector,address,value,addressNum,convValue);
 
                     $(rowSelector).find('.write-confirm-msg').fadeIn(
                         function () {
@@ -870,7 +918,14 @@ function refreshWatchList()
                                     ).fadeOut();
                                 },
                                 function (err) {
-                                    showError(err);
+                                    if(!isNaN(err)) {
+                                        showError('LJM Error ' + device_controller.ljm_driver.errToStrSync(err));
+                                    } else {
+                                        showError(err);
+                                    }
+                                    $(rowSelector).find(
+                                        '.write-confirm-msg'
+                                    ).fadeOut();
                                 }
                             );
                         }
@@ -884,6 +939,20 @@ function refreshWatchList()
                 $('.close-value-editor-button').click(hideRegisterEditControls);
 
                 $('.write-value-editor-button').click(writeRegister);
+
+                $('.write-reg-value-input').keypress(function (e) {
+                    if (e.which != 13) {
+                        return;
+                    } else {
+                        latestKeypress = e;
+                        var curID = e.target.id;
+                        var curEl = $('#'+e.target.id);
+                        // var curAddress = curID.split('-')[2];
+                        // var newVal = curEl.val();
+                        curEl.blur();
+                        writeRegister(e);
+                    }
+                });
             }
         );
     }

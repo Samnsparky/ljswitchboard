@@ -65,7 +65,8 @@ function innerSelectModule(name)
     //     $('<img>').attr('src', MODULE_LOADING_IMAGE_SRC)
     // );
     $(MODULE_CONTENTS_ELEMENT).empty();
-
+    $(MODULE_CONTENTS_FOOTER).hide();
+    $(MODULE_CONTENTS_FOOTER).empty();
 
     fs_facade.getModuleInfo(
         name,
@@ -405,24 +406,43 @@ function onResized()
     } else {
         $('#close-nav-dock').slideUp();
         $('#device-nav-dock').slideDown();
-        $('#module-list').slideUp(reCallFUnc);  
+        $('#module-list').slideUp(reCallFUnc);
     }
     
     var headerHeight = $('#system-navigation');
     var moduleChromeContentsEl = $('#module-chrome-contents');
     var moduleChromeContentsHolderEl = $('#module-chrome-contents-holder');
+    var moduleChromeFooterEl = $('#module-chrome-contents-footer');
+    var moduleChromeBodyEl = $('#module-chrome-block');
     var activeModuleEl = moduleChromeContentsEl.children(0);
     var windowHeight = $(window).height();
     var contents_height = windowHeight - MODULE_CONTENT_BOTTOM_BORDER_HEIGHT;
+
+    var setModuleChromeContentsHolderBottom = function() {
+        if (moduleChromeFooterEl.css('display') === 'none') {
+            moduleChromeContentsHolderEl.css({'bottom':'0px'});
+        } else {
+            var botTxt = moduleChromeFooterEl.height().toString() + 'px';
+            moduleChromeContentsHolderEl.css({'bottom':botTxt});
+        }
+    };
     // if(moduleList.css('display') !== 'none') {
     if ($(window).width() > 768) {
+        contents_height -= moduleChromeFooterEl.height();
         $('#module-list').height((windowHeight - 75).toString() + 'px');
         moduleChromeContentsEl.css(
             {'height': contents_height.toString() + 'px'}
         );
+        moduleChromeBodyEl.css(
+            {'height': (windowHeight).toString() + 'px'}
+        );
+        windowHeight -= moduleChromeFooterEl.height();
         moduleChromeContentsHolderEl.css(
             {'height': (windowHeight).toString() + 'px'}
         );
+        moduleChromeContentsHolderEl.css({'top':'0px'});
+        moduleChromeBodyEl.css({'top':'0px'});
+        // setModuleChromeContentsHolderBottom();
     } else {
         // var topHeight = $('#module-chrome-contents-holder').height();
         var setHeight = 0;
@@ -444,10 +464,16 @@ function onResized()
         if(setHeight < (windowHeight - 130)){
             setHeight = (windowHeight - 130);
         }
+        moduleChromeBodyEl.css({'height': setHeight.toString()+'px'});
+        setHeight += moduleChromeFooterEl.height();
         console.log('HERE1',setHeight);
         moduleChromeContentsHolderEl.css(
             {'height': setHeight.toString()+'px'}
         );
+        moduleChromeContentsHolderEl.css({'top':'0px'});
+
+        
+        // setModuleChromeContentsHolderBottom();
     }
     if(typeof(MODULE_WINDOW_RESIZE_LISTNERS) !== 'undefined') {
         MODULE_WINDOW_RESIZE_LISTNERS.forEach(function(listener) {
@@ -481,7 +507,11 @@ function onResized()
 **/
 function showAlert(errorMessage)
 {
+    if(!isNaN(errorMessage)) {
+        errorMessage = 'LJM Error ' + device_controller.ljm_driver.errToStrSync(errorMessage);
+    }
     var message = OPERATION_FAIL_MESSAGE(errorMessage);
+
     $('#error-display').html(message);
     $('.device-selector-holder').css('margin-top', '0px');
     $('#alert-message').fadeIn();
@@ -516,15 +546,20 @@ $('#module-chrome').ready(function(){
         renderDeviceSelector();
     });
 
+    var updateModuleChromeHeight = function() {
+        // var height = $('#system-navigation').height();
+        // $('#module-chrome-block').css({'top':height.toString()+'px'});
+    };
+
     $('#change-modules-link').click(function () {
         $('#device-nav-dock').slideUp();
-        $('#module-list').slideDown();
+        $('#module-list').slideDown(updateModuleChromeHeight);
         $('#close-nav-dock').slideDown();
     });
 
     $('#close-modules-link').click(function () {
         $('#device-nav-dock').slideDown();
-        $('#module-list').slideUp();
+        $('#module-list').slideUp(updateModuleChromeHeight);
         $('#close-nav-dock').slideUp();
     });
 

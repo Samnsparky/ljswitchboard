@@ -26,6 +26,10 @@ var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
 var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
 
 var FS_FACADE_TEMPLATE_CACHE = dict();
+exports.numCachedTemplates = function() {
+    return FS_FACADE_TEMPLATE_CACHE.size;
+};
+
 var fileSaveAsID = "#file-save-dialog-hidden";
 var getFileLoadID = "#file-dialog-hidden";
 
@@ -184,8 +188,8 @@ exports.getParentDir = function() {
 **/
 exports.renderTemplate = function(location, context, onError, onSuccess) {
     if (FS_FACADE_TEMPLATE_CACHE.has(location)) {
-        var template = FS_FACADE_TEMPLATE_CACHE.get(location);
-        onSuccess(handlebars.compile(template)(context));
+        var curTemplate = FS_FACADE_TEMPLATE_CACHE.get(location);
+        onSuccess(curTemplate(context));
     } else {
         fs.exists(location, function(exists) {
             if (exists) {
@@ -194,7 +198,9 @@ exports.renderTemplate = function(location, context, onError, onSuccess) {
                         if (error) {
                             onError(error);
                         } else {
-                            onSuccess(handlebars.compile(template)(context));
+                            var curTemplate = handlebars.compile(template);
+                            FS_FACADE_TEMPLATE_CACHE.set(location,curTemplate);
+                            onSuccess(curTemplate(context));
                         }
                     }
                 );
@@ -204,6 +210,10 @@ exports.renderTemplate = function(location, context, onError, onSuccess) {
         });
     }
 };
+
+
+
+
 
 // TODO: Move to module manager
 /**

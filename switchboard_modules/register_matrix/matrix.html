@@ -3,9 +3,6 @@
         <div id="ljm-register-search-box">
             <input id="search-box" class="typeahead" type="text" value="{{currentSearchTerm}}" placeholder="search term" title="Search by register name or description">
         </div>
-        <!-- <div id="the-basics">
-            <input class="typeahead" type="text" placeholder="States of USA">
-        </div> -->
         <div>
             <button id="search-button" class="btn">search</button>
             <div id="searching-status" class="search-progress-status" style="display:none;">
@@ -51,7 +48,7 @@
                 </th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="page-content">
             {{!--
             {{#registers}}
             <tr class="register-row big-table-row register-overview-row">
@@ -80,10 +77,10 @@
             --}}
         </tbody>
     </table>
-    <div id="page-content" class="well"></div>
-    <div class="text-center">
+    <!-- <div  class="well"></div> -->
+    <!-- <div class="text-center">
         <ul id="pagination-demo" class="pagination-sm"></ul>
-    </div>
+    </div> -->
     {{^hasRegisters}}
     <div id="no-reg-msg">No registers found.</div>
     {{/hasRegisters}}
@@ -101,4 +98,9 @@ $('#register-matrix-body').ready(function () {
     // };
     // $('#register-matrix').tablePagination(options);
 });
+
+// $('#module-chrome-contents-footer').html('<div class="text-center">
+//         <ul id="pagination-demo" class="pagination-sm"></ul>
+//     </div>');
+// $('#module-chrome-contents-footer').show();
 </script>
