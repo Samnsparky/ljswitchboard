@@ -679,12 +679,14 @@ function labjackVersionManager() {
 					ele.removeClass(className);
 				});
 			};
-			var showWarning = function(ele) {
+			var showWarning = function(ele, statusEle) {
+				statusEle.find('.lvm_update_icon').css({'top':'0'});
 				clearHighlighting(ele);
 				ele.addClass('lvm_version_warning');
 				ele.attr('title', 'New beta version available');
 			};
-			var showError = function(ele) {
+			var showError = function(ele, statusEle) {
+				statusEle.find('.lvm_update_icon').css({'top':'0'});
 				clearHighlighting(ele);
 				ele.addClass('lvm_version_error');
 				ele.attr('title', 'New version available');
@@ -704,7 +706,10 @@ function labjackVersionManager() {
 				if (k3Beta.version > pageElements.kiplingVersion) {
 					upgradeLinks.push(k3Beta);
 					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
-					showWarning(kiplingEl.find('.lvm_version'));
+					showWarning(
+						kiplingEl.find('.lvm_version'),
+						kiplingEl.find('.lvm_status')
+					);
 				}
 			}
 			if (isReal(info.kipling, info.kipling.current, info.kipling.current[0])) {
@@ -715,7 +720,10 @@ function labjackVersionManager() {
 				if (k3Current.version > pageElements.kiplingVersion) {
 					upgradeLinks.push(k3Current);
 					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
-					showError(kiplingEl.find('.lvm_version'));
+					showError(
+						kiplingEl.find('.lvm_version'),
+						kiplingEl.find('.lvm_status')
+					);
 				}
 			}
 
@@ -730,7 +738,10 @@ function labjackVersionManager() {
 					upgradeLinks.push(ljm);
 
 					var ljmElement = self.controls.versionNumbersEl.find('#ljm');
-					showError(ljmElement.find('.lvm_version'));
+					showError(
+						ljmElement.find('.lvm_version'),
+						ljmElement.find('.lvm_status')
+					);
 				}
 			}
 

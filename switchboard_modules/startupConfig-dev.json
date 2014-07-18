@@ -7,6 +7,9 @@
             "serialNumber":"470010610",
             "connectionType":"USB"
         },{
+            "serialNumber":"470010414",
+            "connectionType":"Ethernet"
+        },{
             "serialNumber":"470010548",
             "connectionType":"Ethernet"
         },{
@@ -67,5 +70,5 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "register_matrix"
+    "moduleName": "dashboard"
 }

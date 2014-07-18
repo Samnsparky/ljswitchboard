@@ -712,6 +712,8 @@ function searchRegisters(entries, allTags, tag, searchTerm)
     } else {
         filteredTags = allTags;
     }
+    // Naaw..... I'll leave this here for future chris to think about adding agian...
+    // Code to try and filter the tags a little to only show relevant tags
     // filteredEntries.forEach(function(e) {
     //     if(typeof(e.tags) !== 'undefined') {
     //         e.tags.forEach(function(matchTag) {

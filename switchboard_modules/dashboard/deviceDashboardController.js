@@ -6,16 +6,17 @@ function getDeviceDashboardController(deviceInfo) {
     // Device Image Info
     var LABJACK_OVERVIEW_IMG_SRC = './static/img/' + deviceInfo.fullType + '-cartoon.png';
     var DEVICE_IMAGE_X_OFFSET = 150;
-    var DEVICE_IMAGE_Y_OFFSET = 10;
+    var DEVICE_IMAGE_Y_OFFSET = 10;//10
     var DEVICE_IMG_WIDTH = 225;
     var DEVICE_IMG_HEIGHT = 525;
     var LINE_X_OFFSET = 120;
     var LINE_Y_OFFSET = 6;
     var DEVICE_IMAGE_X_OVERLAP = 30;
     var CONNECTOR_SIZE_X = DEVICE_IMAGE_X_OFFSET + DEVICE_IMAGE_X_OVERLAP;
+    var DEVICE_LINE_Y_OFFSET = 12;
 
     // DB Image Info
-    var LABJACK_DB_IMG_SRC = './static/img/T7-DB-cartoon.png'
+    var LABJACK_DB_IMG_SRC = './static/img/T7-DB-cartoon.png';
     var DB_IMG_WIDTH = 225;
     var DB_IMG_HEIGHT = 525;
     var DB_IMAGE_X_OFFSET = 110;
@@ -38,16 +39,16 @@ function getDeviceDashboardController(deviceInfo) {
     );
     var bNum = 10;
     var REGISTER_OVERLAY_SPEC = [
-        {register: 'AIN0', yLocation: 0.783,                                type: null, board: 'device', side: 'left'},
-        {register: 'AIN1', yLocation: 0.757,                                type: null, board: 'device', side: 'left'},
-        {register: 'AIN2', yLocation: 0.664,                                type: null, board: 'device', side: 'left'},
-        {register: 'AIN3', yLocation: 0.639,                                type: null, board: 'device', side: 'left'},
-        {register: 'DAC0', yLocation: 0.545,            yOffset: 6,         type: 'dac', board: 'device', side: 'left'},
-        {register: 'DAC1', yLocation: 0.519,            yOffset: -6,        type: 'dac', board: 'device', side: 'left'},
-        {register: 'FIO0', yLocation: 0.428,            yOffset: 6,         type: 'dio', board: 'device', side: 'left'},
-        {register: 'FIO1', yLocation: 0.403,            yOffset: -6,        type: 'dio', board: 'device', side: 'left'},
-        {register: 'FIO2', yLocation: 0.308,            yOffset: 6,         type: 'dio', board: 'device', side: 'left'},
-        {register: 'FIO3', yLocation: 0.283,            yOffset: -6,        type: 'dio', board: 'device', side: 'left'},
+        {register: 'AIN0', yLocation: 0.783,            yShift: -7,         yOffset: 6,         type: null, board: 'device', side: 'left'},
+        {register: 'AIN1', yLocation: 0.757,            yShift: -6,         yOffset: 6,         type: null, board: 'device', side: 'left'},
+        {register: 'AIN2', yLocation: 0.664,            yShift: -5,         yOffset: 6,         type: null, board: 'device', side: 'left'},
+        {register: 'AIN3', yLocation: 0.639,            yShift: -4,         yOffset: 6,         type: null, board: 'device', side: 'left'},
+        {register: 'DAC0', yLocation: 0.545,            yShift: -2,         yOffset: 6,         type: 'dac', board: 'device', side: 'left'},
+        {register: 'DAC1', yLocation: 0.519,            yShift: -1,         yOffset: -6,        type: 'dac', board: 'device', side: 'left'},
+        {register: 'FIO0', yLocation: 0.428,            yShift: 0,          yOffset: 6,         type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO1', yLocation: 0.403,            yShift: 1,          yOffset: -6,        type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO2', yLocation: 0.308,            yShift: 3.5,        yOffset: 6,         type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO3', yLocation: 0.283,            yShift: 4,          yOffset: -6,        type: 'dio', board: 'device', side: 'left'},
         
         // Left Side, DB37
         {register: 'AIN1', yLocation: 0.900-0.01,       yOffset:  4*bNum,   type: null, board: 'connector', side: 'left'},
@@ -165,11 +166,11 @@ function getDeviceDashboardController(deviceInfo) {
 
         // Set the margin-top .css style of the registers-container.
         $(DB_REGISTERS_CONTAINER).css(
-            'margin-top', 
+            'margin-top',
             (-1 * marginTopVal).toString() + 'px'
         );
         $(DB_IMAGE_CONTAINER).css(
-            'margin-top', 
+            'margin-top',
             marginTopVal.toString() + 'px'
         );
         // Get a few module-attributes needed to calculate imageY, a constant 
@@ -200,7 +201,7 @@ function getDeviceDashboardController(deviceInfo) {
         .selectAll('.connector-line-left')                                      // Not quite sure what is being select here...
         .data(function () {                                                     // Adding data to the D3 object by...
             return REGISTER_OVERLAY_SPEC.filter(function (registerInfo) {       // Filtering the REGISTER_OVERLAY_SPEC
-                return (registerInfo.board === 'connector')                     // To get only 'device' registers.
+                return (registerInfo.board === 'connector');                    // To get only 'device' registers.
             });
         })
         .enter()                                                                // Enter each data point defined above.
@@ -348,11 +349,11 @@ function getDeviceDashboardController(deviceInfo) {
 
         // Set the margin-top .css style of the registers-container.
         $(DEVICE_REGISTERS_CONTAINER).css(
-            'margin-top', 
+            'margin-top',
             marginTopVal.toString() + 'px'
         );
         $(DEVICE_IMAGE_CONTAINER).css(
-            'margin-top', 
+            'margin-top',
             (-1 * marginTopVal).toString() + 'px'
         );
 
@@ -394,6 +395,10 @@ function getDeviceDashboardController(deviceInfo) {
         .append('g')                                                            // Create an html attribute called "g".  D3:
         .attr('transform', function (registerInfo) {                            // Set the X and Y coordinates for where the base of the line should go
             var y = getOverlayYPos(registerInfo);
+            y += DEVICE_LINE_Y_OFFSET;
+            if(typeof(registerInfo.yShift) !== 'undefined') {
+                y += registerInfo.yShift;
+            }
             return TRANSLATE_TEMPLATE({x: 0, y: y});                            // Define drawn X and Y coordinates
         })
         .attr('class','connector-line');

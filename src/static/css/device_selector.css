@@ -31,12 +31,20 @@ body {
     line-height: normal;
     padding: 1px 0px;
 }
+
 .labjackVersions .lvm_link {
     display: block;
     padding: 0;
     height: 14px;
     width: 96%;
     margin-top: 2px;
+}
+.labjackVersions .lvm_status {
+    width: 0;
+}
+.labjackVersions .lvm_status .lvm_update_icon {
+    position: relative;
+    top:-1000px;
 }
 .labjackVersions .lvm_name {
     text-align: left;
