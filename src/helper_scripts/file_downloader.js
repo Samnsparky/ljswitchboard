@@ -42,6 +42,18 @@ function fileDownloaderUtility() {
 	this.closeID = '';
 	this.closeEl = null;
 
+	var fileBrowserButtonText = {
+		'linux': 'Show in file browser',
+		'linux2': 'Show in file browser',
+		'sunos': 'Show in file browser',
+		'solaris': 'Show in file browser',
+		'freebsd': 'Show in file browser',
+		'openbsd': 'Show in file browser',
+		'darwin': 'Show in file browser',
+		'mac': 'Show in finder',
+		'win32': 'Show in folder'
+	}[process.platform];
+
 	var dlTemplate = '' +
 	'<div id="{{newID}}">' +
 	'<div id="lvmProgressBar" class="curProgressBar progress">' +
@@ -65,7 +77,9 @@ function fileDownloaderUtility() {
 	'<td id="timeRemaining" class="curTimeRemaining"></td>' +
 	'</tr>' +
 	'</table>' +
-	'<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">Show In Finder</button>' +
+	'<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">' +
+		fileBrowserButtonText +
+	'</button>' +
 	'</div>';
 	this.downloadTemplate = handlebars.compile(dlTemplate);
 
@@ -120,6 +134,7 @@ function fileDownloaderUtility() {
 		'mac': nixPath,
 		'win32': windowsPath,
 	}[process.platform];
+
 	var formatSize = function(numBytes) {
 		var kb = Math.pow(2,10);
 		var mb = Math.pow(2,20);
