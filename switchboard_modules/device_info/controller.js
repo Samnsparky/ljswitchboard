@@ -165,17 +165,29 @@ function showDevice(device, onSuccess)
         function(renderedHTML)
         {
             $('#device-info-display').html(renderedHTML);
-            $('#change-name-link').click(function () {
+
+            $('#change-name-link').unbind();
+            $('#change-name-link').bind('click',function () {
                 $('#change-name-controls').slideDown();
             });
 
             var changeNameListener = function () {
                 var newName = $('#new-name-input').val();
                 changeDeviceName(device, newName);
+                $('#change-name-controls').slideUp();
             };
 
-            $('#change-name-button').click(changeNameListener);
+            $('#change-name-button').unbind();
+            $('#change-name-button').bind('click',changeNameListener);
+            
+            $('#cancel-change-name-button').unbind();
+            $('#cancel-change-name-button').bind('click',function() {
+                $('#change-name-controls').slideUp(function() {
+                    $('#new-name-input').val('');
+                });
+            });
 
+            $('#new-name-input').unbind();
             $('#new-name-input').keypress(function (event) {
                 if ( event.which == 13 ) {
                     event.preventDefault();

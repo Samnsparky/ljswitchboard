@@ -418,7 +418,14 @@ function getTagSet(entries)
     }
 
     var tagSet = new simplesets.Set(tags);
-    return tagSet.array();
+    var tagArray = tagSet.array();
+    // Re-Arrange indicies so that 'ALL' is first
+    console.log("HERE!",tagArray.indexOf('all'),tagSet);
+    var index = tagArray.indexOf('all');
+    var tempTag = tagArray[0];
+    tagArray[0] = 'all';
+    tagArray[index] = tempTag;
+    return tagArray;
 }
 
 /**
