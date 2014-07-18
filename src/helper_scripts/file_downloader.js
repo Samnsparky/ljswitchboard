@@ -254,6 +254,8 @@ function fileDownloaderUtility() {
 
 		// Figure out a unique file path for the new file to be named
 		var num = 1;
+		console.log('defaultDownloadDirectory',defaultDownloadDirectory);
+		console.log('process.platform',process.platform);
 		var filePath = defaultDownloadDirectory + path.sep + downloadFileName;
 		var uniqueFilePath = filePath;
 		var newFileName = downloadFileName;
@@ -270,6 +272,7 @@ function fileDownloaderUtility() {
 			uniqueFilePath = defaultDownloadDirectory + path.sep + newFileName;
 			num += 1;
 		}
+		console.log('uniqueFilePath',uniqueFilePath);
 		var fileStream = null;
 		
 		var safeName = newFileName.replace(/\./g,'_');
