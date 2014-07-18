@@ -486,15 +486,15 @@ function initializeTypeahead() {
  * @param {String} currentSearchTerm The term the user is searching for.
  * @return {q.defer.promise} A Q promise that resolves to null.
 **/
-function renderRegistersTable(entries, tags, filteredEntries, currentTag,
-    currentSearchTerm)
+function renderRegistersTable(entries, tags, filteredEntries, filteredTags,
+    currentTag, currentSearchTerm)
 {
     reportTime('renderRegistersTable');
     var deferred = q.defer();
 
     var location = fs_facade.getExternalURI(REGISTERS_TABLE_TEMPLATE_SRC);
     var entriesByAddress = organizeRegistersByAddress(entries);
-
+    
     if(tags === undefined)
         tags = getTagSet(entries);
     if(currentTag === undefined)
@@ -503,11 +503,13 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
         currentSearchTerm = '';
     if(filteredEntries === undefined)
         filteredEntries = entries;
+    if(filteredTags === undefined)
+        filteredTags = getTagSet(entries);
 
     var templateVals = {
         'registers': filteredEntries,
         'hasRegisters': filteredEntries.length > 0,
-        'tags': tags,
+        'tags': filteredTags,
         'currentTag': currentTag,
         'currentSearchTerm': currentSearchTerm,
         'currentRegisters': null
@@ -584,11 +586,13 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
          * another potential library:
          * url: http://flaviusmatis.github.io/simplePagination.js/#page-11
         **/
-        curPaginationObj = $('#pagination-demo').twbsPagination({
-            totalPages: numPages,
-            visiblePages: 7,
-            onPageClick: getPageClickFunc(templateVals)
-        });
+        if(numPages > 0) {
+            curPaginationObj = $('#pagination-demo').twbsPagination({
+                totalPages: numPages,
+                visiblePages: 7,
+                onPageClick: getPageClickFunc(templateVals)
+            });
+        }
 
         reportTime('renderRegisters-bindToTags');
         $('.tag-selection-link').unbind();
@@ -655,20 +659,31 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
 function searchRegisters(entries, allTags, tag, searchTerm)
 {
     var filteredEntries = entries;
+    var filteredTags = [];
+    var tagsDict = dict();
     $('#searching-status').show();
     console.log('HERE 0');
-    if(tag !== 'all')
+
+    var appendTag = function(tagName) {
+        if (filteredTags.indexOf(tagName) === -1) {
+            filteredTags.push(tagName);
+        }
+    };
+
+    if (tag !== 'all')
     {
         filteredEntries = filteredEntries.filter(function(e){
-            if(typeof(e.tags) === 'undefined') {
-                console.log('HERE!!',e,e.tags);
+            if (typeof(e.tags) === 'undefined') {
                 return false;
             } else {
-                return e.tags.indexOf(tag) != -1;
+                if (e.tags.indexOf(tag) != -1) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         });
     }
-    console.log('HERE 1');
 
     var termLow = searchTerm.toLowerCase();
 
@@ -684,12 +699,27 @@ function searchRegisters(entries, allTags, tag, searchTerm)
             var matchesName = matchesTerm(e.name);
             var matchesTag = matchesTerm(e.flatTagStr);
             var matchesDesc = matchesTerm(e.description);
-
-            return matchesName || matchesTag || matchesDesc;
+            var isMatch = matchesName || matchesTag || matchesDesc;
+            return isMatch;
         });
     }
 
-    renderRegistersTable(entries, allTags, filteredEntries, tag, searchTerm)
+    if(tag === 'all') {
+        filteredTags = allTags;
+    }
+    if (searchTerm === '') {
+        filteredTags = allTags;
+    } else {
+        filteredTags = allTags;
+    }
+    // filteredEntries.forEach(function(e) {
+    //     if(typeof(e.tags) !== 'undefined') {
+    //         e.tags.forEach(function(matchTag) {
+    //             appendTag(matchTag);
+    //         });
+    //     }
+    // });
+    renderRegistersTable(entries, allTags, filteredEntries, filteredTags, tag, searchTerm)
     .then(function() {
         $('#searching-status').hide();
     },function() {
