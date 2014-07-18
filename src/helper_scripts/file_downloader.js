@@ -236,13 +236,40 @@ function fileDownloaderUtility() {
 			defered.reject();
 		}
 
+		var num = 1;
+		var filePath = defaultDownloadDirectory + path.sep + downloadFileName;
+		var uniqueFilePath = filePath;
+		var newFileName = downloadFileName;
+		while(fs.existsSync(uniqueFilePath)) {
+			newFileName = '';
+			var subStrs = downloadFileName.split('.');
+			var i = 0;
+			for(i = 0; i < (subStrs.length - 1); i++) {
+				newFileName += subStrs[i];
+			}
+			newFileName += '(' + num.toString() + ').';
+			newFileName += subStrs[subStrs.length-1];
+			// uniqueFilePath = filePath + '(' + num.toString() + ')';
+			uniqueFilePath = defaultDownloadDirectory + path.sep + newFileName;
+			num += 1;
+		}
+		var fileStream = null;
 		
+		var safeName = newFileName.replace(/\./g,'_');
+		safeName = safeName.replace(/\s/g,'_');
+		safeName = safeName.replace(/\(/g,'_');
+		safeName = safeName.replace(/\)/g,'_');
+
 		var handleResponse = function(res) {
 			var startFile = true;
 			var bodyNum = 0;
 			var body = '';
 			var pageElements = null;
-
+			if(fileStream) {
+				res.pipe(fileStream);
+			} else {
+				console.error('HERE!!! WTF!!');
+			}
 			var toMegabytes = function(numBytes) {
 				return Number((body.length/Math.pow(2,20)).toPrecision(3));
 			};
@@ -264,36 +291,25 @@ function fileDownloaderUtility() {
 				bodyNum += 1;
 				body += chunk;
 			});
-			res.on('end', function() {
-				var megabytesDownloaded = toMegabytes(body.length);
-				console.log('');
-				console.log('Finished:',megabytesDownloaded,'MB',bodyNum);
-				defered.resolve({fileName:uniqueFilePath,size:body.length,sizeMB:megabytesDownloaded});
-			});
+			var fileStreamFinished = false;
+			var downloadFinished = false;
 
-
-			var num = 1;
-			var filePath = defaultDownloadDirectory + path.sep + downloadFileName;
-			var uniqueFilePath = filePath;
-			var newFileName = downloadFileName;
-			while(fs.existsSync(uniqueFilePath)) {
-				newFileName = '';
-				var subStrs = downloadFileName.split('.');
-				var i = 0;
-				for(i = 0; i < (subStrs.length - 1); i++) {
-					newFileName += subStrs[i];
+			var returnToCaller = function() {
+				if(fileStreamFinished & downloadFinished) {
+					var megabytesDownloaded = toMegabytes(body.length);
+					fileStream.close(function() { // close() is async
+						defered.resolve({fileName:uniqueFilePath,size:body.length,sizeMB:megabytesDownloaded});
+					});
 				}
-				newFileName += '(' + num.toString() + ').';
-				newFileName += subStrs[subStrs.length-1];
-				// uniqueFilePath = filePath + '(' + num.toString() + ')';
-				uniqueFilePath = defaultDownloadDirectory + path.sep + newFileName;
-				num += 1;
-			}
-			res.pipe(fs.createWriteStream(uniqueFilePath));
-			var safeName = newFileName.replace(/\./g,'_');
-			safeName = safeName.replace(/\s/g,'_');
-			safeName = safeName.replace(/\(/g,'_');
-			safeName = safeName.replace(/\)/g,'_');
+			};
+			res.on('end', function() {
+				downloadFinished = true;
+				returnToCaller();
+			});
+			fileStream.on('finish', function() {
+				fileStreamFinished = true;
+				returnToCaller();
+			});
 
 			pageElements = onStart({
 				fileName:newFileName,
@@ -317,9 +333,11 @@ function fileDownloaderUtility() {
 			}
 		};
 		if(defaultDownloadDirectory !== '') {
+			fileStream = fs.createWriteStream(uniqueFilePath);
 			var curRequest = reqLib.get(url, handleRequest)
 			.on ("error", function(error) {
 				if (bar) bar.cancel ();
+				fs.unlink(uniqueFilePath);
 				defered.reject(error);
 			});
 			curRequest.setTimeout( 5000, function( ) {
@@ -368,8 +386,9 @@ var FILE_DOWNLOADER_UTILITY = new fileDownloaderUtility();
 
 if(FILE_DOWNLOADER_UTILITY.isDebugMode) {
 	// var url = "https://s3.amazonaws.com/ljrob/mac/kipling_mac-test.zip";
-	var url = "http://nodejs.org/dist/latest/node.exe";
+	// var url = "http://nodejs.org/dist/latest/node.exe";
 	// var url = "http://labjack.com/robots.txt";
+	var url = "http://labjack.com/sites/default/files/2014/07/LabJackM-1.0701-Mac.tgz";
 
 	FILE_DOWNLOADER_UTILITY.setDebugMode(true);
 	FILE_DOWNLOADER_UTILITY.downloadFile(url)

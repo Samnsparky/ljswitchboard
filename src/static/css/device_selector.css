@@ -5,7 +5,7 @@ body {
     position:absolute;
     top: 0;
     right: 0;
-    width: 120px;
+    width: 150px;
 }
 #lvm_upgrade_box {
     position: absolute;
@@ -39,16 +39,14 @@ body {
     margin-top: 2px;
 }
 .labjackVersions .lvm_name {
-    float: left;
     text-align: left;
-    width: 56%;
+    width: 120px;
     margin: 0;
     padding-left:5%;
 }
 .labjackVersions .lvm_version {
     text-align: right;
-    float: right;
-    width: 34%;
+    width: 60px;
     margin: 0;
     padding-right:5%;
 }
@@ -67,7 +65,7 @@ body {
     position: absolute;
     bottom: 20px;
     right: 10px;
-    width: 85px;
+    width: 105px;
 }
 .labjackVersions .upgradeButton {
     font-size: 10px;

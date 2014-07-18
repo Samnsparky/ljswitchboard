@@ -581,6 +581,8 @@ function renderRegistersTable(entries, tags, filteredEntries, currentTag,
         /**
          * Using the twbsPagination library:
          * url: http://esimakin.github.io/twbs-pagination/
+         * another potential library:
+         * url: http://flaviusmatis.github.io/simplePagination.js/#page-11
         **/
         curPaginationObj = $('#pagination-demo').twbsPagination({
             totalPages: numPages,

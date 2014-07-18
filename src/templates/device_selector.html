@@ -2,17 +2,25 @@
     <div id="logo-holder"><img src="static/img/labjack-logo.png"></div>
     <h1>Select Devices <button id="refresh-button" class="btn btn-primary">Refresh Devices >></button><button id="finish-button" class="btn btn-primary">Continue >></button></h1>
     <div id="versionNumbers" class="labjackVersions">
-        <h4>Versions</hr>
         <table class="table">
             <tr id="kipling" class="lvm_link">
+                <td class="ljVersionNumbers ljVersionUpdateStatus">
+                    <span class="lvm_update_icon icon-download-2"></span>
+                </td>
                 <td class="ljVersionNumbers lvm_name">Kipling</td>
                 <td class="ljVersionNumbers lvm_version" title="Up to date">{{kiplingVersionNumber}}</td>
             </tr>
             <tr id="ljm" class="lvm_link">
+                <td class="ljVersionNumbers ljVersionUpdateStatus">
+                    <span class="lvm_update_icon icon-download-2"></span>
+                </td>
                 <td class="ljVersionNumbers lvm_name">LJM</td>
                 <td class="ljVersionNumbers lvm_version" title="Up to date">{{ljmVersionNumber}}</td>
             </tr>
             <tr id="ljm_wrapper" class="lvm_link">
+                <td class="ljVersionNumbers ljVersionUpdateStatus">
+                    <span class="lvm_update_icon icon-download-2"></span>
+                </td>
                 <td class="ljVersionNumbers lvm_name">LJM Wrapper</td>
                 <td class="ljVersionNumbers lvm_version" title="Up to date">{{ljmWrapperVersionNumber}}</td>
             </tr>
