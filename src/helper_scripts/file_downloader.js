@@ -159,6 +159,7 @@ function fileDownloaderUtility() {
 						gui = require('gui');
 					}
 					gui.Shell.showItemInFolder(info.filePath);
+					console.log('Tried to open file in finder:',info.filePath);
 				});
 
 				pageElements = {};
@@ -236,6 +237,7 @@ function fileDownloaderUtility() {
 			defered.reject();
 		}
 
+		// Figure out a unique file path for the new file to be named
 		var num = 1;
 		var filePath = defaultDownloadDirectory + path.sep + downloadFileName;
 		var uniqueFilePath = filePath;
@@ -260,6 +262,9 @@ function fileDownloaderUtility() {
 		safeName = safeName.replace(/\(/g,'_');
 		safeName = safeName.replace(/\)/g,'_');
 
+		/**
+		 * Function that handles the file download stuff.
+		 */
 		var handleResponse = function(res) {
 			var startFile = true;
 			var bodyNum = 0;
@@ -320,6 +325,10 @@ function fileDownloaderUtility() {
 				headers:res.headers
 			});
 		};
+		/*
+		 * Function that handles the basic http request to determine if it was 
+		 * successful/file doesn't exist.
+		 */
 		var handleRequest = function(res) {
 			if (res.statusCode === 200) {
 				handleResponse(res);
@@ -332,6 +341,7 @@ function fileDownloaderUtility() {
 				});
 			}
 		};
+		// Make sure that the download directory isn't blank.
 		if(defaultDownloadDirectory !== '') {
 			fileStream = fs.createWriteStream(uniqueFilePath);
 			var curRequest = reqLib.get(url, handleRequest)
