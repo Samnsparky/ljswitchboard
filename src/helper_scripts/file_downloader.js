@@ -98,13 +98,14 @@ function fileDownloaderUtility() {
 	};
 
 	var getWindowsDownloadsPath = function() {
+		var userDrive = process.env.HOMEDRIVE;
 		var userDirectory = process.env.HOMEPATH;
-		if (isDefined(userDirectory)) {
-			var downloadsDir = userDirectory + '\\Downloads';
+		if (isDefined(userDrive) && isDefined(userDirectory)) {
+			var downloadsDir = userDrive + userDirectory + '\\Downloads';
 			if (fs.existsSync(downloadsDir)) {
 				return downloadsDir;
 			}
-			downloadsDir = userDirectory + '\\My Documents\\Downloads';
+			downloadsDir = userDrive + userDirectory + '\\My Documents\\Downloads';
 			if (fs.existsSync(downloadsDir)) {
 				return downloadsDir;
 			}
@@ -318,7 +319,7 @@ function fileDownloaderUtility() {
 			var downloadFinished = false;
 
 			var returnToCaller = function() {
-				if(fileStreamFinished & downloadFinished) {
+				if(fileStreamFinished && downloadFinished) {
 					var megabytesDownloaded = toMegabytes(body.length);
 					fileStream.close(function() { // close() is async
 						defered.resolve({fileName:uniqueFilePath,size:body.length,sizeMB:megabytesDownloaded});
