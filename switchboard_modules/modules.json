@@ -45,7 +45,7 @@
     },
     {
         "name": "thermocouple_simple",
-        "active": true
+        "active": false
     },
     {
         "name": "network_configuration",
