@@ -2,6 +2,7 @@ var globalDeviceConstantsSwitch = {
     "T7":"t7DeviceConstants",
     "T7Pro":"t7ProDeviceConstants"
 };
+var globalDoubleRegExStringPattern = "(^[0-9]{1,}$)|(^[0-9]{1,}\\.$)|(^[0-9]{1,}\\.[0-9]{1,}$)|(^\\.[0-9]{1,}$)";
 var globalDeviceConstants = {
     "t7DeviceConstants": {
         hasEFSystem: true,
@@ -33,7 +34,7 @@ var globalDeviceConstants = {
                 } else if (val === 199) {
                     return {value: 199,name: "GND"};
                 } else {
-                    return {value: 65535, name: "Select"}
+                    return {value: 65535, name: "Select"};
                 }
             },
             filter: function(val) {
@@ -74,8 +75,7 @@ var globalDeviceConstants = {
             {"name": "5","value": 5, "acquisitionTime": 50},
             {"name": "6","value": 6, "acquisitionTime": 50},
             {"name": "7","value": 7, "acquisitionTime": 50},
-            {"name": "8","value": 8, "acquisitionTime": 50},
-            {"name": "9","value": 9, "acquisitionTime": 50}
+            {"name": "8","value": 8, "acquisitionTime": 50}
         ],
         ainSettlingOptions_RAW: [
             {"name": "Auto",    "value": 0},
@@ -116,14 +116,278 @@ var globalDeviceConstants = {
                 // } 
             }
         },
+        ainEFTypeMap: {
+            0: function() {return globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions[0];},
+            1: function() {return globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions[1];},
+            20: function() {return globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions[2];},
+            21: function() {return globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions[3];},
+            22: function() {return globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions[4];},
+            23: function() {return globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions[5];},
+            24: function() {return globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions[6];}
+        },
         ainEFTypeOptions:[
-            {"name": "Input", "value": 0, "selected": '',"infoReg":"_EF_READ_A"},
-            {"name": "TypeE Thermocouple","value": 20, "selected": '',"infoReg":"_EF_READ_A"},
-            {"name": "TypeJ Thermocouple","value": 21, "selected": '',"infoReg":"_EF_READ_A"},
-            {"name": "TypeK Thermocouple","value": 22, "selected": '',"infoReg":"_EF_READ_A"},
-            {"name": "TypeR Thermocouple","value": 23, "selected": '',"infoReg":"_EF_READ_A"},
-            {"name": "TypeT Thermocouple","value": 24, "selected": '',"infoReg":"_EF_READ_A"}
+            {"name": "Input", "value": 0,
+                "getConfigRoutine": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigRoutine.none;
+                },
+                "getReadRegs":function() {
+                    return [];
+                },
+                "getConfigRegs": function() {
+                    return [];
+                }
+            },
+            {"name": "Slope/Offset","value": 1,
+                "getConfigRoutine": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigRoutine.slopeOffset;
+                },
+                "getReadRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efReadOptions.slopeOffset;
+                },
+                "getConfigRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigOptions.slopeOffset;
+                }
+            },
+            {"name": "TypeE Thermocouple","value": 20,
+                "getConfigRoutine": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigRoutine.thermocouples;
+                },
+                "getReadRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efReadOptions.thermocouples;
+                },
+                "getConfigRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigOptions.thermocouples;
+                }
+            },
+            {"name": "TypeJ Thermocouple","value": 21,
+                "getConfigRoutine": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigRoutine.thermocouples;
+                },
+                "getReadRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efReadOptions.thermocouples;
+                },
+                "getConfigRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigOptions.thermocouples;
+                }
+            },
+            {"name": "TypeK Thermocouple","value": 22,
+                "getConfigRoutine": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigRoutine.thermocouples;
+                },
+                "getReadRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efReadOptions.thermocouples;
+                },
+                "getConfigRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigOptions.thermocouples;
+                }
+            },
+            {"name": "TypeR Thermocouple","value": 23,
+                "getConfigRoutine": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigRoutine.thermocouples;
+                },
+                "getReadRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efReadOptions.thermocouples;
+                },
+                "getConfigRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigOptions.thermocouples;
+                }
+            },
+            {"name": "TypeT Thermocouple","value": 24,
+                "getConfigRoutine": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigRoutine.thermocouples;
+                },
+                "getReadRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efReadOptions.thermocouples;
+                },
+                "getConfigRegs": function() {
+                    return globalDeviceConstants.t7DeviceConstants.efConfigOptions.thermocouples;
+                }
+            }
         ],
+        efConfigRoutine: {
+            none: [
+                {"reg": "_EF_INDEX", "configKey": "efType"}
+            ],
+            slopeOffset: [
+                {"reg": "_EF_INDEX", "value": 0, "description": ""},
+                {"reg": "_EF_INDEX", "configKey": "efType", "description": ""},
+                {"reg": "_EF_CONFIG_D", "value": 1, "description": "Custom Slope"},
+                {"reg": "_EF_CONFIG_E", "value": 0, "description": "Custom Offset"}
+            ],
+            thermocouples: [
+                {"reg": "_EF_INDEX", "value": 0, "description": ""},
+                {"reg": "_RANGE", "value": 0.1, "description": ""},
+                {"reg": "_EF_INDEX", "configKey": "efType", "description": ""},
+                {"reg": "_EF_CONFIG_A", "value": 0, "description": ""},
+                {"reg": "_EF_CONFIG_B", "value": 60052, "description": ""}
+            ]
+        },
+        efConfigOptions: {
+            slopeOffset: [
+                {
+                    "configReg": "_EF_CONFIG_D",
+                    "description": "Custom slope to be applied to the reading",
+                    "humanName": "Slope",
+                    "type": "value",
+                    "defaultVal": 1,
+                    "format": "%.4f",
+                    "pattern": globalDoubleRegExStringPattern,
+                    "hint": "Slope",
+                    "validator": function(value) {
+                        return true;
+                    }
+                },{
+                    "configReg": "_EF_CONFIG_E",
+                    "description": "Custom offset to be applied to the reading",
+                    "humanName": "Offset",
+                    "type": "value",
+                    "defaultVal": 0,
+                    "format": "%.4f",
+                    "pattern": globalDoubleRegExStringPattern,
+                    "hint": "Offset",
+                    "validator": function(value) {
+                        return true;
+                    }
+                }
+            ],
+            thermocouples: [
+                {
+                    "configReg": "_EF_CONFIG_A",
+                    "description": "Bitmask to configure temperature metric",
+                    "humanName": "Metric",
+                    "type": "select",
+                    "defaultVal": 0,
+                    "format": function(data) {
+                        var value = Number(data.value);
+                        var options = globalDeviceConstants.t7DeviceConstants.thermocoupleTemperatureMetrics;
+                        var unitStr = '';
+                        options.forEach(function(option) {
+                            if(option.value === value) {
+                                unitStr = option.name;
+                            }
+                        });
+                        return unitStr;
+                    },
+                    "getOptions": function() {
+                        return globalDeviceConstants.t7DeviceConstants.thermocoupleTemperatureMetrics;
+                    }
+                },{
+                    "configReg": "_EF_CONFIG_B",
+                    "description": "Modbus address read to acquire CJC reading.  Default is 60052.",
+                    "humanName": "Custom CJC Modbus Address",
+                    "type": "value",
+                    "defaultVal": 60052,
+                    "format": "%d",
+                    // "pattern": "(^[0-9]{1,}$)|(^[0-9]{1,}\\.$)|(^[0-9]{1,}\\.[0]{1,}$)",
+                    "pattern": "(^60052$)",
+                    "hint": "Modbus Address",
+                    "getValidator": function() {
+                        var isDec = new RegExp(/^[0-9]{1,}$/g);
+                        var isValid = function(value) {
+                            return isDec.test(value.toString());
+                        };
+                        return isValid;
+                    }
+                },{
+                    "configReg": "_EF_CONFIG_D",
+                    "description": "Custom slope to be applied to CJC reading",
+                    "humanName": "CJC Slope",
+                    "type": "value",
+                    "defaultVal": 1,
+                    "format": "%.4f",
+                    "pattern": globalDoubleRegExStringPattern,
+                    "hint": "Slope",
+                    "getValidator": function() {
+                        var isValid = function(value) {
+                            return true;
+                        };
+                        return isValid;
+                    }
+                },{
+                    "configReg": "_EF_CONFIG_E",
+                    "description": "Custom offset to be applied to CJC reading",
+                    "humanName": "CJC Offset",
+                    "type": "value",
+                    "defaultVal": 0,
+                    "format": "%.4f",
+                    "pattern": globalDoubleRegExStringPattern,
+                    "hint": "Offset",
+                    "getValidator": function() {
+                        var isValid = function(value) {
+                            return true;
+                        };
+                        return isValid;
+                    }
+                }
+            ]
+        },
+        efReadOptions: {
+            slopeOffset: [
+                {
+                    "readReg": "_EF_READ_A",
+                    "location":"primary",
+                    "humanName": "Slope/Offset",
+                    "description": "Measured volts * slope + offset",
+                    "unit": "",
+                },
+            ],
+            thermocouples: [
+                {
+                    "readReg": "_EF_READ_A",
+                    "location": "primary",
+                    // "humanName": "Temp.",
+                    "humanNameReg": "_EF_INDEX",
+                    "getHumanName": function(efValue) {
+                        var options = globalDeviceConstants.t7DeviceConstants.thermocoupleTypes;
+                        var nameStr = 'N/A';
+                        options.forEach(function(option) {
+                            if(option.value === efValue) {
+                                nameStr = option.name;
+                            }
+                        });
+                        return nameStr;
+                    },
+                    "description": "Calculated Temperature",
+                    "format": function(data) {
+                        var value = Number(data.value);
+                        if(value !== -9999) {
+                            return sprintf('%.2f',value);
+                        } else {
+                            return "N/A";
+                        }
+                    },
+                    "unitReg": "_EF_CONFIG_A",
+                    "getUnit": function(value) {
+                        var options = globalDeviceConstants.t7DeviceConstants.thermocoupleTemperatureMetrics;
+                        var unitStr = '';
+                        options.forEach(function(option) {
+                            if(option.value === value) {
+                                unitStr = option.name;
+                            }
+                        });
+                        return unitStr;
+                    }
+                },{
+                    "readReg": "_EF_READ_B",
+                    "location": "secondary",
+                    "humanName": "Final Voltage",
+                    "description": "Final voltage used to calculate Temperature",
+                    "unit": "V"
+                },{
+                    "readReg": "_EF_READ_C",
+                    "location": "secondary",
+                    "humanName": "CJC Temperature",
+                    "description": "CJC temperature in degrees K",
+                    "unit": "K"
+                },{
+                    "readReg": "_EF_READ_D",
+                    "location": "secondary",
+                    "humanName": "CJC Compensation Voltage",
+                    "description": "Thermocouple voltage calculated for CJC temperature",
+                    "unit": "V"
+                }
+            ]
+        },
         thermocoupleTypes: [
             {"name": "TypeE","value": 20},
             {"name": "TypeJ","value": 21},
@@ -157,6 +421,7 @@ var globalDeviceConstants = {
         ],
         "extendedInfo":[
             {"key":"ainResolutionOptions","values": [
+                    {"name": "9","value": 9, "acquisitionTime": 200},
                     {"name": "10","value": 10, "acquisitionTime": 200},
                     {"name": "11","value": 11, "acquisitionTime": 200},
                     {"name": "12","value": 12, "acquisitionTime": 200}
@@ -184,7 +449,7 @@ var linkGlobalDeviceConstants = function() {
             globalDeviceConstants.t7ProDeviceConstants[attr.key].push(t7ProData);
         });
     });
-}
+};
 linkGlobalDeviceConstants();
 
 

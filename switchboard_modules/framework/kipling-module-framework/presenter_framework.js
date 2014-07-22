@@ -54,8 +54,8 @@ function JQueryWrapper (origJQuery) {
         return $(selector);
     };
 
-    this.val = function (selector) {
-        return $(selector).val();
+    this.val = function (selector, newValue) {
+        return $(selector).val(newValue);
     };
     this.hide = function(selector) {
         return $(selector).hide();
@@ -63,20 +63,23 @@ function JQueryWrapper (origJQuery) {
     this.show = function(selector) {
         // return $(selector).show();
     };
-    this.fadeOut = function(selector,duration,callback) {
+    this.fadeOut = function(selector, duration, callback) {
         return $(selector).fadeOut(duration,callback);
     };
-    this.fadeIn = function(selector,duration,callback) {
+    this.fadeIn = function(selector, duration, callback) {
         return $(selector).fadeIn(duration,callback);
     };
     this.checkFirstDeviceRadioButton = function() {
         return $('.device-selection-radio').first().prop('checked', true);
     };
-    this.text = function(selector,text) {
+    this.text = function(selector, text) {
         return $(selector).text(text);
     };
     this.get = function(selector) {
         return $(selector);
+    };
+    this.is = function(selector, element) {
+        return $(selector).is(element);
     };
 }
 
@@ -894,7 +897,7 @@ function Framework() {
                 onErrorHandle
             );
             return;
-        }        
+        }
 
         // if binding isn't defined execute onLoadError
         if (newBinding.binding === undefined) {
@@ -914,6 +917,11 @@ function Framework() {
                 onErrorHandle
             );
             return;
+        }
+
+        // if the displayType isn't defined then use the standard one.
+        if (newBinding.displayType === undefined) {
+            newBinding.displayType = 'standard';
         }
 
         // if iterationDelay isn't defined define it as 0
@@ -1070,6 +1078,7 @@ function Framework() {
             binding.customFormatFunc = newSmartBinding.customFormatFunc;
             binding.iterationDelay = newSmartBinding.iterationDelay;
             binding.initialDelay = newSmartBinding.initialDelay;
+            binding.displayType = newSmartBinding.displayType;
 
             if(typeof(newSmartBinding.periodicCallback) === 'function') {
                 binding.execCallback = true;
@@ -1472,7 +1481,7 @@ function Framework() {
             // Populating the execution queue
             bindings.forEach(function (binding, key) {
                 bindingList.push(createFutureDeviceIOOperation(
-                    binding, 
+                    binding,
                     results
                 ));
             });
@@ -1485,7 +1494,7 @@ function Framework() {
             var results = dict({});
 
             var executionQueue = createDeviceIOExecutionQueue(
-                bindings, 
+                bindings,
                 results
             );
 
@@ -1546,7 +1555,7 @@ function Framework() {
                                     key,
                                     {
                                         binding: binding,
-                                        address: addresses[i], 
+                                        address: addresses[i],
                                         result: results[i]
                                     });
                                 i += 1;
@@ -1867,7 +1876,7 @@ function Framework() {
                             var lName = location.replace(/\.json/g, '');
                             var name = lName.split('/')[lName.split('/').length-1];
                             jsonTemplateVals[name] = result;
-                            callback(null); 
+                            callback(null);
                         }
                     );
                 },
@@ -2210,10 +2219,10 @@ function Framework() {
                 self.fire(
                     'onRefreshError',
                     [ self.readBindings , details ],
-                    function (shouldContinue) { 
+                    function (shouldContinue) {
                         self.loopErrorEncountered = true;
                         self.loopErrors.push({details:details,func:'handleIOError'});
-                        self.runLoop = shouldContinue; 
+                        self.runLoop = shouldContinue;
                         if(shouldContinue) {
                             self.printLoopErrors(
                                 'onRefreshError b/c loopIteration.handleIOError',
@@ -2238,10 +2247,10 @@ function Framework() {
                 self.fire(
                     'onRefreshError',
                     [ self.readBindings , details ],
-                    function (shouldContinue) { 
+                    function (shouldContinue) {
                         self.loopErrorEncountered = true;
                         self.loopErrors.push({details:details,func:'reportError'});
-                        self.runLoop = shouldContinue; 
+                        self.runLoop = shouldContinue;
                         if(shouldContinue) {
                             self.printLoopErrors(
                                 'onRefreshError b/c loopIteration.reportError',
@@ -2301,7 +2310,7 @@ function Framework() {
             });
             if(addresses.length > 0) {
                 innerDeferred.resolve({
-                    addresses: addresses, 
+                    addresses: addresses,
                     formats: formats,
                     customFormatFuncs: customFormatFuncs,
                     bindings: bindings
@@ -2321,8 +2330,8 @@ function Framework() {
                 function() {
                     innerDeferred.reject();
                 },
-                function () { 
-                    innerDeferred.resolve(bindingsInfo); 
+                function () {
+                    innerDeferred.resolve(bindingsInfo);
                 }
             );
             return innerDeferred.promise;
@@ -2539,7 +2548,15 @@ function Framework() {
                 var valRead = valueReadFromDevice.get(bindingName.toString());
                 if (valRead !== undefined) {
                     var jquerySelector = '#' + bindingInfo.template;
-                    jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
+                    if (bindingInfo.displayType === 'standard') {
+                        jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
+                    } else if (bindingInfo.displayType === 'input') {
+                        if (!jquery.is(jquerySelector, ':focus')) {
+                            jquery.val(jquerySelector, valRead.toString());
+                        }
+                    } else {
+
+                    }
                 }
             });
         }

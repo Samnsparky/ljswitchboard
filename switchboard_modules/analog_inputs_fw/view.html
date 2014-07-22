@@ -93,8 +93,8 @@
 			<table class="table table-striped" id="device-selector-table">
 				<thead>
 					<tr class="table-dataHeader">
-						<th class="span2">Channel</th>
-						<th class="span9">Reading</th>
+						<th class="span2"></th>
+						<th class="span9"></th>
 						<th class="span1">Options</th>
 					</tr>
 				</thead>
@@ -102,21 +102,20 @@
 				{{#eachDict custom.analogInputsDict}}
 					<tr id="{{name}}-table-data" class="table-dataRow">
 						<td>
-							<p id="{{name}}-channel-name">{{name}}</p>
+							<ul id="{{name}}-original-channel-names" class="channelNamesList">
+								<li id="{{name}}-channel-name">{{name}}</li>
+							</ul>
+							<ul id="{{name}}-original-channel-names" class="efTypeName channelNamesList">
+								<li><span class=" icon-arrow-2"></span></li>
+							</ul>
 						</td>
 						<td>
 							<table style="width: 100%;margin-bottom: -14px;" id="output-data-table" class="table table-non-striped">
 								<tbody style="background-color:transparent">
 									<tr>
-										<td>
+										<td class="result-text" style="font-size:13px;">
+											<p class="result-value" title="Register: {{name}}"><span id="{{name}}">0.000000</span> V</p>
 										</td>
-										<td class="result-text">
-											<p title="Register: {{name}}"><span id="{{name}}">0.000000</span> V</p>
-										</td>
-										<td>
-										</td>
-									</tr>
-									<tr>
 										<td class="graphRange">
 											<div class="ain-range-text-left" title="{{rangeStr}}">-<span class="ain-range-val" id="{{name}}-min-range-val">{{rangeVal}}</span>V</div>
 										</td>
@@ -128,6 +127,18 @@
 										<td class="graphRange">
 											<div class="ain-range-text-right" title="{{rangeStr}}">+<span class="ain-range-val" id="{{name}}-max-range-val">{{rangeVal}}</span>V</div>
 										</td>
+									</tr>
+								</tbody>
+							</table>
+							<table  style="width: 100%;margin-top: 14px;margin-bottom: -14px;" id="output-data-table" class="table table-non-striped">
+								<tbody id="{{name}}-ef-readings" class="efPrimaryReading">
+									<tr class="primary-ef-readings">
+										<td class="result-text" style="font-size:13px;">
+											<p class="result-value" title="Register: "><span id="">0.000000</span> V</p>
+										</td>
+										<td class="graphRange"></td>
+										<td class="graphSlider"></td>
+										<td class="graphRange"></td>
 									</tr>
 								</tbody>
 							</table>
@@ -170,6 +181,14 @@
 									</tr>
 								</tbody>
 							</table>
+							<div id="{{name}}-ainEFExtendedInfo" class="ainEFExtendedInfo">
+								<ul id="{{name}}-ainEFConfigs" class="efExtendedInfo ainEFConfigs">
+									<li>HERE-A</li>
+								</ul>
+								<ul id="{{name}}-ainEFSecondaryReadRegisters" class="efExtendedInfo ainEFSecondaryReadRegisters">
+									<li>HERE-B</li>
+								</ul>
+							</div>
 							<hr>
 						</td>
 					</tr>

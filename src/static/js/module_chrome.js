@@ -516,6 +516,11 @@ function showAlert(errorMessage)
     $('.device-selector-holder').css('margin-top', '0px');
     $('#alert-message').fadeIn();
 }
+function showErrorMessage(message) {
+    $('#error-display').html(message);
+    $('.device-selector-holder').css('margin-top', '0px');
+    $('#alert-message').fadeIn();
+}
 function showMinAlert(errorMessage) {
     $('#error-display').html(errorMessage);
     $('.device-selector-holder').css('margin-top', '0px');

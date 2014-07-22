@@ -70,5 +70,5 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "device_info"
+    "moduleName": "analog_inputs_fw"
 }

@@ -1,8 +1,16 @@
 .ain-config-options {
     display:none;
 }
+.channelNamesList {
+	list-style-type: none;
+}
+.channelNamesList li {
+	line-height: 11px;
+}
+.primary-ef-readings {
+	height: 35px;
+}
 .optionsConfigTable {
-	margin-bottom: 10px;
 	background-color: transparent;
 	margin-top: 0px;
 	margin-bottom: 5px;
@@ -14,6 +22,27 @@
 }
 .optionsConfigTable td {
 	background-color: transparent;
+}
+.ainEFExtendedInfo {
+	width: 86%;
+	margin-left: 14%;
+}
+.efExtendedInfo {
+	min-height: 0;
+	margin:0;
+	width:49%;
+	float:left;
+	display:block;
+	list-style-type: none;
+}
+.efExtendedInfo li {
+	margin-bottom:5px;
+}
+.efConfig-FORM {
+	margin:0;
+}
+.efConfig-INPUT-APPEND {
+	margin:0;
 }
 .displayed-icon {
 	font-size: large;
@@ -31,6 +60,9 @@
 	margin-bottom: -11px;
 	margin-left: 10px;
 	/*text-align: center;*/
+}
+#output-data-table .result-text .result-value {
+	width:100px;
 }
 #output-data-table td {
 	background-color: transparent;
