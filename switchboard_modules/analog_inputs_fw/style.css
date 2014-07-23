@@ -26,6 +26,7 @@
 .ainEFExtendedInfo {
 	width: 86%;
 	margin-left: 14%;
+	display: block;
 }
 .efExtendedInfo {
 	min-height: 0;
@@ -38,11 +39,25 @@
 .efExtendedInfo li {
 	margin-bottom:5px;
 }
+.ainEFConfigA-LINK {
+	width: 30px;
+}
+.ainEFConfigB-LINK {
+	width: 200px;
+}
 .efConfig-FORM {
 	margin:0;
 }
 .efConfig-INPUT-APPEND {
 	margin:0;
+}
+.efConfig-INPUT {
+	width: 190px;
+}
+.efConfig-INPUT-BTN {
+	width: 25px;
+	border: 0;
+	padding: 0;
 }
 .displayed-icon {
 	font-size: large;

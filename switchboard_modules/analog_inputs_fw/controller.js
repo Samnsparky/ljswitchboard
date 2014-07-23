@@ -57,26 +57,7 @@ function module() {
     this.curDeviceOptions = dict();
     this.regParserDict = dict();
     this.regParser = dict();
-    // this.regParser = {
-    //     set: function(name,value) {
-    //         return sdModule.regParserDict.set(name,value);
-    //     },
-    //     get: function(name) {
-    //         var data = sdModule.regParserDict.get(name);
-    //         if(typeof(data) === 'undefined') {
-    //             return sdModule.deviceConstants.extraAllAinOptions[0];
-    //         } else {
-    //             return data;
-    //         }
-    //     },
-    //     delete: function(name) {
-    //          return sdModule.regParserDict.delete(name);
-    //     },
-    //     forEach: function(func) {
-    //         return sdModule.regParserDict.forEach(func);
-    //     },
-    //     size: self.regParserDict.size
-    // };
+
     this.initRegParser = function() {
         self.regParser = {};
         self.regParser.set = self.regParserDict.set;
@@ -158,12 +139,12 @@ function module() {
     '<li id="{{registerName}}-configOption">' +
     '<span>{{humanName}}: <br>' +
     '<div id="{{registerName}}-SELECT" class="btn-group ainConfigReg efConfig-SELECT">' +
-    '    <a style="font-size:12px;"class="btn dropdown-toggle {{cssClass}}-LINK" data-toggle="dropdown"title="Set Register: {{registerName}}"><span class="currentValue" title="{{registerName}} is set to {{value}}">{{curStr}}</span><span class="caret"></span>' +
+    '    <a style="font-size:12px;"class="btn dropdown-toggle {{cssClass}}-LINK" data-toggle="dropdown"title="Set Register: {{registerName}}"><span id="{{registerName}}-CURRENT-VALUE" class="currentValue" title="{{registerName}} is set to {{value}}">{{curStr}}</span><span class="caret"></span>' +
     '    </a>' +
     '    <ul class="dropdown-menu">' +
     '        {{#each menuOptions}}' +
     '        <li>' +
-    '            <a style="font-size:12px;" class="menuOption" title="Set {{../registerName}} to {{value}}" value="{{value}}">{{name}}</a>' +
+    '            <a style="font-size:12px;" class="menuOption" title="Set {{../registerName}} to {{value}}{{titleAppend}}" value="{{value}}">{{name}}</a>' +
     '        </li>' +
     '        {{/each}}' +
     '    </ul>' +
@@ -206,8 +187,8 @@ function module() {
     var minGraphRange;
     var maxGraphRange;
 
-    this.pDict = function(dict) {
-        dict.forEach(function(value,name){
+    this.pDict = function(dictToPrint) {
+        dictToPrint.forEach(function(value,name){
             console.log(name,value);
         });
     };
@@ -347,7 +328,13 @@ function module() {
         var barIdName = '#'+binding+'-input-bar';
         var minValIdName = '#'+binding+'-min-range-val';
         var maxValIdName = '#'+binding+'-max-range-val';
-        var rangeVal = Number($(rangeIdName).val());
+        var rawVal = $(rangeIdName).val();
+        var rangeVal;
+        if(isNaN(rawVal)) {
+            rangeVal = 10;
+        } else {
+            rangeVal = Number(rawVal);
+        }
         var minRangeText = $(minValIdName).text();
         var maxRangeText = $(maxValIdName).text();
         var tStr;
@@ -705,8 +692,21 @@ function module() {
         var baseID = '#' + chName + '-table-data';
         var nameEle = $(baseID + ' .efTypeName');
         var primaryEle = $(baseID + ' .efPrimaryReading');
-        nameEle.empty();
-        primaryEle.empty();
+        var efBaseID = '#' + chName + '-ainEFExtendedInfo';
+        var efConfigsEle = $(efBaseID + ' .ainEFConfigs');
+        var secondaryReadsEle = $(efBaseID + ' .ainEFSecondaryReadRegisters');
+        nameEle.slideUp(function(){
+            nameEle.empty();
+        });
+        primaryEle.slideUp(function(){
+            primaryEle.empty();
+        });
+        efConfigsEle.slideUp(function() {
+            efConfigsEle.empty();
+        });
+        secondaryReadsEle.slideUp(function() {
+            secondaryReadsEle.empty();
+        });
         self.deleteEFBindings(chNum);
     };
     this.deleteEFBindings = function(chNum) {
@@ -949,7 +949,9 @@ function module() {
                 'title': title,
                 'registerName': regName,
                 'curVal': curVal,
-                'value': curVal
+                'value': curVal,
+                'titleAppend': configReg.titleAppend,
+                'cssClass': configReg.cssClass
             };
 
             var newBinding = {
@@ -975,6 +977,10 @@ function module() {
             } else if (inputType === 'select') {
                 var menuOptions = configReg.getOptions();
                 var curStr = 'N/A';
+                if(typeof(configReg.notFoundText) !== 'undefined') {
+                    curStr = configReg.notFoundText;
+                }
+                
                 menuOptions.forEach(function(menuOption){
                     if(menuOption.value === curVal) {
                         curStr = menuOption.name;
@@ -983,10 +989,42 @@ function module() {
                 newEFConfigData.curStr = curStr;
                 newEFConfigData.menuOptions = menuOptions;
                 efControlsData +=  ainEFTypeConfigTemplates.select(newEFConfigData);
+                var getCallback = function(options) {
+                    var callback = function(data, onSuccess) {
+                        try {
+                            var curBinding = data.binding;
+                            var curVal = data.value;
+                            var stringVal = data.stringVal;
+                            var id = '#' + curBinding.template + '-CURRENT-VALUE';
+                            var ele = $(id);
+                            var reg = curBinding.binding;
+
+                            var newTitle = reg + ' is set to ' + curVal.toString();
+                            var titleAppend = '';
+                            options.forEach(function(option){
+                                if(option.value === curVal) {
+                                    if(option.titleAppend) {
+                                        titleAppend = option.titleAppend;
+                                        titleAppend = titleAppend.replace(', ','');
+                                    } else {
+                                        titleAppend = option.name;
+                                    }
+                                }
+                            });
+                            newTitle += ', ' + titleAppend;
+                            ele.attr('title',newTitle);
+                            ele.text(stringVal);
+                            onSuccess();
+                        } catch(err) {
+                            onSuccess();
+                        }
+                    };
+                    return callback;
+                };
+                newBinding.periodicCallback = getCallback(menuOptions);
             } else {
                 efControlsData +=  '<p>Undefined inputType' +regname+'</p>';
             }
-
 
             // Add config register to bindings list
             readBindings.push(newBinding);
@@ -999,18 +1037,40 @@ function module() {
         var efConfigsEle = $(efBaseID + ' .ainEFConfigs');
         var secondaryReadsEle = $(efBaseID + ' .ainEFSecondaryReadRegisters');
         
-        nameEle.empty();
-        primaryEle.empty();
-        efConfigsEle.empty();
-        secondaryReadsEle.empty();
-
-        nameEle.html(primaryNamesData);
-        primaryEle.html(primaryReadRegsData);
-        efConfigsEle.html(efControlsData);
-        secondaryReadsEle.html(secondaryReadRegsData);
-
-        self.registerClickHandlers(chNum, efType, efBaseID);
-        self.framework.putSmartBindings(readBindings);
+        var finishedPages = [];
+        var numFinished = 0;
+        var pageInfos = [
+            {'key':'nameEle','ele':nameEle,'data':primaryNamesData},
+            {'key':'primaryEle','ele':primaryEle,'data':primaryReadRegsData},
+            {'key':'efConfigsEle','ele':efConfigsEle,'data':efControlsData},
+            {'key':'secondaryReadsEle','ele':secondaryReadsEle,'data':secondaryReadRegsData},
+        ];
+        var continueFunc = function(pageInfo) {
+            numFinished += 1;
+            if(pageInfo) {
+                finishedPages.push(pageInfo);
+            }
+            if(numFinished > (pageInfos.length-1)) {
+                self.registerClickHandlers(chNum, efType, efBaseID);
+                self.framework.putSmartBindings(readBindings);
+                finishedPages.forEach(function(finishedPage) {
+                    finishedPage.ele.slideDown();
+                });
+            }
+        };
+        
+        pageInfos.forEach(function(pageInfo) {
+            if(pageInfo.data !== '') {
+                pageInfo.ele.slideUp(function() {
+                    pageInfo.ele.empty();
+                    pageInfo.ele.html(pageInfo.data);
+                    continueFunc(pageInfo);
+                });
+            } else {
+                console.log('Ignoring...',pageInfo.key);
+                continueFunc();
+            }
+        });
     };
 
     /**
@@ -1029,6 +1089,27 @@ function module() {
         onSuccess();
     };
     
+    this.clearCachedData = function() {
+        for (i = 0; i < 13; i++) {
+            self.removeAinEFInfo(i);
+        }
+        self.currentValues = dict();
+        self.newBufferedValues = dict();
+        self.isValueNew = dict();
+        self.bufferedOutputValues = dict();
+        self.analogInputsDict = dict();
+
+        self.deviceConstants = {};
+        self.curDeviceOptions = dict();
+        self.regParserDict = dict();
+        self.regParser = dict();
+
+        self.efTypeDict = dict();
+        self.rangeOptionsDict = dict();
+        self.resolutionOptionsDict = dict();
+        self.settlingOptionsDict = dict();
+        self.negativeChannelDict = dict();
+    };
     /**
      * Function is called once every time a user selects a new device.  
      * @param  {[type]} framework   The active framework instance.
@@ -1038,6 +1119,9 @@ function module() {
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
         self.activeDevice = device;
+        
+        self.clearCachedData();
+
         framework.clearConfigBindings();
         framework.setStartupMessage('Reading Device Configuration');
         self.configureModule(onSuccess);
@@ -1193,6 +1277,7 @@ function module() {
                 val = value / (range + 0.0003);
                 break;
             default:
+                val = 0;
                 break;
         }
         val = (Math.abs(val) * 100);
@@ -1229,6 +1314,7 @@ function module() {
     };
     this.initializeD3Graphs = function(onSuccess) {
         // For each analog input channel, create graphs using D3!
+        console.log('Num Graphs',self.analogInputsDict.size);
         self.analogInputsDict.forEach(function(val,name){
             // Save the current value
             var curVal = val.value;
@@ -1238,7 +1324,8 @@ function module() {
 
             // Get the width of space allocated to rendering the d3 rectangles.
             var svgID = '#' + name + '-graph';
-            var graphWidth = $(svgID).width();
+            var svgEle = $(svgID);
+            var graphWidth = svgEle.width();
 
             // Calculate half the width and/or the offset to be used for the 
             // second graph.
@@ -1274,12 +1361,16 @@ function module() {
         var ainGraph = d3.select(svgID)
         .attr('width', self.getSVGWidth(curVal))
         .attr('style',self.getSVGStyle(curVal,curRange));
-
         var ainGraphLine = d3.select(svgID + ' .ainGraphLine')
         .attr('fill', self.getFillColor(curVal))
         .attr('width', function (data) {
-            return self.getD3GraphWidth(curVal,curRange).toString() + '%';
+            var str = self.getD3GraphWidth(curVal,curRange).toString();
+            if(str === 'NaN') {
+                str = '0';
+            }
+            return str + '%';
         });
+
     };
     this.clearTempData = function() {
         $('.efTypeName').html('');
@@ -1346,6 +1437,7 @@ function module() {
     var findEFIndexRegister = new RegExp("AIN[0-9]{1,2}_EF_INDEX");
     var findActiveChannel = new RegExp("AIN[0-9]{1,2}");
     var findActiveChannelNum = new RegExp("[0-9]{1,2}");
+    this.lastRefreshError = null;
     this.onRefreshed = function(framework, results, onError, onSuccess) {
         try {
             self.bufferedOutputValues.forEach(function(value,name){
@@ -1355,34 +1447,48 @@ function module() {
             self.newBufferedValues.forEach(function(value,name){
                 // if the new value that is read is not an analog input aka a 
                 // channel config option do some special DOM stuff
-                if(name.indexOf('_') != -1){
-                    var buttonID = '#' + name + '-SELECT';
-                    var buttonEl = $(buttonID);
-                    var selectEl = buttonEl.find('.currentValue');
-                    var newText = self.regParser.get(name,{'value':-9999,'name':'N/A'})(value);
-                    var stringVal = value.toString();
-                    var newTitle = name + ' is set to ' + stringVal;
-                    var rangeReg = findRangeRegisterRegex.exec(name);
-                    if(rangeReg) {
-                        var reg = rangeReg[0].split('_RANGE')[0];
-                        var obj = $('#' + reg + '-table-data .ain-range-val');
-                        obj.html(stringVal);
+                var buttonID;
+                var buttonEl;
+                var selectEl;
+                if(typeof(value) !== 'undefined') {
+                    if(name.indexOf('_') != -1){
+                        buttonID = '#' + name + '-SELECT';
+                        buttonEl = $(buttonID);
+                        selectEl = buttonEl.find('.currentValue');
+                        var newText = self.regParser.get(name,{'value':-9999,'name':'N/A'})(value);
+                        var stringVal = value.toString();
+                        var newTitle = name + ' is set to ' + stringVal;
+                        var rangeReg = findRangeRegisterRegex.exec(name);
+                        if(rangeReg) {
+                            var reg = rangeReg[0].split('_RANGE')[0];
+                            var obj = $('#' + reg + '-table-data .ain-range-val');
+                            obj.html(stringVal);
+                        }
+                        selectEl.text(newText.name);
+                        selectEl.attr('title',newTitle);
+                    } else {
+                        self.updateD3Graph(name,value);
                     }
-                    selectEl.text(newText.name);
-                    selectEl.attr('title',newTitle);
                 } else {
-                    self.updateD3Graph(name,value);
+                    buttonID = '#' + name + '-SELECT';
+                    buttonEl = $(buttonID);
+                    selectEl = buttonEl.find('.currentValue');
+                    selectEl.text('NaN');
+                    selectEl.attr('title','Check Device Connection');
                 }
                 self.currentValues.set(name,value);
                 self.newBufferedValues.delete(name);
             });
             onSuccess();
         } catch (err) {
-            console.error('Caught Error... in onRefreshed',err,err.stack);
+            self.lastRefreshError = err;
+            console.error('Failed To Refresh, check sdModule.lastRefreshError');
+            // console.error('Caught Error... in onRefreshed',err,err.stack);
             onSuccess();
         }
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
+        self.clearCachedData();
         onSuccess();
     };
     this.onUnloadModule = function(framework, onError, onSuccess) {

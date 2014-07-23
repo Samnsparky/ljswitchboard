@@ -9,18 +9,18 @@ var globalDeviceConstants = {
         ainBitsPrecision: 6,
         ainChannelNames: "AIN#(0:13)",
         allConfigRegisters: [
-            {"name":"Range",            "cssClass":"range",             "register":"AIN_ALL_RANGE",                 "options":"ainRangeOptions",                    "manual":false},
-            {"name":"Resolution Index", "cssClass":"resolution",        "register":"AIN_ALL_RESOLUTION_INDEX",      "options":"ainResolutionOptions",               "manual":false},
-            {"name":"Settling (us)",    "cssClass":"settling",          "register":"AIN_ALL_SETTLING_US",           "options":"func","func":"ainSettlingOptions",   "manual":false},
-            {"name":"Negative Channel", "cssClass":"negativeChannel",   "register":"AIN_ALL_NEGATIVE_CH",           "options":"func","func":"ainNegativeCHOptions", "manual":false},
-            {"name":"EF System",        "cssClass":"efSystem",          "register":"{{ainChannelNames}}_EF_INDEX",  "options":"ainEFTypeOptions",                   "manual":true}
+            {"name":"Range",                    "cssClass":"range",             "register":"AIN_ALL_RANGE",                 "options":"ainRangeOptions",                    "manual":false},
+            {"name":"Resolution Index",         "cssClass":"resolution",        "register":"AIN_ALL_RESOLUTION_INDEX",      "options":"ainResolutionOptions",               "manual":false},
+            {"name":"Settling (us)",            "cssClass":"settling",          "register":"AIN_ALL_SETTLING_US",           "options":"func","func":"ainSettlingOptions",   "manual":false},
+            {"name":"Negative Channel",         "cssClass":"negativeChannel",   "register":"AIN_ALL_NEGATIVE_CH",           "options":"func","func":"ainNegativeCHOptions", "manual":false},
+            {"name":"Extended Features (EF)",   "cssClass":"efSystem",          "register":"{{ainChannelNames}}_EF_INDEX",  "options":"ainEFTypeOptions",                   "manual":true}
         ],
         configRegisters: [
-            {"name":"Range",            "cssClass":"range",             "register":"{{ainChannelNames}}_RANGE",            "options":"ainRangeOptions"},
-            {"name":"Resolution Index", "cssClass":"resolution",        "register":"{{ainChannelNames}}_RESOLUTION_INDEX", "options":"ainResolutionOptions"},
-            {"name":"Settling (us)",    "cssClass":"settling",          "register":"{{ainChannelNames}}_SETTLING_US",      "options":"func","func":"ainSettlingOptions"},
-            {"name":"Negative Channel", "cssClass":"negativeChannel",   "register":"{{ainChannelNames}}_NEGATIVE_CH",      "options":"func","func":"ainNegativeCHOptions"},
-            {"name":"EF System",        "cssClass":"efSystem",          "register":"{{ainChannelNames}}_EF_INDEX",         "options":"ainEFTypeOptions"}
+            {"name":"Range",                    "cssClass":"range",             "register":"{{ainChannelNames}}_RANGE",            "options":"ainRangeOptions"},
+            {"name":"Resolution Index",         "cssClass":"resolution",        "register":"{{ainChannelNames}}_RESOLUTION_INDEX", "options":"ainResolutionOptions"},
+            {"name":"Settling (us)",            "cssClass":"settling",          "register":"{{ainChannelNames}}_SETTLING_US",      "options":"func","func":"ainSettlingOptions"},
+            {"name":"Negative Channel",         "cssClass":"negativeChannel",   "register":"{{ainChannelNames}}_NEGATIVE_CH",      "options":"func","func":"ainNegativeCHOptions"},
+            {"name":"Extended Feature (EF)",    "cssClass":"efSystem",          "register":"{{ainChannelNames}}_EF_INDEX",         "options":"ainEFTypeOptions"}
         ],
         extraAllAinOptions: [
             {"name": "Select","value": -9999},
@@ -126,7 +126,7 @@ var globalDeviceConstants = {
             24: function() {return globalDeviceConstants.t7DeviceConstants.ainEFTypeOptions[6];}
         },
         ainEFTypeOptions:[
-            {"name": "Input", "value": 0,
+            {"name": "Disabled", "value": 0,
                 "getConfigRoutine": function() {
                     return globalDeviceConstants.t7DeviceConstants.efConfigRoutine.none;
                 },
@@ -257,6 +257,7 @@ var globalDeviceConstants = {
                     "humanName": "Metric",
                     "type": "select",
                     "defaultVal": 0,
+                    "cssClass": "ainEFConfigA",
                     "format": function(data) {
                         var value = Number(data.value);
                         var options = globalDeviceConstants.t7DeviceConstants.thermocoupleTemperatureMetrics;
@@ -272,21 +273,42 @@ var globalDeviceConstants = {
                         return globalDeviceConstants.t7DeviceConstants.thermocoupleTemperatureMetrics;
                     }
                 },{
+                    // "configReg": "_EF_CONFIG_B",
+                    // "description": "Modbus address read to acquire CJC reading.  Default is 60052.",
+                    // "humanName": "Custom CJC Modbus Address",
+                    // "type": "value",
+                    // "defaultVal": 60050,
+                    // "format": "%d",
+                    // // "pattern": "(^[0-9]{1,}$)|(^[0-9]{1,}\\.$)|(^[0-9]{1,}\\.[0]{1,}$)",
+                    // "pattern": "(^60052$)|(^60050$)",
+                    // "hint": "Modbus Address",
+                    // "getValidator": function() {
+                    //     var isDec = new RegExp(/^[0-9]{1,}$/g);
+                    //     var isValid = function(value) {
+                    //         return isDec.test(value.toString());
+                    //     };
+                    //     return isValid;
+                    // }
                     "configReg": "_EF_CONFIG_B",
                     "description": "Modbus address read to acquire CJC reading.  Default is 60052.",
-                    "humanName": "Custom CJC Modbus Address",
-                    "type": "value",
+                    "humanName": "Cold Junction Location",
+                    "type": "select",
                     "defaultVal": 60052,
-                    "format": "%d",
-                    // "pattern": "(^[0-9]{1,}$)|(^[0-9]{1,}\\.$)|(^[0-9]{1,}\\.[0]{1,}$)",
-                    "pattern": "(^60052$)",
-                    "hint": "Modbus Address",
-                    "getValidator": function() {
-                        var isDec = new RegExp(/^[0-9]{1,}$/g);
-                        var isValid = function(value) {
-                            return isDec.test(value.toString());
-                        };
-                        return isValid;
+                    "cssClass": "ainEFConfigB",
+                    "notFoundText": "Custom",
+                    "format": function(data) {
+                        var value = Number(data.value);
+                        var options = globalDeviceConstants.t7DeviceConstants.thermocoupleCJCRegisters;
+                        var unitStr = '';
+                        options.forEach(function(option) {
+                            if(option.value === value) {
+                                unitStr = option.name;
+                            }
+                        });
+                        return unitStr;
+                    },
+                    "getOptions": function() {
+                        return globalDeviceConstants.t7DeviceConstants.thermocoupleCJCRegisters;
                     }
                 },{
                     "configReg": "_EF_CONFIG_D",
@@ -382,7 +404,7 @@ var globalDeviceConstants = {
                 },{
                     "readReg": "_EF_READ_D",
                     "location": "secondary",
-                    "humanName": "CJC Compensation Voltage",
+                    "humanName": "CJC Voltage",
                     "description": "Thermocouple voltage calculated for CJC temperature",
                     "unit": "V"
                 }
@@ -399,6 +421,17 @@ var globalDeviceConstants = {
             {"name": "K","value": 0},
             {"name": "C","value": 1},
             {"name": "F","value": 2}
+        ],
+        thermocoupleCJCRegisters: [
+            {
+                "name": "T7 Screw Terminals (AIN0-3)",
+                "value": 60052,
+                "titleAppend":", TEMPERATURE_DEVICE_K"
+            },{
+                "name": "CB37 Screw Terminals (AIN0-13)",
+                "value": 60050,
+                "titleAppend":", TEMPERATURE_AIR_K"
+            }
         ]
     },
     "t7ProDeviceConstants": {
