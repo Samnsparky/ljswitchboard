@@ -154,6 +154,13 @@ function module() {
         'value': handlebars.compile(ainEFTypeConfigTemplateStr_value),
         'select': handlebars.compile(ainEFTypeConfigTemplateStr_select)
     };
+    var isDefined = function(val) {
+        if(typeof(val) !== 'undefined') {
+            return true;
+        } else {
+            return false;
+        }
+    };
 
 
     // Supported analog input negative channel options
@@ -920,7 +927,28 @@ function module() {
             };
             if(typeof(readReg.format) !== 'undefined') {
                 newBinding.format = 'customFormat';
-                newBinding.customFormatFunc = readReg.format;
+                var formatFunc = readReg.format;
+                if(isDefined(readReg.unitReg) && isDefined(readReg.getUnit)) {
+                    var getFormatFunc = function(readReg,regName) {
+                        var unitReg = readReg.unitReg;
+                        var getUnit = readReg.getUnit;
+                        var custFormatFunc = readReg.format;
+                        var secFormatFunc = function(data) {
+                            var val = self.getCurrentBufferedVal(regName);
+                            var unitStr = getUnit(val);
+                            var valStr = custFormatFunc(data);
+                            return valStr + ' ' + unitStr;
+                        };
+                        return secFormatFunc;
+                    };
+                    var unitRegisterName = chName + readReg.unitReg;
+                    formatFunc = getFormatFunc(readReg,unitRegisterName);
+                    newEFData.unit = undefined;
+                    newEFData.unitRegName = undefined;
+                    var initUnitVal = self.getCurrentBufferedVal(unitRegisterName);
+                    newEFData.value = '0 ' + readReg.getUnit(initUnitVal);
+                }
+                newBinding.customFormatFunc = formatFunc;
             }
             if(readReg.location === 'primary') {
                 primaryReadRegs.push(newEFData);

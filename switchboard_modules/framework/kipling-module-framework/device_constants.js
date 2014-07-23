@@ -400,7 +400,25 @@ var globalDeviceConstants = {
                     "location": "secondary",
                     "humanName": "CJC Temperature",
                     "description": "CJC temperature in degrees K",
-                    "unit": "K"
+                    "format": function(data) {
+                        var value = Number(data.value);
+                        if(value !== -9999) {
+                            return sprintf('%.4f',value);
+                        } else {
+                            return "N/A";
+                        }
+                    },
+                    "unitReg": "_EF_CONFIG_A",
+                    "getUnit": function(value) {
+                        var options = globalDeviceConstants.t7DeviceConstants.thermocoupleTemperatureMetrics;
+                        var unitStr = '';
+                        options.forEach(function(option) {
+                            if(option.value === value) {
+                                unitStr = option.name;
+                            }
+                        });
+                        return unitStr;
+                    }
                 },{
                     "readReg": "_EF_READ_D",
                     "location": "secondary",

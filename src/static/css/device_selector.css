@@ -74,6 +74,9 @@ body {
     bottom: 20px;
     right: 10px;
     width: 105px;
+    /*-webkit-animation-name: upgradeButton;
+    -webkit-animation-duration: 2s;
+    -webkit-animation-iteration-count: infinite;*/
 }
 .labjackVersions .upgradeButton {
     font-size: 10px;
@@ -253,20 +256,21 @@ body {
 }
 
 .lvm_version_warning {
-    color: #FFF;
-    -webkit-animation-name: versionWarning;
+    /*color: #FFF;*/
+    /*color: #2D89F0;*/
+    /*-webkit-animation-name: versionWarning;
     -webkit-animation-duration: 2s;
-    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;*/
 }
 .lvm_version_error {
-    color: #FFF;
-    -webkit-animation-name: versionError;
+    /*color: #FFF;*/
+    /*color: #DA4F49;*/
+    /*-webkit-animation-name: versionError;
     -webkit-animation-duration: 2s;
-    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;*/
 }
 
-#alert-message
-{
+#alert-message {
     display: none;
 }
 
@@ -313,4 +317,9 @@ body {
     from { background-color: #DA4F49; -webkit-box-shadow: 0 0 3px #333; border-color: #DA4F49;}
     50% { background-color: #BD362F; -webkit-box-shadow: 0 0 6px #000; border-color: #BD362F;}
     to { background-color: #DA4F49; -webkit-box-shadow: 0 0 3px #333; border-color: #DA4F49;}
+}
+@-webkit-keyframes upgradeButton {
+    from { background-color: #49AFCD; -webkit-box-shadow: 0 0 3px #333; border-color: #49AFCD;}
+    50% { background-color: #115A8F; -webkit-box-shadow: 0 0 6px #000; border-color: #115A8F;}
+    to { background-color: #49AFCD; -webkit-box-shadow: 0 0 3px #333; border-color: #49AFCD;}
 }
