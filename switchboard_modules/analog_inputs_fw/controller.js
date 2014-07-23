@@ -453,7 +453,6 @@ function module() {
             selectEl.title = newTitle;
             //Set new text
             selectEl.innerText = newText;
-            console.log('ID',className,buttonID,register,value);
 
             // -----------------------------------------------------------------
             //Perform device I/O from TC-simple
@@ -503,7 +502,6 @@ function module() {
                     writeList.push(singleOp);
                     ioArray.push(self.getWriteReg(writeReg,writeVal));
                 });
-                console.log('Current Register Write List', writeList,ioArray);
 
                 return ioArray;
             };
@@ -752,24 +750,26 @@ function module() {
     this.lastInputKeyboardEvent = null;
     this.lastInputKeyboardEvent = null;
     this.registerClickHandlers = function(chNum, efType, baseID) {
-        console.log('registerClickHandlers', chNum, efType, baseID);
         var writeConfig = function(reg, val, isValid) {
-            console.log('writeConfig',reg,val,isValid);
             if(!(typeof(isValid) !== 'undefined')) {
                 isValid = true;
             }
-            if(isValid) {
-                self.writeReg(reg,val)
-                .then(function() {
+            if((typeof(val) !== 'undefined') && (typeof(reg) !== 'undefined')) {
+                if(isValid) {
+                    self.writeReg(reg,val)
+                    .then(function() {
 
-                }, function(err) {
-                    var message = "Got: ";
-                    message += self.ljmDriver.errToStrSync(err);
-                    message += " writing reg: " + reg;
-                    showErrorMessage(message);
-                });
+                    }, function(err) {
+                        var message = "Got: ";
+                        message += self.ljmDriver.errToStrSync(err);
+                        message += " writing reg: " + reg;
+                        showErrorMessage(message);
+                    });
+                } else {
+                    showErrorMessage('Invalid value written to: ' + reg);
+                }
             } else {
-                showErrorMessage('Invalid value written to: ' + reg);
+                showErrorMessage('An invalid value written to: ' + reg);
             }
         };
         var menuClickHandler = function(event) {
@@ -844,7 +844,7 @@ function module() {
             var rootEl = event.target;
             var rootID = rootEl.id;
             var reg = rootID.replace('-INPUT','');
-            var rawVal = rootID.value;
+            var rawVal = rootEl.value;
             var val = Number(rawVal);
             var isValid = rootEl.validity.valid;
 
@@ -925,6 +925,7 @@ function module() {
                     onSuccess();
                 }
             };
+            newBinding.periodicCallback = self.genericPeriodicCallback;
             if(typeof(readReg.format) !== 'undefined') {
                 newBinding.format = 'customFormat';
                 var formatFunc = readReg.format;
@@ -990,6 +991,7 @@ function module() {
                     onSuccess();
                 }
             };
+            newBinding.periodicCallback = self.genericPeriodicCallback;
             if(typeof(configReg.format) !== 'undefined') {
                 newBinding.format = 'customFormat';
                 newBinding.customFormatFunc = configReg.format;
@@ -1026,6 +1028,9 @@ function module() {
                             var id = '#' + curBinding.template + '-CURRENT-VALUE';
                             var ele = $(id);
                             var reg = curBinding.binding;
+
+                            // Update Module's Device buffer
+                            self.currentValues.set(reg,curVal);
 
                             var newTitle = reg + ' is set to ' + curVal.toString();
                             var titleAppend = '';
@@ -1095,7 +1100,6 @@ function module() {
                     continueFunc(pageInfo);
                 });
             } else {
-                console.log('Ignoring...',pageInfo.key);
                 continueFunc();
             }
         });
@@ -1469,7 +1473,7 @@ function module() {
     this.onRefreshed = function(framework, results, onError, onSuccess) {
         try {
             self.bufferedOutputValues.forEach(function(value,name){
-                self.currentValues.set(name,value);
+                self.newBufferedValues.set(name,value);
                 self.bufferedOutputValues.delete(name);
             });
             self.newBufferedValues.forEach(function(value,name){
@@ -1479,22 +1483,33 @@ function module() {
                 var buttonEl;
                 var selectEl;
                 if(typeof(value) !== 'undefined') {
-                    if(name.indexOf('_') != -1){
+                    if(name.indexOf('_') != -1) {
                         buttonID = '#' + name + '-SELECT';
                         buttonEl = $(buttonID);
                         selectEl = buttonEl.find('.currentValue');
-                        var newText = self.regParser.get(name,{'value':-9999,'name':'N/A'})(value);
-                        var stringVal = value.toString();
-                        var newTitle = name + ' is set to ' + stringVal;
-                        var rangeReg = findRangeRegisterRegex.exec(name);
-                        if(rangeReg) {
-                            var reg = rangeReg[0].split('_RANGE')[0];
-                            var obj = $('#' + reg + '-table-data .ain-range-val');
-                            obj.html(stringVal);
+                        var parserFunc = self.regParser.get(name,{'value':-9999,'name':'N/A'});
+                        if(typeof(parserFunc) === 'undefined') {
+                            // console.log('parserFunc not defined',typeof(parserFunc),name);
+                        } else {
+                            var newText;
+                            try {
+                                newText = parserFunc(value);
+                            } catch(err) {
+                                newText = parserFunc;
+                            }
+                            var stringVal = value.toString();
+                            var newTitle = name + ' is set to ' + stringVal;
+                            var rangeReg = findRangeRegisterRegex.exec(name);
+                            if(rangeReg) {
+                                var reg = rangeReg[0].split('_RANGE')[0];
+                                var obj = $('#' + reg + '-table-data .ain-range-val');
+                                obj.html(stringVal);
+                            }
+                            selectEl.text(newText.name);
+                            selectEl.attr('title',newTitle);
                         }
-                        selectEl.text(newText.name);
-                        selectEl.attr('title',newTitle);
                     } else {
+                        // if is an AINx channel
                         self.updateD3Graph(name,value);
                     }
                 } else {
