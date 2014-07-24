@@ -5,7 +5,7 @@
 #define MyAppVersion "3.0.0.1"
 #define MyAppPublisher "LabJack, Corp."
 #define MyAppURL "http://www.labjack.com/"
-#define MyAppExeName "nw.exe"
+#define MyAppExeName "Kipling.exe"
 #define MyAppID "{571B30F3-ECF9-46b5-9572-9AD6ACA5E9C6}"
 #define MyAppVersionNum "0.0.1"
 
@@ -21,7 +21,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\LabJack\{#MyAppName}
+DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 OutputBaseFilename=setup
 Compression=lzma
