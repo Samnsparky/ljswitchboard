@@ -82,11 +82,11 @@ var DEVICE_ENABLED_LIST = dict({
     'Digit': false
 });
 var WIFI_RSSI_IMAGES = [
-    {'val':-30,'img':'wifiRSSI-4'},
-    {'val':-40,'img':'wifiRSSI-3'},
-    {'val':-50,'img':'wifiRSSI-2'},
-    {'val':-60,'img':'wifiRSSI-1'},
-    {'val':-70,'img':'wifiRSSI-0'},
+    {'val':-45,'img':'wifiRSSI-4'},
+    {'val':-60,'img':'wifiRSSI-3'},
+    {'val':-65,'img':'wifiRSSI-2'},
+    {'val':-75,'img':'wifiRSSI-1'},
+    {'val':-80,'img':'wifiRSSI-0'},
     {'val':-200,'img':'wifiRSSI-0'},
 ];
 var WIFI_STATUS_DISPLAY_DATA = {

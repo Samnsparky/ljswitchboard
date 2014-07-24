@@ -39,16 +39,16 @@ function getDeviceDashboardController(deviceInfo) {
     );
     var bNum = 10;
     var REGISTER_OVERLAY_SPEC = [
-        {register: 'AIN0', yLocation: 0.783,            yShift: -7,         yOffset: 6,         type: null, board: 'device', side: 'left'},
-        {register: 'AIN1', yLocation: 0.757,            yShift: -6,         yOffset: 6,         type: null, board: 'device', side: 'left'},
-        {register: 'AIN2', yLocation: 0.664,            yShift: -5,         yOffset: 6,         type: null, board: 'device', side: 'left'},
-        {register: 'AIN3', yLocation: 0.639,            yShift: -4,         yOffset: 6,         type: null, board: 'device', side: 'left'},
-        {register: 'DAC0', yLocation: 0.545,            yShift: -2,         yOffset: 6,         type: 'dac', board: 'device', side: 'left'},
-        {register: 'DAC1', yLocation: 0.519,            yShift: -1,         yOffset: -6,        type: 'dac', board: 'device', side: 'left'},
-        {register: 'FIO0', yLocation: 0.428,            yShift: 0,          yOffset: 6,         type: 'dio', board: 'device', side: 'left'},
-        {register: 'FIO1', yLocation: 0.403,            yShift: 1,          yOffset: -6,        type: 'dio', board: 'device', side: 'left'},
-        {register: 'FIO2', yLocation: 0.308,            yShift: 3.5,        yOffset: 6,         type: 'dio', board: 'device', side: 'left'},
-        {register: 'FIO3', yLocation: 0.283,            yShift: 4,          yOffset: -6,        type: 'dio', board: 'device', side: 'left'},
+        {register: 'AIN0', yLocation: 0.783,            yShift: -7,         yOffset: 6,         yOverlayOffset: 7,     type: null, board: 'device', side: 'left'},
+        {register: 'AIN1', yLocation: 0.757,            yShift: -6,         yOffset: 6,         yOverlayOffset: 7,     type: null, board: 'device', side: 'left'},
+        {register: 'AIN2', yLocation: 0.664,            yShift: -5,         yOffset: 6,         yOverlayOffset: 8,     type: null, board: 'device', side: 'left'},
+        {register: 'AIN3', yLocation: 0.639,            yShift: -4,         yOffset: 6,         yOverlayOffset: 8,     type: null, board: 'device', side: 'left'},
+        {register: 'DAC0', yLocation: 0.545,            yShift: -2,         yOffset: 6,         yOverlayOffset: 10,      type: 'dac', board: 'device', side: 'left'},
+        {register: 'DAC1', yLocation: 0.519,            yShift: -1,         yOffset: -6,        yOverlayOffset: 10,      type: 'dac', board: 'device', side: 'left'},
+        {register: 'FIO0', yLocation: 0.428,            yShift: 0,          yOffset: 6,         yOverlayOffset:  12,     type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO1', yLocation: 0.403,            yShift: 1,          yOffset: -6,        yOverlayOffset:  12,     type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO2', yLocation: 0.308,            yShift: 3.5,        yOffset: 6,         yOverlayOffset:  15,     type: 'dio', board: 'device', side: 'left'},
+        {register: 'FIO3', yLocation: 0.283,            yShift: 4,          yOffset: -6,        yOverlayOffset:  15,     type: 'dio', board: 'device', side: 'left'},
         
         // Left Side, DB37
         {register: 'AIN1', yLocation: 0.900-0.01,       yOffset:  4*bNum,   type: null, board: 'connector', side: 'left'},
@@ -278,10 +278,18 @@ function getDeviceDashboardController(deviceInfo) {
         .enter()
         .append('div')
         .attr('class', function (registerInfo) {
+            var appendClass = '';
+            if(registerInfo.register.indexOf('AIN') !== -1) {
+                if(registerInfo.side === 'left') {
+                    appendClass = ' register-overlay-left';
+                } else {
+                    appendClass = ' register-overlay-right';
+                }
+            }
             if (registerInfo.type === 'dio')
-                return 'register-overlay fio-overlay';
+                return 'register-overlay fio-overlay' + appendClass;
             else
-                return 'register-overlay';
+                return 'register-overlay' + appendClass;
         })
         .style('top', function (registerInfo) {
             var yFromTopOfImage = imageY + getOverlayYPos(registerInfo) - 9;
@@ -483,15 +491,25 @@ function getDeviceDashboardController(deviceInfo) {
         .enter()
         .append('div')
         .attr('class', function (registerInfo) {
+            var appendClass = '';
+            if(registerInfo.register.indexOf('AIN') !== -1) {
+                if(registerInfo.side === 'left') {
+                    appendClass = ' register-overlay-left';
+                } else {
+                    appendClass = ' register-overlay-right';
+                }
+            }
             if (registerInfo.type === 'dio')
-                return 'device-register-overlay fio-device-overlay';
+                return 'device-register-overlay fio-device-overlay' + appendClass;
             else
-                return 'device-register-overlay';
+                return 'device-register-overlay' + appendClass;
         })
         .style('top', function (registerInfo) {
             var yFromTopOfImage = imageY + getOverlayYPos(registerInfo);
             if (registerInfo.yOffset)
                 yFromTopOfImage += registerInfo.yOffset;
+            if(registerInfo.yOverlayOffset)
+                yFromTopOfImage += registerInfo.yOverlayOffset;
             return yFromTopOfImage + 'px';
         })
         .attr('id', function (registerInfo) {

@@ -2549,7 +2549,11 @@ function Framework() {
                 if (valRead !== undefined) {
                     var jquerySelector = '#' + bindingInfo.template;
                     if (bindingInfo.displayType === 'standard') {
-                        jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
+                        var vals = jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
+                        if (vals.length === 0) {
+                            jquerySelector = '.' + bindingInfo.template;
+                            jquery.html(jquerySelector, valRead.replace(' ','&nbsp;'));
+                        }
                     } else if (bindingInfo.displayType === 'input') {
                         if (!jquery.is(jquerySelector, ':focus')) {
                             jquery.val(jquerySelector, valRead.toString());

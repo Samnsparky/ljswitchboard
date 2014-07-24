@@ -128,6 +128,19 @@ function UpgradeableDeviceAdapter(device)
         };
         return executeErrorSafeFunction(formattedCall);
     };
+    this.getWifiFirmwareVersion = function()
+    {
+        var formattedCall = function () {
+            return device.getWifiFirmwareVersion().toFixed(4);
+        };
+        return executeErrorSafeFunction(formattedCall);
+    };
+    this.getSubclass = function() {
+        var formattedCall = function () {
+            return device.getSubclass();
+        };
+        return executeErrorSafeFunction(formattedCall);
+    };
 
     this.getConnectionTypeStr = function () {
         return device.getConnectionTypeStr();
@@ -196,11 +209,11 @@ function getAvailableFirmwareListing(onError, onSuccess)
                     }
 
                     var numFirmwares = firmwareListing.length;
-                    if (numFirmwares == 0) {
+                    if (numFirmwares === 0) {
                         innerDeferred.resolve(overallFirmwareListing);
                         return;
                     }
-                    console.log('After While Loop')
+                    console.log('After While Loop');
                     var highestFirmware = firmwareListing[0];
                     for (var i=1; i<numFirmwares; i++) {
                         if (highestFirmware.version < firmwareListing[i].version)
@@ -243,7 +256,7 @@ function getAvailableFirmwareListing(onError, onSuccess)
         else
             $('#internet-error-list').remove();
         onSuccess(firmwareListing);
-    })
+    });
 }
 
 
@@ -563,7 +576,14 @@ $('#network-configuration').ready(function(){
     });
 
     $('#local-update-button').click(function () {
-        updateFirmware($('#file-loc-input').val());
+        var fileLocation = $('#file-loc-input').val();
+        fs.exists(fileLocation,function(res){
+            if(res) {
+                updateFirmware(fileLocation);
+            } else {
+                $('#browse-link').trigger('click');
+            }
+        });
         return false;
     });
 

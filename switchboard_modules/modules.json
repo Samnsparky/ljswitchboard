@@ -21,7 +21,7 @@
     },
     {
         "name": "digital_io_config",
-        "active": true
+        "active": false
     },
     {
         "name": "digital_io_fw",

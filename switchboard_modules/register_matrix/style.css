@@ -308,3 +308,11 @@
 .registerControls .removeButton {
     width: 60px;
 }
+.register-matrix-heading {
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-bottom-color: lightgrey;
+}
+#watch-config-tooltip {
+    display:none;
+}

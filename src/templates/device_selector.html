@@ -1,5 +1,15 @@
 <div class="device-selector-holder">
     <div id="logo-holder"><img src="static/img/labjack-logo.png"></div>
+    <div id="lj-link-holder" title="Open LabJack home page in your default browser"><a>labjack.com</a></div>
+    <script>
+        $('#lj-link-holder').unbind();
+        $('#lj-link-holder').bind('click',function(){
+            if(typeof(gui) === 'undefined') {
+                gui = require('nw.gui');
+            }
+            gui.Shell.openExternal("http://labjack.com");
+        });
+    </script>
     <h1>Select Devices <button id="refresh-button" class="btn btn-primary">Refresh Devices >></button><button id="finish-button" class="btn btn-primary">Continue >></button></h1>
     <div id="versionNumbers" class="labjackVersions">
         <table class="table">

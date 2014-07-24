@@ -70,5 +70,5 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "analog_inputs_fw"
+    "moduleName": "dashboard"
 }

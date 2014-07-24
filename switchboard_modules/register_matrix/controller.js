@@ -47,6 +47,7 @@ var REGISTER_TABLE_LIST_TEMPLATE_SRC = 'register_matrix/table_list.html';
 var REGISTER_MATRIX_SELECTOR = '#register-matrix';
 var REGISTER_MATRIX_SELECTOR_OBJ = null;
 var REGISTER_WATCHLIST_SELECTOR = '#register-watchlist';
+var REGISTER_WATCHLIST_EMPTY_SELECTOR = '#register-matrix-empty-holder';
 
 var DESCRIPTION_DISPLAY_TEMPLATE_SELECTOR_STR =
     '#{{address}}-description-display';
@@ -876,6 +877,7 @@ function refreshWatchList()
             function(renderedHTML)
             {
                 $(REGISTER_WATCHLIST_SELECTOR).html(renderedHTML);
+                $(REGISTER_WATCHLIST_EMPTY_SELECTOR).hide();
                 $(REGISTER_WATCHLIST_SELECTOR).show(runRedraw);
 
                 var showRegiserEditControls = function(event){
@@ -1000,7 +1002,9 @@ function refreshWatchList()
     else
     {
         $(REGISTER_WATCHLIST_SELECTOR).hide();
-        $('#watch-config-tooltip').fadeIn();
+        $(REGISTER_WATCHLIST_EMPTY_SELECTOR).show();
+        // $('#watch-config-tooltip').fadeIn();
+        $('#watch-config-tooltip').hide();
     }
 }
 
@@ -1026,6 +1030,7 @@ function addToWatchList(event, registerInfoByAddress)
 
     var targetRegister = registerInfoByAddress[address];
     registerWatchList.push(targetRegister);
+    console.log('Adding targetRegister to registerWatchList',targetRegister);
     refreshWatchList();
     runRedraw();
 }
