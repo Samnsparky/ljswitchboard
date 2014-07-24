@@ -36,7 +36,7 @@ var CALLBACK_STRING_CONST = '-callback';
 
 function JQueryWrapper (origJQuery) {
     this.html = function (selector, newHTML) {
-        $(selector).html(newHTML);
+        return $(selector).html(newHTML);
     };
     this.bind = function(selector, event,listener) {
         $(selector).bind(event,listener);
