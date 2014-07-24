@@ -13,6 +13,14 @@
 .register-overlay-left {
 	text-align: right;
 }
+.register-overlay-left .dac-output-SELECT {
+	float:right;
+	position: absolute;
+	right: -9px;
+}
+.analogInputDisplay {
+	padding-right: 7px;
+}
 .digitalDisplayIndicator {
 
 }

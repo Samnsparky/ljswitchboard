@@ -279,7 +279,9 @@ function getDeviceDashboardController(deviceInfo) {
         .append('div')
         .attr('class', function (registerInfo) {
             var appendClass = '';
-            if(registerInfo.register.indexOf('AIN') !== -1) {
+            var isAIN = registerInfo.register.indexOf('AIN') !== -1;
+            var isDAC = registerInfo.register.indexOf('DAC') !== -1;
+            if(isAIN || isDAC) {
                 if(registerInfo.side === 'left') {
                     appendClass = ' register-overlay-left';
                 } else {
@@ -492,17 +494,21 @@ function getDeviceDashboardController(deviceInfo) {
         .append('div')
         .attr('class', function (registerInfo) {
             var appendClass = '';
-            if(registerInfo.register.indexOf('AIN') !== -1) {
+            var isAIN = registerInfo.register.indexOf('AIN') !== -1;
+            var isDAC = registerInfo.register.indexOf('DAC') !== -1;
+            if(isAIN || isDAC) {
                 if(registerInfo.side === 'left') {
                     appendClass = ' register-overlay-left';
                 } else {
                     appendClass = ' register-overlay-right';
                 }
             }
-            if (registerInfo.type === 'dio')
+            if (registerInfo.type === 'dio') {
                 return 'device-register-overlay fio-device-overlay' + appendClass;
-            else
+            }
+            else {
                 return 'device-register-overlay' + appendClass;
+            }
         })
         .style('top', function (registerInfo) {
             var yFromTopOfImage = imageY + getOverlayYPos(registerInfo);
