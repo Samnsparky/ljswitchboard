@@ -1,5 +1,5 @@
 {
-    "autoConnectToDevices": true,
+    "autoConnectToDevices": false,
     "_Comment": "connectionType choices are: 'USB', 'Wifi', or 'Ethernet'",
     "ljmDeviceParameters":
     [
@@ -70,5 +70,5 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "dashboard"
+    "moduleName": "device_updater"
 }

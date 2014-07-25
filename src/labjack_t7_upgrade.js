@@ -42,7 +42,7 @@ function updateProgressScaled (value) {
         var scaledValue = curScaling * value + curOffset;
         globalProgressListener.update(scaledValue, function () {});
     }
-};
+}
 
 
 /**
@@ -1027,23 +1027,60 @@ exports.restartAndUpgrade = function(bundle)
 {
     var deferred = q.defer();
     var device = bundle.getDevice();
+    var ljmDriver = new labjack_nodejs.driver();
+    var self = this;
     device.write(
         driver_const.T7_MA_REQ_FWUPG,
         driver_const.T7_REQUEST_FW_UPGRADE,
         createSafeReject(deferred),
-        function () { 
-            device.close(function(err) {
-                console.error('Error Closing 1-restertAndUpgrade',err);
-                device.close(function(err){
-                    deferred.resolve(bundle);
-                },function() {
-                    deferred.resolve(bundle);
-                })
-            },function() {
-                deferred.resolve(bundle);
-            }); 
+        function () {
+            deferred.resolve(bundle);
         }
     );
+    return deferred.promise;
+};
+exports.closeDevice = function(bundle) {
+    var deferred = q.defer();
+    var device = bundle.getDevice();
+    console.log(
+        'Closing Device',
+        device,
+        device.handle,
+        device.identifier,
+        device.deviceType,
+        device.connectionType
+    );
+    device.close(function(err) {
+        deferred.reject(bundle);
+    }, function() {
+        deferred.resolve(bundle);
+    });
+    return deferred.promise;
+};
+exports.forceClose = function(bundle) {
+    console.error(
+        'Force Closing Device',
+        device,
+        device.handle,
+        device.identifier,
+        device.deviceType,
+        device.connectionType
+    );
+    var deferred = q.defer();
+    var device = bundle.getDevice();
+    console.log(
+        'Device Info',
+        device,
+        device.handle,
+        device.identifier,
+        device.deviceType,
+        device.connectionType
+    );
+    device.close(function(err) {
+        deferred.resolve(bundle);
+    }, function() {
+        deferred.resolve(bundle);
+    });
     return deferred.promise;
 };
 exports.pauseForClose = function(bundle) {
@@ -1053,7 +1090,7 @@ exports.pauseForClose = function(bundle) {
     }
     setTimeout(continueExec, EXPECTED_FIRMWARE_UPDATE_TIME);
     return deferred.promise;
-}
+};
 
 
 /**
@@ -1073,61 +1110,64 @@ exports.waitForEnumeration = function(bundle)
     var ljmDriver = new labjack_nodejs.driver();
     var targetSerial = bundle.getSerialNumber();
     this.targetSerial = targetSerial;
-    this.bundle = bundle;
     console.log('t7_upgrade.js-Bundle...',bundle,targetSerial);
-    var self = this;
-    var getAllConnectedSerials = function () {
-        var innerDeferred = q.defer();
+    
+    function getCheckForDevice (bundle) {
+        this.bundle = bundle;
+        this.targetSerial = bundle.getSerialNumber().toString();
+        this.connectionType = bundle.getConnectionType();
+        var getAllConnectedSerials = function () {
+            var innerDeferred = q.defer();
+            ljmDriver.listAll("LJM_dtT7", bundle.getConnectionType(),
+                createSafeReject(innerDeferred),
+                function (devicesInfo) {
+                    
+                    var serials = devicesInfo.map(function (e) {
+                        return e.serialNumber;
+                    });
+                    console.log('Found Devices-A',devicesInfo.length,serials);
+                    innerDeferred.resolve(serials);
+                }
+            );
 
-        ljmDriver.listAll("LJM_dtT7", bundle.getConnectionType(),
-            createSafeReject(innerDeferred),
-            function (devicesInfo) {
-                var serials = devicesInfo.map(function (e) {
-                    return e.serialNumber; 
-                });
-                innerDeferred.resolve(serials);
-            }
-        );
-
-        return innerDeferred.promise;
-    };
-    this.getAllConnectedSerials = getAllConnectedSerials;
-
-    var checkForDevice = function () {
-        self.getAllConnectedSerials().then(function (serialNumbers) {
-            if (serialNumbers.indexOf(targetSerial) != -1) {
-                var newDevice = new labjack_nodejs.device();
-                // try {
-                console.log('t7_upgrade.js-Trying to open device',bundle.getConnectionType(),targetSerial);
-                newDevice.open(
-                    "LJM_dtT7",
-                    bundle.getConnectionType(),
-                    targetSerial.toString(),
-                    function(err){
-                        console.log('t7_upgrade.js-Error...',err);
-                        console.log('t7_upgrade.js-Failed to connect',bundle.getConnectionType(),targetSerial.toString());
-                        setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
-                    },
-                    function(succ){
-                        console.log('t7_upgrade.js-Succeeded to connect!');
-                        console.log('t7_upgrade.js-Bundle...',bundle.getConnectionType(),targetSerial.toString());
-                        bundle.setDevice(newDevice);
-                        deferred.resolve(bundle);
-                    }
-                );
-                // } catch (e) {
-                //     //safelyReject(deferred, e);
-                //     console.log(e);
-                //     setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
-                //     return;
-                // }
-            } else {
-                setTimeout(self.checkForDevice, EXPECTED_REBOOT_WAIT);
-            }
-        });
-    };
-    this.checkForDevice = checkForDevice;
-    setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
+            return innerDeferred.promise;
+        };
+        this.getAllConnectedSerials = getAllConnectedSerials;
+        var checkForDevice = function () {
+            console.log('Bundle Info:',self.bundle,self.targetSerial,self.connectionType);
+            self.getAllConnectedSerials().then(function (serialNumbers) {
+                console.log('t7_upgrade.js-Check Scan Results',self.targetSerial,self.connectionType,serialNumbers);
+                if (serialNumbers.indexOf(targetSerial) != -1) {
+                    var newDevice = new labjack_nodejs.device();
+                    console.log('t7_upgrade.js-Trying to open device',self.targetSerial,self.connectionType);
+                    newDevice.open(
+                        "LJM_dtT7",
+                        self.connectionType,
+                        self.targetSerial,
+                        function(err){
+                            console.log('t7_upgrade.js-Open Error',err);
+                            // console.log('t7_upgrade.js-Failed to connect',bundle.getConnectionType(),targetSerial.toString());
+                            setTimeout(checkForDevice, EXPECTED_REBOOT_WAIT);
+                        },
+                        function(succ){
+                            console.log('t7_upgrade.js-Open Success',self.targetSerial);
+                            // console.log('t7_upgrade.js-Bundle...',bundle.getConnectionType(),targetSerial.toString());
+                            bundle.setDevice(newDevice);
+                            deferred.resolve(bundle);
+                        }
+                    );
+                } else {
+                    // console.log('HERE, serial number not found',targetSerial,serialNumbers);
+                    setTimeout(self.checkForDevice, EXPECTED_REBOOT_WAIT);
+                }
+            });
+        };
+        this.checkForDevice = checkForDevice;
+        var self = this;
+        return checkForDevice;
+    }
+    var deviceChecker = new getCheckForDevice(bundle);
+    setTimeout(deviceChecker, EXPECTED_REBOOT_WAIT);
 
     return deferred.promise;
 };
@@ -1200,12 +1240,16 @@ exports.updateFirmware = function(device, firmwareFileLocation,
     };
     var reportError = function(message) {
         var reportErrorFunc = function(error) {
-            safelyReject(deferred, error);
+            if(message !== 'finishingUpdate') {
+                safelyReject(deferred, error);
+            } else {
+                console.log('Ignoring last error... finishingUpdate');
+            }
             if(typeof(message) !== 'undefined') {
                 console.log('throwing error...',message);
             }
             throw error;
-        }
+        };
         return reportErrorFunc;
     };
 
@@ -1250,16 +1294,17 @@ exports.updateFirmware = function(device, firmwareFileLocation,
         CHECKPOINT_THREE_PERCENT,
         CHECKPOINT_FOUR_PERCENT
     ), reportError('writeImage'))
-    //.then(exports.checkImageWrite, reportError)
+    //.then(exports.checkImageWrite, reportError) - Not doing anymore for speed
     .then(updateProgress(CHECKPOINT_FOUR_PERCENT), reportError('writeImageInformation'))
     .then(updateStatusText('Restarting...'), reportError('updateProgress'))
     .then(exports.restartAndUpgrade, reportError('updateStatusText'))
+    .then(exports.closeDevice, exports.forceClose)
     .then(updateStatusText('<br>Waiting for device(s)...'), reportError('restartAndUpgrade'))
     .then(exports.pauseForClose, reportError('updateStatusText'))
     .then(exports.waitForEnumeration, reportError('pauseForClose'))
     .then(exports.checkNewFirmware, reportError('waitForEnumeration'))
     .then(updateProgress(CHECKPOINT_FIVE_PERCENT), reportError('checkNewFirmware'))
-    .then(deferred.resolve, reportError('updateProgress'));
+    .then(deferred.resolve, reportError('finishingUpdate'));
 
     return deferred.promise;
 };

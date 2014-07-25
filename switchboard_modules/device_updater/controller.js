@@ -48,13 +48,19 @@ function UpgradeableDeviceAdapter(device)
             return target();
         } catch (e) {
             var errMsg;
-
-            if (e.retError === undefined) {
-                errMsg = e.toString();
+            if(!isNaN(e)){
+                errMsg = device_controller.ljm_driver.errToStrSync(e);
             } else {
-                errMsg = e.retError.toString();
+                if(e.code !== undefined) {
+                    errMsg = device_controller.ljm_driver.errToStrSync(e.code);
+                } else {
+                    if (e.retError === undefined) {
+                        errMsg = e.toString();
+                    } else {
+                        errMsg = e.retError.toString();
+                    }
+                }
             }
-
             showAlert('Failed to read device info: ' + errMsg);
             return '[unavailable]';
         }
@@ -180,7 +186,7 @@ function getAvailableFirmwareListing(onError, onSuccess)
                         innerDeferred.resolve(overallFirmwareListing);
                         return;
                     }
-                    console.log('HERE',url)
+                    console.log('HERE',url);
 
                     var firmwareListing = [];
                     var match = FIRMWARE_LINK_REGEX.exec(body);
@@ -421,6 +427,15 @@ function updateFirmware (firmwareFileLocation) {
 
     $('#total-devices-display').html(selectedSerials.length);
     $('#complete-devices-display').html(0);
+    try {
+        device_controller.ljm_driver.writeLibrarySync('LJM_OPEN_TCP_DEVICE_TIMEOUT_MS',1000);
+        device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_TIMEOUT_MS_ETHERNET',1000);
+        device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_NUM_ATTEMPTS_ETHERNET',5);
+        device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_TIMEOUT_MS_WIFI',1000);
+        device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_NUM_ATTEMPTS_WIFI',5);
+    } catch(e) {
+        console.log('Error caught',e);
+    }
 
     var numUpgraded = 0;
     async.each(
@@ -452,6 +467,15 @@ function updateFirmware (firmwareFileLocation) {
                             bundle.getFirmwareVersion()
                         );
                         $('#complete-devices-display').html(numUpgraded);
+                        try {
+                            device_controller.ljm_driver.writeLibrarySync('LJM_OPEN_TCP_DEVICE_TIMEOUT_MS','default');
+                            device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_TIMEOUT_MS_ETHERNET','default');
+                            device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_NUM_ATTEMPTS_ETHERNET',5);
+                            device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_TIMEOUT_MS_WIFI','default');
+                            device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_NUM_ATTEMPTS_WIFI',5);
+                        } catch(e) {
+                            console.log('Error caught',e);
+                        }
                         callback();
                     },
                     function (err) {
