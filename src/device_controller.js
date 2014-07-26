@@ -594,7 +594,7 @@ var Device = function (device, serial, connectionType, deviceType)
         this.rqControl('qRead',address)
         .then(qDeferred.resolve,qDeferred.reject);
         return qDeferred.promise;
-    }
+    };
     this.dqRead = function(address) {
         var deferred = q.defer();
         this.device.read(
@@ -607,11 +607,35 @@ var Device = function (device, serial, connectionType, deviceType)
             }
         );
         return deferred.promise;
-    }
+    };
 
     this.readAsync = function (address, onError, onSuccess) {
         this.device.read(address, onError, onSuccess);
     };
+
+    this.qReadUINT64 = function(address) {
+        var deferred = q.defer();
+        this.rqControl('qReadUINT64', address)
+        .then(deferred.resolve, deferred.reject);
+        return deferred.promise;
+    };
+    this.dqReadUINT64 = function(address) {
+        var deferred = q.defer();
+        this.device.readUINT64(
+            address,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+        return deferred.promise;
+    };
+    this.readUINT64 = function(address) {
+        return this.device.readUINT64Sync(address);
+    };
+
 
     /**
      * Temporary Read & Write-Repeat functions...
@@ -627,14 +651,16 @@ var Device = function (device, serial, connectionType, deviceType)
             'readMany':'dreadMany',
             'qWrite':'dqWrite',
             'writeMany':'dwriteMany',
-            'rwMany':'drwMany'
+            'rwMany':'drwMany',
+            'qReadUINT64':'dqReadUINT64'
         }[cmdType];
         var supportedFunctions = [
             'qRead',
             'readMany',
             'qWrite',
             'writeMany',
-            'rwMany'
+            'rwMany',
+            'qReadUINT64'
         ];
 
         var control = function() {

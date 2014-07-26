@@ -69,7 +69,7 @@ function showDevice(device, onSuccess)
             showAlert(
                 'Failed to communicate with device: ' + e.toString()
             );
-            firmwareVersion = '[ could not read WiFi firmware version]'
+            wifiFirmwareVersion = '[ could not read WiFi firmware version]'
         }
     }
 
@@ -96,6 +96,14 @@ function showDevice(device, onSuccess)
         );
         ethernetIP = '[ could not read ethernet IP address ]';
     }
+    try {
+        var ethernetMac = device.readUINT64('ethernet');
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        ethernetMac = '[ could not read ethernet mac address ]';
+    }
 
     try {
         var wifiIPNum = device.read('WIFI_IP');
@@ -109,6 +117,14 @@ function showDevice(device, onSuccess)
             'Failed to communicate with device: ' + e.toString()
         );
         wifiIP = '[ could not read wifi IP address ]';
+    }
+    try {
+        var wifiMac = device.readUINT64('wifi');
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        wifiMac = '[ could not read wifi mac address ]';
     }
 
     try {
@@ -144,7 +160,9 @@ function showDevice(device, onSuccess)
         'firmware': firmwareVersion,
         'bootloader': bootloaderVersion,
         'ethernetIP': ethernetIP,
+        'ethernetMac': ethernetMac,
         'wifiIP': wifiIP,
+        'wifiMac': wifiMac,
         'isPro': isPro,
         'powerEthernet': powerEthernet,
         'powerWifi': powerWifi,

@@ -54,11 +54,23 @@
                     {{../ethernetIP}}
                 </span>
             </div>
+            <div class="device-detail">
+                Ethernet Mac Address: 
+                <span id="wifi-version-display">
+                    {{../ethernetMac}}
+                </span>
+            </div>
             {{#if ../isPro }}
             <div class="device-detail">
                 WiFi IP Address: 
                 <span id="wifi-version-display">
                     {{../../wifiIP}}
+                </span>
+            </div>
+            <div class="device-detail">
+                WiFi Mac Address: 
+                <span id="wifi-version-display">
+                    {{../../wifiMac}}
                 </span>
             </div>
             {{/if}}
