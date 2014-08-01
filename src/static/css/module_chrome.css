@@ -66,6 +66,8 @@ p, h1, h2, h3 {
 }
 
 .selectableText {
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 #module-list .selected

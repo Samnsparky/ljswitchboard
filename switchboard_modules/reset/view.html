@@ -34,37 +34,34 @@
         <div class="section">
             <h3>Introduction</h3>
             <div>
-                This module can reset the current settings on a device to either
-                the factory defaults or the power-up defaults.
+                This module configures the devices current settings.  The settings can be set to either the devices saved power-up defaults or factory defaults.  This feature is useful if you want to restore device settings without powercycling a device.
             </div>
         </div>
         
         <div class="section">
-            <h3>Select source to restore from</h3>
+            <h3>Select Configuration Source</h3>
             <div>
                 <label class="radio">
-                    <input type="radio" name="source" value="factory">
-                    <span class="metro-radio">Factory Defaults</span>
+                    <input type="radio" name="source" value="powerup">
+                    <span class="metro-radio">Power-Up Defaults</span>
                     <div class="option-description">
-                        Load the configuration the device had when purchased as
-                        the device's current settings.
+                        Load the configuration the device uses when it is rebooted as the device's current settings.
                     </div>
                 </label>
             </div>
             <div>
                 <label class="radio">
-                    <input type="radio" name="source" value="powerup" checked>
-                    <span class="metro-radio">Power-Up Defaults</span>
+                    <input type="radio" name="source" value="factory" checked>
+                    <span class="metro-radio">Factory Defaults</span>
                     <div class="option-description">
-                        Load the configuration the device uses when it is
-                        plugged in as the device's current settings.
+                        Load the configuration the device had when purchased as the device's current settings.
                     </div>
                 </label>
             </div>
         </div>
 
         <div class="section">
-            <a href="#" id="reset-button" class="btn">Reset Settings</a>
+            <a href="#" id="reset-button" class="btn">Configure</a>
             <div class="saving-notice" id="saving-indicator">Saving...</div>
             <div class="saving-notice" id="saved-indicator">Saved.</div>
             <div class="flash-notice" id="flash-read-notice">

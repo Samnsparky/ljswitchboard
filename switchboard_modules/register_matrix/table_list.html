@@ -1,7 +1,7 @@
 {{#currentRegisters}}
 <tr class="register-row big-table-row register-overview-row">
-    <td>{{address}}</td>
-    <td>{{name}}</td>
+    <td class="selectableText">{{address}}</td>
+    <td class="selectableText">{{name}}</td>
     <td>{{type}}</td>
     <td>{{relevantFwmin}}</td>
     <td>{{readwrite}}</td>
@@ -17,7 +17,7 @@
         </div>
         <div class="description-section">
             <span class="description-header">Description:</span>
-            {{description}}
+            <span class="selectableText">{{description}}</span>
         </div>
     </td>
 </tr>

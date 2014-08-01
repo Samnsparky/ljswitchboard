@@ -45,6 +45,8 @@ function module() {
     this.framework = undefined;
     this.defineDebuggingArrays = true;
 
+    // String key to trigger a clearing of current values
+    var FORCE_AIN_VAL_REFRESH = 'FORCE_AIN_VAL_REFRESH';
     this.currentValues = dict();
     this.isValueNew = dict();
     this.newBufferedValues = dict();
@@ -441,6 +443,7 @@ function module() {
 
 
         if(className === 'menuOption') {
+            self.bufferedOutputValues.set(FORCE_AIN_VAL_REFRESH,1);
             buttonEl = rootEl.parentElement.parentElement.parentElement;
             buttonID = buttonEl.id;
             selectEl = buttonEl.children[0].children[0];
@@ -526,6 +529,13 @@ function module() {
                 return configDefered.promise;
             };
 
+            if(register.indexOf('AIN_ALL') === 0) {
+                baseRegisters.forEach(function(baseRegister) {
+                    var reg = baseRegister + register.split('AIN_ALL')[1];
+                    self.bufferedOutputValues.set(reg,value);
+                });
+            }
+
             // Switch based on what type of register is being configured. (check for _EF_TYPE or _EF_INDEX)
             if (isIndex || isType) {
                 var getCurEFInfo = ain_ef_type_map[value];
@@ -583,8 +593,8 @@ function module() {
                     console.error('Check device_constants.js, *ainEFTypeMap*');
                 }
             } else {
-            //Perform device IO
-            self.writeReg(register,value)
+                //Perform device IO
+                self.writeReg(register,value)
                 .then(function(){
                     console.log('Successfully wrote data!');
                 }, function(err){
@@ -815,6 +825,8 @@ function module() {
 
                 rootEl.blur();
                 writeConfig(reg,val,isValid);
+            } else {
+                console.log('Other keypress captured',event.which);
             }
         };
         var inputGoHandler = function(event) {
@@ -873,6 +885,9 @@ function module() {
         var efData = ain_ef_type_map[efType];
         if(typeof(efData) !== 'undefined') {
             efData = efData();
+        } else {
+            console.error('in addAINEFInfo',chNum, efType);
+            return;
         }
         var primaryNamesData = '';
         var secondaryReadRegsData = '';
@@ -1238,44 +1253,48 @@ function module() {
             var dataObj = {};
             dataObj.reg = name;
             dataObj.val = value;
-            var strVal = value.toString();
-            // Switch on 
-            var newData;
-            if(!findNum.test(name)) {
-                newData = self.regParser.get(name)(value);
-                var optionsData = self.curDeviceOptions.get(name);
-                dataObj.curStr = newData.name;
-                dataObj.curVal = newData.value;
-                dataObj.menuOptions = optionsData.menuOptions;
-                dataObj.name = optionsData.name;
-                dataObj.cssClass = optionsData.cssClass;
-                configRegistersDict.set(name,dataObj);
+            if(typeof(value) === 'undefined') {
+                console.error('in onDeviceConfigured, currentValue is undefined...',name,value);
             } else {
-                var res = findNum.exec(name);
-                var index = Number(res[0]);
-                // Get currently saved values
-                var ainInfo = self.analogInputsDict.get('AIN'+index.toString());
-
-                newData = self.regParser.get(name)(value);
-                if(isFound(name,'_')) {
-                    var menuOptions = ainInfo.optionsDict.get(name);
-                    menuOptions.curStr = newData.name;
-                    menuOptions.curVal = newData.value;
-                    
-                    if(name.indexOf('_RANGE') !== -1) {
-                        var rangeStr = newData.value.toString();
-                        ainInfo.rangeVal = newData.value;
-                        ainInfo.rangeStr = name + ' is set to ' + rangeStr;
-                    }
-                    ainInfo.optionsDict.set(name, menuOptions);
+                var strVal = value.toString();
+                // Switch on 
+                var newData;
+                if(!findNum.test(name)) {
+                    newData = self.regParser.get(name)(value);
+                    var optionsData = self.curDeviceOptions.get(name);
+                    dataObj.curStr = newData.name;
+                    dataObj.curVal = newData.value;
+                    dataObj.menuOptions = optionsData.menuOptions;
+                    dataObj.name = optionsData.name;
+                    dataObj.cssClass = optionsData.cssClass;
+                    configRegistersDict.set(name,dataObj);
                 } else {
-                    var roundedRes = value.toFixed(self.ANALOG_INPUT_PRECISION);
-                    ainInfo.value = value;
-                    ainInfo.strVal = roundedRes + ' V';
-                }
+                    var res = findNum.exec(name);
+                    var index = Number(res[0]);
+                    // Get currently saved values
+                    var ainInfo = self.analogInputsDict.get('AIN'+index.toString());
 
-                // Update saved values
-                self.analogInputsDict.set('AIN'+index.toString(),ainInfo);
+                    newData = self.regParser.get(name)(value);
+                    if(isFound(name,'_')) {
+                        var menuOptions = ainInfo.optionsDict.get(name);
+                        menuOptions.curStr = newData.name;
+                        menuOptions.curVal = newData.value;
+                        
+                        if(name.indexOf('_RANGE') !== -1) {
+                            var rangeStr = newData.value.toString();
+                            ainInfo.rangeVal = newData.value;
+                            ainInfo.rangeStr = name + ' is set to ' + rangeStr;
+                        }
+                        ainInfo.optionsDict.set(name, menuOptions);
+                    } else {
+                        var roundedRes = value.toFixed(self.ANALOG_INPUT_PRECISION);
+                        ainInfo.value = value;
+                        ainInfo.strVal = roundedRes + ' V';
+                    }
+
+                    // Update saved values
+                    self.analogInputsDict.set('AIN'+index.toString(),ainInfo);
+                }
             }
         });
         
@@ -1413,6 +1432,7 @@ function module() {
 
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
         self.clearTempData();
+        // Populated list of missing registers
         var missingRegs = [];
         var refreshEFData = [];
         self.currentValues.forEach(function(curVal,key) {
@@ -1423,14 +1443,16 @@ function module() {
                 var efData = ain_ef_type_map[curVal];
                 if(typeof(efData) !== 'undefined') {
                     efData = efData();
-                    efData.getReadRegs().forEach(function(readReg) {
-                        var regName = chName + readReg.readReg;
-                        missingRegs.push(regName);
-                    });
-                    efData.getConfigRegs().forEach(function(configReg) {
-                        var regName = chName + configReg.configReg;
-                        missingRegs.push(regName);
-                    });
+                    if(typeof(efData.getReadRegs) !== 'undefined') {
+                        efData.getReadRegs().forEach(function(readReg) {
+                            var regName = chName + readReg.readReg;
+                            missingRegs.push(regName);
+                        });
+                        efData.getConfigRegs().forEach(function(configReg) {
+                            var regName = chName + configReg.configReg;
+                            missingRegs.push(regName);
+                        });
+                    }
                 }
             }
         });
@@ -1441,7 +1463,7 @@ function module() {
                     self.currentValues.set(reg,val);
                     callback();
                 }, function(err) {
-                    self.currentValues.set(reg,0);
+                    // self.currentValues.set(reg,0);
                     callback();
                 });
             }, function(err) {
@@ -1467,14 +1489,24 @@ function module() {
     };
     var findRangeRegisterRegex = new RegExp("AIN[0-9]{1,2}_RANGE");
     var findEFIndexRegister = new RegExp("AIN[0-9]{1,2}_EF_INDEX");
+    var findOnlyActiveChannel = new RegExp("^AIN[0-9]{1,2}$");
     var findActiveChannel = new RegExp("AIN[0-9]{1,2}");
     var findActiveChannelNum = new RegExp("[0-9]{1,2}");
     this.lastRefreshError = null;
     this.onRefreshed = function(framework, results, onError, onSuccess) {
         try {
+            var clearCurAINREadings = false;
             self.bufferedOutputValues.forEach(function(value,name){
-                self.newBufferedValues.set(name,value);
-                self.bufferedOutputValues.delete(name);
+                if(name === FORCE_AIN_VAL_REFRESH) {
+                    baseRegisters.forEach(function(baseRegister) {
+                        var oldVal = self.currentValues.get(baseRegister);
+                        self.newBufferedValues.set(baseRegister,oldVal);
+                    });
+                    self.bufferedOutputValues.delete(name);
+                } else {
+                    self.newBufferedValues.set(name,value);
+                    self.bufferedOutputValues.delete(name);
+                }
             });
             self.newBufferedValues.forEach(function(value,name){
                 // if the new value that is read is not an analog input aka a 

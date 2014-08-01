@@ -72,11 +72,11 @@
         "active": true
     },
     {
-        "name": "set_defaults",
+        "name": "reset",
         "active": true
     },
     {
-        "name": "reset",
+        "name": "set_defaults",
         "active": true
     },
     {

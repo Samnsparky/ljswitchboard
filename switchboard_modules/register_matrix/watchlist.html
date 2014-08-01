@@ -11,12 +11,12 @@
     <tbody>
         {{#registers}}
         <tr id="{{address}}-watch-row" class="register-row small-table-row register-overview-row">
-            <td>{{address}}</td>
-            <td>{{name}}</td>
+            <td class="selectableText">{{address}}</td>
+            <td class="selectableText">{{name}}</td>
             <td id="{{address}}-type-display">{{type}}</td>
             <td class="register-value-obj">
                 <div class="value-display">
-                    <span id="{{address}}-cur-val-display">1.0000</span>
+                    <span id="{{address}}-cur-val-display" class="selectableText">1.0000</span>
                     {{#writeAccess}}
                     <span id="edit-reg-{{address}}" title="enter write mode" class="icon-pencil edit-register-button"></span>
                     {{/writeAccess}}

@@ -83,14 +83,14 @@
                             <div id="info">
                                 <table>
                                     <tbody>
-                                        <tr><td class="device-attribute-label">Model</td><td id="type" class="device-attribute-value">{{typeStr}}{{specialText}}</td></tr>
-                                        <tr><td class="device-attribute-label">Serial</td><td id="serial" class="device-attribute-value">{{serial}}</td></tr>
-                                        <tr><td class="device-attribute-label">Name</td><td id="name" class="device-attribute-value">{{name}}</td></tr>
+                                        <tr><td class="device-attribute-label">Model</td><td id="type" class="device-attribute-value selectableText">{{typeStr}}{{specialText}}</td></tr>
+                                        <tr><td class="device-attribute-label">Serial</td><td id="serial" class="device-attribute-value selectableText">{{serial}}</td></tr>
+                                        <tr><td class="device-attribute-label">Name</td><td id="name" class="device-attribute-value selectableText">{{name}}</td></tr>
                                         {{#ethernetIPAddress}}
-                                        <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value">{{../ethernetConnectionStatus}}</td></tr>
+                                        <tr><td class="device-attribute-label">Eth. IP</td><td id="ethernet-ip-address" class="device-attribute-value selectableText">{{../ethernetConnectionStatus}}</td></tr>
                                         {{/ethernetIPAddress}}
                                         {{#if specialText}}{{#if ../wifiIPAddress }}
-                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value"><span class="wifiIPAddressText">{{../displayWifiIPAddress}}</span>{{{../button_image}}}</td></tr>
+                                        <tr><td class="device-attribute-label">WiFi IP</td><td id="wifi-ip-address" class="device-attribute-value"><span class="wifiIPAddressText selectableText">{{../displayWifiIPAddress}}</span>{{{../button_image}}}</td></tr>
                                         {{/if}}{{/if}}
                                     </tbody>
                                 </table>

@@ -34,21 +34,20 @@
         <div class="section">
             <h3>Introduction</h3>
             <div>
-                This module indicates what settings the device should default to
-                when it is turned on (powered on).
+                Control how the device is configured after any reboot.  See "IO Config" in the device datasheet.
             </div>
         </div>
         
         <div class="section">
-            <h3>Select which settings to use</h3>
+            <h3>Select Defaults Source</h3>
             <div>
                 <label class="radio">
                     <input type="radio" name="source" value="current" checked>
                     <span class="metro-radio">Current Device Settings</span>
                     <div class="option-description">
                         Take a snapshot of the settings the device has right now
-                        and use that snapshot of settings when the device is
-                        powered on.
+                        and use that snapshot of settings after the device is
+                        rebooted.
                     </div>
                 </label>
             </div>
@@ -57,15 +56,14 @@
                     <input type="radio" name="source" value="factory">
                     <span class="metro-radio">Factory Defaults</span>
                     <div class="option-description">
-                        When powered on, have the device revert to the
-                        configuration it had when purchased.
+                        Configure the device to use the factory settings after the device is rebooted.
                     </div>
                 </label>
             </div>
         </div>
 
         <div class="section">
-            <a href="#" id="reset-button" class="btn">Save Power-Up Defaults</a>
+            <a href="#" id="reset-button" class="btn">Save Defaults</a>
             <div class="saving-notice" id="saving-indicator">Saving...</div>
             <div class="saving-notice" id="saved-indicator">Saved.</div>
             <div class="flash-notice" id="flash-read-notice">

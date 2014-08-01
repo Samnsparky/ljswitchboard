@@ -8,16 +8,16 @@
             <div class="important-info">
                 <div class="device-detail">
                     Serial Number:
-                    <span id="serial-number-display">{{getSerial}}</span>
+                    <span id="serial-number-display" class="selectableText">{{getSerial}}</span>
                 </div>
                 <div class="device-detail">
                     Model:
-                    <span id="type-display">{{getDeviceType}}{{../specialText}}</span>
+                    <span id="type-display" class="selectableText">{{getDeviceType}}{{../specialText}}</span>
                 </div>
                 <div id="name-display-holder" class="device-detail">
                     Name:
                     <span id="name-display">
-                        <span id="current-name-display">{{getName}}</span> <div><a href="#" id="change-name-link">change name</a></div>
+                        <span id="current-name-display" class="selectableText">{{getName}}</span> <div><a href="#" id="change-name-link">change name</a></div>
                         <div id="change-name-controls">
                             <div><input type="text" id="new-name-input" placeholder="new name"></div>
                             <div>
@@ -30,46 +30,48 @@
             </div>
             <div id="firmware-display-holder" class="device-detail">
                 Firmware version: 
-                <span id="firmware-display">
+                <span id="firmware-display" class="selectableText">
                     {{../firmware}}
                 </span>
             </div>
             <div id="bootloader-display-holder" class="device-detail">
                 Bootloader version: 
-                <span id="bootloader-display">
+                <span id="bootloader-display" class="selectableText">
                     {{../bootloader}}
                 </span>
             </div>
             {{#if ../isPro }}
             <div id="wifi-firmware-display-holder" class="device-detail">
                 WiFi Firmware version: 
-                <span id="bootloader-display">
+                <span id="bootloader-display" class="selectableText">
                     {{../../wifiFirmware}}
                 </span>
             </div>
             {{/if}}
             <div class="device-detail">
                 Ethernet IP Address: 
-                <span id="wifi-version-display">
+                <span id="wifi-version-display" class="selectableText">
                     {{../ethernetIP}}
-                </span>
-            </div>
-            <div class="device-detail">
-                Ethernet Mac Address: 
-                <span id="wifi-version-display">
-                    {{../ethernetMac}}
                 </span>
             </div>
             {{#if ../isPro }}
             <div class="device-detail">
                 WiFi IP Address: 
-                <span id="wifi-version-display">
+                <span id="wifi-version-display" class="selectableText">
                     {{../../wifiIP}}
                 </span>
             </div>
+            {{/if}}
+            <div class="device-detail">
+                Ethernet Mac Address: 
+                <span id="wifi-version-display" class="selectableText">
+                    {{../ethernetMac}}
+                </span>
+            </div>
+            {{#if ../isPro }}
             <div class="device-detail">
                 WiFi Mac Address: 
-                <span id="wifi-version-display">
+                <span id="wifi-version-display" class="selectableText">
                     {{../../wifiMac}}
                 </span>
             </div>

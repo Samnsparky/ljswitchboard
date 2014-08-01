@@ -32,7 +32,7 @@ var ERROR_TEMPLATE = handlebars.compile(
 );
 
 var HUMAN_VERSION_TEMPLATE = handlebars.compile(
-    '{{ version }} ({{ humanName }})'
+    '{{ version }} -{{ humanName }}'
 );
 
 
