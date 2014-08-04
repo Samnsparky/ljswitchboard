@@ -29,10 +29,14 @@ var device_controller = null;
 try {
     device_controller = require('./device_controller');
 } catch (e) {
-    showPrematureAlert(
-        '<b>Failed to load JSON constants file or LJM on your machine. Please '+
-        'check the install and restart Kipling</b>. Original error: '+
-        e.toString()
-    );
+	try {
+		showPrematureAlert(
+			'<b>Failed to load JSON constants file or LJM on your machine. Please '+
+			'check the install and restart Kipling</b>. Original error: '+
+			e.toString()
+		);
+	} catch(err) {
+		console.error('Error calling showPrematureAlert global_requires.js',e,e.getStack(),err,err.getStack());
+	}
 }
 

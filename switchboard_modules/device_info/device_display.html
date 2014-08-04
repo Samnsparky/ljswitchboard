@@ -17,32 +17,34 @@
                 <div id="name-display-holder" class="device-detail">
                     Name:
                     <span id="name-display">
-                        <span id="current-name-display" class="selectableText">{{getName}}</span> <div><a href="#" id="change-name-link">change name</a></div>
+                        <span id="current-name-display" class="selectableText">{{getName}}</span>
+                        <button id="change-name-link" class="icon-pencil btn" title="Edit Device Name"></button>
+                        {{!--<div><button id="change-name-link" class="btn">Change Name</button></div>--}}
                         <div id="change-name-controls">
                             <div><input type="text" id="new-name-input" placeholder="new name"></div>
                             <div>
-                                <button id="change-name-button" class="btn">change name</button>
-                                <button id="cancel-change-name-button" class="btn">cancel</button>
+                                <button id="change-name-button" class="btn">Change Name</button>
+                                <button id="cancel-change-name-button" class="btn">Cancel</button>
                             </div>
                         </div>
                     </span>
                 </div>
             </div>
             <div id="firmware-display-holder" class="device-detail">
-                Firmware version: 
+                Firmware Version: 
                 <span id="firmware-display" class="selectableText">
                     {{../firmware}}
                 </span>
             </div>
             <div id="bootloader-display-holder" class="device-detail">
-                Bootloader version: 
+                Bootloader Version: 
                 <span id="bootloader-display" class="selectableText">
                     {{../bootloader}}
                 </span>
             </div>
             {{#if ../isPro }}
             <div id="wifi-firmware-display-holder" class="device-detail">
-                WiFi Firmware version: 
+                WiFi Firmware Version: 
                 <span id="bootloader-display" class="selectableText">
                     {{../../wifiFirmware}}
                 </span>

@@ -8,21 +8,11 @@
  * @contributor Chris Johnson (LabJack, 2013)
 **/
 
-// var async = require('async');
-// var handlebars = require('handlebars');
-// var q = require('q');
+var async = require('async');
+var handlebars = require('handlebars');
+var q = require('q');
 
-// var fs_facade = require('./fs_facade');
-// var device_controller = null;
-// try {
-//     device_controller = require('./device_controller');
-// } catch (e) {
-//     showPrematureAlert(
-//         '<b>Failed to load JSON constants file or LJM on your machine. Please '+
-//         'check the install and restart Kipling</b>. Original error: '+
-//         e.toString()
-//     );
-// }
+var fs_facade = require('./fs_facade');
 
 var DEVICE_TYPE_DISPLAY_HEIGHTS = {'T7': 'tall', 'Digit': 'tall'};
 var CHROME_TEMPLATE_NAME = 'module_chrome.html';
@@ -69,6 +59,16 @@ function showPrematureAlert(content) {
         $('#searching-devices-message').slideUp();
         $('#device-search-msg').animate({'width': '90%', 'left': '0%'});
     }, 1000);
+}
+var device_controller = null;
+try {
+    device_controller = require('./device_controller');
+} catch (e) {
+    showPrematureAlert(
+        '<b>Failed to load JSON constants file or LJM on your machine. Please '+
+        'check the install and restart Kipling</b>. Original error: '+
+        e.toString()
+    );
 }
 
 
