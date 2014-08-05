@@ -546,7 +546,7 @@ function updateFirmware (firmwareFileLocation) {
                 showAlert(
                     'Failed to update device firmware. Please try ' + 
                     'again. If the problem persists, please contact ' + 
-                    'support@labjack.com. Error: ' + errMsg
+                    errMsg
                 );
             } else {
                 DISABLE_WIFI_POWER = true;

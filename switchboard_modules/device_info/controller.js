@@ -44,6 +44,13 @@ function showDevice(device, onSuccess)
     var firmwareVersion;
     var bootloaderVersion;
     var wifiFirmwareVersion;
+    var ethIPNum;
+    var ethernetMac;
+    var wifiIPNum;
+    var internalTemp;
+    var wifiMac;
+    var currentSourceA;
+    var currentSourceB;
 
     try {
         isPro = device.read('HARDWARE_INSTALLED') != 0;
@@ -83,7 +90,7 @@ function showDevice(device, onSuccess)
     }
 
     try {
-        var ethIPNum = device.read('ETHERNET_IP');
+        ethIPNum = device.read('ETHERNET_IP');
         if(ethIPNum !== 0) {
             ethernetIP = formatAsIP(ethIPNum);
         } else {
@@ -97,7 +104,7 @@ function showDevice(device, onSuccess)
         ethernetIP = '[ could not read ethernet IP address ]';
     }
     try {
-        var ethernetMac = device.readUINT64('ethernet');
+        ethernetMac = device.readUINT64('ethernet');
     } catch (e) {
         showAlert(
             'Failed to communicate with device: ' + e.toString()
@@ -106,7 +113,7 @@ function showDevice(device, onSuccess)
     }
 
     try {
-        var wifiIPNum = device.read('WIFI_IP');
+        wifiIPNum = device.read('WIFI_IP');
         if(wifiIPNum !== 0) {
             wifiIP = formatAsIP(wifiIPNum);
         } else {
@@ -119,7 +126,38 @@ function showDevice(device, onSuccess)
         wifiIP = '[ could not read wifi IP address ]';
     }
     try {
-        var wifiMac = device.readUINT64('wifi');
+        internalTemp = device.read('TEMPERATURE_DEVICE_K');
+        internalTemp = internalTemp.toFixed(2);
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        internalTemp = '[ could not read temperature ]';
+    }
+    try {
+        currentSourceA = device.read('CURRENT_SOURCE_200UA_CAL_VALUE');
+        currentSourceA *= 1000000;
+        currentSourceA = currentSourceA.toFixed(3);
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        currentSourceA = '[ could not read 200UA Current Source Cal ]';
+    }
+    try {
+        currentSourceB = device.read('CURRENT_SOURCE_10UA_CAL_VALUE');
+        currentSourceB *= 1000000;
+        currentSourceB = currentSourceB.toFixed(3);
+    } catch (e) {
+        showAlert(
+            'Failed to communicate with device: ' + e.toString()
+        );
+        currentSourceB = '[ could not read 10UA Current Source Cal ]';
+    }
+
+
+    try {
+        wifiMac = device.readUINT64('wifi');
     } catch (e) {
         showAlert(
             'Failed to communicate with device: ' + e.toString()
@@ -168,7 +206,10 @@ function showDevice(device, onSuccess)
         'powerWifi': powerWifi,
         'powerAin': powerAin,
         'powerLed': powerLed,
-        'wifiFirmware': wifiFirmwareVersion
+        'wifiFirmware': wifiFirmwareVersion,
+        'internalTemp': internalTemp,
+        'currentSourceA': currentSourceA,
+        'currentSourceB': currentSourceB
     };
 
     if (isPro) {

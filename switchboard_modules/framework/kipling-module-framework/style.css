@@ -3,8 +3,8 @@
 }
 #single-device-framework-obj #device-selector
 {
-    max-height: 150px;
-    overflow: auto;
+    /*max-height: 150px;
+    overflow: auto;*/
     font-size: 16px;
     padding: 0px;
 }

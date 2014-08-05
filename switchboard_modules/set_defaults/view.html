@@ -34,7 +34,25 @@
         <div class="section">
             <h3>Introduction</h3>
             <div>
-                Control how the device is configured after any reboot.  See "IO Config" in the device datasheet.
+                <p>
+                    Control how the device is configured after any reboot, power-up, or reset condition.  This uses the T7's I/O configuration system to configure registers including but not limited to:
+                </p>
+                <ul>
+                    <li>Digital I/O directions and states</li>
+                    <li>Analog input configuration options (Range, Resolution, etc.)</li>
+                    <li>Analog input extended features (AINx_EF)</li>
+                    <li>Analog output (DAC) channel values</li>
+                </ul>
+                <p>Refer to the <a class="lj-link-holder" id="io-config-datasheet-link">"IO Config" section of the datasheet</a> for more information.</p>
+                <script>
+                    $('#io-config-datasheet-link').unbind();
+                    $('#io-config-datasheet-link').bind('click',function(){
+                        if(typeof(gui) === 'undefined') {
+                            gui = require('nw.gui');
+                        }
+                        gui.Shell.openExternal("http://labjack.com/support/datasheets/t7/io-config-default");
+                    });
+                </script>
             </div>
         </div>
         
@@ -63,7 +81,7 @@
         </div>
 
         <div class="section">
-            <a href="#" id="reset-button" class="btn">Save Defaults</a>
+            <a id="reset-button" class="btn">Save Defaults</a>
             <div class="saving-notice" id="saving-indicator">Saving...</div>
             <div class="saving-notice" id="saved-indicator">Saved.</div>
             <div class="flash-notice" id="flash-read-notice">

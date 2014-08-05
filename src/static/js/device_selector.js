@@ -13,7 +13,7 @@
 
 var OPEN_FAIL_MESSAGE = handlebars.compile(
     'Sorry. Failed to the open device. Please check the ' +
-    'physical connection and try again or contact support@labjack.com. ' +
+    'physical connection and try again. ' +
     'Driver error number: {{.}}');
 
 var CONNECTED_OVER_TEMPLATE = handlebars.compile('Connected over {{ . }}');
@@ -428,6 +428,7 @@ function onResized() {
         decrement += 78;
     }
     var num = ($(window).height()-decrement);
+    num -= 13;
     $('.device-pane').height((num-10).toString()+'px');
 }
 

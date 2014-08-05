@@ -92,8 +92,8 @@ var EDIT_CONTROLS_TEMPLATE_STR = '<div class="edit-control row-fluid" id="{{ . }
     '<div class="span1 edit-label">{{ . }}</div>' +
     '<div class="span5 val-input-holder"><input id="{{ . }}-val-input" type="text" placeholder="val to write"></div>' +
     '<div class="span6">' +
-    '<a href="#" id="{{ . }}-write-btn" class="write-button btn btn-success">write</a>' +
-    '<a href="#" id="{{ . }}-close-btn" class="close-button btn btn-warning">return {{ . }} to read-mode</a>' +
+    '<a id="{{ . }}-write-btn" class="write-button btn btn-success">write</a>' +
+    '<a id="{{ . }}-close-btn" class="close-button btn btn-warning">return {{ . }} to read-mode</a>' +
     '</div>' +
     '</div>';
 var EDIT_CONTROLS_TEMPLATE = handlebars.compile(EDIT_CONTROLS_TEMPLATE_STR);
