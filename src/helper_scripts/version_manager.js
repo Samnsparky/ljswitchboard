@@ -15,17 +15,17 @@ var handlebars = require('handlebars');
 
 function labjackVersionManager() {
 	this.kiplingUpdateLinks = {
-		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling_win.exe",
-		"beta_win":			"https://s3.amazonaws.com/ljrob/win32/kipling_win_beta.exe",
+		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling/kipling_win.exe",
+		"beta_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/beta/kipling_beta_win.exe",
 
-		"current_mac":		"https://s3.amazonaws.com/ljrob/mac/kipling_mac.zip",
-		"beta_mac":			"https://s3.amazonaws.com/ljrob/mac/kipling_mac-test.zip",
+		"current_mac":		"https://s3.amazonaws.com/ljrob/mac/kipling/kipling_mac.zip",
+		"beta_mac":			"https://s3.amazonaws.com/ljrob/mac/kipling/beta/kipling_beta_mac.zip",
 
-		"current_linux32":	"https://s3.amazonaws.com/ljrob/lin32/kipling_lin32.zip",
-		"beta_linux32":		"https://s3.amazonaws.com/ljrob/lin32/kipling_lin32_beta.zip",
+		"current_linux32":	"https://s3.amazonaws.com/ljrob/linux32/kipling/kipling_lin32.zip",
+		"beta_linux32":		"https://s3.amazonaws.com/ljrob/lin32/kipling/beta/kipling_beta_lin32.zip",
 
-		"current_linux64":	"https://s3.amazonaws.com/ljrob/lin64/kipling_lin64.zip",
-		"beta_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling_lin64_beta.zip"
+		"current_linux64":	"https://s3.amazonaws.com/ljrob/linux64/kipling/kipling_lin64.zip",
+		"beta_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling/beta/kipling_beta_lin64.zip"
 	};
 
 	// define dict object with various urls in it
