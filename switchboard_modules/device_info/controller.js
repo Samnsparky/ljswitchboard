@@ -344,7 +344,10 @@ $('#device-info-inspector').ready(function(){
 
     var devices = device_controller.getDeviceKeeper().getDevices();
     var device = devices[0];
-    showDevice(device, function(){$('#device-info-display').fadeIn();});
+    showDevice(device, function(){
+        $('#device-info-display').fadeIn();
+        KEYBOARD_EVENT_HANDLER.initInputListeners();
+    });
 });
 
 var test = function() {
