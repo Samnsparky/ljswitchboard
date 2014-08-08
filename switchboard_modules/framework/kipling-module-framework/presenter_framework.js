@@ -637,6 +637,7 @@ function Framework() {
         };
         var resolveFunc = function(data) {
             onResized();
+            KEYBOARD_EVENT_HANDLER.initInputListeners();
             innerDeferred.resolve(data);
         };
         try{

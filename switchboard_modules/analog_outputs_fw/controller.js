@@ -269,9 +269,9 @@ function module() {
             var val = self.currentValues.get(register.register);
             self.writeDisplayedVoltage(register.register,val);
         });
-        $('#analog_outputs_fw_hider').css('position','inherit')
+        $('#analog_outputs_fw_hider').css('position','inherit');
         onSuccess();
-    }
+    };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
         onSuccess();
     };

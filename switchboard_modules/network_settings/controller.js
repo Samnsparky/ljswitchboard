@@ -240,6 +240,7 @@ function module() {
         var dhcpToggleEl = $('#wifi-DHCP-Select-Toggle .btnText');
         dhcpToggleEl.text($('#wifi-DHCP-Select-Toggle #WiFi_DHCP_Manual').text());
         self.selectivelyShowWifiAlerts();
+        KEYBOARD_EVENT_HANDLER.initInputListeners();
     };
     this.showAutoWifiSettings = function() {
         $('#wifi_settings .Manual_Value').hide();
@@ -536,6 +537,7 @@ function module() {
         } else {
             self.updateWifiValidationStatus(isValid);
         }
+        inputTextEl.blur();
     };
     this.networkNameValidator = function(event) {
         var settingID = event.target.parentElement.parentElement.id;
@@ -571,6 +573,7 @@ function module() {
             isValid = true;
         }
         self.updateWifiValidationStatus(isValid);
+        inputTextEl.blur();
     };
     this.networkPasswordValidator = function(event) {
         var settingID = event.target.parentElement.parentElement.id;
@@ -609,6 +612,7 @@ function module() {
             isValid = true;
         }
         self.updateWifiValidationStatus(isValid);
+        inputTextEl.blur();
     };
     this.attachIPInputValidators = function() {
         var inputElements = $('.networkSetting .ipAddress');

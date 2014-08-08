@@ -880,7 +880,7 @@ function refreshWatchList()
                 $(REGISTER_WATCHLIST_EMPTY_SELECTOR).hide();
                 $(REGISTER_WATCHLIST_SELECTOR).show(runRedraw);
 
-                var showRegiserEditControls = function(event){
+                var showRegiserEditControls = function(event) {
                     var address = event.target.id.replace('edit-reg-', '');
                     var rowSelector = WATCH_ROW_SELECTOR_TEMPLATE({
                         'address': address
@@ -903,7 +903,7 @@ function refreshWatchList()
                     );
                 };
 
-                var hideRegisterEditControls = function(event){
+                var hideRegisterEditControls = function(event) {
                     var address = event.target.id;
                     address = address.replace('close-edit-reg-', '');
                     address = address.replace('icon-', '');
@@ -927,7 +927,7 @@ function refreshWatchList()
                     );
                 };
 
-                var writeRegister = function(event){
+                var writeRegister = function(event) {
                     var address = event.target.id;
                     address = address.replace('write-reg-', '');
                     address = address.replace('icon-', '');
@@ -996,6 +996,7 @@ function refreshWatchList()
                         writeRegister(e);
                     }
                 });
+                KEYBOARD_EVENT_HANDLER.initInputListeners();
             }
         );
     }
@@ -1170,12 +1171,12 @@ function updateReadRegisters ()
     });
 
     promise.then(
-        function () { 
+        function () {
             if(LOADED_MODULE_INFO_OBJECT.name !== 'register_matrix') {
                 runRedraw();
                 return;
             }
-            setTimeout(updateReadRegisters, REFRESH_DELAY); 
+            setTimeout(updateReadRegisters, REFRESH_DELAY);
         },
         onError
     );
@@ -1220,6 +1221,7 @@ $('#register-matrix-holder').ready(function(){
     .then(renderRegistersTable)
     .then(qRunRedraw)
     .done(function () {
+        KEYBOARD_EVENT_HANDLER.initInputListeners();
         reportTime('Finished!');
         var keeper = device_controller.getDeviceKeeper();
         selectedDevice = keeper.getDevices()[0];

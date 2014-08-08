@@ -6,55 +6,276 @@
  * @author Chris Johnson (LabJack, 2014)
 **/
 
+// Require npm libraries
 var dict = require('dict');
+var q = require('q');
+var async = require('async');
 
+// Require nodejs libraries
+var os = require('os');
+var path = require('path');
+
+
+/**
+ * keyboardEventHandler is an object that allows easy window-wide keypress 
+ * handling.  Initialize object at the start of the program.
+ * @return {[type]} [description]
+**/
 function keyboardEventHandler() {
-    var LJ_TEMPORARY_FILE_LOCATION;
-    if (process.platform === 'win32') {
-        var modernPath = process.env.ALLUSERSPROFILE + '\\LabJack\\K3';
-        var xpPath = process.env.ALLUSERSPROFILE + '\\Application Data\\LabJack\\K3';
-        var filePath = fs.existsSync(modernPath);
-        if (filePath) {
-            LJ_TEMPORARY_FILE_LOCATION = modernPath;
+    var escBinding = 'escape-input-listener-keyboard_event_handler';
+    this.handleGenericKeypress = function(info) {
+        if(typeof(info.listeners) !== 'undefined') {
+            info.listeners.forEach(function(listenerFunc, listenerName){
+                try {
+                    console.log('Executing','"'+listenerName+'"');
+                    listenerFunc(info);
+                } catch (err) {
+                    console.log(
+                        'Error executing keyboard_event_handler',
+                        '"'+listenerName+'"',
+                        'event name',
+                        info.name,
+                        'error',
+                        err
+                    );
+                }
+            });
         }
-        else {
-            LJ_TEMPORARY_FILE_LOCATION = xpPath;
+    };
+    this.handleOpenConsole = function(info) {
+        console.log('in handleOpenConsole', info.name);
+        if(typeof(gui) === 'undefined') {
+            gui = require('nw.gui');
         }
-    } else {
-        LJ_TEMPORARY_FILE_LOCATION = '/usr/local/share/LabJack/K3';
-    }
-    // This dict holds data that is persistent to reboots.
-    this.startupData = dict();
-
-    // This dict holds data that is only valid during the current instance of K3
-    this.activeData = dict();
-
-    /*
-     * initializeData should be called on startup.  It loads a static file that 
-     * holds persistent data between reboots and loads it into the startupData 
-     * object.  It then transfers that data into the activeData object.
-     */
-    this.initializeData = function() {
-
+        gui.Window.get().showDevTools();
+    };
+    var specialElements = [
+        {
+            "className": "escapableInput typeahead tt-input",
+            "func": function(info, newText) {
+                $('.escapableInput.typeahead.tt-input').val(newText);
+            }
+        }
+    ];
+    this.handleEscapeKey = function(info) {
+        console.log('in handleEscapeKey');
+        var curClassName = document.activeElement.className;
+        var curID = document.activeElement.id;
+        var curKey = curID + curClassName;
+        console.log('in handleEscapeKey',curKey,self.lastOnFocusElementKey,self.lastOnFocusElementValue);
+        if(curKey === self.lastOnFocusElementKey) {
+            var newText = self.lastOnFocusElementValue;
+            document.activeElement.value = newText;
+            document.activeElement.blur();
+            specialElements.forEach(function(specialElement) {
+                if(specialElement.className === curClassName) {
+                    specialElement.func(info,newText);
+                }
+            });
+        }
     };
 
-    /*
-     * initializeStartupData is called by the initializeData function.  It loads
-     * data from a static & unprotected file and saves the data to the 
-     * startupData object.
-     */
-    this.initializeStartupData = function() {
+    this.lastElementOriginalData = dict();
+    this.lastOnFocusEvent = null;
+    this.lastOnFocusElementValue = '';
+    this.lastOnFocusElementID = '';
+    this.lastOnFocusElementClassName = '';
+    this.lastOnFocusElementKey = '';
+    this.onFocusListener = function(event) {
+        self.lastOnFocusEvent = event;
+        console.log(event.target.value);
+        self.lastOnFocusElementValue = event.target.value.toString();
+        var className = event.target.className;
+        var id = event.target.id;
+        self.lastOnFocusElementID = id;
+        self.lastOnFocusElementClassName = className;
+        self.lastOnFocusElementKey = id + className;
+    };
+
+    this.numInputListeners = 0;
+    this.initInputListeners = function() {
+        self.lastOnFocusEvent = null;
+        self.lastOnFocusElementValue = '';
+        self.lastOnFocusElementKey = '';
+        var inputElements = $('input');
+        self.numInputListeners = inputElements.length;
+        inputElements.unbind('focus');
+        inputElements.bind('focus',self.onFocusListener);
+    };
+    this.keysList = [
+        {   // escape key
+            'name':'esc',
+            'key':'esc',
+            'platforms':['mac','win','linux'],
+            'func': this.handleEscapeKey,
+            'listeners': dict()
+        },{ // keypress to open debugging console
+            'name':'openConsole',
+            'key':'ctrl+alt+shift+c',
+            'platforms':['mac','win','linux'],
+            'func': this.handleOpenConsole,
+            'listeners': dict()
+        },{ // windows keypress to save
+            'name':'save',
+            'key':'ctrl+s',
+            'platforms':['win','linux'],
+            'func': this.handleGenericKeypress,
+            'listeners': dict()
+        },{ // mac keypress to save
+            'name':'save',
+            'key':'meta+s',
+            'platforms':['mac'],
+            'func': this.handleGenericKeypress,
+            'listeners': dict()
+        }
+    ];
+    var keysMap = {};
+    this.keysList.forEach(function(info) {
+        keysMap[info.name] = info.key;
+    });
+    this.keysMap = keysMap;
+
+    this.curPlatform = {
+        'linux': 'linux',
+        'linux2': 'linux',
+        'sunos': 'linux',
+        'solaris': 'linux',
+        'freebsd': 'linux',
+        'openbsd': 'linux',
+        'darwin': 'mac',
+        'mac': 'mac',
+        'win32': 'win',
+    }[process.platform];
+
+    this.keyFunctions = dict();
+
+    this.keyMap = {
+        16:{'key':'shift', 'isPressed': false},
+        17:{'key':'ctrl', 'isPressed': false},
+        18:{'key':'alt', 'isPressed': false},
+        27:{'key':'esc', 'isPressed': false},
+        67:{'key':'c', 'isPressed': false},
+        83:{'key':'s', 'isPressed': false},
+        91:{'key':'cmd', 'isPressed': false},
+    };
+    this.keyList = [16, 17, 18, 27, 67, 83, 91];
+
+    var esc_KEY     = 27;
+    var c_KEY       = 67;
+    var s_KEY       = 83;
+    this.primaryKeysList = [esc_KEY, c_KEY, s_KEY];
+
+    this.convertKeyCode = function(code) {
+        if(typeof(self.keyMap[code]) !== 'unified') {
+            return self.keyMap[code].key;
+        } else {
+            return '';
+        }
+    };
+
+    this.dispatchFunc = function(key) {
+        // Check to see if the key exists
+        if(self.keyFunctions.has(key)) {
+            // If the key exists, get the function & execute it.
+            var keyFunction = self.keyFunctions.get(key);
+            var func = keyFunction.func;
+            func(keyFunction);
+        }
+    };
+
+    this.printAllListeners = function() {
+        console.log('Printing Listeners');
+        self.keyFunctions.forEach(function(keyFunction,key) {
+            console.log('Event:','"'+keyFunction.name+'"','has',keyFunction.listeners.size,'listeners');
+            var i = 1;
+            keyFunction.listeners.forEach(function(listener,listenerName) {
+                console.log('\t'+(i.toString())+'.',listenerName);
+                i += 1;
+            });
+        });
+    };
+    this.addListener = function(keyName, listenerName, listenerFunc) {
+        keyName = self.keysMap[keyName];
+        var isKeyName = (typeof(keyName) !== 'undefined');
+        var isListenerName = (typeof(listenerName) !== 'undefined');
+        var isListenerFunc = (typeof(listenerFunc) !== 'undefined');
+        if(isKeyName && isListenerName && isListenerFunc) {
+            if(self.keyFunctions.has(keyName)) {
+                var tempKeyFunction = self.keyFunctions.get(keyName);
+                tempKeyFunction.listeners.set(listenerName, listenerFunc);
+                self.keyFunctions.set(keyName, tempKeyFunction);
+            }
+        }
+    };
+    this.deleteListener = function(keyName, listenerName, listenerFunc) {
+        var isKeyName = (typeof(keyName) !== 'undefined');
+        var isListenerName = (typeof(listenerName) !== 'undefined');
+        var isListenerFunc = (typeof(listenerFunc) !== 'undefined');
+        if(isKeyName && isListenerName && isListenerFunc) {
+            if(self.keyFunctions.has(keyName)) {
+                var tempKeyFunction = self.keyFunctions.get(keyName);
+                tempKeyFunction.listeners.delete(listenerName);
+                self.keyFunctions.set(keyName, tempKeyFunction);
+            }
+        }
+    };
+
+    /**
+     * Function to be used as the keydown listener
+    **/
+    this.lastKeydownEvent = null;
+    this.keydownListener = function(event) {
+        self.lastKeydownEvent = event;
+        var keyNum = event.keyCode;
+        var keyStr = keyNum.toString();
+        var str = '';
+        if(event.ctrlKey) {
+            str += 'ctrl+';
+        }
+        if(event.altKey) {
+            str += 'alt+';
+        }
+        if(event.shiftKey) {
+            str += 'shift+';
+        }
+        if(event.metaKey) {
+            str += 'meta+';
+        }
+        if(self.primaryKeysList.indexOf(keyNum) !== -1) {
+            str += self.convertKeyCode(keyNum);
+            self.dispatchFunc(str);
+        }
+    };
+
+    /**
+     * Function to be used as the keyup listener
+    **/
+    this.keyupListener = function(event) {
 
     };
 
     /**
-     * initializeActiveData is called after the startupData object has been 
-     * initialized.  It transfers that information into the activeData object so
-     * that all of the information remains in one location.
-     */
-    this.initializeActiveData = function() {
+     * Function to be called that sets up the document wide keypress listener.
+    **/
+    this.init = function() {
+        // Initialize the key listener list
+        self.keysList.forEach(function(keysListItem) {
+            keysListItem.platforms.forEach(function(platform) {
+                // if the defined key has a matching platform, add it to the
+                // list.
+                if(platform === self.curPlatform) {
+                    self.keyFunctions.set(keysListItem.key,keysListItem);
+                }
+            });
+        });
 
+        // bind listener to document's keypress event
+        $(document).keydown(self.keydownListener);
+        $(document).keyup(self.keyupListener);
     };
 
     var self = this;
 }
+
+// Initialize object and make object available in k3's namespace.
+var KEYBOARD_EVENT_HANDLER = new keyboardEventHandler();

@@ -104,7 +104,6 @@ function labjackVersionManager() {
 		ljmDownloadsPage: function(listingArray, pageData, urlInfo, name) {
 			var LJM_REGEX;
 			var platform = urlInfo.type.split('_')[1];
-			console.log('Platform',platform);
 			var match;
 			var getMatch = true;
 			if (platform === 'win') {
@@ -129,7 +128,6 @@ function labjackVersionManager() {
 			if(match) {
 				var targetURL = match[0].replace(/href\=\"/g, '');
 				var version = match[1];
-				console.log('Url:',targetURL);
 				listingArray.push({
 						"upgradeLink":targetURL,
 						"version":version,
@@ -512,7 +510,7 @@ function labjackVersionManager() {
 			return !(self.isDataComplete || self.isError);
 		};
 		var finishFunc = function() {
-			console.log('version_manager.js - Num Iterations',iteration);
+			// console.log('version_manager.js - Num Iterations',iteration);
 			if(self.isError) {
 				defered.reject(self.errorInfo);
 			} else {
@@ -745,8 +743,6 @@ function labjackVersionManager() {
 				}
 			}
 
-			console.log('version_manager.js links:',upgradeLinks);
-
 			// Build linksStr which will get inserted into the linksList element
 			upgradeLinks.forEach(function(linkInfo) {
 				linksStr += self.upgradeLinkTemplate(linkInfo);
@@ -761,16 +757,16 @@ function labjackVersionManager() {
 			}
 
 			// Connect upgrade button listeners
-			self.controls.linksListEl.find('.upgradeButton')
-			.bind('click',function(event) {
-				console.log('Clicked!',event.toElement);
-
+			var buttons = self.controls.linksListEl.find('.upgradeButton');
+			buttons.unbind();
+			buttons.bind('click',function(event) {
+				console.log('LVM Clicked!',event.toElement);
 				var href = event.toElement.attributes.href.value;
 				FILE_DOWNLOADER_UTILITY.downloadFile(href)
 				.then(function(info) {
-					console.log('success!',info);
+					console.log('LVM Success!',info);
 				}, function(error) {
-					console.log('Error :(',error);
+					console.log('LVM Error :(',error);
 				});
 			});
 		};
@@ -801,7 +797,7 @@ var LABJACK_VERSION_MANAGER = new labjackVersionManager();
 LABJACK_VERSION_MANAGER.getAllVersions();
 LABJACK_VERSION_MANAGER.waitForData()
 .then(function(data) {
-	console.log('dataCache',LABJACK_VERSION_MANAGER.dataCache);
+	console.log('LVM dataCache:',LABJACK_VERSION_MANAGER.dataCache);
 	if(LABJACK_VERSION_MANAGER.isIssue()) {
 		var issue =LABJACK_VERSION_MANAGER.getIssue();
 		console.warn('LVM Warming',issue);

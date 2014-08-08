@@ -78,18 +78,31 @@
         <script type="text/javascript" src="helper_scripts/global_requires.js"></script>
         <script type="text/javascript" src="helper_scripts/version_manager.js"></script>
         <script type="text/javascript" src="helper_scripts/file_downloader.js"></script>
+        <script type="text/javascript" src="helper_scripts/keyboard_event_handler.js"></script>
         
         <div id="content-holder"></div>
         <script type="text/javascript" src="presenter.js"></script>
         <script type="text/javascript">
+            // prevent most webpage like drag & drop functionality to open links.
             window.ondragover = function(e) {e.preventDefault();return false;};
             window.ondrop = function(e) {e.preventDefault();return false;};
             $(document).ready(function() {
+                // Initialize object in file_downloader.js
                 FILE_DOWNLOADER_UTILITY.initializeFileDownloader(
                     'lvmDownloadBox',
                     'currentDownloads',
                     'closeDownloaderWindowButton');
 
+                // Initialize object in keyboard_event_handler.js
+                KEYBOARD_EVENT_HANDLER.init();
+                KEYBOARD_EVENT_HANDLER.addListener('save','test',function(info){
+                    console.log('Test Save Listener',info);
+                });
+                KEYBOARD_EVENT_HANDLER.addListener('esc','test',function(info){
+                    console.log('Test esc Listener',info);
+                });
+
+                // Start Kipling!
                 renderDeviceSelector();
             });
         </script>

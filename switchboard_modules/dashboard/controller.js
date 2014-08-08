@@ -414,6 +414,7 @@ function module() {
             self.attachDIOListners();
             onSuccess();
         });
+        KEYBOARD_EVENT_HANDLER.initInputListeners();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
         onSuccess();

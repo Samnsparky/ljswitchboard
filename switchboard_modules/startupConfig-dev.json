@@ -68,7 +68,7 @@
             "connectionType":"USB"
         }
     ],
-    "displayDevTools": false,
+    "displayDevTools": true,
     "overrideAutoModuleLoad": true,
     "moduleName": "analog_inputs_fw"
 }

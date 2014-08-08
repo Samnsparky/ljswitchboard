@@ -1104,6 +1104,7 @@ function module() {
                 finishedPages.forEach(function(finishedPage) {
                     finishedPage.ele.slideDown();
                 });
+                KEYBOARD_EVENT_HANDLER.initInputListeners();
             }
         };
         

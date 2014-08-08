@@ -10,6 +10,10 @@
  *      device_controller = require('./device_controller');
  *      gui = require('nw.gui');
 **/
+var handlebars = require('handlebars');
+var q = require('q');
+var device_controller = require('./device_controller');
+var gui = require('nw.gui');
 
 var OPEN_FAIL_MESSAGE = handlebars.compile(
     'Sorry. Failed to the open device. Please check the ' +

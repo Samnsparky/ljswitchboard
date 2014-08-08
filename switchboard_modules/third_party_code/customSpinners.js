@@ -83,7 +83,7 @@ function customSpinners(owner, infoArray, writeFunc, updateFunc) {
                 clearTimeout(self.dacListerners[targetID].timer);
                 // Enable this code for timeed blur events for up/down arrows
                 self.dacListerners[targetID].timer = setTimeout(
-                    self.setVoltage(targetElement,targetID,targetObject), 
+                    self.setVoltage(targetElement,targetID,targetObject),
                     500
                 );
                 // Enable this code for immediate writes to up/down arrows
