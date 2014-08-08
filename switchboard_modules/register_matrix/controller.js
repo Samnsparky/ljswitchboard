@@ -4,6 +4,7 @@
  * Logic for a matrix with information about registers that also allows users
  * to read and write the current value of those registers via raw values.
  *
+ * @author Chris Johnson  (labJack Corp, 2013)
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 var curTemplateVals = null;

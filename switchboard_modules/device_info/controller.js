@@ -4,11 +4,14 @@
  * Logic / controller for the device info inspector, a module that allows the
  * user to see basic device information.
  *
+ * @author Chris Johnson  (labJack Corp, 2013)
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
 
 var device_controller = require('./device_controller');
 
+function ACTIVE_KIPLING_MODULE() {
+var activeDevice = null;
 var DEVICE_DISPLAY_SRC = 'device_info/device_display.html';
 var DEVICE_NAME_DEFAULT_REGISTER = 60500;
 var NAME_MAX_LEN = 49;
@@ -38,6 +41,7 @@ function formatAsIP(ipAddress) {
 **/
 function showDevice(device, onSuccess)
 {
+    activeDevice = device;
     var location = fs_facade.getExternalURI(DEVICE_DISPLAY_SRC);
     var isPro;
     var templateValues;
@@ -342,3 +346,47 @@ $('#device-info-inspector').ready(function(){
     var device = devices[0];
     showDevice(device, function(){$('#device-info-display').fadeIn();});
 });
+
+var test = function() {
+    var testCh = function(ch,val) {
+        ch = ch.toString();
+        var origVal = d.read('AIN'+ch+'_SETTLING_US');
+        d.write('AIN'+ch+'_SETTLING_US',val);
+        var reportedVal = d.read('AIN'+ch+'_SETTLING_US');
+        d.write('AIN'+ch+'_SETTLING_US',origVal);
+        var finalVal = d.read('AIN'+ch+'_SETTLING_US');
+        var str = ch+'\t';
+        str += origVal.toString()+'\t\t';
+        str += val.toString()+'\t\t';
+        str += reportedVal.toString()+'\t\t\t';
+        str += finalVal.toString()+'\t\t';
+        var result = false;
+        if (val == reportedVal) {
+            result = true;
+        }
+        str += result.toString();
+        console.log(str);
+        return result;
+    };
+    var d = activeDevice;
+    var reportAllSettling = d.read('AIN_ALL_SETTLING_US');
+    d.write('AIN_ALL_SETTLING_US',200);
+    console.log('Testing _SETTLING_US');
+    console.log('Original AIN_ALL_SETTLING_US',reportAllSettling,'now set to 200');
+    var str = 'Ch\torig.\ttest\treported\tfinal\tresult';
+    console.log(str);
+    var result = true;
+    for (i=0; i<13; i++) {
+        var res = testCh(i,10);
+        result = result && res;
+    }
+    if(result) {
+        result = 'Passed';
+    } else {
+        result = 'Failed';
+    }
+    console.log('Overall Result:',result);
+};
+this.test = test;
+}
+var ACTIVE_KIPLING_MODULE = new ACTIVE_KIPLING_MODULE();
