@@ -347,7 +347,7 @@ function labjackVersionManager() {
 						function(query, callback) {
 							query(callback);
 						}, function(err) {
-							if(typeof(err) !== 'undefined') {
+							if(err) {
 								if(err.quit) {
 									defered.reject(err);
 								} else {
@@ -365,7 +365,7 @@ function labjackVersionManager() {
 						function(query, callback) {
 							query(callback);
 						}, function(err) {
-							if(typeof(err) !== 'undefined') {
+							if(err) {
 								if(err.quit) {
 									defered.reject(err);
 								} else {

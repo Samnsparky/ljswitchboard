@@ -196,6 +196,12 @@ function showDevice(device, onSuccess)
         showAlert('Could not read POWER_LED');
         powerLed = false;
     }
+    try {
+        powerWatchdog = device.read('WATCHDOG_ENABLE_DEFAULT');
+    } catch (e) {
+        showAlert('Could not read WATCHDOG_ENABLE_DEFAULT');
+        powerWatchdog = false;
+    }
 
     templateValues = {
         'device': device,
@@ -213,7 +219,8 @@ function showDevice(device, onSuccess)
         'wifiFirmware': wifiFirmwareVersion,
         'internalTemp': internalTemp,
         'currentSourceA': currentSourceA,
-        'currentSourceB': currentSourceB
+        'currentSourceB': currentSourceB,
+        'powerWatchdog': powerWatchdog
     };
 
     if (isPro) {

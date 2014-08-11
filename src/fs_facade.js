@@ -46,7 +46,7 @@ var defaultFilePath = {
     'win64': 'C:\\Windows'
 }[process.platform];
 exports.testFunction = function() {
-    return "testing..."
+    return "testing...";
 };
 exports.getFileSaveAsID = function() {
     return fileSaveAsID;

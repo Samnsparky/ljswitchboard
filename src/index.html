@@ -79,10 +79,13 @@
         <script type="text/javascript" src="helper_scripts/version_manager.js"></script>
         <script type="text/javascript" src="helper_scripts/file_downloader.js"></script>
         <script type="text/javascript" src="helper_scripts/keyboard_event_handler.js"></script>
-        
+        <script type="text/javascript" src="helper_scripts/global_data_manager.js"></script>
+
         <div id="content-holder"></div>
         <script type="text/javascript" src="presenter.js"></script>
         <script type="text/javascript">
+            var GLOBAL_DATA_MANAGER = new globalDataManager(fs_facade);
+            
             // prevent most webpage like drag & drop functionality to open links.
             window.ondragover = function(e) {e.preventDefault();return false;};
             window.ondrop = function(e) {e.preventDefault();return false;};
