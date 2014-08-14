@@ -13,6 +13,14 @@ var dict = require('dict');
 
 var handlebars = require('handlebars');
 
+// Require ljswitchboard libs
+var ljsError;
+try {
+    ljsError = require('./helper_scripts/error_handler');
+} catch (err) {
+    ljsError = require('./error_handler');
+}
+
 function labjackVersionManager() {
 	this.kiplingUpdateLinks = {
 		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling/kipling_win.exe",
@@ -538,6 +546,7 @@ function labjackVersionManager() {
 		}
 		return defered.promise;
 	};
+
 	this.getLabjackSystemType = function() {
 		var ljSystemType = '';
 		var ljPlatformClass = {

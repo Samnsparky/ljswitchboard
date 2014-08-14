@@ -213,7 +213,7 @@ function kiplingStartupManager() {
             fs_facade.getJSON(
                 filePath,
                 function() {
-                    console.log('startupConfig.json, fileNotFound');
+                    console.error('startupConfig.json, fileNotFound');
                     innerDeferred.reject();
                 },
                 function(contents) {
@@ -486,7 +486,6 @@ $('#device-selector-holder').ready(function(){
     starter.autoStart();
 
     // attachUpgradeLinkListeners();
-    console.log('HERE!');
     LABJACK_VERSION_MANAGER.initializeLVM({
         'versionNumbersID': 'versionNumbers',
         'showLinksButtonID': 'showUpgradeLinks',

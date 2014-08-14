@@ -745,15 +745,15 @@ var Device = function (device, serial, connectionType, deviceType)
                 // console.log('Read-Really-Finished',arg0,res);
                 rqControlDeferred.resolve(res);
             },function(err) {
-                console.log('Here...',err);
-                rqControlDeferred.reject(err)
-            })
+                console.error('DC rqControl',err);
+                rqControlDeferred.reject(err);
+            });
         } else {
-            console.log(cmdType,type,supportedFunctions.indexOf(type))
+            console.log(cmdType,type,supportedFunctions.indexOf(type));
             throw 'device_controller.rqControl Error!';
         }
         return rqControlDeferred.promise;
-    }
+    };
     /**
      * Release the device handle for this device.
      *

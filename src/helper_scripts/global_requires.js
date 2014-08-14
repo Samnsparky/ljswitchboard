@@ -40,3 +40,17 @@ try {
 	}
 }
 
+// Require ljswitchboard libs
+var ljsError;
+try {
+    ljsError = require('./helper_scripts/error_handler');
+} catch (err) {
+    ljsError = require('./error_handler');
+}
+var dataPrinter;
+try {
+    dataPrinter = require('./helper_scripts/data_printer');
+} catch (err) {
+    dataPrinter = require('./data_printer');
+}
+

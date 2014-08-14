@@ -25,6 +25,14 @@ var https = require('https');
 var path = require('path');
 var fs = require('fs');
 
+// Require ljswitchboard libs
+var ljsError;
+try {
+    ljsError = require('./helper_scripts/error_handler');
+} catch (err) {
+    ljsError = require('./error_handler');
+}
+
 
 /**
  * define an object in which all variables will be defined in to help reduce
