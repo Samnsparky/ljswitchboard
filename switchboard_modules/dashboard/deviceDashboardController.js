@@ -621,7 +621,6 @@ function getDeviceDashboardController(deviceInfo) {
                 // Get the previously set state & direction for current register
                 var curState = self.getCurInfo(register,currentValues);
                 if(curState.direction == 1) {
-                    console.log('HERE!')
                     elems.forEach(function(elem){
                         // if the previous set direction was 1 (Output), configure GUI as input
                         var inputDisplayId = '.digitalDisplayIndicator';

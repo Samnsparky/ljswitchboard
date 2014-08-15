@@ -179,7 +179,6 @@ function getAvailableFirmwareListing(onError, onSuccess)
                 url,
                 function (error, response, body) {
                     if (error || response.statusCode != 200) {
-                        console.log('HERE!!!',url)
                         $('#internet-error-list').append(
                             ERROR_TEMPLATE(humanName)
                         );

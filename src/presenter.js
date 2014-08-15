@@ -34,6 +34,13 @@ var START_UP_MODULE_NAME = 'thermocouple_simple';
 
 var currentTab = '';
 var numTabChanges = 0;
+var AUTO_ENABLE_TAB_CLICK = true;
+var LOADING_NEW_MODULE = false;
+
+function unlockModuleLoader() {
+    AUTO_ENABLE_TAB_CLICK = true;
+    LOADING_NEW_MODULE = false;
+}
 
 function showCriticalAlert(content) {
     $('#device-search-msg').css("background-color",'#e16908');
@@ -210,6 +217,9 @@ function renderTemplate(name, context, dest, internal, cssFiles, jsFiles, onErr)
         });
 
         $(dest).fadeIn(function() {
+            if(AUTO_ENABLE_TAB_CLICK) {
+                LOADING_NEW_MODULE = false;
+            }
             if(typeof(onResized) !== 'undefined') {
                 onResized();
             }

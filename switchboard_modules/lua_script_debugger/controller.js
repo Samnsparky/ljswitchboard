@@ -30,7 +30,9 @@ function textEditor() {
     var editorTheme = '';
     var editorMode = '';
     var curHeight = -1;
-
+    this.destroy = function() {
+        self.editor.destroy();
+    };
     this.setupEditor = function(id, theme, mode) {
         self.htmlID = id;
         self.editorTheme = theme;
@@ -716,9 +718,9 @@ function luaDeviceController() {
 function module() {
     var frameworkElement;
     this.frameworkElement = frameworkElement;
-    var luaEditor = new textEditor();
+    var luaEditor = null;
     this.luaEditor = luaEditor;
-    var debuggingLog = new textEditor();
+    var debuggingLog = null;
     this.debuggingLog = debuggingLog;
 
     try{
@@ -856,8 +858,12 @@ function module() {
             self.luaController.debuggingLog.setHeight(newHeight);
         } else {
             // console.log('Setting to default height');
-            self.luaController.codeEditor.setHeight(500);
-            self.luaController.debuggingLog.setHeight(300);
+            try {
+                self.luaController.codeEditor.setHeight(500);
+                self.luaController.debuggingLog.setHeight(300);
+            } catch(err) {
+                console.error('luaDebugger controller.js err',err);
+            }
         }
     };
     this.refreshEditorHeights = function() {
@@ -927,14 +933,14 @@ function module() {
             onSuccess();
         };
         var genericConfigCallback = function(data, onSuccess) {
-            console.log('Binding: ',data.binding.bindingClass, data.result);
+            // console.log('Binding: ',data.binding.bindingClass, data.result);
             onSuccess();
         };
         var genericPeriodicCallback = function(data, onSuccess) {
             onSuccess();
         };
         var genericButtonPress = function(data, onSuccess) {
-            console.log('Pressed: ',data.binding.bindingClass, data.eventData);
+            // console.log('Pressed: ',data.binding.bindingClass, data.eventData);
             onSuccess();
         };
         var conditionalExecution = function(constants, trueFunc, falseFunc, onSuccess) {
@@ -1498,23 +1504,26 @@ function module() {
         });
         // Initialize ace editor obj for luaEditor & debuggingLog:
         try {
-            luaEditor.setupEditor(
-                "lua-code-editor", 
-                "ace/theme/monokai", 
+            self.luaEditor = new textEditor();
+            self.debuggingLog = new textEditor();
+            self.luaEditor.setupEditor(
+                "lua-code-editor",
+                "ace/theme/monokai",
                 "ace/mode/lua"
             );
-            debuggingLog.setupEditor(
-                "lua-debugging-log-editor", 
-                "ace/theme/monokai", 
+            self.debuggingLog.setupEditor(
+                "lua-debugging-log-editor",
+                "ace/theme/monokai",
                 "ace/mode/text"
             );
             // Save luaEditor & debuggingLog objects to the luaController object
-            self.luaController.setCodeEditor(luaEditor);
-            self.luaController.setDebuggingLog(debuggingLog);
+            self.luaController.setCodeEditor(self.luaEditor);
+            self.luaController.setDebuggingLog(self.debuggingLog);
 
             onSuccess();
         } catch(err) {
             console.error('Caught Exception!!',err);
+            onError();
         }
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
@@ -1542,6 +1551,12 @@ function module() {
         removeModuleWindowResizeListner(
             framework.moduleName
         );
+        try {
+            self.luaEditor.destroy();
+            self.debuggingLog.destroy();
+        } catch(err) {
+            console.error('Failed to destroy editors',err);
+        }
         aceEditor = undefined;
         self.aceEditor = undefined;
         luaEditor = undefined;

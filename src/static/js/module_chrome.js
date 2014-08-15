@@ -42,7 +42,7 @@ var SINGLE_DEVICE_FRAMEWORK_DEVICE_CONSTANTS = SINGLE_DEVICE_FRAMEWORK_DIR + '/d
 //     'Sorry, Kipling encountered an error. Please try again or contact ' + 
 //     'support@labjack.com. Error: {{.}}');
 var OPERATION_FAIL_MESSAGE = handlebars.compile(
-    'Sorry, Kipling encountered an error. ' + 
+    'Sorry, Kipling encountered an error. ' +
     'Error: {{.}}');
 
 var LOADED_MODULE_INFO_OBJECT;
@@ -59,6 +59,10 @@ var MODULE_WINDOW_RESIZE_LISTNERS = [];
 **/
 function innerSelectModule(name)
 {
+    if (LOADING_NEW_MODULE) {
+        return;
+    }
+    LOADING_NEW_MODULE = true;
     $('.' + MODULE_TAB_CLASS).removeClass('selected');
     $('#' + name + MODULE_TAB_ID_POSTFIX).addClass('selected');
     // $(MODULE_CONTENTS_ELEMENT).empty().append(
@@ -67,6 +71,10 @@ function innerSelectModule(name)
     $(MODULE_CONTENTS_ELEMENT).empty();
     $(MODULE_CONTENTS_FOOTER).hide();
     $(MODULE_CONTENTS_FOOTER).empty();
+
+    // After deleting module contents, remove any active listeners as there are
+    // currently no possible modules that would need to be using this feature.
+    clearModuleWindowResizeListners();
 
     fs_facade.getModuleInfo(
         name,
@@ -130,8 +138,8 @@ function innerSelectModule(name)
         var framework_style = SINGLE_DEVICE_FRAMEWORK_CSS;
         var jsLocalFiles = [
             device_constants,
-            framework_location, 
-            jsFile, 
+            framework_location,
+            jsFile,
             framework_connector
         ];
         var jsFiles = [];
@@ -152,13 +160,13 @@ function innerSelectModule(name)
 
         //Renders the module, function lives in 'ljswitchboard/src/presenter.js'
         renderTemplateFramework(
-            SINGLE_DEVICE_FRAMEWORK_VIEW, 
+            SINGLE_DEVICE_FRAMEWORK_VIEW,
             src,
-            standardContext, 
-            MODULE_CONTENTS_ELEMENT, 
+            standardContext,
+            MODULE_CONTENTS_ELEMENT,
             false,
-            [framework_style, cssFile], 
-            jsFiles, 
+            [framework_style, cssFile],
+            jsFiles,
             getCustomGenericErrorHandler('module_chrome-renderSingleDeviceFrameworkModule'));
         //Render a template based off of a framework:
         //renderFrameworkTemplate(SINGLE_DEVICE_FRAMEWORK_VIEW);
@@ -167,9 +175,9 @@ function innerSelectModule(name)
     // TODO: Better error handler
     fs_facade.getModuleInfo(
         name,
-        function (err) { 
+        function (err) {
             console.log('Error Loading moduleConstants.json');
-            showAlert(err); 
+            showAlert(err);
         },
         function (moduleInfo) {
 
@@ -210,7 +218,7 @@ function innerSelectModule(name)
             };
             fs_facade.getModuleConstants(
                 name,
-                function (err) { 
+                function (err) {
                     console.log('Error Loading moduleConstants.json');
                     showAlert(err);
                 },
@@ -485,7 +493,12 @@ function onResized()
                 moduleHeight += parseInt(topPadding.slice(0,topPadding.search('px')));
                 moduleHeight += parseInt(bottomPadding.slice(0,bottomPadding.search('px')));
                 
-                listener.callback(moduleHeight);
+                try {
+                    listener.callback(moduleHeight);
+                } catch(err) {
+                    console.error('Error Calling Window Resize Listner module_chrome.js',err);
+                }
+                
             } else {
                 console.log('Bad Window Resize Listener Found! (module_chrome.js)',listener);
             }

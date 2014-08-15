@@ -1366,7 +1366,6 @@ function module() {
     };
     this.initializeD3Graphs = function(onSuccess) {
         // For each analog input channel, create graphs using D3!
-        console.log('Num Graphs',self.analogInputsDict.size);
         self.analogInputsDict.forEach(function(val,name){
             // Save the current value
             var curVal = val.value;
@@ -1400,8 +1399,6 @@ function module() {
             .attr('height', '5')
             .attr('fill', self.getFillColor(curVal))
             .attr('class', 'ainGraphLine');
-
-            console.log('initializeD3Graphs',name,curVal,curRange,val);
         });
         if(typeof(onSuccess) !== 'undefined') {
             onSuccess();

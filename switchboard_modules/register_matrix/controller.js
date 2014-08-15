@@ -7,6 +7,7 @@
  * @author Chris Johnson  (labJack Corp, 2013)
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
 **/
+AUTO_ENABLE_TAB_CLICK = false;
 var curTemplateVals = null;
 var curPaginationObj = null;
 var latestKeypress = null;
@@ -422,7 +423,6 @@ function getTagSet(entries)
     var tagSet = new simplesets.Set(tags);
     var tagArray = tagSet.array();
     // Re-Arrange indicies so that 'ALL' is first
-    console.log("HERE!",tagArray.indexOf('all'),tagSet);
     var index = tagArray.indexOf('all');
     var tempTag = tagArray[0];
     tagArray[0] = 'all';
@@ -458,8 +458,6 @@ function configureTypeaheadData(data) {
     return deferred.promise;
 }
 function initializeTypeahead() {
-    console.log('Initializing Typeahead');
-
     $('#ljm-register-search-box .typeahead').typeahead({
             hint: true,
             highlight: true,
@@ -1222,6 +1220,7 @@ $('#register-matrix-holder').ready(function(){
     .then(renderRegistersTable)
     .then(qRunRedraw)
     .done(function () {
+        unlockModuleLoader();
         KEYBOARD_EVENT_HANDLER.initInputListeners();
         reportTime('Finished!');
         var keeper = device_controller.getDeviceKeeper();

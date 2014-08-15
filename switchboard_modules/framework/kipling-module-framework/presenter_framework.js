@@ -336,6 +336,10 @@ function Framework() {
     this.isDAQLoopPaused = false;
     this.hasNotifiedUserOfPause = false;
 
+    this.allowModuleExecution = true;
+    this.isModuleLoaded = false;
+    this.isDeviceOpen = false;
+
     var self = this;
     this.reportSyntaxError = function(location, err) {
         console.log('Error in:',location);
@@ -483,10 +487,18 @@ function Framework() {
             onSuccess();
             return;
         }
-
+        var isValidCall = true;
+        if (self.moduleName !== getActiveTabID()) {
+            console.error('Should Skip Call',name);
+            self.allowModuleExecution = false;
+        }
         var listener = eventListener.get(name);
+        var isValidListener = false;
+        if(listener !== null) {
+            isValidListener = true;
+        }
 
-        if (listener !== null) {
+        if (isValidCall && isValidListener) {
             var passParams = [];
             passParams.push(self);
             passParams.push.apply(passParams, params);
@@ -496,12 +508,12 @@ function Framework() {
                 listener.apply(null, passParams);
             } catch (err) {
                 console.log(
-                    'Error firing: '+name, 
+                    'Error firing: '+name,
                     'currentTab: ', currentTab,
                     'typeof sdModule: ', typeof(sdModule),
                     'typeof sdFramework: ', typeof(sdFramework),
                     'frameworkActive', self.frameworkActive,
-                    ' Error caught is: ',err.name, 
+                    ' Error caught is: ',err.name,
                     'message: ',err.message,err.stack);
                 try{
                     var isHandled = false;
@@ -546,6 +558,32 @@ function Framework() {
     };
     var unloadModuleLibraries = this.unloadModuleLibraries;
 
+    this.getExitFuncs = function(curState) {
+        var exitPath = q.defer();
+        var exitErrHandle = function() {
+            var exitDeferred = q.defer();
+            exitDeferred.resolve();
+            return exitDeferred.promise;
+        };
+        if(curState === 'onModuleLoaded') {
+            self.qExecOnUnloadModule()
+            .then(exitPath.resolve,exitPath.reject);
+        } else if(curState === 'onDeviceSelected') {
+            self.qExecOnCloseDevice()
+            .then(self.qExecOnUnloadModule,self.qExecOnUnloadModule)
+            .then(exitPath.resolve,exitPath.reject);
+        } else if(curState === 'onLoadError') {
+            exitPath.reject();
+        } else {
+            self.qExecOnCloseDevice()
+            .then(self.qExecOnUnloadModule,self.qExecOnUnloadModule)
+            .then(exitPath.resolve,exitPath.reject);
+        }
+
+        return exitPath.promise;
+    };
+    var getExitFuncs = this.getExitFuncs;
+
     this.convertBindingsToDict = function() {
         return self.moduleTemplateBindings;
     };
@@ -588,70 +626,98 @@ function Framework() {
     this.qExecOnModuleLoaded = function() {
         var innerDeferred = q.defer();
 
-        //Save module info if not already defined
-        if(self.moduleInfoObj === undefined) {
-            self.moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
-            moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
+        if(self.allowModuleExecution) {
+            //Save module info if not already defined
+            if(self.moduleInfoObj === undefined) {
+                self.moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
+                moduleInfoObj = LOADED_MODULE_INFO_OBJECT;
+            }
+            //Fire onModuleLoaded function
+            self.fire(
+                'onModuleLoaded',
+                [],
+                innerDeferred.reject,
+                function() {
+                    self.isModuleLoaded = true;
+                    innerDeferred.resolve();
+                }
+            );
+        } else {
+            self.getExitFuncs('onModuleLoaded')()
+            .then(innerDeferred.reject,innerDeferred.reject);
         }
-
-        //Fire onModuleLoaded function
-        self.fire(
-            'onModuleLoaded',
-            [],
-            innerDeferred.reject,
-            innerDeferred.resolve
-        );
         return innerDeferred.promise;
     };
     var qExecOnModuleLoaded = this.qExecOnModuleLoaded;
 
     this.qExecOnDeviceSelected = function() {
         var innerDeferred = q.defer();
-        self.fire(
-            'onDeviceSelected',
-            [self.getSelectedDevice()],
-            innerDeferred.reject,
-            innerDeferred.resolve
-        );
+
+        if(self.allowModuleExecution) {
+            self.fire(
+                'onDeviceSelected',
+                [self.getSelectedDevice()],
+                innerDeferred.reject,
+                function() {
+                    self.isDeviceOpen = true;
+                    innerDeferred.resolve();
+                }
+            );
+        } else {
+            self.getExitFuncs('onDeviceSelected')()
+            .then(innerDeferred.reject,innerDeferred.reject);
+        }
         return innerDeferred.promise;
     };
     var qExecOnDeviceSelected = this.qExecOnDeviceSelected;
 
     this.qExecOnDeviceConfigured = function(data) {
         var innerDeferred = q.defer();
-        self.fire(
-            'onDeviceConfigured',
-            [self.getSelectedDevice(), data],
-            innerDeferred.reject,
-            innerDeferred.resolve
-        );
+
+        if(self.allowModuleExecution) {
+            self.fire(
+                'onDeviceConfigured',
+                [self.getSelectedDevice(), data],
+                innerDeferred.reject,
+                innerDeferred.resolve
+            );
+        } else {
+            self.getExitFuncs('onDeviceConfigured')()
+            .then(innerDeferred.reject,innerDeferred.reject);
+        }
         return innerDeferred.promise;
     };
     var qExecOnDeviceConfigured = this.qExecOnDeviceConfigured;
 
     this.qExecOnTemplateDisplayed = function() {
         var innerDeferred = q.defer();
-        var rejectFunc = function(data) {
-            onResized();
-            innerDeferred.reject(data);
-        };
-        var resolveFunc = function(data) {
-            onResized();
-            KEYBOARD_EVENT_HANDLER.initInputListeners();
-            innerDeferred.resolve(data);
-        };
-        try{
-            self.fire(
-                'onTemplateDisplayed',
-                [],
-                rejectFunc,
-                resolveFunc
-            );
-        } catch (err) {
-            if(err.name === 'SyntaxError') {
-                console.log('Syntax Error captured');
+
+        if(self.allowModuleExecution) {
+            var rejectFunc = function(data) {
+                onResized();
+                innerDeferred.reject(data);
+            };
+            var resolveFunc = function(data) {
+                onResized();
+                KEYBOARD_EVENT_HANDLER.initInputListeners();
+                innerDeferred.resolve(data);
+            };
+            try{
+                self.fire(
+                    'onTemplateDisplayed',
+                    [],
+                    rejectFunc,
+                    resolveFunc
+                );
+            } catch (err) {
+                if(err.name === 'SyntaxError') {
+                    console.log('Syntax Error captured');
+                }
+                console.log('Error caught in qExecOnTemplateDisplayed',err);
             }
-            console.log('Error caught in qExecOnTemplateDisplayed',err);
+        } else {
+            self.getExitFuncs('onTemplateDisplayed')()
+            .then(innerDeferred.reject,innerDeferred.reject);
         }
         return innerDeferred.promise;
     };
@@ -659,26 +725,32 @@ function Framework() {
     
     this.qExecOnTemplateLoaded = function() {
         var innerDeferred = q.defer();
-        var rejectFunc = function(data) {
-            onResized();
-            innerDeferred.reject(data);
-        };
-        var resolveFunc = function(data) {
-            onResized();
-            innerDeferred.resolve(data);
-        };
-        try{
-            self.fire(
-                'onTemplateLoaded',
-                [],
-                rejectFunc,
-                resolveFunc
-            );
-        } catch (err) {
-            if(err.name === 'SyntaxError') {
-                console.log('Syntax Error captured');
+
+        if(self.allowModuleExecution) {
+            var rejectFunc = function(data) {
+                onResized();
+                innerDeferred.reject(data);
+            };
+            var resolveFunc = function(data) {
+                onResized();
+                innerDeferred.resolve(data);
+            };
+            try{
+                self.fire(
+                    'onTemplateLoaded',
+                    [],
+                    rejectFunc,
+                    resolveFunc
+                );
+            } catch (err) {
+                if(err.name === 'SyntaxError') {
+                    console.log('Syntax Error captured');
+                }
+                console.log('Error caught in qExecOnTemplateLoaded',err);
             }
-            console.log('Error caught in qExecOnTemplateLoaded',err);
+        } else {
+             self.getExitFuncs('onTemplateLoaded')()
+            .then(innerDeferred.reject,innerDeferred.reject);
         }
         return innerDeferred.promise;
     };
@@ -686,57 +758,92 @@ function Framework() {
 
     this.qExecOnCloseDevice = function(device) {
         var innerDeferred = q.defer();
-        self.fire(
-            'onCloseDevice',
-            [device],
-            innerDeferred.reject,
-            innerDeferred.resolve
-        );
+        if(self.isDeviceOpen) {
+            if(self.allowModuleExecution) {
+                self.fire(
+                    'onCloseDevice',
+                    [device],
+                    innerDeferred.reject,
+                    innerDeferred.resolve
+                );
+            } else {
+                var finishExecution = function() {
+                    self.isDeviceOpen = false;
+                    self.qExecOnUnloadModule()
+                    .then(innerDeferred.reject,innerDeferred.reject);
+                };
+                self.fire(
+                    'onCloseDevice',
+                    [device],
+                    finishExecution,
+                    finishExecution
+                );
+            }
+        } else {
+            console.error('HERERERE');
+            innerDeferred.reject();
+        }
         return innerDeferred.promise;
     };
     var qExecOnCloseDevice = this.qExecOnCloseDevice;
 
     this.qExecOnLoadError = function(err) {
         var innerDeferred = q.defer();
-        self.fire(
-            'onLoadError',
-            [
-                [ err ],
-                function (shouldContinue) { 
-                    self.runLoop = shouldContinue; 
-                    innerDeferred.resolve();
-                }
-            ]
-        );
+
+        if(self.allowModuleExecution) {
+            self.fire(
+                'onLoadError',
+                [
+                    [ err ],
+                    function (shouldContinue) {
+                        self.runLoop = shouldContinue;
+                        innerDeferred.resolve();
+                    }
+                ]
+            );
+        } else {
+             self.getExitFuncs('onLoadError')()
+            .then(innerDeferred.reject,innerDeferred.reject);
+        }
         return innerDeferred.promise;
     };
     var qExecOnLoadError = this.qExecOnLoadError;
 
     this.qExecOnUnloadModule = function() {
         var innerDeferred = q.defer();
+        if(self.isModuleLoaded) {
+            //Halt the daq loop
+            self.stopLoop();
 
-        //Halt the daq loop
-        self.stopLoop();
+            //clean up module's third party libraries
+            self.unloadModuleLibraries(self.moduleInfoObj.third_party_code_unload);
 
-        //clean up module's third party libraries
-        self.unloadModuleLibraries(self.moduleInfoObj.third_party_code_unload);
+            // clear any "ModuleWindowResizeListeners" window resize listeners
+            // clearModuleWindowResizeListners();
 
-        //If LJM's debug log was enabled, disable it
-        if(self.ljmDriverLogEnabled) {
-            console.log('disabling LJM-log');
-            console.log('File:',self.ljmDriver.readLibrarySync('LJM_DEBUG_LOG_FILE'));
-            self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',1);
-            self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_LEVEL',10);
-            self.ljmDriverLogEnabled = false;
+            //If LJM's debug log was enabled, disable it
+            if(self.ljmDriverLogEnabled) {
+                console.log('disabling LJM-log');
+                console.log('File:',self.ljmDriver.readLibrarySync('LJM_DEBUG_LOG_FILE'));
+                self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_MODE',1);
+                self.ljmDriver.writeLibrarySync('LJM_DEBUG_LOG_LEVEL',10);
+                self.ljmDriverLogEnabled = false;
+            }
+
+            //Inform the module that it has been unloaded.
+            self.fire(
+                'onUnloadModule',
+                [],
+                innerDeferred.reject,
+                function() {
+                    self.isModuleLoaded = false;
+                    innerDeferred.resolve();
+                }
+            );
+        } else {
+            console.error('HERERERE(2)');
+            innerDeferred.resolve();
         }
-
-        //Inform the module that it has been unloaded.
-        self.fire(
-            'onUnloadModule',
-            [],
-            innerDeferred.reject,
-            innerDeferred.resolve
-        );
         return innerDeferred.promise;
     };
     var qExecOnUnloadModule = this.qExecOnUnloadModule;
@@ -2618,7 +2725,6 @@ function Framework() {
 
     this.startFramework = function() {
         var deferred = q.defer();
-        
         self.qExecOnModuleLoaded()
         .then(self.attachNavListeners, self.qExecOnLoadError)
         .then(deferred.resolve, deferred.reject);

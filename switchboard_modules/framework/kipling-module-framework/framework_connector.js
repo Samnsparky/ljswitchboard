@@ -20,6 +20,7 @@ sdFramework._SetJQuery(new JQueryWrapper());
 
 // Create a variable for the user's module
 var sdModule = null;
+AUTO_ENABLE_TAB_CLICK = false;
 
 try {
     // try and create an instance of the user's module, if it doesn't exist
@@ -35,8 +36,8 @@ try {
         // if they don't exist don't link them.  If there is an error, show an
         // error via 'showAlert'
         if(typeof(sdModule.onModuleLoaded) === "function") {
-            sdFramework.on('onModuleLoaded',sdModule.onModuleLoaded); 
-        } 
+            sdFramework.on('onModuleLoaded',sdModule.onModuleLoaded);
+        }
         if(typeof(sdModule.onDeviceSelected) === "function") {
             sdFramework.on('onDeviceSelected',sdModule.onDeviceSelected);
         }
@@ -44,10 +45,10 @@ try {
             sdFramework.on('onDeviceConfigured',sdModule.onDeviceConfigured);
         }
         if(typeof(sdModule.onTemplateLoaded) === "function") {
-            sdFramework.on('onTemplateLoaded',sdModule.onTemplateLoaded); 
+            sdFramework.on('onTemplateLoaded',sdModule.onTemplateLoaded);
         }
         if(typeof(sdModule.onTemplateDisplayed) === "function") {
-            sdFramework.on('onTemplateDisplayed',sdModule.onTemplateDisplayed); 
+            sdFramework.on('onTemplateDisplayed',sdModule.onTemplateDisplayed);
         }
         if(typeof(sdModule.onRegisterWrite) === "function") {
             sdFramework.on('onRegisterWrite',sdModule.onRegisterWrite);
@@ -69,13 +70,13 @@ try {
         }
         if(typeof(sdModule.onLoadError) === "function") {
             sdFramework.on('onLoadError',sdModule.onLoadError);
-        } 
+        }
         if(typeof(sdModule.onWriteError) === "function") {
             sdFramework.on('onWriteError',sdModule.onWriteError);
-        } 
+        }
         if(typeof(sdModule.onRefreshError) === "function") {
-            sdFramework.on('onRefreshError',sdModule.onRefreshError); 
-        } 
+            sdFramework.on('onRefreshError',sdModule.onRefreshError);
+        }
         try {
             // Try to configure & start the framework
             
@@ -104,7 +105,12 @@ try {
             );
 
             // Start the framework
-            sdFramework.startFramework();
+            sdFramework.startFramework()
+            .then(function() {
+                // console.warn('Started FW');
+            },function() {
+                // console.warn('Failed Starting FW');
+            });
             
         } catch (err) {
             showAlert('problems starting framework');
@@ -115,8 +121,8 @@ try {
         console.log('Linking to Framework Error:',err);
     }
 } catch (err) {
-    showAlert('Object "module" not defined in the "controller.js"' + 
-        'file which is required when the framework type "singleDevice"' + 
+    showAlert('Object "module" not defined in the "controller.js"' +
+        'file which is required when the framework type "singleDevice"' +
         'is being used.');
 }
 
@@ -124,10 +130,13 @@ try {
  * Initialization logic for the analog inputs module.
 **/
 $('#single-device-framework-obj').ready(function(){
+    if($('#module-chrome-contents').css('display') === 'none') {
+        $('#module-chrome-contents').fadeIn();
+    }
     //gives access to device
     var keeper = device_controller.getDeviceKeeper();
     //list of devices
-    devices = keeper.getDevices(); 
+    devices = keeper.getDevices();
 
     // Check for any load-errors
     var loadErrors = fs_facade.getLoadErrors();
@@ -139,8 +148,25 @@ $('#single-device-framework-obj').ready(function(){
         var moduleName = LOADED_MODULE_INFO_OBJECT.name;
         showCriticalAlert('Not Starting Module: ' + moduleName);
     } else {
+        // Get the active tab ID
+        if(sdFramework.moduleName !== getActiveTabID()) {
+            console.warn("Shouldn't run FW");
+        }
+        var getFinish = function(mess) {
+            var finishFunc = function() {
+                if($('#module-chrome-contents').css('display') === 'none') {
+                    $('#module-chrome-contents').fadeIn(function() {
+                        unlockModuleLoader();
+                    });
+                } else {
+                    unlockModuleLoader();
+                }
+            };
+            return finishFunc;
+        };
         // Run the framework if there aren't any load errors
-        sdFramework.runFramework();
+        sdFramework.runFramework()
+        .then(getFinish('Run FW'),getFinish('Failed Running FW'));
     }
 });
 
