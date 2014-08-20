@@ -41,12 +41,11 @@ function catchWindowErrors(e) {
     m = 'startup.js-uncaughtException: '  +
         e.message + '\nfilename:"' +
         (e.filename ? e.filename : 'app_front.js') +
-        '", line:' + e.lineno
+        '", line:' + e.lineno;
     // show any errors early
     showAlert(m + ': ' + e.error.stack);
     console.error(m, e,e.error.stack);
 }
 process.on('uncaughtException', catchUncaughtExceptions);
 window.addEventListener('error' ,catchWindowErrors);
-
 
