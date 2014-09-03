@@ -25,15 +25,19 @@ function labjackVersionManager() {
 	this.kiplingUpdateLinks = {
 		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling/kipling_win.zip",
 		"beta_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/beta/kipling_beta_win.zip",
+		"test_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/test/kipling_test_win.zip",
 
 		"current_mac":		"https://s3.amazonaws.com/ljrob/mac/kipling/kipling_mac.zip",
 		"beta_mac":			"https://s3.amazonaws.com/ljrob/mac/kipling/beta/kipling_beta_mac.zip",
+		"test_mac":			"https://s3.amazonaws.com/ljrob/mac/kipling/test/kipling_test_mac.zip",
 
 		"current_linux32":	"https://s3.amazonaws.com/ljrob/linux32/kipling/kipling_lin32.zip",
 		"beta_linux32":		"https://s3.amazonaws.com/ljrob/lin32/kipling/beta/kipling_beta_lin32.zip",
+		"test_linux32":		"https://s3.amazonaws.com/ljrob/lin32/kipling/test/kipling_test_lin32.zip",
 
 		"current_linux64":	"https://s3.amazonaws.com/ljrob/linux64/kipling/kipling_lin64.zip",
-		"beta_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling/beta/kipling_beta_lin64.zip"
+		"beta_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling/beta/kipling_beta_lin64.zip",
+		"test_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling/test/kipling_test_lin64.zip"
 	};
 
 	// define dict object with various urls in it
@@ -41,16 +45,22 @@ function labjackVersionManager() {
 		"kipling": {
 			"type":"kipling",
 			"platformDependent": true,
-			"types": ['current','beta'],
+			"types": ['current','beta','test'],
 			"urls":[
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/kipling.txt", "type": "current_win"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/kipling.txt", "type": "current_mac"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/kipling.txt", "type": "current_linux32"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/kipling.txt", "type": "current_linux64"},
+
 				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_win"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_mac"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_linux32"},
-				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_linux64"}
+				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_linux64"},
+
+				{"url": "http://files.labjack.com/versions/ljrob/win32/kipling/test.txt", "type": "test_win"},
+				{"url": "http://files.labjack.com/versions/ljrob/mac/kipling/test.txt", "type": "test_mac"},
+				{"url": "http://files.labjack.com/versions/ljrob/linux32/kipling/test.txt", "type": "test_linux32"},
+				{"url": "http://files.labjack.com/versions/ljrob/linux64/kipling/test.txt", "type": "test_linux64"}
 			]
 		},
 		"ljm": {
@@ -807,6 +817,7 @@ LABJACK_VERSION_MANAGER.getAllVersions();
 LABJACK_VERSION_MANAGER.waitForData()
 .then(function(data) {
 	console.log('LVM dataCache:',LABJACK_VERSION_MANAGER.dataCache);
+	console.log('LJM current versions',LABJACK_VERSION_MANAGER.dataCache.kipling);
 	if(LABJACK_VERSION_MANAGER.isIssue()) {
 		var issue =LABJACK_VERSION_MANAGER.getIssue();
 		console.warn('LVM Warming',issue);
