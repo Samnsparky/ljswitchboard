@@ -15,6 +15,9 @@ var q = require('q');
 var dict = require('dict');
 var async = require('async');
 
+// Require 3rd party libaries
+var rmdir = require('rimraf');
+
 // Require ljswitchboard libs
 var ljsError;
 try {
@@ -28,9 +31,16 @@ try {
 } catch (err) {
     dataPrinter = require('./data_printer');
 }
+var fs_facade;
+try {
+    fs_facade = require('./../fs_facade');
+} catch (err) {
+    fs_facade = require('./fs_facade');
+}
 
-function globalDataManager(fs_facade_obj) {
-
+function globalDataManager() {
+    var PRINT_FOLDER_CREATION_INFO = false;
+    var gdmVersion = '0.0.1';
     var registeredName = 'GDM';
     this.registeredName = registeredName;
 
@@ -45,15 +55,20 @@ function globalDataManager(fs_facade_obj) {
         return ljsError.criticalError(self.registeredName, errorName, options);
     };
 
-    var fs_facade = fs_facade_obj;
     var LJ_TEMPORARY_FILE_PATH;
     var PATH_TXT = '/';
     var K3_TEMPORARY_FILE_PATH;
     var K3_FOLDER = 'K3';
-    var DATA_FOLDER = 'data';
+    var DATA_FOLDER = 'gdm';
+    var DATA_FILE = 'gdm.json';
+    var MODULES_FOLDER = 'modules';
     var K3_DATA_FILE_PATH;
 
+    // Required folders object will look something like:
+    // ["<os-path>/LabJack","<os-path>/LabJack/K3","<os-path>/LabJack/K3/data"]
     var requiredFolders = [];
+    var modules = [];
+    this.gdmData = {};
 
     // Switch based off platform type
     if (process.platform === 'win32') {
@@ -74,15 +89,31 @@ function globalDataManager(fs_facade_obj) {
     // Define K3 temporary file path & others
     K3_TEMPORARY_FILE_PATH = LJ_TEMPORARY_FILE_PATH + PATH_TXT + K3_FOLDER;
     K3_DATA_FILE_PATH = K3_TEMPORARY_FILE_PATH + PATH_TXT + DATA_FOLDER;
+    K3_MODULES_DATA_FILE_PATH = K3_DATA_FILE_PATH + PATH_TXT + MODULES_FOLDER;
+    GDM_FILE_PATH = K3_DATA_FILE_PATH + PATH_TXT + DATA_FILE;
 
     // Define any required folders
     var addFolder = function(isRequired, path) {
         var newInfo = {'path':path,'isRequired':isRequired};
         requiredFolders.push(newInfo);
     };
+    var addActiveModule = function(moduleData) {
+        var folderPath = K3_MODULES_DATA_FILE_PATH + PATH_TXT + moduleData.name;
+        var versionStr;
+        if(moduleData.version) {
+            versionStr = moduleData.version.split('.').join('_');
+        } else {
+            versionStr = '0.0.1';
+        }
+        var dataPath = folderPath + PATH_TXT + moduleData.name + '.json';
+        modules.push({'name':moduleData.name,'folderPath':folderPath, 'dataPath':dataPath, 'moduleData':moduleData});
+        addFolder(false,folderPath);
+    };
+
     addFolder(true, LJ_TEMPORARY_FILE_PATH);
     addFolder(false, K3_TEMPORARY_FILE_PATH);
     addFolder(false, K3_DATA_FILE_PATH);
+    addFolder(false, K3_MODULES_DATA_FILE_PATH);
     this.requiredFolders = requiredFolders;
 
     // Define variables that are necessary for determining if the 
@@ -92,19 +123,25 @@ function globalDataManager(fs_facade_obj) {
     this.savedError = null;
 
     // This dict holds data that is persistent to reboots.
-    this.startupData = dict();
+    this.nonVolatileData = dict();
+    this.nonVolatileDataInfo = dict();
+    this.addNonVolatileData = function(location, key, data) {
+        self.nonVolatileDataInfo.set(key, location);
+        self.nonVolatileData.set(key,data);
+    };
+
+    this.printNonVolatileData = function() {
+        self.nonVolatileData.forEach(function(data,key) {
+            console.log('key:',key,data);
+        });
+    };
 
     // This dict holds data that is only valid during the current instance of K3
-    this.activeData = dict();
+    this.volatileData = dict();
     
-    /*
-     * initializeData should be called on startup.  It loads a static file that 
-     * holds persistent data between reboots and loads it into the startupData 
-     * object.  It then transfers that data into the activeData object.
-     */
     this.availableFolders = [];
     this.missingFolders = [];
-    this.initializeData = function() {
+    this.initializeFolderStructure = function() {
         var defered = q.defer();
 
         var errors = [];
@@ -124,7 +161,6 @@ function globalDataManager(fs_facade_obj) {
                             callback();
                         } else {
                             fs.mkdir(requiredFolder.path,function(e) {
-                                console.log('HERE!',e);
                                 if (!e || (e && e.code === 'EEXIST')) {
                                     callback();
                                 } else {
@@ -150,10 +186,252 @@ function globalDataManager(fs_facade_obj) {
                 } else {
 
                 }
-                self.log('missing',self.missingFolders);
-                self.log('found',self.availableFolders);
+                if(PRINT_FOLDER_CREATION_INFO) {
+                    self.log('missing',self.missingFolders);
+                    self.log('found',self.availableFolders);
+                }
                 defered.resolve();
             });
+        return defered.promise;
+    };
+
+    /*
+     * getInstalledModules
+     * Goals: populate required folders list so that there is one for each 
+     * module.
+     */
+    this.getInstalledModules = function() {
+        var defered = q.defer();
+
+        fs_facade.getLoadedModulesInfo(function(err) {
+            self.pErr('fs_facade getModules err',err);
+            defered.reject();
+        }, function(modules) {
+            modules.forEach(function(module) {
+                if(module.active) {
+                    fs_facade.getModuleInfo(module.name,function(err) {
+                        self.pErr('fs_facade getInfo err',err);
+                    }, function(moduleData){
+                        addActiveModule(moduleData);
+                    });
+                    
+                }
+            });
+            defered.resolve();
+        });
+        return defered.promise;
+    };
+
+    /*
+     * initializeFileStructure
+     * Goals: initialize the basic files in which data will be stored.
+     * 1. a gdm.json file that stores basic version info & serves as a "check" 
+     * to see if things are corrupt as well as empty files for all found 
+     * modules.
+     */
+    this.initializeGDMFile = function() {
+        var defered = q.defer();
+        var tempData = {'version':gdmVersion,'data':[]};
+        var initGDMFile = function(resolve, reject) {
+            var tempStr = JSON.stringify(tempData);
+            fs.writeFile(GDM_FILE_PATH,tempStr,function(err) {
+                if (err) {
+                    isError = true;
+                    errors.push(err);
+                    reject();
+                }
+                resolve();
+            });
+            self.gdmData = tempData;
+        };
+
+        fs.exists(GDM_FILE_PATH,function(exists) {
+            if(exists) {
+                // Try to read the file
+                fs.readFile(GDM_FILE_PATH, function(err, data) {
+                    if(err) {
+                        self.pErr('Error reading gdm.json file, re-initializing file');
+                        initGDMFile(defered.resolve, defered.reject);
+                    } else {
+                        // if successfully read the file, try to parse its contents.
+                        self.gdmData = tempData;
+                        try {
+                            self.gdmData = JSON.parse(data);
+                            defered.resolve();
+                        } catch (error) {
+                            // if the contents are corrupt, re-init the gdm.json file
+                            self.pErr('Corrupt gdm .json file, re-initializing file');
+                            initGDMFile(defered.resolve, defered.reject);
+                        }
+                    }
+                });
+            } else {
+                // if the file doesn't exist, then re-init the gdm.json file
+                self.pErr("gdm.json file doesn't exist, re-initializing file");
+                initGDMFile(defered.resolve, defered.reject);
+            }
+        });
+        return defered.promise;
+    };
+
+    this.initializeModuleFileStructure = function() {
+        var defered = q.defer();
+        var isError = false;
+        var errors = [];
+        async.each(
+            modules,
+            function(moduleData,callback) {
+                //Check to see if the file currently exists
+                fs.exists(moduleData.dataPath,function(exists) {
+                    if(exists) {
+                        callback();
+                    } else {
+                        var tempData = {};
+                        var tempStr = JSON.stringify(tempData);
+                        fs.writeFile(moduleData.dataPath,tempStr,function(err) {
+                            if (err) {
+                                isError = true;
+                                errors.push(err);
+                            }
+                            callback();
+                        });
+                    }
+                });
+            }, function(err) {
+                if(err) {
+                    defered.reject(err);
+                } else {
+                    defered.resolve();
+                }
+            });
+        return defered.promise;
+    };
+
+    this.loadGDMData = function() {
+        var defered = q.defer();
+        self.gdmData.data.forEach(function(data) {
+            if(data.key) {
+                if(data.data) {
+                    self.addNonVolatileData('gdm.json',data.key, data.data);
+                }
+            }
+        });
+        defered.resolve();
+        return defered.promise;
+    };
+    /*
+     * loadGlobalModuleData
+     * Goals: opens and parses all of the module .json files that have now been 
+     * initialized.  Saves the data into the gdm "nonVolatileData" dict object.
+     */
+    this.loadGlobalModuleData = function() {
+        var defered = q.defer();
+        async.each(
+            modules,
+            function(moduleData, callback) {
+                fs.readFile(moduleData.dataPath, function(err, data) {
+                    var createBackup = false;
+                    var dataObj = {};
+                    if(err) {
+                        data = '{}';
+                    } else {
+                        try {
+                            dataObj = JSON.parse(data);
+                        } catch (error) {
+                            dataObj = {};
+                            createBackup = true;
+                        }
+                    }
+                    if(createBackup) {
+                        self.pErr('Corrupt .json file',moduleData);
+                        var timeStr = new Date().getTime().toString();
+                        fs.writeFile('backup_'+timeStr+'_'+moduleData.dataPath);
+                    }
+                    self.nonVolatileData.set(moduleData.moduleData.name,dataObj);
+                    self.addNonVolatileData(moduleData.dataPath,moduleData.moduleData.name,dataObj);
+                    callback();
+                });
+            }, function(err) {
+                if(err) {
+                    defered.reject();
+                } else {
+                    console.log('Loaded Data', self.nonVolatileData.size);
+                    defered.resolve();
+                }
+            });
+        return defered.promise;
+    };
+    
+
+    /*
+     * finishInitialization
+     * Goals: save the state of the initialization routine to the self object
+     * for init-now/check-and-block later type running.  
+     */
+    this.finishInitialization = function(data) {
+        var defered = q.defer();
+        self.isDataComplete = true;
+        defered.resolve(data);
+        return defered.promise;
+    };
+
+    /*
+     * initializeData should be called on startup.  It loads a static file that 
+     * holds persistent data between reboots and loads it into the startupData 
+     * object.  It then transfers that data into the activeData object.
+     */
+    this.initializeData = function() {
+        var defered = q.defer();
+        var initError = function(bundle) {
+            self.pErr('HERE!',bundle,bundle.stack);
+            var errDefered = q.defer();
+            self.isError = true;
+            errDefered.reject(bundle);
+            return errDefered.promise;
+        };
+
+        // Initialize K3 folder structure
+        var initFuncs = [
+            // Get a list of the installed modules
+            self.clearData,
+            self.getInstalledModules,
+            self.initializeFolderStructure,
+            self.initializeGDMFile,
+            self.initializeModuleFileStructure,
+            self.loadGDMData,
+            self.loadGlobalModuleData,
+            self.finishInitialization
+        ];
+        // self.activeModuleList()
+        // .then(self.initializeFolderStructure(),initError)
+        // .then(defered.resolve,defered.reject);
+        // return defered.promise;
+        return initFuncs.reduce(function (curFunc, nextFunc) {
+            return curFunc.then(nextFunc, initError);
+        }, q());
+    };
+
+    this.clearData = function() {
+        var defered = q.defer();
+        var files = ['gdm','data'];
+        var filePaths = [];
+        files.forEach(function(file) {
+            filePaths.push(K3_TEMPORARY_FILE_PATH + PATH_TXT + file);
+        });
+        async.eachSeries(
+            filePaths,
+            function(filePath,callback) {
+                rmdir('/usr/local/share/LabJack/K3/gdm',callback);
+            },
+            function(error) {
+                if(error) {
+                    self.pErr('Error Clearing Data',error);
+                } else {
+                    self.log('Successfully cleared data');
+                }
+                defered.resolve();
+            }
+        );
         return defered.promise;
     };
 
@@ -223,25 +501,27 @@ function globalDataManager(fs_facade_obj) {
         return defered.promise;
     };
 
+
     var self = this;
 }
+
 try {
     if(NODE_WEBKIT_INSTANCE) {
-        console.log('GDM, html version');
+        console.log('*GDM, html version*');
     } else {
-        console.log('GDM NODE_WEBKIT_INSTANCE not defined');
+        console.log('*GDM NODE_WEBKIT_INSTANCE not defined*');
     }
 } catch(err) {
-    console.log('GDM nodejs version');
-    var fs_facade_temp = function () {
-        var self = this;
-    };
-    var fs_facade_obj = new fs_facade_temp();
-    var GDM = new globalDataManager(fs_facade_obj);
+    // Configure fs_facade for non-node-webkit use
+    fs_facade.setIsNodeWebkitInstance(false);
+
+    console.log('*GDM nodejs version*');
+    var GDM = new globalDataManager();
     GDM.initializeData();
     GDM.waitForData()
     .then(function(data) {
-        console.log('waitFunc succ',data);
+        GDM.printNonVolatileData();
+        console.log('waitFunc success!',data);
     }, function(err) {
         console.log('waitFunc err',err,ljsError.getNumErrors());
     });

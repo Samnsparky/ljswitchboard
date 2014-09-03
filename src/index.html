@@ -21,6 +21,7 @@
     <body class="unselectable">
         <script>
         var NODE_WEBKIT_INSTANCE = true;
+        NODE_WEBKIT_INSTANCE = true;
         </script>
         <!-- Display initial element before other script includes -->
         <div id="device-search-msg">
@@ -87,7 +88,7 @@
         <div id="content-holder"></div>
         <script type="text/javascript" src="presenter.js"></script>
         <script type="text/javascript">
-            var GLOBAL_DATA_MANAGER = new globalDataManager(fs_facade);
+            var GLOBAL_DATA_MANAGER = new globalDataManager();
             GLOBAL_DATA_MANAGER.initializeData();
             
             // prevent most webpage like drag & drop functionality to open links.

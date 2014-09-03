@@ -11,7 +11,7 @@ var request = require('request');
 var async = require('async');
 var dict = require('dict');
 var handlebars = require('handlebars');
-console.log('Initializing error_handler.js');
+// console.log('Initializing error_handler.js');
 
 var errorTypes = {
 	'critical':		0,

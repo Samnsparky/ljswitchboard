@@ -25,6 +25,11 @@ var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
 
 var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
 
+var NODE_WEBKIT_INSTANCE = true;
+exports.setIsNodeWebkitInstance = function(state) {
+    NODE_WEBKIT_INSTANCE = state;
+};
+
 var FS_FACADE_TEMPLATE_CACHE = dict();
 exports.numCachedTemplates = function() {
     return FS_FACADE_TEMPLATE_CACHE.size;
@@ -87,6 +92,10 @@ var safeJSONParse = function(filePath, contents) {
     }
     return constants;
 };
+exports.safeJSONParser = function(filePath, contents) {
+    return safeJSONParse(filePath, contents);
+};
+
 exports.getLoadErrors = function() {
     return FS_FACADE_LoadErrors;
 };
@@ -100,8 +109,8 @@ handlebars.registerHelper('eachDict', function(context, options) {
             data.key = name;
             data.info = value;
         }
-        ret = ret + options.fn(value, {data: data})
-    })
+        ret = ret + options.fn(value, {data: data});
+    });
     return ret;
 });
 
@@ -161,16 +170,40 @@ exports.getExternalURI = function(fullResourceName) {
  *      run out of.
 **/
 exports.getParentDir = function() {
-    var pathPieces = path.dirname(process.execPath).split(path.sep);
-    
-    var cutIndex;
-    var numPieces = pathPieces.length;
-    for (cutIndex=0; cutIndex<numPieces; cutIndex++) {
-        if (pathPieces[cutIndex].indexOf('.app') != -1) {
-            break;
+    // Code that allows fs_facade to work outside of node_webkit instance
+    var isWebkitInstance = true;
+    try {
+        if(NODE_WEBKIT_INSTANCE) {
+            isWebkitInstance = true;
+        } else {
+            isWebkitInstance = false;
         }
+    } catch(err) {
+        isWebkitInstance = true;
     }
-    return pathPieces.slice(0, cutIndex).join(path.sep);
+
+    if(isWebkitInstance) {
+        var pathPieces = path.dirname(process.execPath).split(path.sep);
+        
+        var cutIndex;
+        var numPieces = pathPieces.length;
+        for (cutIndex=0; cutIndex<numPieces; cutIndex++) {
+            if (pathPieces[cutIndex].indexOf('.app') != -1) {
+                break;
+            }
+        }
+        return pathPieces.slice(0, cutIndex).join(path.sep);
+    } else {
+        var PATH_TXT = '/';
+        if (process.platform === 'win32') {
+            PATH_TXT = '\\';
+        }
+        var MODULES_DESC_FILENAME = 'modules.json';
+
+        var currentDir = process.cwd();
+        var switchboard_modules_dir = currentDir + PATH_TXT + '..';
+        return switchboard_modules_dir;
+    }
 };
 
 
@@ -342,8 +375,8 @@ exports.getLoadedModulesInfo = function(onError, onSuccess) {
 exports.saveDataToFile = function(location, data, onError, onSuccess) {
     fs.exists(location, function(exists) {
         fs.writeFile(
-            location, 
-            data, 
+            location,
+            data,
             function (err) {
                 if (err) {
                     onError(err);

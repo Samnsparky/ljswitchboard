@@ -31,6 +31,7 @@
     "q": "~0",
     "raw-socket":"~1",
     "request": "~2",
+    "rimraf": "2.1",
     "simplesets": "~1",
     "sprintf-js": "~0",
     "sprintf":  "~0.1.3",
