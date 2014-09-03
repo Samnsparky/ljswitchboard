@@ -16,6 +16,8 @@ var async = require('async');
 var dict = require('dict');
 var statusBar = require ('status-bar');
 var handlebars = require('handlebars');
+var admZip = require('adm-zip');
+var tarball = require('tarball-extract')
 
 // Require nodejs internal libraries to perform get requests.
 var http = require('http');
@@ -64,30 +66,30 @@ function fileDownloaderUtility() {
 
 	var dlTemplate = '' +
 	'<div id="{{newID}}">' +
-	'<div id="lvmProgressBar" class="curProgressBar progress">' +
-	'<div class="bar" style="width: 0%;"></div>' +
-	'</div>' +
-	'<table>' +
-	'<tr>' +
-	'<td>File Name:</td>' +
-	'<td id="fileName" class="curFileName">{{fileName}}</td>' +
-	'</tr>' +
-	'<tr>' +
-	'<td>Size:</td>' +
-	'<td id="fileSize" class="curFileSize">{{fileSize}}</td>' +
-	'</tr>' +
-	'<tr>' +
-	'<td>Speed:</td>' +
-	'<td id="downloadSpeed" class="curDownloadSpeed"></td>' +
-	'</tr>' +
-	'<tr>' +
-	'<td>Time Remaining:</td>' +
-	'<td id="timeRemaining" class="curTimeRemaining"></td>' +
-	'</tr>' +
-	'</table>' +
-	'<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">' +
-		fileBrowserButtonText +
-	'</button>' +
+		'<div id="lvmProgressBar" class="curProgressBar progress">' +
+			'<div class="bar" style="width: 0%;"></div>' +
+		'</div>' +
+		'<table>' +
+			'<tr>' +
+				'<td>File Name:</td>' +
+				'<td id="fileName" class="curFileName">{{fileName}}</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td>Size:</td>' +
+				'<td id="fileSize" class="curFileSize">{{fileSize}}</td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td>Speed:</td>' +
+				'<td id="downloadSpeed" class="curDownloadSpeed"></td>' +
+			'</tr>' +
+			'<tr>' +
+				'<td>Time Remaining:</td>' +
+				'<td id="timeRemaining" class="curTimeRemaining"></td>' +
+			'</tr>' +
+		'</table>' +
+		'<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">' +
+			fileBrowserButtonText +
+		'</button>' +
 	'</div>';
 	this.downloadTemplate = handlebars.compile(dlTemplate);
 
@@ -329,7 +331,6 @@ function fileDownloaderUtility() {
 				});
 
 				bar.on ("render", function (stats){
-					console.log('FD: is requestAborted (render)',requestAborted);
 					try {
 						onUpdate(stats,bar,pageElements);
 					} catch (err) {
@@ -341,7 +342,6 @@ function fileDownloaderUtility() {
 				console.log('Error Encountered',err);
 			}
 			res.on('data', function (chunk) {
-				console.log('Data Received!');
 				bodyNum += 1;
 				bodyLength += chunk.length;
 			});
@@ -425,7 +425,7 @@ function fileDownloaderUtility() {
 				fs.unlink(uniqueFilePath);
 				defered.reject(error);
 			});
-			curRequest.setTimeout( 3000, function( ) {
+			curRequest.setTimeout( 5000, function( ) {
 				console.error('file_downloader.js timeout');
 				requestAborted = true;
 				if (bar) bar.cancel ();
@@ -441,6 +441,94 @@ function fileDownloaderUtility() {
 		}
 		return defered.promise;
 	};
+
+	/*
+	 * downloadInfo should be the object returned by the function defined: 
+	 * "this.downloadFile"
+	 * More specifically, an object that has an attribute "fileName" that is a 
+	 * full file path to a .zip file.
+	 */
+	this.extractFile = function(downloadInfo) {
+		var defered = q.defer();
+		var extractFile = function() {
+			var innerDefered = q.defer();
+
+			var filePath = downloadInfo.fileName;
+			var baseDir = path.dirname(filePath);
+			var fileName = path.basename(filePath);
+			var fileExtension = path.extname(filePath);
+			var destinationFolderName = fileName.slice(0, fileName.length - fileExtension.length);
+			var destinationFolder = baseDir + path.sep + destinationFolderName;
+			var destinationPath = destinationFolder + path.sep;
+
+			if(fileExtension === '.zip') {
+				console.log('Downloaded file is a .zip file');
+				
+				// for use with adm-zip
+				var zip = new admZip(filePath);
+				var zipEntries = zip.getEntries(); // an array of ZipEntry records
+
+				// console.log('Printing entries');
+				// zipEntries.forEach(function(zipEntry) {
+				// console.log('Zip entry',zipEntry.toString()); // outputs zip entries information
+				// });
+
+				console.log('Extracting .zip file');
+				zip.extractAllTo(/*target path*/destinationPath, /*overwrite*/true);
+				downloadInfo.extractedFolder = destinationPath;
+				innerDefered.resolve(downloadInfo);
+			} else if (fileExtension === '.tgz') {
+				// var decompressOperation = new decompress({ mode: 755 })
+				// .src(filePath)
+				// .dest(destinationPath)
+				// .use(decompress.targz({ strip: 1 }));
+
+				console.log('Extracting .tgz file');
+
+				tarball.extractTarball(filePath, destinationPath, function(err){
+					if(err) {
+						console.log('Extraction of .tgz error',err);
+					}
+					console.log('Finished extracting .tgz file');
+					downloadInfo.extractedFolder = destinationPath;
+					innerDefered.resolve(downloadInfo);
+				})
+				// decompressOperation.decompress(function() {
+				// 	console.log('Finished extracting .tgz');
+				// 	downloadInfo.extractedFolder = destinationPath;
+				//	innerDefered.resolve(downloadInfo);
+				// });
+				
+				
+			} else {
+				console.log('Other File type detected', fileExtension);
+				innerDefered.resolve(downloadInfo);
+			}
+			return innerDefered.promise;
+		};
+		var startExecution = function() {
+			var innerDefered = q.defer();
+			innerDefered.resolve();
+			return innerDefered.promise;
+		};
+		startExecution()
+		.then(extractFile)
+		.then(defered.resolve, defered.reject);
+		return defered.promise;
+	};
+
+	this.downloadAndExtractFile = function(url, listeners) {
+		var errFunc = function(bundle) {
+			var errDefered = q.defer();
+			errDefered.reject(bundle);
+			return errDefered.promise;
+		};
+		var defered = q.defer();
+		self.downloadFile(url, listeners)
+		.then(self.extractFile, errFunc)
+		.then(defered.resolve, defered.reject);
+		return defered.promise;
+	}
 
 	// Define functions so utility can automaticaly configure/control the 
 	// downloads bar of K3.
@@ -476,13 +564,26 @@ if(FILE_DOWNLOADER_UTILITY.isDebugMode) {
 	// var url = "http://nodejs.org/dist/latest/node.exe";
 	// var url = "http://labjack.com/robots.txt";
 	var url = "https://s3.amazonaws.com/ljrob/mac/kipling/test/kipling_test_mac.zip";
+	url = "http://labjack.com/sites/default/files/2014/07/LabJackM-1.0702-Mac.tgz";
 
 	FILE_DOWNLOADER_UTILITY.setDebugMode(true);
-	FILE_DOWNLOADER_UTILITY.downloadFile(url)
+	// FILE_DOWNLOADER_UTILITY.downloadFile(url)
+	// .then(function(info) {
+	// 	console.log('success!',info);
+	// 	FILE_DOWNLOADER_UTILITY.extractFile(info)
+	// 	.then(function(result) {
+	// 		console.log('FD: Successfully unzipped file',result);
+	// 	}, function(error) {
+	// 		console.log('FD: Error unzipping file',error);
+	// 	});
+	// }, function(error) {
+	// 	console.log('Error :(',error);
+	// });
+	FILE_DOWNLOADER_UTILITY.downloadAndExtractFile(url)
 	.then(function(info) {
-		console.log('success!',info);
+		console.log('success!', info);
 	}, function(error) {
-		console.log('Error :(',error);
+		console.log('Error :(', error);
 	});
 } else {
 	console.log('file_downloader.js runing in html mode');

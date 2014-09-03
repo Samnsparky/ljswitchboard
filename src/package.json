@@ -17,6 +17,7 @@
   "nodejs": true,
   "dependencies": {
     "async": "~0",
+    "adm-zip":"~0.4.4",
     "dict": "~1",
     "getmac":"~1",
     "handlebars": "~1",
@@ -36,7 +37,8 @@
     "sprintf-js": "~0",
     "sprintf":  "~0.1.3",
     "status-bar": "~2",
-    "tar":"~0.1"
+    "tar":"~0.1",
+    "tarball-extract":"~0.0.3"
   },
   "enableStartupConfig":false,
   "buildType": "debug"

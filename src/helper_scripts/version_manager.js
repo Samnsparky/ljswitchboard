@@ -606,6 +606,9 @@ function labjackVersionManager() {
 				'<button ' +
 					'class="upgradeButton btn btn-link" ' +
 					'href="{{upgradeLink}}" ' +
+					'lvmVersionName="{{name}}"' +
+					'lvmVersionType="{{versionType}}"' +
+					'lvmVersionInfo="{{versionInfo}}"' +
 					'title="Click to Download and Install, ' +
 						'{{name}}: {{versionType}}, {{versionInfo}}"' +
 					'>Download' +
@@ -796,7 +799,19 @@ function labjackVersionManager() {
 			buttons.bind('click',function(event) {
 				console.log('LVM Clicked!',event.toElement);
 				var href = event.toElement.attributes.href.value;
-				FILE_DOWNLOADER_UTILITY.downloadFile(href)
+
+				var fileName;
+				var fileType;
+				var fileInfo;
+				try {
+					fileName = event.toElement.attributes.lvmVersionName.value;
+					fileType = event.toElement.attributes.lvmVersionType.value;
+					fileInfo = event.toElement.attributes.lvmVersionInfo.value;
+				} catch (err) {
+					console.log('LJM Error... getting file attributes', fileName, fileType, fileInfo);
+				}
+				console.log('LJM Success... file attributes:', fileName, fileType, fileInfo);
+				FILE_DOWNLOADER_UTILITY.downloadAndExtractFile(href)
 				.then(function(info) {
 					console.log('LVM Success!',info);
 				}, function(error) {
