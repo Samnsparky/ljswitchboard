@@ -49,6 +49,23 @@ function keyboardEventHandler() {
         }
         gui.Window.get().showDevTools();
     };
+    this.rebootKipling = function(info) {
+        console.log('in handleOpenConsole', info.name);
+        if(typeof(gui) === 'undefined') {
+            gui = require('nw.gui');
+        }
+        var child_process = require('child_process');
+        var execStr = 'bash helper_scripts/reboot_scripts/mac_reboot.sh';
+        var currentExecutable = process.execPath.split(' ')[0].split(/\.*\/Contents/g)[0];
+
+        var args = [new Date().getTime().toString(), currentExecutable];
+        args.forEach(function(arg) {
+            execStr += ' ' + arg;
+        });
+        var bashObj = child_process.exec(execStr);
+        console.log('Executed Script');
+        // gui.App.quit();
+    };
     var specialElements = [
         {
             "className": "escapableInput typeahead tt-input",
@@ -115,6 +132,12 @@ function keyboardEventHandler() {
             'platforms':['mac','win','linux'],
             'func': this.handleOpenConsole,
             'listeners': dict()
+        },{ // keypress to reboot kipling
+            'name':'rebootKipling',
+            'key':'ctrl+alt+shift+q',
+            'platforms':['mac','win','linux'],
+            'func': this.rebootKipling,
+            'listeners': dict()
         },{ // windows keypress to save
             'name':'save',
             'key':'ctrl+s',
@@ -155,15 +178,17 @@ function keyboardEventHandler() {
         18:{'key':'alt', 'isPressed': false},
         27:{'key':'esc', 'isPressed': false},
         67:{'key':'c', 'isPressed': false},
+        81:{'key':'q', 'isPressed': false},
         83:{'key':'s', 'isPressed': false},
         91:{'key':'cmd', 'isPressed': false},
     };
-    this.keyList = [16, 17, 18, 27, 67, 83, 91];
+    this.keyList = [16, 17, 18, 27, 67, 81, 83, 91];
 
     var esc_KEY     = 27;
     var c_KEY       = 67;
+    var q_KEY       = 81;
     var s_KEY       = 83;
-    this.primaryKeysList = [esc_KEY, c_KEY, s_KEY];
+    this.primaryKeysList = [esc_KEY, c_KEY, q_KEY, s_KEY];
 
     this.convertKeyCode = function(code) {
         if(typeof(self.keyMap[code]) !== 'unified') {
