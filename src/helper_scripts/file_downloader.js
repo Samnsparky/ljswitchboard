@@ -201,18 +201,32 @@ function fileDownloaderUtility() {
 		return pageElements;
 	};
 	var onUpdateDefaultFunc = function(stats, statusBar, pageElements) {
-		var stdOutWrite = function() {
-			process.stdout.write (
-				path.basename (url) + " " +
-				statusBar.format.storage (stats.currentSize) + " " +
-				statusBar.format.speed (stats.speed) + " " +
-				statusBar.format.time (stats.elapsedTime) + " " +
-				statusBar.format.time (stats.remainingTime) + " [" +
-				statusBar.format.progressBar (stats.percentage) + "] " +
-				statusBar.format.percentage (stats.percentage)
-			);
-			process.stdout.cursorTo (0);
-		};
+		var stdOutWrite;
+		var defineSTDOutWrite = false;
+		if(self.isInitialized) {
+			if(isDefined($)) {
+			} else {
+				defineSTDOutWrite = true;
+			}
+		} else {
+			defineSTDOutWrite = true;
+		}
+		if(defineSTDOutWrite) {
+			stdOutWrite = function() {
+				process.stdout.write (
+					path.basename (url) + " " +
+					statusBar.format.storage (stats.currentSize) + " " +
+					statusBar.format.speed (stats.speed) + " " +
+					statusBar.format.time (stats.elapsedTime) + " " +
+					statusBar.format.time (stats.remainingTime) + " [" +
+					statusBar.format.progressBar (stats.percentage) + "] " +
+					statusBar.format.percentage (stats.percentage)
+				);
+				process.stdout.cursorTo (0);
+			};
+		} else {
+			stdOutWrite = function(){};
+		}
 		if(self.isInitialized) {
 			if(isDefined($)) {
 				console.log('Update Func...',stats.currentSize,stats.remainingTime);
@@ -289,13 +303,15 @@ function fileDownloaderUtility() {
 		safeName = safeName.replace(/\(/g,'_');
 		safeName = safeName.replace(/\)/g,'_');
 
+		var requestAborted = false;
+
 		/**
 		 * Function that handles the file download stuff.
 		 */
 		var handleResponse = function(res) {
 			var startFile = true;
 			var bodyNum = 0;
-			var body = '';
+			var bodyLength = 0;
 			var pageElements = null;
 			if(fileStream) {
 				res.pipe(fileStream);
@@ -303,7 +319,7 @@ function fileDownloaderUtility() {
 				console.error('HERE!!! WTF!!');
 			}
 			var toMegabytes = function(numBytes) {
-				return Number((body.length/Math.pow(2,20)).toPrecision(3));
+				return Number((bodyLength/Math.pow(2,20)).toPrecision(3));
 			};
 			var fileSize = res.headers["content-length"];
 
@@ -313,34 +329,59 @@ function fileDownloaderUtility() {
 				});
 
 				bar.on ("render", function (stats){
-					onUpdate(stats,bar,pageElements);
+					console.log('FD: is requestAborted (render)',requestAborted);
+					try {
+						onUpdate(stats,bar,pageElements);
+					} catch (err) {
+						console.error('FD: Error rendering bar',err);
+					}
 				});
 				res.pipe (bar);
 			} catch (err) {
 				console.log('Error Encountered',err);
 			}
 			res.on('data', function (chunk) {
+				console.log('Data Received!');
 				bodyNum += 1;
-				body += chunk;
+				bodyLength += chunk.length;
 			});
 			var fileStreamFinished = false;
 			var downloadFinished = false;
 
 			var returnToCaller = function() {
+				console.log('FD: is requestAborted (returnToCaller)',requestAborted);
 				if(fileStreamFinished && downloadFinished) {
-					var megabytesDownloaded = toMegabytes(body.length);
+					var megabytesDownloaded = toMegabytes(bodyLength);
 					fileStream.close(function() { // close() is async
-						defered.resolve({fileName:uniqueFilePath,size:body.length,sizeMB:megabytesDownloaded});
+						try {
+							defered.resolve(
+								{
+									fileName:uniqueFilePath,
+									size:bodyLength,
+									sizeMB:megabytesDownloaded
+								}
+							);
+						} catch (err) {
+							console.error('FD: error resolving download');
+						}
 					});
 				}
 			};
 			res.on('end', function() {
 				downloadFinished = true;
-				returnToCaller();
+				try {
+					returnToCaller();
+				} catch (err) {
+					console.error('FD: error returningToCaller-end',err);
+				}
 			});
 			fileStream.on('finish', function() {
 				fileStreamFinished = true;
-				returnToCaller();
+				try {
+					returnToCaller();
+				} catch (err) {
+					console.error('FD: error returningToCaller-finish',err);
+				}
 			});
 
 			pageElements = onStart({
@@ -356,32 +397,41 @@ function fileDownloaderUtility() {
 		 * Function that handles the basic http request to determine if it was 
 		 * successful/file doesn't exist.
 		 */
-		var handleRequest = function(res) {
-			if (res.statusCode === 200) {
-				handleResponse(res);
-			} else {
-				curRequest.end();
-				curRequest.abort();
-				defered.reject({
-					// result:res,
-					statusCode:res.statusCode
-				});
-			}
+		var getHandleRequest = function(handleResponse) {
+			var handleRequest = function(res) {
+				if (res.statusCode === 200) {
+					handleResponse(res);
+				} else {
+					curRequest.end();
+					curRequest.abort();
+					defered.reject({
+						// result:res,
+						statusCode:res.statusCode
+					});
+				}
+			};
+			return handleRequest;
 		};
 		// Make sure that the download directory isn't blank.
 		if(defaultDownloadDirectory !== '') {
 			fileStream = fs.createWriteStream(uniqueFilePath);
-			var curRequest = reqLib.get(url, handleRequest)
+			var curRequest = reqLib.get(url, getHandleRequest(handleResponse))
 			.on ("error", function(error) {
+				console.error('curRequest error',error);
+				requestAborted = true;
 				if (bar) bar.cancel ();
+				curRequest.end();
+				curRequest.abort();
 				fs.unlink(uniqueFilePath);
 				defered.reject(error);
 			});
-			curRequest.setTimeout( 5000, function( ) {
-				if (bar) bar.cancel ();
+			curRequest.setTimeout( 3000, function( ) {
 				console.error('file_downloader.js timeout');
+				requestAborted = true;
+				if (bar) bar.cancel ();
 				curRequest.end();
 				curRequest.abort();
+				fs.unlink(uniqueFilePath);
 				defered.reject('timeout-err');
 			});
 		} else {
@@ -425,7 +475,7 @@ if(FILE_DOWNLOADER_UTILITY.isDebugMode) {
 	// var url = "https://s3.amazonaws.com/ljrob/mac/kipling_mac-test.zip";
 	// var url = "http://nodejs.org/dist/latest/node.exe";
 	// var url = "http://labjack.com/robots.txt";
-	var url = "http://labjack.com/sites/default/files/2014/07/LabJackM-1.0701-Mac.tgz";
+	var url = "https://s3.amazonaws.com/ljrob/mac/kipling/test/kipling_test_mac.zip";
 
 	FILE_DOWNLOADER_UTILITY.setDebugMode(true);
 	FILE_DOWNLOADER_UTILITY.downloadFile(url)

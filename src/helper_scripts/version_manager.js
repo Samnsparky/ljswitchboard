@@ -714,6 +714,21 @@ function labjackVersionManager() {
 			// Check to make sure each link and data exists before adding it
 			// Check and add Kipling info
 			var kiplingEl;
+			if (isReal(info.kipling, info.kipling.test, info.kipling.test[0])) {
+				var k3Test = info.kipling.test[0];
+				k3Test = appendInfo(k3Test);
+				k3Test.name = "Kipling (Test)";
+				k3Test.safe_name = "kipling_test";
+
+				if (k3Test.version > pageElements.kiplingVersion) {
+					upgradeLinks.push(k3Test);
+					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
+					showWarning(
+						kiplingEl.find('.lvm_version'),
+						kiplingEl.find('.lvm_status')
+					);
+				}
+			}
 			if (isReal(info.kipling, info.kipling.beta, info.kipling.beta[0])) {
 				var k3Beta = info.kipling.beta[0];
 				k3Beta = appendInfo(k3Beta);

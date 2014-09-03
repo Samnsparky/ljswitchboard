@@ -61,8 +61,13 @@ then
 	echo $(./run.sh buildAndRun) >> $FILE_PATH_CUST_B
 	echo "finished building K3"
 else
-	echo "cmd: ./run.sh build" >> $FILE_PATH_CUST_B
-	echo $(./run.sh build) >> $FILE_PATH_CUST_B
+	if [[ $3 == 'build' ]]
+	then
+		echo "cmd: ./run.sh build" >> $FILE_PATH_CUST_B
+		echo $(./run.sh build) >> $FILE_PATH_CUST_B
+	else
+		echo "Not building kipling" >> $FILE_PATH_CUST_B
+	fi
 fi
 echo "HERE?" >> $FILE_PATH_CUST_B
 echo $(cd $TEMP_CURRENT_DIRECTORY) >> $FILE_PATH_CUST_B
