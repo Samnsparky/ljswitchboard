@@ -2,8 +2,6 @@
 ROOT_PATH="/Users/chrisjohnson/Documents/k3Temp/*"
 rm $ROOT_PATH
 
-touch /Users/chrisjohnson/Documents/k3Temp/k3Dump.log
-
 CUR_TIME=$(date +%s)
 ROOT_DIR="/Users/chrisjohnson/Documents/k3Temp/k3Dump_"
 FILE_NAME=$1
