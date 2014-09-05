@@ -110,7 +110,7 @@ NUM_STALL="0"
 while $WAIT_FOR_OPEN; do
 	echo "has kipling started?" >> $FILE_PATH_CUST_B
 	echo $NUM_STALL >> $FILE_PATH_CUST_B
-	sleep 1
+	sleep 2
 	IS_RUNNING=$(pgrep node-webkit)
 	if [[ $IS_RUNNING == '' ]]
 	then

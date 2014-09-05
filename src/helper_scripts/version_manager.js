@@ -915,7 +915,7 @@ function labjackVersionManager() {
 			scriptArgs.push(rebootScriptPath);		// The path of the script being executed
 
 			executeScript = true;
-			quitKipling = false;
+			quitKipling = true;
 		} else {
 			console.warn('systemType not supported', systemType);
 			// TODO: add support for systemType 'win', 'linux32', and 'linux64'		
