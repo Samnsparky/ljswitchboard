@@ -836,6 +836,8 @@ function labjackVersionManager() {
 						console.log('LVM Upgrade Success!',info);
 					}, function(err) {
 						console.log('LVM Upgrade Failure', err);
+					}, function(err) {
+						console.log('LVM Upgrade Syntax Error',err);
 					});
 				}, function(error) {
 					console.log('LVM Download Error :(',error);
@@ -864,97 +866,109 @@ function labjackVersionManager() {
 	};
 
 	this.beginFileUpgrade = function(info) {
-		var systemType = self.getLabjackSystemType();
-		console.log('in beginFileUpgrade', systemType);
-
 		var defered = q.defer();
+		try {
+			var systemType = self.getLabjackSystemType();
+			console.log('in beginFileUpgrade', systemType);
 
-		// Make sure gui has been required.
-		if(typeof(gui) === 'undefined') {
-			gui = require('nw.gui');
-		}
-		var executionProgram = '';
-		var rebootScriptPath = '';
-		var rebootScriptName = '';
-		var currentExecFilePath = '';
-		var currentExecPath = '';
-		var scriptArgs = [];
-		var execStr = '';
-		var downloadedFilePath = info.extractedFolder;
 
-		var executeScript = false;
-		var quitKipling = false;
-		var runScript = false;
+			// Make sure gui has been required.
+			if(typeof(gui) === 'undefined') {
+				gui = require('nw.gui');
+			}
+			var executionProgram = '';
+			var rebootScriptPath = '';
+			var rebootScriptName = '';
+			var currentExecFilePath = '';
+			var currentExecPath = '';
+			var scriptArgs = [];
+			var execStr = '';
+			var formatPath = function(newPath) {
+				newPath = newPath.replace(/\(/g,'\\(');
+				newPath = newPath.replace(/\)/g,'\\)');
+				// newPath = '"' + newPath + '"';
+				return newPath;
+			};
+			var downloadedFilePath = info.extractedFolder;
 
-		if (systemType === 'mac') {
-			console.log('systemType is mac, preparing args');
-			executionProgram = 'bash';
+			var executeScript = false;
+			var quitKipling = false;
+			var runScript = false;
 			
-			// Get the name of the application that was downloaded
-			var downloadedAppName = 'Kipling.app';
-			var downloadedFiles = fs.readdirSync(downloadedFilePath);
-			downloadedFiles.forEach(function(downloadedFile) {
-				if (downloadedFile.search('.app') > 0) {
-					downloadedAppName = downloadedFile;
+
+			if (systemType === 'mac') {
+				console.log('systemType is mac, preparing args');
+				executionProgram = 'bash';
+				
+				// Get the name of the application that was downloaded
+				var downloadedAppName = 'Kipling.app';
+				var downloadedFiles = fs.readdirSync(downloadedFilePath);
+				downloadedFiles.forEach(function(downloadedFile) {
+					if (downloadedFile.search('.app') > 0) {
+						downloadedAppName = downloadedFile;
+					}
+				});
+
+				// Build the path where the script can be found
+				rebootScriptPath = downloadedFilePath + downloadedAppName;
+				rebootScriptPath += '/Contents/Resources/update_scripts';
+
+				// Define the name of the script to be executed
+				rebootScriptName = 'mac_reboot.sh';
+
+				// Figure out where Kipling is currently being executed
+				// currentExecFilePath = process.execPath.split(' ')[0].split(/\.*\/Contents/g)[0];
+				currentExecPath = path.dirname(process.execPath.split(' ')[0].split(/\.*\.app/g)[0]);
+				
+				// Add arguments to the script execution
+				scriptArgs.push(currentExecPath);		// The current path in which kipling is executing out of
+				scriptArgs.push(downloadedFilePath);	// The path where the files needed to be coppied from exist
+				scriptArgs.push(downloadedAppName);		// The name of the program to "open"
+				scriptArgs.push(rebootScriptPath);		// The path of the script being executed
+
+				executeScript = true;
+				quitKipling = true;
+				runScript = true;
+			} else {
+				console.warn('systemType not supported', systemType);
+				// TODO: add support for systemType 'win', 'linux32', and 'linux64'		
+			}
+			
+			if(executeScript) {
+				console.log('preparing execStr for execution');
+				// Build basic execution info
+				execStr += executionProgram + ' ';
+
+				// build the full file path of the script to execute
+				var scriptPath = rebootScriptPath;
+				scriptPath += path.sep;
+				scriptPath += rebootScriptName;
+				console.log('scriptPath', scriptPath, scriptArgs);
+				console.log('does script exist?', fs.existsSync(scriptPath));
+
+				// Append the script's path to the execution string
+				execStr += scriptPath;
+
+				// Append the any arguments to the string to be executed
+				scriptArgs.forEach(function(scriptArg) {
+					execStr += ' ' + scriptArg;
+				});
+
+				execStr = formatPath(execStr);
+				console.log('LVM execStr', execStr);
+				if(runScript) {
+					var bashObj = child_process.exec(execStr);
 				}
-			});
-
-			// Build the path where the script can be found
-			rebootScriptPath = downloadedFilePath + downloadedAppName;
-			rebootScriptPath += '/Contents/Resources/update_scripts';
-
-			// Define the name of the script to be executed
-			rebootScriptName = 'mac_reboot.sh';
-
-			// Figure out where Kipling is currently being executed
-			// currentExecFilePath = process.execPath.split(' ')[0].split(/\.*\/Contents/g)[0];
-			currentExecPath = path.dirname(process.execPath.split(' ')[0].split(/\.*\.app/g)[0]);
-			
-			// Add arguments to the script execution
-			scriptArgs.push(currentExecPath);		// The current path in which kipling is executing out of
-			scriptArgs.push(downloadedFilePath);	// The path where the files needed to be coppied from exist
-			scriptArgs.push(downloadedAppName);		// The name of the program to "open"
-			scriptArgs.push(rebootScriptPath);		// The path of the script being executed
-
-			executeScript = true;
-			quitKipling = false;
-		} else {
-			console.warn('systemType not supported', systemType);
-			// TODO: add support for systemType 'win', 'linux32', and 'linux64'		
-		}
-		
-		if(executeScript) {
-			console.log('preparing execStr for execution');
-			// Build basic execution info
-			execStr += executionProgram + ' ';
-
-			// build the full file path of the script to execute
-			var scriptPath = rebootScriptPath;
-			scriptPath += path.sep;
-			scriptPath += rebootScriptName;
-			console.log('scriptPath', scriptPath, scriptArgs);
-			console.log('does script exist?', fs.existsSync(scriptPath));
-
-			// Append the script's path to the execution string
-			execStr += scriptPath;
-
-			// Append the any arguments to the string to be executed
-			scriptArgs.forEach(function(scriptArg) {
-				execStr += ' ' + scriptArg;
-			});
-
-			console.log('LVM execStr', execStr);
-			if(runScript) {
-				var bashObj = child_process.exec(execStr);
+				console.log('Executed Script');
+				if(quitKipling) {
+					gui.App.quit();
+				}
+			} else {
+				console.warn('LVM Upgrade Strategy Not Implemented For', systemType, info);
 			}
-			console.log('Executed Script');
-			if(quitKipling) {
-				gui.App.quit();
-			}
-		} else {
-			console.warn('LVM Upgrade Strategy Not Implemented For', systemType, info);
+		} catch (err) {
+			console.log('LVM Upgrade non-q syntax error', err);
 		}
-
 		defered.resolve(info);
 		return defered.promise;
 	};
