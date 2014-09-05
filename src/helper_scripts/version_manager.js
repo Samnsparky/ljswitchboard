@@ -884,6 +884,8 @@ function labjackVersionManager() {
 
 		var executeScript = false;
 		var quitKipling = false;
+		var runScript = false;
+
 		if (systemType === 'mac') {
 			console.log('systemType is mac, preparing args');
 			executionProgram = 'bash';
@@ -915,7 +917,7 @@ function labjackVersionManager() {
 			scriptArgs.push(rebootScriptPath);		// The path of the script being executed
 
 			executeScript = true;
-			quitKipling = true;
+			quitKipling = false;
 		} else {
 			console.warn('systemType not supported', systemType);
 			// TODO: add support for systemType 'win', 'linux32', and 'linux64'		
@@ -942,7 +944,9 @@ function labjackVersionManager() {
 			});
 
 			console.log('LVM execStr', execStr);
-			var bashObj = child_process.exec(execStr);
+			if(runScript) {
+				var bashObj = child_process.exec(execStr);
+			}
 			console.log('Executed Script');
 			if(quitKipling) {
 				gui.App.quit();

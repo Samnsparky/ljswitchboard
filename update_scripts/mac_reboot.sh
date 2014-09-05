@@ -5,7 +5,7 @@ ROOT_PATH="/Users/chrisjohnson/Documents/k3Temp/*"
 rm $ROOT_PATH
 
 BASIC_FILE="/Users/chrisjohnson/Documents/k3Temp/testFile.log"
-echo "Hello World!" >> BASIC_FILE
+echo "Hello World!" >> $BASIC_FILE
 
 CUR_TIME=$(date +%s)
 ROOT_DIR="/Users/chrisjohnson/Documents/k3Temp/k3Dump_"
