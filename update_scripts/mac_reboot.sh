@@ -98,6 +98,7 @@ cd $CURRENT_EXEC_PATH
 echo "re-opening Kipling" >> $FILE_PATH_CUST_B
 echo "opening file:" >> $FILE_PATH_CUST_B
 echo $DOWNLOADED_APP_NAME >> $FILE_PATH_CUST_B
+echo $(pwd) >> $FILE_PATH_CUST_B
 echo $(open $DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
 
 echo "finished Starting Kipling" >> $FILE_PATH_CUST_B
@@ -114,6 +115,7 @@ while $WAIT_FOR_OPEN; do
 	if [[ $IS_RUNNING == '' ]]
 	then
 		echo "K3 isn't running :(" >> $FILE_PATH_CUST_B
+		echo $(open $DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
 	else
 		echo "Kipling is running!! Yay!" >> $FILE_PATH_CUST_B
 		WAIT_FOR_OPEN=false
