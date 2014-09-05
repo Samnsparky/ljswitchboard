@@ -68,8 +68,14 @@ DOWNLOADED_FILE_PATH=$2
 DOWNLOADED_APP_NAME=$3
 rebootScriptPath=$4
 
+# Change directories to the current active directory
+echo "starting directory:" >> $FILE_PATH_CUST_B
+echo $(pwd) >> $FILE_PATH_CUST_B
 echo $(cd $CURRENT_EXEC_PATH) >> $FILE_PATH_CUST_B
 echo "Files in CURRENT_EXEC_PATH directory" >> $FILE_PATH_CUST_B
+echo "2nd directory:" >> $FILE_PATH_CUST_B
+echo $(pwd) >> $FILE_PATH_CUST_B
+
 # FILES_IN_DIRECTORY=$(ls)
 FILES_TO_DELETE[0]="Kipling.app"
 FILES_TO_DELETE[1]="switchboard_modules"
@@ -80,8 +86,14 @@ for FILE_IN_DIRECTORY in ${FILES_TO_DELETE[@]}; do
 	#rm -r $FILE_IN_DIRECTORY
 done
 
+# Change directories to the Downloaded files directory
+echo "3rd directory:" >> $FILE_PATH_CUST_B
+echo $(pwd) >> $FILE_PATH_CUST_B
 echo $(cd $DOWNLOADED_FILE_PATH) >> $FILE_PATH_CUST_B
 echo "Files in DOWNLOADED_FILE_PATH directory" >> $FILE_PATH_CUST_B
+echo "4th directory:" >> $FILE_PATH_CUST_B
+echo $(pwd) >> $FILE_PATH_CUST_B
+
 # FILES_IN_DIRECTORY=$(ls)
 FILES_TO_COPY[0]="Kipling.app"
 FILES_TO_COPY[1]="switchboard_modules"
@@ -93,8 +105,15 @@ done
 
 #-------------- Begin Launching Kipling ----------------------------------------
 
-# Try to re-open kipling
+# Change directories back to the currently executing directory
+echo "5th directory:" >> $FILE_PATH_CUST_B
+echo $(pwd) >> $FILE_PATH_CUST_B
 echo $(cd $CURRENT_EXEC_PATH) >> $FILE_PATH_CUST_B
+echo "Files in CURRENT_EXEC_PATH directory" >> $FILE_PATH_CUST_B
+echo "6th directory:" >> $FILE_PATH_CUST_B
+echo $(pwd) >> $FILE_PATH_CUST_B
+
+# Try to re-open kipling
 echo "re-opening Kipling" >> $FILE_PATH_CUST_B
 echo "opening file:" >> $FILE_PATH_CUST_B
 echo $DOWNLOADED_APP_NAME >> $FILE_PATH_CUST_B
