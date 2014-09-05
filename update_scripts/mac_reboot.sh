@@ -1,5 +1,10 @@
 #!/bin/sh
 
+CURRENT_EXEC_PATH=$1
+DOWNLOADED_FILE_PATH=$2
+DOWNLOADED_APP_NAME=$3
+REBOOT_SCRIPT_PATH=$4
+
 # Code for creating various debugging files
 ROOT_PATH="/Users/chrisjohnson/Documents/k3Temp/*"
 rm $ROOT_PATH
@@ -63,11 +68,6 @@ while $WAIT_FOR_EXIT; do
 done
 #-------------- Finished Exiting Kipling ---------------------------------------
 
-CURRENT_EXEC_PATH=$1
-DOWNLOADED_FILE_PATH=$2
-DOWNLOADED_APP_NAME=$3
-rebootScriptPath=$4
-
 # Change directories to the current active directory
 echo "starting directory:" >> $FILE_PATH_CUST_B
 echo $(pwd) >> $FILE_PATH_CUST_B
@@ -122,8 +122,16 @@ echo "re-opening Kipling" >> $FILE_PATH_CUST_B
 echo "opening file:" >> $FILE_PATH_CUST_B
 echo "$CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
 echo $(pwd) >> $FILE_PATH_CUST_B
+
+# Change permissions on downloaded .app to allow it to be executed
 echo "chmod -R +x $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
 echo $(chmod -R +x $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
+
+# Edit the file so that the warning "This file was downloaded from the internet" doesn't happen.
+echo "xattr -d -r com.apple.quarantine $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
+echo $(xattr -d -r com.apple.quarantine $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
+
+# Open the .app
 echo "open $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
 echo $(open $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
 
