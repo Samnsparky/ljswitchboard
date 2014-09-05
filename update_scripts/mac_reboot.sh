@@ -75,6 +75,9 @@ echo $(cd $CURRENT_EXEC_PATH) >> $FILE_PATH_CUST_B
 echo "Files in CURRENT_EXEC_PATH directory" >> $FILE_PATH_CUST_B
 echo "2nd directory:" >> $FILE_PATH_CUST_B
 echo $(pwd) >> $FILE_PATH_CUST_B
+cd $CURRENT_EXEC_PATH
+echo "2nd(2) directory:" >> $FILE_PATH_CUST_B
+echo $(pwd) >> $FILE_PATH_CUST_B
 
 # FILES_IN_DIRECTORY=$(ls)
 FILES_TO_DELETE[0]="Kipling.app"
@@ -83,7 +86,7 @@ FILES_TO_DELETE[1]="switchboard_modules"
 for FILE_IN_DIRECTORY in ${FILES_TO_DELETE[@]}; do
 	echo "rm -r $CURRENT_EXEC_PATH/$FILE_IN_DIRECTORY" >> $FILE_PATH_CUST_B
 	# Delete the found file
-	#rm -r $FILE_IN_DIRECTORY
+	rm -r $CURRENT_EXEC_PATH/$FILE_IN_DIRECTORY
 done
 
 # Change directories to the Downloaded files directory
@@ -101,6 +104,7 @@ FILES_TO_COPY[1]="switchboard_modules"
 for FILE_IN_DIRECTORY in ${FILES_TO_COPY[@]}; do
 	echo "cp -r $DOWNLOADED_FILE_PATH$FILE_IN_DIRECTORY $CURRENT_EXEC_PATH" >> $FILE_PATH_CUST_B
 	# Copy the found file to the CURRENT_EXEC_PATH
+	cp -r $DOWNLOADED_FILE_PATH$FILE_IN_DIRECTORY $CURRENT_EXEC_PATH
 done
 
 #-------------- Begin Launching Kipling ----------------------------------------
@@ -118,7 +122,9 @@ echo "re-opening Kipling" >> $FILE_PATH_CUST_B
 echo "opening file:" >> $FILE_PATH_CUST_B
 echo "$CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
 echo $(pwd) >> $FILE_PATH_CUST_B
+echo "chmod -R +x $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
 echo $(chmod -R +x $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
+echo "open $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
 echo $(open $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
 
 echo "finished Starting Kipling" >> $FILE_PATH_CUST_B
