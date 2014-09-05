@@ -6,12 +6,16 @@
  * @author Chris Johnson (LabJack, 2014)
 **/
 
+// nodejs requires:
+var child_process = require('child_process');
+
+// 3rd party npm library requires:
 var q = require('q');
 var request = require('request');
 var async = require('async');
 var dict = require('dict');
-
 var handlebars = require('handlebars');
+var fs = require('fs');
 
 // Require ljswitchboard libs
 var ljsError;
@@ -609,6 +613,7 @@ function labjackVersionManager() {
 					'lvmVersionName="{{name}}"' +
 					'lvmVersionType="{{versionType}}"' +
 					'lvmVersionInfo="{{versionInfo}}"' +
+					'lvmUpgradeType="{{upgrade_type}}"' +
 					'title="Click to Download and Install, ' +
 						'{{name}}: {{versionType}}, {{versionInfo}}"' +
 					'>Download' +
@@ -721,6 +726,7 @@ function labjackVersionManager() {
 				var k3Test = info.kipling.test[0];
 				k3Test = appendInfo(k3Test);
 				k3Test.name = "Kipling (Test)";
+				k3Test.upgrade_type = "kipling";
 				k3Test.safe_name = "kipling_test";
 
 				if (k3Test.version > pageElements.kiplingVersion) {
@@ -736,6 +742,7 @@ function labjackVersionManager() {
 				var k3Beta = info.kipling.beta[0];
 				k3Beta = appendInfo(k3Beta);
 				k3Beta.name = "Kipling (Beta)";
+				k3Beta.upgrade_type = "kipling";
 				k3Beta.safe_name = "kipling_beta";
 
 				if (k3Beta.version > pageElements.kiplingVersion) {
@@ -751,6 +758,7 @@ function labjackVersionManager() {
 				var k3Current = info.kipling.current[0];
 				k3Current = appendInfo(k3Current);
 				k3Current.name = "Kipling";
+				k3Current.upgrade_type = "kipling";
 				k3Current.safe_name = "kipling_current";
 				if (k3Current.version > pageElements.kiplingVersion) {
 					upgradeLinks.push(k3Current);
@@ -767,6 +775,7 @@ function labjackVersionManager() {
 				var ljm = info.ljm.current[0];
 				ljm = appendInfo(ljm);
 				ljm.name = "LJM";
+				ljm.upgrade_type = "ljm";
 				ljm.safe_name = "ljm";
 
 				if (ljm.version > pageElements.ljmVersion) {
@@ -803,19 +812,33 @@ function labjackVersionManager() {
 				var fileName;
 				var fileType;
 				var fileInfo;
+				var fileUpgradeType;
 				try {
 					fileName = event.toElement.attributes.lvmVersionName.value;
 					fileType = event.toElement.attributes.lvmVersionType.value;
 					fileInfo = event.toElement.attributes.lvmVersionInfo.value;
+					fileUpgradeType = event.toElement.attributes.lvmUpgradeType.value;
 				} catch (err) {
 					console.log('LJM Error... getting file attributes', fileName, fileType, fileInfo);
 				}
 				console.log('LJM Success... file attributes:', fileName, fileType, fileInfo);
 				FILE_DOWNLOADER_UTILITY.downloadAndExtractFile(href)
 				.then(function(info) {
-					console.log('LVM Success!',info);
+					console.log('LVM Download Success!',info);
+					info.lvm = {};
+					info.lvm.fileName = fileName;
+					info.lvm.fileType = fileType;
+					info.lvm.fileInfo = fileInfo;
+					info.lvm.fileUpgradeType = fileUpgradeType;
+
+					self.beginFileUpgrade(info)
+					.then(function(info) {
+						console.log('LVM Upgrade Success!',info);
+					}, function(err) {
+						console.log('LVM Upgrade Failure', err);
+					});
 				}, function(error) {
-					console.log('LVM Error :(',error);
+					console.log('LVM Download Error :(',error);
 				});
 			});
 		};
@@ -838,6 +861,98 @@ function labjackVersionManager() {
 				}
 			});
 		}
+	};
+
+	this.beginFileUpgrade = function(info) {
+		var systemType = self.getLabjackSystemType();
+		console.log('in beginFileUpgrade', systemType);
+
+		var defered = q.defer();
+
+		// Make sure gui has been required.
+		if(typeof(gui) === 'undefined') {
+			gui = require('nw.gui');
+		}
+		var executionProgram = '';
+		var rebootScriptPath = '';
+		var rebootScriptName = '';
+		var currentExecFilePath = '';
+		var currentExecPath = '';
+		var scriptArgs = [];
+		var execStr = '';
+		var downloadedFilePath = info.extractedFolder;
+
+		var executeScript = false;
+		var quitKipling = false;
+		if (systemType === 'mac') {
+			console.log('systemType is mac, preparing args');
+			executionProgram = 'bash';
+			
+			// Get the name of the application that was downloaded
+			var downloadedAppName = 'Kipling.app';
+			var downloadedFiles = fs.readdirSync(downloadedFilePath);
+			downloadedFiles.forEach(function(downloadedFile) {
+				if (downloadedFile.search('.app') > 0) {
+					downloadedAppName = downloadedFile;
+				}
+			});
+
+			// Build the path where the script can be found
+			rebootScriptPath = downloadedFilePath + downloadedAppName;
+			rebootScriptPath += '/Contents/Resources/update_scripts';
+
+			// Define the name of the script to be executed
+			rebootScriptName = 'mac_reboot.sh';
+
+			// Figure out where Kipling is currently being executed
+			// currentExecFilePath = process.execPath.split(' ')[0].split(/\.*\/Contents/g)[0];
+			currentExecPath = path.dirname(process.execPath.split(' ')[0].split(/\.*\.app/g)[0]);
+			
+			// Add arguments to the script execution
+			scriptArgs.push(currentExecPath);		// The current path in which kipling is executing out of
+			scriptArgs.push(downloadedFilePath);	// The path where the files needed to be coppied from exist
+			scriptArgs.push(downloadedAppName);		// The name of the program to "open"
+			scriptArgs.push(rebootScriptPath);		// The path of the script being executed
+
+			executeScript = true;
+			quitKipling = false;
+		} else {
+			console.warn('systemType not supported', systemType);
+			// TODO: add support for systemType 'win', 'linux32', and 'linux64'		
+		}
+		
+		if(executeScript) {
+			console.log('preparing execStr for execution');
+			// Build basic execution info
+			execStr += executionProgram + ' ';
+
+			// build the full file path of the script to execute
+			var scriptPath = rebootScriptPath;
+			scriptPath += path.sep;
+			scriptPath += rebootScriptName;
+			console.log('scriptPath', scriptPath, scriptArgs);
+			console.log('does script exist?', fs.existsSync(scriptPath));
+
+			// Append the script's path to the execution string
+			execStr += scriptPath;
+
+			// Append the any arguments to the string to be executed
+			scriptArgs.forEach(function(scriptArg) {
+				execStr += ' ' + scriptArg;
+			});
+
+			console.log('LVM execStr', execStr);
+			var bashObj = child_process.exec(execStr);
+			console.log('Executed Script');
+			if(quitKipling) {
+				gui.App.quit();
+			}
+		} else {
+			console.warn('LVM Upgrade Strategy Not Implemented For', systemType, info);
+		}
+
+		defered.resolve(info);
+		return defered.promise;
 	};
 	var self = this;
 }

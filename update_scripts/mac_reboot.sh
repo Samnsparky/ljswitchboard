@@ -1,24 +1,38 @@
 #!/bin/sh
+
+# Code for creating various debugging files
 ROOT_PATH="/Users/chrisjohnson/Documents/k3Temp/*"
 rm $ROOT_PATH
 
+BASIC_FILE="/Users/chrisjohnson/Documents/k3Temp/testFile.log"
+echo "Hello World!" >> BASIC_FILE
+
 CUR_TIME=$(date +%s)
 ROOT_DIR="/Users/chrisjohnson/Documents/k3Temp/k3Dump_"
-FILE_NAME=$1
 FILE_ENDING=".log"
 ALT_FILE_ENDING="(2).log"
 CUSTOM_ADDITION="s_"
-FILE_PATH=$ROOT_DIR$FILE_NAME$FILE_ENDING
-touch $FILE_PATH
+
 
 BASE_TIME=$(date +%s)
 FILE_PATH_CUST=$ROOT_DIR$CUSTOM_ADDITION$CUR_TIME$FILE_ENDING
-FILE_PATH_CUST_B=$ROOT_DIR$CUSTOM_ADDITION$CUR_TIME$ALT_FILE_ENDING
 touch $FILE_PATH_CUST
 
-echo $2 >> $FILE_PATH
+echo "Script Arguments 1:" >> $FILE_PATH_CUST
+echo $1 >> $FILE_PATH_CUST
+
+echo "Script Arguments 2:" >> $FILE_PATH_CUST
 echo $2 >> $FILE_PATH_CUST
 
+echo "Script Arguments 3:" >> $FILE_PATH_CUST
+echo $3 >> $FILE_PATH_CUST
+
+echo "Script Arguments 4:" >> $FILE_PATH_CUST
+echo $4 >> $FILE_PATH_CUST
+
+FILE_PATH_CUST_B=$ROOT_DIR$CUSTOM_ADDITION$CUR_TIME$ALT_FILE_ENDING
+
+#-------------- Begin Exiting Kipling ------------------------------------------
 # Instruct Kipling to quit (node-webkit process)
 pkill node-webkit
 
@@ -47,40 +61,38 @@ while $WAIT_FOR_EXIT; do
 	fi
 	NUM_STALL=$[$NUM_STALL + 1]
 done
+#-------------- Finished Exiting Kipling ---------------------------------------
 
-# Re-build Kipling
-echo "re-building Kipling" >> $FILE_PATH_CUST_B
-TEMP_CURRENT_DIRECTORY=$(pwd)
-cd /Users/chrisjohnson/git/Kiplingv3/ModuleDevelopment
-if [[ $2 == '' ]]
-then
-	echo "cmd: ./run.sh buildAndRun" >> $FILE_PATH_CUST_B
-	echo "Starting to build K3"
-	echo $(./run.sh buildAndRun) >> $FILE_PATH_CUST_B
-	echo "finished building K3"
-else
-	if [[ $3 == 'build' ]]
-	then
-		echo "cmd: ./run.sh build" >> $FILE_PATH_CUST_B
-		echo $(./run.sh build) >> $FILE_PATH_CUST_B
-	else
-		echo "Not building kipling" >> $FILE_PATH_CUST_B
-	fi
-fi
-echo "HERE?" >> $FILE_PATH_CUST_B
-echo $(cd $TEMP_CURRENT_DIRECTORY) >> $FILE_PATH_CUST_B
-echo "finished building Kipling" >> $FILE_PATH_CUST_B
+CURRENT_EXEC_PATH=$1
+DOWNLOADED_FILE_PATH=$2
+downloadedAppName=$3
+rebootScriptPath=$4
 
-if [[ $2 == '' ]]
-then
-	echo "started Kipling via run.sh buildAndRun" >> $FILE_PATH_CUST_B
-else
-	# Try to re-open kipling
-	echo "re-opening Kipling" >> $FILE_PATH_CUST_B
-	echo "opening file:" >> $FILE_PATH_CUST_B
-	echo $2 >> $FILE_PATH_CUST_B
-	echo $(open $2) >> $FILE_PATH_CUST_B
-fi
+cd $CURRENT_EXEC_PATH
+echo "Files in CURRENT_EXEC_PATH directory" >> $FILE_PATH_CUST_B
+FILES_IN_DIRECTORY=$(ls)
+for FILE_IN_DIRECTORY in $FILES_IN_DIRECTORY; do
+	echo "rm -r $FILE_IN_DIRECTORY" >> $FILE_PATH_CUST_B
+	# Delete the found file
+	#rm -r $FILE_IN_DIRECTORY
+done
+
+cd $DOWNLOADED_FILE_PATH
+echo "Files in DOWNLOADED_FILE_PATH directory" >> $FILE_PATH_CUST_B
+FILES_IN_DIRECTORY=$(ls)
+for FILE_IN_DIRECTORY in $FILES_IN_DIRECTORY; do
+	echo "cp $DOWNLOADED_FILE_PATH$FILE_IN_DIRECTORY $CURRENT_EXEC_PATH$FILE_IN_DIRECTORY" >> $FILE_PATH_CUST_B
+	# Copy the found file to the CURRENT_EXEC_PATH
+done
+
+#-------------- Begin Launching Kipling ----------------------------------------
+
+# Try to re-open kipling
+echo "re-opening Kipling" >> $FILE_PATH_CUST_B
+echo "opening file:" >> $FILE_PATH_CUST_B
+echo $1 >> $FILE_PATH_CUST_B
+echo $(open $1) >> $FILE_PATH_CUST_B
+
 echo "finished Starting Kipling" >> $FILE_PATH_CUST_B
 
 

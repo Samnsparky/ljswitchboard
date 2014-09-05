@@ -231,7 +231,7 @@ function fileDownloaderUtility() {
 		}
 		if(self.isInitialized) {
 			if(isDefined($)) {
-				console.log('Update Func...',stats.currentSize,stats.remainingTime);
+				console.log('FD: onUpdateDefaultFunc time remaining (sec)',stats.remainingTime);
 				pageElements.downloadSpeed.text(
 					statusBar.format.speed(stats.speed)
 				);
@@ -349,7 +349,6 @@ function fileDownloaderUtility() {
 			var downloadFinished = false;
 
 			var returnToCaller = function() {
-				console.log('FD: is requestAborted (returnToCaller)',requestAborted);
 				if(fileStreamFinished && downloadFinished) {
 					var megabytesDownloaded = toMegabytes(bodyLength);
 					fileStream.close(function() { // close() is async
@@ -462,29 +461,15 @@ function fileDownloaderUtility() {
 			var destinationPath = destinationFolder + path.sep;
 
 			if(fileExtension === '.zip') {
-				console.log('Downloaded file is a .zip file');
-				
-				// for use with adm-zip
+				// Setup adm-zip object
 				var zip = new admZip(filePath);
-				var zipEntries = zip.getEntries(); // an array of ZipEntry records
 
-				// console.log('Printing entries');
-				// zipEntries.forEach(function(zipEntry) {
-				// console.log('Zip entry',zipEntry.toString()); // outputs zip entries information
-				// });
-
-				console.log('Extracting .zip file');
+				// Extract the .zip file
 				zip.extractAllTo(/*target path*/destinationPath, /*overwrite*/true);
 				downloadInfo.extractedFolder = destinationPath;
 				innerDefered.resolve(downloadInfo);
 			} else if (fileExtension === '.tgz') {
-				// var decompressOperation = new decompress({ mode: 755 })
-				// .src(filePath)
-				// .dest(destinationPath)
-				// .use(decompress.targz({ strip: 1 }));
-
-				console.log('Extracting .tgz file');
-
+				// Setup and extract the downloaded .tgz files
 				tarball.extractTarball(filePath, destinationPath, function(err){
 					if(err) {
 						console.log('Extraction of .tgz error',err);
@@ -492,14 +477,7 @@ function fileDownloaderUtility() {
 					console.log('Finished extracting .tgz file');
 					downloadInfo.extractedFolder = destinationPath;
 					innerDefered.resolve(downloadInfo);
-				})
-				// decompressOperation.decompress(function() {
-				// 	console.log('Finished extracting .tgz');
-				// 	downloadInfo.extractedFolder = destinationPath;
-				//	innerDefered.resolve(downloadInfo);
-				// });
-				
-				
+				});
 			} else {
 				console.log('Other File type detected', fileExtension);
 				innerDefered.resolve(downloadInfo);
