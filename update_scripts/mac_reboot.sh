@@ -80,7 +80,7 @@ for FILE_IN_DIRECTORY in ${FILES_TO_DELETE[@]}; do
 	#rm -r $FILE_IN_DIRECTORY
 done
 
-cd $DOWNLOADED_FILE_PATH
+echo $(cd $DOWNLOADED_FILE_PATH) >> $FILE_PATH_CUST_B
 echo "Files in DOWNLOADED_FILE_PATH directory" >> $FILE_PATH_CUST_B
 # FILES_IN_DIRECTORY=$(ls)
 FILES_TO_COPY[0]="Kipling.app"
@@ -94,7 +94,7 @@ done
 #-------------- Begin Launching Kipling ----------------------------------------
 
 # Try to re-open kipling
-cd $CURRENT_EXEC_PATH
+echo $(cd $CURRENT_EXEC_PATH) >> $FILE_PATH_CUST_B
 echo "re-opening Kipling" >> $FILE_PATH_CUST_B
 echo "opening file:" >> $FILE_PATH_CUST_B
 echo $DOWNLOADED_APP_NAME >> $FILE_PATH_CUST_B
