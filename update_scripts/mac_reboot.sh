@@ -65,7 +65,7 @@ done
 
 CURRENT_EXEC_PATH=$1
 DOWNLOADED_FILE_PATH=$2
-downloadedAppName=$3
+DOWNLOADED_APP_NAME=$3
 rebootScriptPath=$4
 
 cd $CURRENT_EXEC_PATH
@@ -88,10 +88,11 @@ done
 #-------------- Begin Launching Kipling ----------------------------------------
 
 # Try to re-open kipling
+cd $CURRENT_EXEC_PATH
 echo "re-opening Kipling" >> $FILE_PATH_CUST_B
 echo "opening file:" >> $FILE_PATH_CUST_B
-echo $1 >> $FILE_PATH_CUST_B
-echo $(open $1) >> $FILE_PATH_CUST_B
+echo $DOWNLOADED_APP_NAME >> $FILE_PATH_CUST_B
+echo $(open $DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
 
 echo "finished Starting Kipling" >> $FILE_PATH_CUST_B
 
