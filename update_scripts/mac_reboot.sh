@@ -70,8 +70,11 @@ rebootScriptPath=$4
 
 cd $CURRENT_EXEC_PATH
 echo "Files in CURRENT_EXEC_PATH directory" >> $FILE_PATH_CUST_B
-FILES_IN_DIRECTORY=$(ls)
-for FILE_IN_DIRECTORY in $FILES_IN_DIRECTORY; do
+# FILES_IN_DIRECTORY=$(ls)
+FILES_TO_DELETE[0]="Kipling.app"
+FILES_TO_DELETE[1]="switchboard_modules"
+# for FILE_IN_DIRECTORY in $FILES_IN_DIRECTORY; do
+for FILE_IN_DIRECTORY in ${FILES_TO_DELETE[@]}; do
 	echo "rm -r $FILE_IN_DIRECTORY" >> $FILE_PATH_CUST_B
 	# Delete the found file
 	#rm -r $FILE_IN_DIRECTORY
@@ -79,8 +82,11 @@ done
 
 cd $DOWNLOADED_FILE_PATH
 echo "Files in DOWNLOADED_FILE_PATH directory" >> $FILE_PATH_CUST_B
-FILES_IN_DIRECTORY=$(ls)
-for FILE_IN_DIRECTORY in $FILES_IN_DIRECTORY; do
+# FILES_IN_DIRECTORY=$(ls)
+FILES_TO_COPY[0]="Kipling.app"
+FILES_TO_COPY[1]="switchboard_modules"
+# for FILE_IN_DIRECTORY in $FILES_IN_DIRECTORY; do
+for FILE_IN_DIRECTORY in ${FILES_TO_COPY[@]}; do
 	echo "cp $DOWNLOADED_FILE_PATH$FILE_IN_DIRECTORY $CURRENT_EXEC_PATH$FILE_IN_DIRECTORY" >> $FILE_PATH_CUST_B
 	# Copy the found file to the CURRENT_EXEC_PATH
 done
