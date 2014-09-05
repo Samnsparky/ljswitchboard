@@ -116,10 +116,10 @@ echo $(pwd) >> $FILE_PATH_CUST_B
 # Try to re-open kipling
 echo "re-opening Kipling" >> $FILE_PATH_CUST_B
 echo "opening file:" >> $FILE_PATH_CUST_B
-echo $DOWNLOADED_APP_NAME >> $FILE_PATH_CUST_B
+echo "$CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
 echo $(pwd) >> $FILE_PATH_CUST_B
-echo $(chmod -R +x $DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
-echo $(open $DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
+echo $(chmod -R +x $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
+echo $(open $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
 
 echo "finished Starting Kipling" >> $FILE_PATH_CUST_B
 
