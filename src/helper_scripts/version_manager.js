@@ -56,10 +56,20 @@ function labjackVersionManager() {
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/kipling.txt", "type": "current_linux32"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/stable/kipling.txt", "type": "current_linux64"},
 
+				// {"url": "http://files.labjack.com/versions/ljrob/win32/kipling/current.txt", "type": "test_win"},
+				// {"url": "http://files.labjack.com/versions/ljrob/mac/kipling/current.txt", "type": "test_mac"},
+				// {"url": "http://files.labjack.com/versions/ljrob/linux32/kipling/current.txt", "type": "test_linux32"},
+				// {"url": "http://files.labjack.com/versions/ljrob/linux64/kipling/current.txt", "type": "test_linux64"},
+
 				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_win"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_mac"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_linux32"},
 				{"url": "http://files.labjack.com/versions/ljrob/K3/beta/kipling.txt", "type": "beta_linux64"},
+
+				// {"url": "http://files.labjack.com/versions/ljrob/win32/kipling/beta.txt", "type": "test_win"},
+				// {"url": "http://files.labjack.com/versions/ljrob/mac/kipling/beta.txt", "type": "test_mac"},
+				// {"url": "http://files.labjack.com/versions/ljrob/linux32/kipling/beta.txt", "type": "test_linux32"},
+				// {"url": "http://files.labjack.com/versions/ljrob/linux64/kipling/beta.txt", "type": "test_linux64"},
 
 				{"url": "http://files.labjack.com/versions/ljrob/win32/kipling/test.txt", "type": "test_win"},
 				{"url": "http://files.labjack.com/versions/ljrob/mac/kipling/test.txt", "type": "test_mac"},
