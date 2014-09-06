@@ -291,7 +291,7 @@ function fileDownloaderUtility() {
 			for(i = 0; i < (subStrs.length - 1); i++) {
 				newFileName += subStrs[i];
 			}
-			newFileName += '(' + num.toString() + ').';
+			newFileName += '_' + num.toString() + '.';
 			newFileName += subStrs[subStrs.length-1];
 			// uniqueFilePath = filePath + '(' + num.toString() + ')';
 			uniqueFilePath = defaultDownloadDirectory + path.sep + newFileName;

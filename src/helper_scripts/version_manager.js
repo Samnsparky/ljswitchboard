@@ -1026,4 +1026,29 @@ if(typeof(exports) !== 'undefined') {
 /*
 var vm = require('./helper_scripts/version_manager')
 
+
+var formatPath = function(newPath) {
+	newPath = newPath.replace(/\(/g,'\\(');
+	newPath = newPath.replace(/\)/g,'\\)');
+	// newPath = '"' + newPath + '"';
+	return newPath;
+};
+var execStr = 'bash ';
+execStr += '/Users/chrisjohnson/Downloads/kipling_test_mac(2)/Kipling.app/Contents/Resources/update_scripts/mac_reboot.sh ';
+execStr += '/Applications/Kiplingv3 '
+execStr += '/Users/chrisjohnson/Downloads/kipling_test_mac(2)/ '
+execStr += 'Kipling.app '
+execStr += '/Users/chrisjohnson/Downloads/kipling_test_mac(2)/Kipling.app/Contents/Resources/update_scripts'
+child_process.exec(formatPath(execStr));
+gui.App.quit();
+
+Script Arguments 1:
+/Applications/Kiplingv3
+Script Arguments 2:
+/Users/chrisjohnson/Downloads/kipling_test_mac(2)/
+Script Arguments 3:
+Kipling.app
+Script Arguments 4:
+/Users/chrisjohnson/Downloads/kipling_test_mac(2)/Kipling.app/Contents/Resources/update_scripts
+
  */

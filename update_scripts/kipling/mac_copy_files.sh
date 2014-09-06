@@ -1,4 +1,4 @@
-echo "in mac_copy_files.sh"
+echo "in mac_copy_files.sh" >> $5
 
 CURRENT_EXEC_PATH=$1
 DOWNLOADED_FILE_PATH=$2

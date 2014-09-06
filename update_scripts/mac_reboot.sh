@@ -5,6 +5,7 @@ DOWNLOADED_FILE_PATH=$2
 DOWNLOADED_APP_NAME=$3
 REBOOT_SCRIPT_PATH=$4
 MAC_COPY_SCRIPT="$REBOOT_SCRIPT_PATH/kipling/mac_copy_files.sh"
+chmod +x $MAC_COPY_SCRIPT
 
 # Code for creating various debugging files
 ROOT_PATH="/Users/chrisjohnson/Documents/k3Temp/*"
@@ -16,7 +17,8 @@ echo "Hello World!" >> $BASIC_FILE
 CUR_TIME=$(date +%s)
 ROOT_DIR="/Users/chrisjohnson/Documents/k3Temp/k3Dump_"
 FILE_ENDING=".log"
-ALT_FILE_ENDING="(2).log"
+ALT_FILE_ENDING="_2.log"
+ALT_FILE_ENDINGB="_3.log"
 CUSTOM_ADDITION="s_"
 
 
@@ -37,7 +39,7 @@ echo "Script Arguments 4:" >> $FILE_PATH_CUST
 echo $4 >> $FILE_PATH_CUST
 
 FILE_PATH_CUST_B=$ROOT_DIR$CUSTOM_ADDITION$CUR_TIME$ALT_FILE_ENDING
-
+FILE_PATH_CUST_C=$ROOT_DIR$CUSTOM_ADDITION$CUR_TIME$ALT_FILE_ENDINGB
 #-------------- Begin Exiting Kipling ------------------------------------------
 # Instruct Kipling to quit (node-webkit process)
 pkill node-webkit
@@ -78,14 +80,17 @@ echo "Does Script have write permission: $HAS_WRITE_PERMISSION" >> $FILE_PATH_CU
 if [[ $HAS_WRITE_PERMISSION == 'YES' ]]
 then
 	echo "rmdir $CURRENT_EXEC_PATH/$CUR_TIME" >> $FILE_PATH_CUST_B
-	rmdir $CURRENT_EXEC_PATH//$CUR_TIME
+	rmdir $CURRENT_EXEC_PATH/$CUR_TIME
 	# Execute upgrade script
 	echo "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" >> $FILE_PATH_CUST_B
 	bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B
 else
 	#Execute upgrade script and ask for password.
-	echo "bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_B $MAC_COPY_SCRIPT" >> $FILE_PATH_CUST_B
-	bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_B $MAC_COPY_SCRIPT
+	echo "osascript -e 'do shell script 'bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B' with administrator privileges'" >> $FILE_PATH_CUST_B
+	osascript -e 'do shell script "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" with administrator privileges'
+	# echo "bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_C $MAC_COPY_SCRIPT" >> $FILE_PATH_CUST_B
+	# echo $(chmod +x $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh) >> $FILE_PATH_CUST_B
+	# echo $(bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_C $MAC_COPY_SCRIPT) >> $FILE_PATH_CUST_B
 fi
 
 # # Change directories to the current active directory
