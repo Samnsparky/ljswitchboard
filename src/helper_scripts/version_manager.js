@@ -739,7 +739,7 @@ function labjackVersionManager() {
 				k3Test.upgrade_type = "kipling";
 				k3Test.safe_name = "kipling_test";
 
-				if (k3Test.version > pageElements.kiplingVersion) {
+				if (k3Test.version >= pageElements.kiplingVersion) {
 					upgradeLinks.push(k3Test);
 					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
 					showWarning(

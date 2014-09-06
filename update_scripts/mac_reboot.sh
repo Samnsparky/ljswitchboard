@@ -80,10 +80,12 @@ then
 	echo "rmdir $CURRENT_EXEC_PATH/$CUR_TIME" >> $FILE_PATH_CUST_B
 	rmdir $CURRENT_EXEC_PATH//$CUR_TIME
 	# Execute upgrade script
-	echo "./$MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B"
+	echo "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" >> $FILE_PATH_CUST_B
+	bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B
 else
 	#Execute upgrade script and ask for password.
-	echo "./$REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_B $MAC_COPY_SCRIPT"
+	echo "bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_B $MAC_COPY_SCRIPT" >> $FILE_PATH_CUST_B
+	bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_B $MAC_COPY_SCRIPT
 fi
 
 # # Change directories to the current active directory
