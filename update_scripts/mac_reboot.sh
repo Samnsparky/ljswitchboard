@@ -86,7 +86,7 @@ then
 	bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B
 else
 	#Execute upgrade script and ask for password.
-	echo "osascript -e 'do shell script 'bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B' with administrator privileges'" >> $FILE_PATH_CUST_B
+	echo "osascript -e 'do shell script \"bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B\" with administrator privileges'" >> $FILE_PATH_CUST_B
 	osascript -e 'do shell script "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" with administrator privileges'
 	# echo "bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_C $MAC_COPY_SCRIPT" >> $FILE_PATH_CUST_B
 	# echo $(chmod +x $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh) >> $FILE_PATH_CUST_B
