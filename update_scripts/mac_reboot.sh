@@ -5,18 +5,18 @@ DOWNLOADED_FILE_PATH=$2
 DOWNLOADED_APP_NAME=$3
 REBOOT_SCRIPT_PATH=$4
 MAC_COPY_SCRIPT="$REBOOT_SCRIPT_PATH/kipling/mac_copy_files.sh"
-MAC_PRINT_SCRIPT="$REBOOT_SCRIPT_PATH/mac_print.sh"
 chmod +x $MAC_COPY_SCRIPT
 
 # Code for creating various debugging files
-ROOT_PATH="/Users/chrisjohnson/Documents/k3Temp/*"
-rm $ROOT_PATH
+ROOT_PATH="/usr/local/share/LabJack/updater"
+rm -r $ROOT_PATH
+mkdir ROOT_PATH
 
-BASIC_FILE="/Users/chrisjohnson/Documents/k3Temp/testFile.log"
+BASIC_FILE="$ROOT_PATH/testFile.log"
 echo "Hello World!" >> $BASIC_FILE
 
 CUR_TIME=$(date +%s)
-ROOT_DIR="/Users/chrisjohnson/Documents/k3Temp/k3Dump_"
+ROOT_DIR="$ROOT_PATH/k3Dump_"
 FILE_ENDING=".log"
 ALT_FILE_ENDING="_2.log"
 ALT_FILE_ENDINGB="_3.log"
