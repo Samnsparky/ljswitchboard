@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 CURRENT_EXEC_PATH=$1
 DOWNLOADED_FILE_PATH=$2
 DOWNLOADED_APP_NAME=$3
@@ -11,16 +12,23 @@ chmod +x $MAC_COPY_SCRIPT
 BASE_PATH="/usr/local/share/LabJack/K3"
 ROOT_PATH="$BASE_PATH/updater"
 
-DOES_EXIST=false
+# Check to see if the /updater file path already exists, if so delete it
 FILES_IN_DIRECTORY=$(ls $BASE_PATH)
 for FILE_IN_DIRECTORY in $FILES_IN_DIRECTORY; do
 	if [[ $FILE_IN_DIRECTORY == 'updater' ]]
+	then
 		rm -r $ROOT_PATH
 	fi
 done
 
-mkdir ROOT_PATH
+# Make the /updater file path for debuggiong purposes
+mkdir $ROOT_PATH
 
+# Clean the directory
+DIR_TO_CLEAN="$ROOT_PATH/*"
+rm $DIR_TO_CLEAN
+
+# Print out to a basic file
 BASIC_FILE="$ROOT_PATH/testFile.log"
 echo "Hello World!" >> $BASIC_FILE
 
