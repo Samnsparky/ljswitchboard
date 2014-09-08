@@ -45,3 +45,11 @@ for FILE_IN_DIRECTORY in ${FILES_TO_COPY[@]}; do
 	# Copy the found file to the CURRENT_EXEC_PATH
 	cp -r $DOWNLOADED_FILE_PATH$FILE_IN_DIRECTORY $CURRENT_EXEC_PATH
 done
+
+# Change permissions on downloaded .app to allow it to be executed
+echo "chmod -R +x $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
+echo $(chmod -R +x $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
+
+# Edit the file so that the warning "This file was downloaded from the internet" doesn't happen.
+echo "xattr -d -r com.apple.quarantine $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME" >> $FILE_PATH_CUST_B
+echo $(xattr -d -r com.apple.quarantine $CURRENT_EXEC_PATH/$DOWNLOADED_APP_NAME) >> $FILE_PATH_CUST_B
