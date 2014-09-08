@@ -8,8 +8,17 @@ MAC_COPY_SCRIPT="$REBOOT_SCRIPT_PATH/kipling/mac_copy_files.sh"
 chmod +x $MAC_COPY_SCRIPT
 
 # Code for creating various debugging files
-ROOT_PATH="/usr/local/share/LabJack/updater"
-rm -r $ROOT_PATH
+BASE_PATH="/usr/local/share/LabJack/K3"
+ROOT_PATH="$BASE_PATH/updater"
+
+DOES_EXIST=false
+FILES_IN_DIRECTORY=$(ls $BASE_PATH)
+for FILE_IN_DIRECTORY in $FILES_IN_DIRECTORY; do
+	if [[ $FILE_IN_DIRECTORY == 'updater' ]]
+		rm -r $ROOT_PATH
+	fi
+done
+
 mkdir ROOT_PATH
 
 BASIC_FILE="$ROOT_PATH/testFile.log"
