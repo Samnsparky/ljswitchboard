@@ -44,6 +44,7 @@ FILE_PATH_CUST_C=$ROOT_DIR$CUSTOM_ADDITION$CUR_TIME$ALT_FILE_ENDINGB
 #-------------- Begin Exiting Kipling ------------------------------------------
 # Instruct Kipling to quit (node-webkit process)
 pkill node-webkit
+echo "QUIT KIPLING"
 
 WAIT_FOR_EXIT=true
 FAILED_TO_EXIT=false
@@ -87,7 +88,6 @@ then
 	bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B
 else
 	#Execute upgrade script and ask for password.
-	echo "HERE-A" >> $FILE_PATH_CUST_B
 	echo "osascript -e 'do shell script \"bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B\" with administrator privileges'" >> $FILE_PATH_CUST_B
 	# echo $(osascript -e 'do shell script "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" with administrator privileges') >> $FILE_PATH_CUST_B
 	# echo "osascript -e 'do shell script \"bash $MAC_PRINT_SCRIPT\" with administrator privileges'" >> $FILE_PATH_CUST_B
@@ -105,13 +105,10 @@ osascript -- - "$ARG_A" "$ARG_B" "$ARG_C" "$ARG_D" "$ARG_E" "$ARG_F" <<'EOF'
 		do shell script "bash " & item 1 of argv & " " & item 2 of argv & " " & item 3 of argv & " " & item 4 of argv & " " & item 5 of argv & " " & item 6 of argv with administrator privileges
 	end
 EOF
-
-	echo "HERE-B" >> $FILE_PATH_CUST_B
-	# echo "bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_C $MAC_COPY_SCRIPT" >> $FILE_PATH_CUST_B
-	# echo $(chmod +x $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh) >> $FILE_PATH_CUST_B
-	# echo $(bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_C $MAC_COPY_SCRIPT) >> $FILE_PATH_CUST_B
 fi
 
+
+# Mac update code has been moved to the /kipling/mac_copy_files.sh script
 # # Change directories to the current active directory
 # echo "starting directory:" >> $FILE_PATH_CUST_B
 # echo $(pwd) >> $FILE_PATH_CUST_B
@@ -206,12 +203,4 @@ while $WAIT_FOR_OPEN; do
 	fi
 	NUM_STALL=$[$NUM_STALL + 1]
 done
-
-
-# sleep 5
-# touch $FILE_PATH_CUST_B
-# echo $2 >> $FILE_PATH_CUST_B
-# echo "Opening Program" >> $FILE_PATH_CUST_B
-# echo $(open $2) >> $FILE_PATH_CUST_B
-# echo "Opened Program" >> $FILE_PATH_CUST_B
 
