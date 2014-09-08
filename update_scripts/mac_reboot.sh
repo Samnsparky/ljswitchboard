@@ -5,6 +5,7 @@ DOWNLOADED_FILE_PATH=$2
 DOWNLOADED_APP_NAME=$3
 REBOOT_SCRIPT_PATH=$4
 MAC_COPY_SCRIPT="$REBOOT_SCRIPT_PATH/kipling/mac_copy_files.sh"
+MAC_PRINT_SCRIPT="$REBOOT_SCRIPT_PATH/mac_print.sh"
 chmod +x $MAC_COPY_SCRIPT
 
 # Code for creating various debugging files
@@ -86,8 +87,26 @@ then
 	bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B
 else
 	#Execute upgrade script and ask for password.
+	echo "HERE-A" >> $FILE_PATH_CUST_B
 	echo "osascript -e 'do shell script \"bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B\" with administrator privileges'" >> $FILE_PATH_CUST_B
-	osascript -e 'do shell script "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" with administrator privileges'
+	# echo $(osascript -e 'do shell script "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" with administrator privileges') >> $FILE_PATH_CUST_B
+	# echo "osascript -e 'do shell script \"bash $MAC_PRINT_SCRIPT\" with administrator privileges'" >> $FILE_PATH_CUST_B
+	# echo $(osascript -e 'do shell script "bash $MAC_PRINT_SCRIPT" with administrator privileges') >> $FILE_PATH_CUST_B
+	
+
+ARG_A="$MAC_COPY_SCRIPT"
+ARG_B="$1"
+ARG_C="$2"
+ARG_D="$3"
+ARG_E="$4"
+ARG_F="$FILE_PATH_CUST_B"
+osascript -- - "$ARG_A" "$ARG_B" "$ARG_C" "$ARG_D" "$ARG_E" "$ARG_F" <<'EOF'
+	on run(argv)
+		do shell script "bash " & item 1 of argv & " " & item 2 of argv & " " & item 3 of argv & " " & item 4 of argv & " " & item 5 of argv & " " & item 6 of argv with administrator privileges
+	end
+EOF
+
+	echo "HERE-B" >> $FILE_PATH_CUST_B
 	# echo "bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_C $MAC_COPY_SCRIPT" >> $FILE_PATH_CUST_B
 	# echo $(chmod +x $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh) >> $FILE_PATH_CUST_B
 	# echo $(bash $REBOOT_SCRIPT_PATH/kipling/mac_request_permissions.sh $1 $2 $3 $4 $FILE_PATH_CUST_C $MAC_COPY_SCRIPT) >> $FILE_PATH_CUST_B

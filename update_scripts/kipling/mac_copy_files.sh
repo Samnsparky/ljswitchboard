@@ -1,3 +1,4 @@
+echo "in mac_copy_files.sh" >> "/Users/chrisjohnson/Documents/k3Temp/k3Dump_s_copy_files.log"
 echo "in mac_copy_files.sh" >> $5
 
 CURRENT_EXEC_PATH=$1

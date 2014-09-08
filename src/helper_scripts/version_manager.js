@@ -925,7 +925,7 @@ function labjackVersionManager() {
 
 				// Define the name of the script to be executed
 				rebootScriptName = 'mac_reboot.sh';
-				// rebootScriptName = 'mac_print.sh'
+				// rebootScriptName = 'mac_print.sh';
 
 				// Figure out where Kipling is currently being executed
 				// currentExecFilePath = process.execPath.split(' ')[0].split(/\.*\/Contents/g)[0];
