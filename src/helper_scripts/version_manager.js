@@ -925,6 +925,7 @@ function labjackVersionManager() {
 
 				// Define the name of the script to be executed
 				rebootScriptName = 'mac_reboot.sh';
+				// rebootScriptName = 'mac_print.sh'
 
 				// Figure out where Kipling is currently being executed
 				// currentExecFilePath = process.execPath.split(' ')[0].split(/\.*\/Contents/g)[0];
@@ -937,7 +938,7 @@ function labjackVersionManager() {
 				scriptArgs.push(rebootScriptPath);		// The path of the script being executed
 
 				executeScript = true;
-				quitKipling = true;
+				quitKipling = false;
 				runScript = true;
 			} else {
 				console.warn('systemType not supported', systemType);
@@ -968,8 +969,32 @@ function labjackVersionManager() {
 				console.log('LVM execStr', execStr);
 				if(runScript) {
 					var bashObj = child_process.exec(execStr);
+					// bashObj.stdin.setEncoding = 'utf-8';
+					bashObj.stdout.on('data', function(data) {
+						if ( data === 'QUIT KIPLING\n' ) {
+							gui.App.quit();
+						} else {
+							console.log('LVM Script Data', data);
+						}
+						// console.log('Data Read from bashObj:',data, data.length);
+						// self.stdoutData = data;
+						// var bytes = [];
+						// for (var i = 0; i < data.length; i++) {
+						//     bytes.push(data.charCodeAt(i));
+						// }
+						// console.log('Data Read', data, data.length, bytes);
+					});
+					bashObj.on('error',function(data) {
+						console.log('LVM bashObj error', data);
+					});
+					bashObj.on('exit',function(data) {
+						console.log('LVM bashObj exit', data);
+					});
+					bashObj.on('close',function(data) {
+						console.log('LVM bashObj close', data);
+					});
 				}
-				console.log('Executed Script');
+				console.log('LVM Executed Script');
 				if(quitKipling) {
 					gui.App.quit();
 				}
@@ -1051,4 +1076,8 @@ Kipling.app
 Script Arguments 4:
 /Users/chrisjohnson/Downloads/kipling_test_mac(2)/Kipling.app/Contents/Resources/update_scripts
 
+
+LABJACK_VERSION_MANAGER.beginFileUpgrade({
+	'extractedFolder':'/Users/chrisjohnson/git/Kiplingv3/ModuleDevelopment/ljswitchboard/deploy/'
+});
  */
