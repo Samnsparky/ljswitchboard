@@ -893,17 +893,13 @@ function labjackVersionManager() {
 			var currentExecPath = '';
 			var scriptArgs = [];
 			var execStr = '';
-			var formatPath = function(newPath) {
-				newPath = newPath.replace(/\(/g,'\\(');
-				newPath = newPath.replace(/\)/g,'\\)');
-				// newPath = '"' + newPath + '"';
-				return newPath;
-			};
+			
 			var downloadedFilePath = info.extractedFolder;
 
 			var executeScript = false;
 			var quitKipling = false;
 			var runScript = false;
+			var putScriptInQuotes = false;
 			
 
 			if (systemType === 'mac') {
@@ -940,6 +936,51 @@ function labjackVersionManager() {
 				executeScript = true;
 				quitKipling = false;
 				runScript = true;
+			} else if (systemType === 'win') {
+				console.log('systemType is win, preparing args');
+
+				// Figure out where Kipling is currently being executed
+				var nwExePath = process.execPath.split(' ')[0];
+				var nwExeDirectory = path.dirname(nwExePath);
+				var kiplingExePath = nwExeDirectory + path.sep + 'Kipling.exe';
+				// Just incase a version of K3 gets released w/o the kipling.exe.
+				if (fs.existsSync(kiplingExePath)) {
+					currentExecPath = kiplingExePath;
+				} else {
+					currentExecPath = nwExePath;
+				}
+
+				// Make sure that one of the appropriate .exe files was downloaded
+				var namesToSearchFor = ['Kipling.exe', 'kipling.exe', 'nw.exe'];
+				var downloadedExeName = 'Kipling.exe';
+				var downloadedFiles = fs.readdirSync(downloadedFilePath);
+				downloadedFiles.forEach(function(downloadedFile) {
+					if (namesToSearchFor.indexOf(downloadedFile) !== -1) {
+						downloadedExeName = downloadedFile;
+						return false;
+					}
+				});
+
+				// rebootScriptPath = '"' + downloadedFilePath + '"';
+				rebootScriptPath = downloadedFilePath;
+
+				// Define the name of the batch file to be executed
+				rebootScriptName = 'win_reboot.bat';
+
+				// Add arguments to the script execution
+				var appendArg = function(data) {
+					scriptArgs.push('"' + data + '"');
+				};
+
+				appendArg(currentExecPath);			// The current path in which kipling is executing out of
+				appendArg(downloadedFilePath);		// The path where the files needed to be coppied from exist
+				appendArg(downloadedExeName);		// The name of the program to "open"
+				appendArg(rebootScriptPath);		// The path of the script being executed
+
+				putScriptInQuotes = true;
+				executeScript = true;
+				quitKipling = false;
+				runScript = true;
 			} else {
 				console.warn('systemType not supported', systemType);
 				// TODO: add support for systemType 'win', 'linux32', and 'linux64'		
@@ -948,12 +989,17 @@ function labjackVersionManager() {
 			if(executeScript) {
 				console.log('preparing execStr for execution');
 				// Build basic execution info
-				execStr += executionProgram + ' ';
+				if(executionProgram !== '') {
+					execStr += executionProgram + ' ';
+				}
 
 				// build the full file path of the script to execute
 				var scriptPath = rebootScriptPath;
 				scriptPath += path.sep;
 				scriptPath += rebootScriptName;
+				if (putScriptInQuotes) {
+					scriptPath = '"' + scriptPath + '"';
+				}
 				console.log('scriptPath', scriptPath, scriptArgs);
 				console.log('does script exist?', fs.existsSync(scriptPath));
 
@@ -965,8 +1011,6 @@ function labjackVersionManager() {
 					execStr += ' ' + scriptArg;
 				});
 
-				execStr = formatPath(execStr);
-				console.log('LVM execStr', execStr);
 				if(runScript) {
 					self.executeProcess(execStr);
 				}
@@ -984,10 +1028,34 @@ function labjackVersionManager() {
 		return defered.promise;
 	};
 	this.executeProcess = function(execStr) {
+
+		
+		
+
+		// Apply a custom execStr filter per platform.
+		var curSysType = self.getLabjackSystemType();
+		if ( curSysType === 'mac' ) {
+			var formatPath = function(newPath) {
+				newPath = newPath.replace(/\(/g,'\\(');
+				newPath = newPath.replace(/\)/g,'\\)');
+				// newPath = '"' + newPath + '"';
+				return newPath;
+			};
+			execStr = formatPath(execStr);
+		} else if ( curSysType === 'win' ) {
+			var formatPath = function(newPath) {
+
+			};
+		} else {
+			// Do nothing
+		}
+
+		console.log('LVM execStr', execStr);
 		var bashObj = child_process.exec(execStr);
 		// bashObj.stdin.setEncoding = 'utf-8';
 		bashObj.stdout.on('data', function(data) {
-			if ( data === 'QUIT KIPLING\n' ) {
+			if ( data.search('QUIT KIPLING\n') !== -1 ) {
+			// if ( data === 'QUIT KIPLING\n' ) {
 				gui.App.quit();
 			} else {
 				console.log('LVM Script Data', data);
@@ -1083,4 +1151,10 @@ Script Arguments 4:
 LABJACK_VERSION_MANAGER.beginFileUpgrade({
 	'extractedFolder':'/Users/chrisjohnson/git/Kiplingv3/ModuleDevelopment/ljswitchboard/deploy/'
 });
+
+LABJACK_VERSION_MANAGER.executeProcess('"J:\\Users\\Chris_2\\Dropbox\\LabJack-Shared\\Kipling Updater\\win_reboot.bat"')
+
+extractedFolder
+LABJACK_VERSION_MANAGER.beginFileUpgrade({'extractedFolder':'J:\\Users\\Chris_2\\Dropbox\\LabJack-Shared\\Kipling Updater\\'});
+
  */
