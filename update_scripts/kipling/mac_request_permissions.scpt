@@ -1,22 +1,29 @@
+#!/usr/bin/osascript
 -- do shell script "bash /Users/chrisjohnson/git/Kiplingv3/ModuleDevelopment/ljswitchboard/update_scripts/kipling/mac_copy_files.sh" with administrator privileges
 
 set netSharingStatus to checkService("com.apple.InternetSharing")
 set fileSharingStatus to checkService("com.apple.AppleFileServer")
 
+set application_name to "K3 Installer"
+set application_id to "K3 Installer"
+set process_name to "K3 Installer"
 
-
-
-
-
-tell application "Kipling"
-    activate
-    set application_name to "Installer"
-    set application_id to "Installer"
-    set process_name to "Installer"
-    do shell script "ls ~root" with administrator privileges
-	-- display alert "Current Settings" message "Click to change settings" buttons {"Internet " & netSharingStatus, "File Sharing " & fileSharingStatus, "Exit"} default button 3
-    display dialog ("hello world" as string)
+tell application "System Events" to tell process "osascript"
+  display alert "K3 Installer" message "K3 Installer needs administrative permissions to update Kipling" buttons {"Ok", "cancel"} default button 1
 end tell
+do shell script "ls ~root" with administrator privileges
+-- tell application "Kipling" to display dialog "A stop dialog with only one button." buttons "OK" default button 1 with title "and a title" with icon "/Applications/Kipling/Kipling.app/Contents/Resources/nw.icns"
+
+
+--tell application "Kipling"
+--    activate
+--    set application_name to "Installer"
+--    set application_id to "Installer"
+--    set process_name to "Installer"
+--    -- do shell script "ls ~root" with administrator privileges
+--	-- display alert "Current Settings" message "Click to change settings" buttons {"Internet " & netSharingStatus, "File --Sharing " & fileSharingStatus, "Exit"} default button 3--
+--    display dialog ("hello world" as string)
+--end tell
 
 -- on GetApplicationCorrespondingToProcess(process_name)
 --     tell application "System Events"

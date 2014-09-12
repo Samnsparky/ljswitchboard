@@ -968,31 +968,7 @@ function labjackVersionManager() {
 				execStr = formatPath(execStr);
 				console.log('LVM execStr', execStr);
 				if(runScript) {
-					var bashObj = child_process.exec(execStr);
-					// bashObj.stdin.setEncoding = 'utf-8';
-					bashObj.stdout.on('data', function(data) {
-						if ( data === 'QUIT KIPLING\n' ) {
-							gui.App.quit();
-						} else {
-							console.log('LVM Script Data', data);
-						}
-						// console.log('Data Read from bashObj:',data, data.length);
-						// self.stdoutData = data;
-						// var bytes = [];
-						// for (var i = 0; i < data.length; i++) {
-						//     bytes.push(data.charCodeAt(i));
-						// }
-						// console.log('Data Read', data, data.length, bytes);
-					});
-					bashObj.on('error',function(data) {
-						console.log('LVM bashObj error', data);
-					});
-					bashObj.on('exit',function(data) {
-						console.log('LVM bashObj exit', data);
-					});
-					bashObj.on('close',function(data) {
-						console.log('LVM bashObj close', data);
-					});
+					self.executeProcess(execStr);
 				}
 				console.log('LVM Executed Script');
 				if(quitKipling) {
@@ -1006,6 +982,33 @@ function labjackVersionManager() {
 		}
 		defered.resolve(info);
 		return defered.promise;
+	};
+	this.executeProcess = function(execStr) {
+		var bashObj = child_process.exec(execStr);
+		// bashObj.stdin.setEncoding = 'utf-8';
+		bashObj.stdout.on('data', function(data) {
+			if ( data === 'QUIT KIPLING\n' ) {
+				gui.App.quit();
+			} else {
+				console.log('LVM Script Data', data);
+			}
+			// console.log('Data Read from bashObj:',data, data.length);
+			// self.stdoutData = data;
+			// var bytes = [];
+			// for (var i = 0; i < data.length; i++) {
+			//     bytes.push(data.charCodeAt(i));
+			// }
+			// console.log('Data Read', data, data.length, bytes);
+		});
+		bashObj.on('error',function(data) {
+			console.log('LVM bashObj error', data);
+		});
+		bashObj.on('exit',function(data) {
+			console.log('LVM bashObj exit', data);
+		});
+		bashObj.on('close',function(data) {
+			console.log('LVM bashObj close', data);
+		});
 	};
 	var self = this;
 }
