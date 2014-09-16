@@ -940,7 +940,7 @@ function labjackVersionManager() {
 				console.log('systemType is win, preparing args');
 
 				// Figure out where Kipling is currently being executed
-				var nwExePath = process.execPath.split(' ')[0];
+				var nwExePath = process.execPath;
 				var nwExeDirectory = path.dirname(nwExePath);
 				var kiplingExePath = nwExeDirectory + path.sep + 'Kipling.exe';
 				// Just incase a version of K3 gets released w/o the kipling.exe.
@@ -964,6 +964,9 @@ function labjackVersionManager() {
 				// rebootScriptPath = '"' + downloadedFilePath + '"';
 				rebootScriptPath = downloadedFilePath;
 
+				var downloadedFilePathFixed = path.resolve(downloadedFilePath);
+				var rebootScriptPathFixed = path.resolve(rebootScriptPath);
+
 				// Define the name of the batch file to be executed
 				rebootScriptName = 'win_reboot.bat';
 
@@ -972,10 +975,10 @@ function labjackVersionManager() {
 					scriptArgs.push('"' + data + '"');
 				};
 
-				appendArg(currentExecPath);			// The current path in which kipling is executing out of
-				appendArg(downloadedFilePath);		// The path where the files needed to be coppied from exist
-				appendArg(downloadedExeName);		// The name of the program to "open"
-				appendArg(rebootScriptPath);		// The path of the script being executed
+				appendArg(currentExecPath);				// The current path in which kipling is executing out of
+				appendArg(downloadedFilePathFixed);		// The path where the files needed to be coppied from exist
+				appendArg(downloadedExeName);			// The name of the program to "open"
+				appendArg(rebootScriptPathFixed);		// The path of the script being executed
 
 				putScriptInQuotes = true;
 				executeScript = true;
