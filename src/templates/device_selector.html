@@ -1,9 +1,9 @@
 <div class="device-selector-holder">
     <div id="logo-holder"><img src="static/img/labjack-logo.png"></div>
-    <div id="lj-link-holder" title="Open LabJack home page in your default browser"><a>labjack.com</a></div>
+    <div id="lj-link-holder"><a id="lj-link-text" title="Open LabJack home page in your default browser">labjack.com</a></div>
     <script>
-        $('#lj-link-holder').unbind();
-        $('#lj-link-holder').bind('click',function(){
+        $('#lj-link-text').unbind();
+        $('#lj-link-text').bind('click',function(){
             if(typeof(gui) === 'undefined') {
                 gui = require('nw.gui');
             }
