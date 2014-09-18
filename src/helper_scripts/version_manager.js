@@ -917,7 +917,7 @@ function labjackVersionManager() {
 
 				// Build the path where the script can be found
 				rebootScriptPath = downloadedFilePath + downloadedAppName;
-				rebootScriptPath += '/Contents/Resources/update_scripts';
+				rebootScriptPath += '/Contents/Resources/update_scripts/kipling/mac';
 
 				// Define the name of the script to be executed
 				rebootScriptName = 'mac_reboot.sh';
