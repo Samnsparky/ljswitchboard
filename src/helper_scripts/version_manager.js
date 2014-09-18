@@ -961,11 +961,11 @@ function labjackVersionManager() {
 					}
 				});
 
-				// rebootScriptPath = '"' + downloadedFilePath + '"';
+				// Build the path where the script can be found
 				rebootScriptPath = downloadedFilePath;
-
 				var downloadedFilePathFixed = path.resolve(downloadedFilePath);
 				var rebootScriptPathFixed = path.resolve(rebootScriptPath);
+				rebootScriptPathFixed += '/update_scripts/kipling/windows';
 
 				// Define the name of the batch file to be executed
 				rebootScriptName = 'win_reboot.bat';
@@ -979,6 +979,9 @@ function labjackVersionManager() {
 				appendArg(downloadedFilePathFixed);		// The path where the files needed to be coppied from exist
 				appendArg(downloadedExeName);			// The name of the program to "open"
 				appendArg(rebootScriptPathFixed);		// The path of the script being executed
+
+				// For now, set the "debug file directory" to be the downloadedFilePath
+				appendArg(downloadedFilePathFixed);		// The path where the upgrader .bat and .exe can save log files
 
 				putScriptInQuotes = true;
 				executeScript = true;
