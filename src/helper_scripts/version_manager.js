@@ -962,10 +962,10 @@ function labjackVersionManager() {
 				});
 
 				// Build the path where the script can be found
-				rebootScriptPath = downloadedFilePath;
+				rebootScriptPath = downloadedFilePath + 'update_scripts\\kipling\\windows';
 				var downloadedFilePathFixed = path.resolve(downloadedFilePath);
 				var rebootScriptPathFixed = path.resolve(rebootScriptPath);
-				rebootScriptPathFixed += '/update_scripts/kipling/windows';
+				rebootScriptPathFixed += '\\update_scripts\\kipling/windows';
 
 				// Define the name of the batch file to be executed
 				rebootScriptName = 'win_reboot.bat';
