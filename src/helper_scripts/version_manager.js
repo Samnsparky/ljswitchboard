@@ -965,11 +965,11 @@ function labjackVersionManager() {
 				});
 
 				// Build the path where the script can be found
-				rebootScriptPath = downloadedFilePath + 'update_scripts\\kipling\\windows';
+				rebootScriptPath = downloadedFilePath + '\\update_scripts\\kipling\\windows';
 				console.log('HERE');
 				console.log('Downloaded File Path', downloadedFilePath);
 				console.log('Appended rebootScriptPath', rebootScriptPath);
-				
+
 				var downloadedFilePathFixed = path.resolve(downloadedFilePath);
 				var rebootScriptPathFixed = path.resolve(rebootScriptPath);
 				rebootScriptPathFixed += '\\update_scripts\\kipling\\windows';
