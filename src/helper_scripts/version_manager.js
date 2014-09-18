@@ -902,13 +902,16 @@ function labjackVersionManager() {
 			var putScriptInQuotes = false;
 			
 
+			// Variables that should be defined outside of if/else statements
+			var downloadedFiles = [];
+
 			if (systemType === 'mac') {
 				console.log('systemType is mac, preparing args');
 				executionProgram = 'bash';
 				
 				// Get the name of the application that was downloaded
 				var downloadedAppName = 'Kipling.app';
-				var downloadedFiles = fs.readdirSync(downloadedFilePath);
+				downloadedFiles = fs.readdirSync(downloadedFilePath);
 				downloadedFiles.forEach(function(downloadedFile) {
 					if (downloadedFile.search('.app') > 0) {
 						downloadedAppName = downloadedFile;
@@ -953,7 +956,7 @@ function labjackVersionManager() {
 				// Make sure that one of the appropriate .exe files was downloaded
 				var namesToSearchFor = ['Kipling.exe', 'kipling.exe', 'nw.exe'];
 				var downloadedExeName = 'Kipling.exe';
-				var downloadedFiles = fs.readdirSync(downloadedFilePath);
+				downloadedFiles = fs.readdirSync(downloadedFilePath);
 				downloadedFiles.forEach(function(downloadedFile) {
 					if (namesToSearchFor.indexOf(downloadedFile) !== -1) {
 						downloadedExeName = downloadedFile;
@@ -963,9 +966,13 @@ function labjackVersionManager() {
 
 				// Build the path where the script can be found
 				rebootScriptPath = downloadedFilePath + 'update_scripts\\kipling\\windows';
+				console.log('HERE');
+				console.log('Downloaded File Path', downloadedFilePath);
+				console.log('Appended rebootScriptPath', rebootScriptPath);
+				
 				var downloadedFilePathFixed = path.resolve(downloadedFilePath);
 				var rebootScriptPathFixed = path.resolve(rebootScriptPath);
-				rebootScriptPathFixed += '\\update_scripts\\kipling/windows';
+				rebootScriptPathFixed += '\\update_scripts\\kipling\\windows';
 
 				// Define the name of the batch file to be executed
 				rebootScriptName = 'win_reboot.bat';
