@@ -965,14 +965,11 @@ function labjackVersionManager() {
 				});
 
 				// Build the path where the script can be found
-				rebootScriptPath = downloadedFilePath + '\\update_scripts\\kipling\\windows';
-				console.log('HERE');
-				console.log('Downloaded File Path', downloadedFilePath);
-				console.log('Appended rebootScriptPath', rebootScriptPath);
-
 				var downloadedFilePathFixed = path.resolve(downloadedFilePath);
-				var rebootScriptPathFixed = path.resolve(rebootScriptPath);
-				rebootScriptPathFixed += '\\update_scripts\\kipling\\windows';
+				rebootScriptPath = downloadedFilePathFixed + '\\update_scripts\\kipling\\windows';
+				console.log('HERE');
+				console.log('Downloaded File Path', downloadedFilePathFixed);
+				console.log('Appended rebootScriptPath', rebootScriptPath);
 
 				// Define the name of the batch file to be executed
 				rebootScriptName = 'win_reboot.bat';
@@ -985,7 +982,7 @@ function labjackVersionManager() {
 				appendArg(currentExecPath);				// The current path in which kipling is executing out of
 				appendArg(downloadedFilePathFixed);		// The path where the files needed to be coppied from exist
 				appendArg(downloadedExeName);			// The name of the program to "open"
-				appendArg(rebootScriptPathFixed);		// The path of the script being executed
+				appendArg(rebootScriptPath);		// The path of the script being executed
 
 				// For now, set the "debug file directory" to be the downloadedFilePath
 				appendArg(downloadedFilePathFixed);		// The path where the upgrader .bat and .exe can save log files

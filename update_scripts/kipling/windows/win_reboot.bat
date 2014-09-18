@@ -155,7 +155,6 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 	echo "Terminating Program"
 	echo "Terminating Program" >> "%DEBUG_FILE%"
 	set PROGRAM_STATE=TERMINATE_PROGRAM
-	pause
 	exit /B
 :: ------------- End terminate program code ------------------------------------
 
