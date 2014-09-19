@@ -196,7 +196,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 		:: If the file doesn't get created, we go to "ABORT_UPGRADE"
 		echo "Program State: SUS" >> "%DEBUG_FILE%"
 		set /a "numTimeout = 0"
-		set /a "timeoutLength = 5"
+		set /a "timeoutLength = 40"
 		set WAIT_LOOP_NEXT=QUIT_KIPLING
 		set WAIT_LOOP_FAIL=ABORT_UPGRADE
 		set PROGRAM_STATE=WAIT_FOR_UPDATE_SCRIPT
@@ -211,7 +211,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 		echo "QUIT KIPLING" >> "%DEBUG_FILE%"
 		echo QUIT KIPLING
 		set /a "numTimeout = 0"
-		set /a "timeoutLength = 20"
+		set /a "timeoutLength = 120"
 		set WFKTQ_WAIT_LOOP_NEXT=START_UPGRADE
 		set WFKTQ_WAIT_LOOP_FAIL=ABORT_UPGRADE
 		set PROGRAM_STATE=WAIT_FOR_KIPLING_TO_QUIT
@@ -233,7 +233,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 		:: If the file doesn't get created, we go to "ABORT_UPGRADE"
 		echo "Program State: WFU" >> "%DEBUG_FILE%"
 		set /a "numTimeout = 0"
-		set /a "timeoutLength = 20"
+		set /a "timeoutLength = 120"
 		set WAIT_LOOP_NEXT=CHECK_UPGRADE
 		set WAIT_LOOP_FAIL=ABORT_UPGRADE
 		set PROGRAM_STATE=WAIT_FOR_UPDATE_SCRIPT
@@ -246,7 +246,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 		:: If the file doesn't get created, we go to "ABORT_UPGRADE"
 		echo "Program State: WFU" >> "%DEBUG_FILE%"
 		set /a "numTimeout = 0"
-		set /a "timeoutLength = 20"
+		set /a "timeoutLength = 120"
 		set WAIT_LOOP_NEXT=LAUNCH_KIPLING
 		set WAIT_LOOP_FAIL=ABORT_UPGRADE
 		set PROGRAM_STATE=WAIT_FOR_KIPLING_UPGRADE
