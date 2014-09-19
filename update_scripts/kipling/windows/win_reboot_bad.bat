@@ -21,11 +21,6 @@ set DOWNLOADED_APP_NAME=%arg3%
 set REBOOT_SCRIPT_PATH=%arg4%
 set DEBUG_FILE_DIRECTORY=%arg5%
 echo "HERE"
-if exist "%REBOOT_SCRIPT_PATH%\win_start_reboot.bat" (
-	echo "It exists---"
-) else (
-	echo "It doesn't exist"
-)
 if "%CURRENT_EXEC_PATH%" == "" (
 	echo "Overwriting CURRENT_EXEC_PATH"
 	set CURRENT_EXEC_PATH="C:\Program Files (x86)\Kipling"
@@ -56,7 +51,7 @@ if "%DEBUG_FILE_DIRECTORY%" == "" (
 	echo "After Overwrite"
 )
 echo "HEREC"
-
+CALL :unquote CURRENT_EXEC_PATH %CURRENT_EXEC_PATH%
 :: set DEBUG_FILE_DIRECTORY=J:\Users\Chris_2\temp Kipling Upgrading\downloaded files
 
 :: Setup some required file paths
@@ -160,7 +155,6 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 	echo "Terminating Program"
 	echo "Terminating Program" >> "%DEBUG_FILE%"
 	set PROGRAM_STATE=TERMINATE_PROGRAM
-	pause
 	exit /B
 :: ------------- End terminate program code ------------------------------------
 
@@ -211,7 +205,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 		echo "QUIT KIPLING" >> "%DEBUG_FILE%"
 		echo QUIT KIPLING
 		set /a "numTimeout = 0"
-		set /a "timeoutLength = 20"
+		set /a "timeoutLength = 40"
 		set WFKTQ_WAIT_LOOP_NEXT=START_UPGRADE
 		set WFKTQ_WAIT_LOOP_FAIL=ABORT_UPGRADE
 		set PROGRAM_STATE=WAIT_FOR_KIPLING_TO_QUIT

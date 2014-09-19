@@ -893,6 +893,7 @@ function labjackVersionManager() {
 			var currentExecPath = '';
 			var scriptArgs = [];
 			var execStr = '';
+			var customScriptPath = '';
 			
 			var downloadedFilePath = info.extractedFolder;
 
@@ -900,6 +901,7 @@ function labjackVersionManager() {
 			var quitKipling = false;
 			var runScript = false;
 			var putScriptInQuotes = false;
+			var useCustomScriptPath = false;
 			
 
 			// Variables that should be defined outside of if/else statements
@@ -942,18 +944,19 @@ function labjackVersionManager() {
 			} else if (systemType === 'win') {
 				console.log('systemType is win, preparing args');
 
-				// executionProgram = 'cmd.exe /c start ""';
+				executionProgram = 'start "" ';
 
 				// Figure out where Kipling is currently being executed
 				var nwExePath = process.execPath;
 				var nwExeDirectory = path.dirname(nwExePath);
 				var kiplingExePath = nwExeDirectory + path.sep + 'Kipling.exe';
 				// Just incase a version of K3 gets released w/o the kipling.exe.
-				if (fs.existsSync(kiplingExePath)) {
-					currentExecPath = kiplingExePath;
-				} else {
-					currentExecPath = nwExePath;
-				}
+				// if (fs.existsSync(kiplingExePath)) {
+				//     currentExecPath = kiplingExePath;
+				// } else {
+				//     currentExecPath = nwExePath;
+				// }
+				currentExecPath = nwExeDirectory;
 
 				// Make sure that one of the appropriate .exe files was downloaded
 				var namesToSearchFor = ['Kipling.exe', 'kipling.exe', 'nw.exe'];
@@ -974,12 +977,13 @@ function labjackVersionManager() {
 				console.log('Appended rebootScriptPath', rebootScriptPath);
 
 				// Define the name of the batch file to be executed
-				rebootScriptName = 'win_reboot.bat';
+				rebootScriptName = 'win_start_reboot.bat';
 
 				// Add arguments to the script execution
 				var appendArg = function(data) {
 					scriptArgs.push('"' + data + '"');
 				};
+
 
 				appendArg(currentExecPath);				// The current path in which kipling is executing out of
 				appendArg(downloadedFilePathFixed);		// The path where the files needed to be coppied from exist
@@ -993,6 +997,11 @@ function labjackVersionManager() {
 				executeScript = true;
 				quitKipling = false;
 				runScript = true;
+
+				
+				// Build custom script path for windows and use it instead of the default.
+				useCustomScriptPath = true;
+				customScriptPath = 'start /B "" /d"' + currentExecPath + '" "' + rebootScriptName + '" ';
 			} else {
 				console.warn('systemType not supported', systemType);
 				// TODO: add support for systemType 'win', 'linux32', and 'linux64'		
@@ -1016,7 +1025,12 @@ function labjackVersionManager() {
 				console.log('does script exist?', fs.existsSync(scriptPath));
 
 				// Append the script's path to the execution string
-				execStr += scriptPath;
+				if(!useCustomScriptPath) {
+					execStr += scriptPath;
+				} else {
+					execStr += customScriptPath;
+				}
+				
 
 				// Append the any arguments to the string to be executed
 				scriptArgs.forEach(function(scriptArg) {
