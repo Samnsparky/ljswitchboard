@@ -944,7 +944,7 @@ function labjackVersionManager() {
 			} else if (systemType === 'win') {
 				console.log('systemType is win, preparing args');
 
-				executionProgram = 'start "" ';
+				executionProgram = '';
 
 				// Figure out where Kipling is currently being executed
 				var nwExePath = process.execPath;
@@ -1001,7 +1001,7 @@ function labjackVersionManager() {
 				
 				// Build custom script path for windows and use it instead of the default.
 				useCustomScriptPath = true;
-				customScriptPath = 'start /B "" /d"' + currentExecPath + '" "' + rebootScriptName + '" ';
+				customScriptPath = 'start /B "" /d"' + rebootScriptPath + '" "' + rebootScriptName + '" ';
 			} else {
 				console.warn('systemType not supported', systemType);
 				// TODO: add support for systemType 'win', 'linux32', and 'linux64'		
