@@ -942,6 +942,8 @@ function labjackVersionManager() {
 			} else if (systemType === 'win') {
 				console.log('systemType is win, preparing args');
 
+				executionProgram = 'cmd.exe /c start ""';
+
 				// Figure out where Kipling is currently being executed
 				var nwExePath = process.execPath;
 				var nwExeDirectory = path.dirname(nwExePath);
