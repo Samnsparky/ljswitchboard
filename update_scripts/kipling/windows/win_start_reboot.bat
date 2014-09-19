@@ -80,10 +80,22 @@ set WAIT_LOOP_FAIL=ABORT_UPGRADE
 	) else if "%PROGRAM_STATE%" == "ABORT_UPGRADE" (
 		echo "abort upgrade case" >> "%DEBUG_FILE%"
 		echo ABORT UPGRADE
+		timeout /t 1 /nobreak > NUL
+		echo ABORT UPGRADE
+		timeout /t 1 /nobreak > NUL
+		echo ABORT UPGRADE
+		timeout /t 1 /nobreak > NUL
+		echo ABORT UPGRADE
 		set PROGRAM_STATE=TERMINATE
 		goto changeStateAndJump
 	) else if "%PROGRAM_STATE%" == "CONTINUE_UPGRADE" (
 		echo "continue upgrade case" >> "%DEBUG_FILE%"
+		echo QUIT KIPLING
+		timeout /t 1 /nobreak > NUL
+		echo QUIT KIPLING
+		timeout /t 1 /nobreak > NUL
+		echo QUIT KIPLING
+		timeout /t 1 /nobreak > NUL
 		echo QUIT KIPLING
 		set PROGRAM_STATE=TERMINATE
 		goto changeStateAndJump
