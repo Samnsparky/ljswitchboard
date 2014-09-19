@@ -942,7 +942,7 @@ function labjackVersionManager() {
 			} else if (systemType === 'win') {
 				console.log('systemType is win, preparing args');
 
-				executionProgram = 'cmd.exe /c start ""';
+				// executionProgram = 'cmd.exe /c start ""';
 
 				// Figure out where Kipling is currently being executed
 				var nwExePath = process.execPath;
@@ -1068,6 +1068,8 @@ function labjackVersionManager() {
 		bashObj.stdout.on('data', function(data) {
 			if ( data.search('QUIT KIPLING') !== -1 ) {
 			// if ( data === 'QUIT KIPLING\n' ) {
+				bashObj.unref();
+				gui.App.closeAllWindows();
 				gui.App.quit();
 			} else {
 				console.log('LVM Script Data', data);
