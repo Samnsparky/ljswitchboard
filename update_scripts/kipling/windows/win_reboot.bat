@@ -438,7 +438,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 :waitForKiplingToQuit
 	echo "in waitForKiplingToQuit" >> "%DEBUG_FILE%"
 	set IS_KIPLING_RUNNING="YES"
-	tasklist /nh /fi "imagename eq nw.exe" | find /i "nw.exe" >nul && (
+	"%REBOOT_SCRIPT_PATH%\tasklist.exe" /nh /fi "imagename eq nw.exe" | find /i "nw.exe" >nul && (
 		echo "Kipling is running" >> "%DEBUG_FILE%"
 	) || (
 		echo "Kipling is not running" >> "%DEBUG_FILE%"
