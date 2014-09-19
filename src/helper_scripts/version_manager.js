@@ -1064,7 +1064,7 @@ function labjackVersionManager() {
 		var bashObj = child_process.exec(execStr);
 		// bashObj.stdin.setEncoding = 'utf-8';
 		bashObj.stdout.on('data', function(data) {
-			if ( data.search('QUIT KIPLING\n') !== -1 ) {
+			if ( data.search('QUIT KIPLING') !== -1 ) {
 			// if ( data === 'QUIT KIPLING\n' ) {
 				gui.App.quit();
 			} else {

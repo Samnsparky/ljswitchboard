@@ -205,7 +205,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 		echo "QUIT KIPLING" >> "%DEBUG_FILE%"
 		echo QUIT KIPLING
 		set /a "numTimeout = 0"
-		set /a "timeoutLength = 20"
+		set /a "timeoutLength = 40"
 		set WFKTQ_WAIT_LOOP_NEXT=START_UPGRADE
 		set WFKTQ_WAIT_LOOP_FAIL=ABORT_UPGRADE
 		set PROGRAM_STATE=WAIT_FOR_KIPLING_TO_QUIT
