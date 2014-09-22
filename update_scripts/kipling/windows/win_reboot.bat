@@ -63,6 +63,7 @@ echo "HEREC"
 set WIN_UPDATE_SCRIPT=%REBOOT_SCRIPT_PATH%\win_update.bat
 set WIN_UPDATE_EXE=%REBOOT_SCRIPT_PATH%\Kipling Updater.exe
 set FILE_TO_CREATE=%DEBUG_FILE_DIRECTORY%\kiplingUpdate.tst
+set FILE_TO_CREATE_SECONDARY=%DEBUG_FILE_DIRECTORY%\kiplingUpdateStart.tst
 set FILE_TO_CONTINUE_UPGRADE=%DEBUG_FILE_DIRECTORY%\launchUpdate.tst
 set DEBUG_FILE=%DEBUG_FILE_DIRECTORY%\Debug_win_reboot_bat.txt
 set UPGRADER_DEBUG_FILE=%DEBUG_FILE_DIRECTORY%\Debug_Kipling_Upgrader_exe.txt
@@ -83,6 +84,10 @@ echo "Checking to Delete %UPGRADER_DEBUG_FILE%"
 if exist "%UPGRADER_DEBUG_FILE%" (
 	del "%UPGRADER_DEBUG_FILE%"
 )
+echo "Checking to Delete %FILE_TO_CREATE_SECONDARY%"
+if exist "%FILE_TO_CREATE_SECONDARY%" (
+	del "%FILE_TO_CREATE_SECONDARY%"
+)
 
 
 echo "CURRENT_EXEC_PATH: %CURRENT_EXEC_PATH%" >> "%DEBUG_FILE%"
@@ -93,6 +98,7 @@ echo "DEBUG_FILE_DIRECTORY: %DEBUG_FILE_DIRECTORY%" >> "%DEBUG_FILE%"
 echo "WIN_UPDATE_SCRIPT: %WIN_UPDATE_SCRIPT%" >> "%DEBUG_FILE%"
 echo "WIN_UPDATE_EXE: %WIN_UPDATE_EXE%" >> "%DEBUG_FILE%"
 echo "FILE_TO_CREATE: %FILE_TO_CREATE%" >> "%DEBUG_FILE%"
+echo "FILE_TO_CREATE_SECONDARY: %FILE_TO_CREATE_SECONDARY%" >> "%DEBUG_FILE%"
 echo "DEBUG_FILE: %DEBUG_FILE%" >> "%DEBUG_FILE%"
 echo "**" >> "%DEBUG_FILE%"
 echo "**" >> "%DEBUG_FILE%"
@@ -156,6 +162,9 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 	)
 	if exist "%FILE_TO_CREATE%" (
 		del "%FILE_TO_CREATE%"
+	)
+	if exist "%FILE_TO_CREATE_SECONDARY%" (
+		del "%FILE_TO_CREATE_SECONDARY%"
 	)
 	echo "Terminating Program"
 	echo "Terminating Program" >> "%DEBUG_FILE%"
@@ -340,7 +349,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 :UACPrompt
 	echo "in UACPrompt" >> "%DEBUG_FILE%"
 	echo Set UAC = CreateObject^("Shell.Application"^) > "%DOWNLOADED_FILE_PATH%\getadmin.vbs"
-	set ADMIN_SCRIPT_CMD= """%CURRENT_EXEC_PATH%"" ""%DOWNLOADED_FILE_PATH%"" ""%DOWNLOADED_APP_NAME%"" ""%REBOOT_SCRIPT_PATH%"" ""%FILE_TO_CREATE%"" ""%FILE_TO_CONTINUE_UPGRADE%"" ""%UPGRADER_DEBUG_FILE%"""
+	set ADMIN_SCRIPT_CMD= """%CURRENT_EXEC_PATH%"" ""%DOWNLOADED_FILE_PATH%"" ""%DOWNLOADED_APP_NAME%"" ""%REBOOT_SCRIPT_PATH%"" ""%FILE_TO_CREATE%"" ""%FILE_TO_CREATE_SECONDARY%"" ""%FILE_TO_CONTINUE_UPGRADE%"" ""%UPGRADER_DEBUG_FILE%"""
 	:: ""%arg1%"" ""%arg2%"" ""%arg3%"" ""%arg4%"" ""%FILE_TO_CREATE%""
 	echo "ADMIN SCRIPT: %ADMIN_SCRIPT_CMD%" >> "%DEBUG_FILE%"
 	:: Commands to update the Kipling Updater .exe
@@ -374,7 +383,7 @@ echo "Defining terminateProgram" >> "%DEBUG_FILE%"
 	:: echo WIN_SCRIPT_HOST.ShellExecute "cmd.exe", "/c start /min %WIN_UPDATE_SCRIPT% %arg1% %arg2% %arg3% %arg4%", 0  >> "%DOWNLOADED_FILE_PATH%\runUser.vbs"
 	
 	:: Commands to update the Kipling Updater .exe
-	echo WIN_SCRIPT_HOST.Run """%WIN_UPDATE_EXE%"" ""%CURRENT_EXEC_PATH%"" ""%DOWNLOADED_FILE_PATH%"" ""%DOWNLOADED_APP_NAME%"" ""%REBOOT_SCRIPT_PATH%"" ""%FILE_TO_CREATE%"" ""%FILE_TO_CONTINUE_UPGRADE%"" ""%UPGRADER_DEBUG_FILE%""", 0 >> "%DOWNLOADED_FILE_PATH%\runUser.vbs"
+	echo WIN_SCRIPT_HOST.Run """%WIN_UPDATE_EXE%"" ""%CURRENT_EXEC_PATH%"" ""%DOWNLOADED_FILE_PATH%"" ""%DOWNLOADED_APP_NAME%"" ""%REBOOT_SCRIPT_PATH%"" ""%FILE_TO_CREATE%"" ""%FILE_TO_CREATE_SECONDARY%"" ""%FILE_TO_CONTINUE_UPGRADE%"" ""%UPGRADER_DEBUG_FILE%""", 0 >> "%DOWNLOADED_FILE_PATH%\runUser.vbs"
 	echo "Starting Program" >> "%DEBUG_FILE%"
 	:: WORKING: start "%DOWNLOADED_FILE_PATH%" "%WIN_UPDATE_EXE%" "%CURRENT_EXEC_PATH%" "%DOWNLOADED_FILE_PATH%" "%DOWNLOADED_APP_NAME%" "%REBOOT_SCRIPT_PATH%" "%FILE_TO_CREATE%" "%UPGRADER_DEBUG_FILE%"
 	:: NOT WORKING: start /B "%DOWNLOADED_FILE_PATH%" "%arg1%" "%arg2%" "%arg3%" "%arg4%" "%FILE_TO_CREATE%" "%UPGRADER_DEBUG_FILE%"
