@@ -834,6 +834,7 @@ function labjackVersionManager() {
 				console.log('LJM Success... file attributes:', fileName, fileType, fileInfo);
 				FILE_DOWNLOADER_UTILITY.downloadAndExtractFile(href)
 				.then(function(info) {
+
 					console.log('LVM Download Success!',info);
 					info.lvm = {};
 					info.lvm.fileName = fileName;
@@ -841,14 +842,18 @@ function labjackVersionManager() {
 					info.lvm.fileInfo = fileInfo;
 					info.lvm.fileUpgradeType = fileUpgradeType;
 
-					self.beginFileUpgrade(info)
-					.then(function(info) {
-						console.log('LVM Upgrade Success!',info);
-					}, function(err) {
-						console.log('LVM Upgrade Failure', err);
-					}, function(err) {
-						console.log('LVM Upgrade Syntax Error',err);
-					});
+					if(info.isExtracted) {
+						self.beginFileUpgrade(info)
+						.then(function(info) {
+							console.log('LVM Upgrade Success!',info);
+						}, function(err) {
+							console.log('LVM Upgrade Failure', err);
+						}, function(err) {
+							console.log('LVM Upgrade Syntax Error',err);
+						});
+					} else {
+						console.log('LVM File Not Extracted, Not Upgradable');
+					}
 				}, function(error) {
 					console.log('LVM Download Error :(',error);
 				});

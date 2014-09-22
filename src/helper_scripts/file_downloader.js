@@ -459,6 +459,7 @@ function fileDownloaderUtility() {
 			var destinationFolderName = fileName.slice(0, fileName.length - fileExtension.length);
 			var destinationFolder = baseDir + path.sep + destinationFolderName;
 			var destinationPath = destinationFolder + path.sep;
+			downloadInfo.isExtracted = false;
 
 			if(fileExtension === '.zip') {
 				// Setup adm-zip object
@@ -467,8 +468,9 @@ function fileDownloaderUtility() {
 				// Extract the .zip file
 				zip.extractAllTo(/*target path*/destinationPath, /*overwrite*/true);
 				downloadInfo.extractedFolder = destinationPath;
+				downloadInfo.isExtracted = true;
 				innerDefered.resolve(downloadInfo);
-			} else if (fileExtension === '.tgz') {
+			} else if (fileExtension === 'xxREMOVExx.tgz') {
 				// Setup and extract the downloaded .tgz files
 				tarball.extractTarball(filePath, destinationPath, function(err){
 					if(err) {
