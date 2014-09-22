@@ -25,6 +25,7 @@ set WIN_REBOOT_BAT=%REBOOT_SCRIPT_PATH%\win_reboot.bat
 set WIN_UPDATE_SCRIPT=%REBOOT_SCRIPT_PATH%\win_update.bat
 set WIN_UPDATE_EXE=%REBOOT_SCRIPT_PATH%\Kipling Updater.exe
 set FILE_TO_CREATE=%DEBUG_FILE_DIRECTORY%\kiplingUpdate.tst
+set FILE_TO_CREATE_SECONDARY=%DEBUG_FILE_DIRECTORY%\kiplingUpdateStart.tst
 set FILE_TO_CONTINUE_UPGRADE=%DEBUG_FILE_DIRECTORY%\launchUpdate.tst
 set DEBUG_FILE=%DEBUG_FILE_DIRECTORY%\Debug_win_reboot_bat.txt
 set DEBUG_FILE=%DEBUG_FILE_DIRECTORY%\Debug_win_start_reboot_bat.txt
@@ -42,7 +43,11 @@ echo "Checking to Delete %DEBUG_FILE%"
 if exist "%DEBUG_FILE%" (
 	del "%DEBUG_FILE%"
 )
-ec
+echo "Checking to Delete %FILE_TO_CREATE_SECONDARY%"
+if exist "%FILE_TO_CREATE_SECONDARY%" (
+	del "%FILE_TO_CREATE_SECONDARY%"
+)
+
 
 echo "CURRENT_EXEC_PATH: %CURRENT_EXEC_PATH%"
 echo "DOWNLOADED_FILE_PATH: %DOWNLOADED_FILE_PATH%"
@@ -52,6 +57,7 @@ echo "DEBUG_FILE_DIRECTORY: %DEBUG_FILE_DIRECTORY%"
 echo "WIN_UPDATE_SCRIPT: %WIN_UPDATE_SCRIPT%"
 echo "WIN_UPDATE_EXE: %WIN_UPDATE_EXE%"
 echo "FILE_TO_CREATE: %FILE_TO_CREATE%"
+echo "FILE_TO_CREATE_SECONDARY: %FILE_TO_CREATE_SECONDARY%"
 echo "DEBUG_FILE: %DEBUG_FILE%"
 echo "**"
 echo "**"
@@ -69,7 +75,7 @@ echo "HERERE????" >> "%DEBUG_FILE%"
 
 set /a "numTimeout = 0"
 set /a "timeoutLength = 400"
-set WAIT_FILE_NAME="%FILE_TO_CREATE%"
+set WAIT_FILE_NAME="%FILE_TO_CREATE_SECONDARY%"
 set PROGRAM_STATE=WAITING
 set WAIT_LOOP_NEXT=CONTINUE_UPGRADE
 set WAIT_LOOP_FAIL=ABORT_UPGRADE
@@ -114,6 +120,7 @@ set WAIT_LOOP_FAIL=ABORT_UPGRADE
 	echo "in waitForContinueUpgrade" >> "%DEBUG_FILE%"
 	if exist %WAIT_FILE_NAME% (
 		echo "Removing temp file: %WAIT_FILE_NAME%" >> "%DEBUG_FILE%"
+		del %WAIT_FILE_NAME%
 		timeout /t 1 /nobreak > NUL
 		set PROGRAM_STATE=%WAIT_LOOP_NEXT%
 		goto changeStateAndJump
