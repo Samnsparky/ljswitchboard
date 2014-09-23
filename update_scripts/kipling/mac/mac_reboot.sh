@@ -213,3 +213,5 @@ while $WAIT_FOR_OPEN; do
 	NUM_STALL=$[$NUM_STALL + 1]
 done
 
+rm -r $DOWNLOADED_FILE_PATH
+

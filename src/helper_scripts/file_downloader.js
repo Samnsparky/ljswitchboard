@@ -252,7 +252,7 @@ function fileDownloaderUtility() {
 	};
 	
 
-	this.downloadFile = function(url, listeners) {
+	this.downloadFile = function(url, downloadType, listeners) {
 		var downloadFileName = url.split('/')[url.split('/').length-1];
 		var defered = q.defer();
 		var onStart = onStartDefaultFunc;
@@ -461,6 +461,16 @@ function fileDownloaderUtility() {
 			var destinationPath = destinationFolder + path.sep;
 			downloadInfo.isExtracted = false;
 
+			var deleteFile = function(filePath) {
+				try {
+					var tempFile = fs.openSync(filePath, 'r');
+					fs.closeSync(tempFile);
+					fs.unlinkSync(filePath);
+				} catch (err) {
+					console.warn('Failed to delete file: ' + filePath);
+				}
+			};
+
 			if(fileExtension === '.zip') {
 				// Setup adm-zip object
 				var zip = new admZip(filePath);
@@ -469,6 +479,7 @@ function fileDownloaderUtility() {
 				zip.extractAllTo(/*target path*/destinationPath, /*overwrite*/true);
 				downloadInfo.extractedFolder = destinationPath;
 				downloadInfo.isExtracted = true;
+				deleteFile(filePath);
 				innerDefered.resolve(downloadInfo);
 			} else if (fileExtension === 'xxREMOVExx.tgz') {
 				// Setup and extract the downloaded .tgz files
@@ -478,6 +489,7 @@ function fileDownloaderUtility() {
 					}
 					console.log('Finished extracting .tgz file');
 					downloadInfo.extractedFolder = destinationPath;
+					deleteFile(filePath);
 					innerDefered.resolve(downloadInfo);
 				});
 			} else {
@@ -497,18 +509,18 @@ function fileDownloaderUtility() {
 		return defered.promise;
 	};
 
-	this.downloadAndExtractFile = function(url, listeners) {
+	this.downloadAndExtractFile = function(url, type, listeners) {
 		var errFunc = function(bundle) {
 			var errDefered = q.defer();
 			errDefered.reject(bundle);
 			return errDefered.promise;
 		};
 		var defered = q.defer();
-		self.downloadFile(url, listeners)
+		self.downloadFile(url, downloadType, listeners)
 		.then(self.extractFile, errFunc)
 		.then(defered.resolve, defered.reject);
 		return defered.promise;
-	}
+	};
 
 	// Define functions so utility can automaticaly configure/control the 
 	// downloads bar of K3.
