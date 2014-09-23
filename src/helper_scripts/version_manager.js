@@ -788,7 +788,7 @@ function labjackVersionManager() {
 				ljm.upgrade_type = "ljm";
 				ljm.safe_name = "ljm";
 
-				if (ljm.version > pageElements.ljmVersion) {
+				if (ljm.version >= pageElements.ljmVersion) {
 					upgradeLinks.push(ljm);
 
 					var ljmElement = self.controls.versionNumbersEl.find('#ljm');
@@ -831,8 +831,8 @@ function labjackVersionManager() {
 				} catch (err) {
 					console.log('LJM Error... getting file attributes', fileName, fileType, fileInfo);
 				}
-				console.log('LJM Success... file attributes:', fileName, fileType, fileInfo);
-				FILE_DOWNLOADER_UTILITY.downloadAndExtractFile(href)
+				console.log('LJM Success... file attributes:', fileName, fileType, fileInfo, fileUpgradeType);
+				FILE_DOWNLOADER_UTILITY.downloadAndExtractFile(href, fileUpgradeType)
 				.then(function(info) {
 
 					console.log('LVM Download Success!',info);
@@ -842,7 +842,13 @@ function labjackVersionManager() {
 					info.lvm.fileInfo = fileInfo;
 					info.lvm.fileUpgradeType = fileUpgradeType;
 
-					if(info.isExtracted) {
+					var isUpgradable = false;
+					if(info.downloadType === 'kipling') {
+						isUpgradable = true;
+					} else if (info.downloadType === 'ljm') {
+						isUpgradable = true;
+					}
+					if(info.isExtracted && isUpgradable && false) {
 						self.beginFileUpgrade(info)
 						.then(function(info) {
 							console.log('LVM Upgrade Success!',info);

@@ -16,8 +16,9 @@ var async = require('async');
 var dict = require('dict');
 var statusBar = require ('status-bar');
 var handlebars = require('handlebars');
-var admZip = require('adm-zip');
-var tarball = require('tarball-extract')
+// var admZip = require('adm-zip');
+var unzip = require('unzip');
+var tarball = require('tarball-extract');
 
 // Require nodejs internal libraries to perform get requests.
 var http = require('http');
@@ -64,8 +65,9 @@ function fileDownloaderUtility() {
 		'win32': 'Show in folder'
 	}[process.platform];
 
-	var dlTemplate = '' +
-	'<div id="{{newID}}">' +
+	var genericDownloadTemplate = '' +
+	'<h3>Downloading</h3>' +
+	'<div id="{{newID}}" downloadType="{{downloadType}}">' +
 		'<div id="lvmProgressBar" class="curProgressBar progress">' +
 			'<div class="bar" style="width: 0%;"></div>' +
 		'</div>' +
@@ -91,7 +93,53 @@ function fileDownloaderUtility() {
 			fileBrowserButtonText +
 		'</button>' +
 	'</div>';
-	this.downloadTemplate = handlebars.compile(dlTemplate);
+	var kiplingUpgradeDownloadTemplate = '' +
+	'<ol id="{{newID}}_process">' +
+		'<li id="{{newID}}_process_download" class="download">' +
+			'<h3>Downloading Files</h3>' +
+			'<div id="{{newID}}" downloadType="{{downloadType}}">' +
+				'<div id="lvmProgressBar" class="curProgressBar progress">' +
+					'<div class="bar" style="width: 0%;"></div>' +
+				'</div>' +
+				'<table>' +
+					'<tr>' +
+						'<td>File Name:</td>' +
+						'<td id="fileName" class="curFileName">{{fileName}}</td>' +
+					'</tr>' +
+					'<tr>' +
+						'<td>Size:</td>' +
+						'<td id="fileSize" class="curFileSize">{{fileSize}}</td>' +
+					'</tr>' +
+					'<tr>' +
+						'<td>Speed:</td>' +
+						'<td id="downloadSpeed" class="curDownloadSpeed"></td>' +
+					'</tr>' +
+					'<tr>' +
+						'<td>Time Remaining:</td>' +
+						'<td id="timeRemaining" class="curTimeRemaining"></td>' +
+					'</tr>' +
+				'</table>' +
+				'<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">' +
+					fileBrowserButtonText +
+				'</button>' +
+			'</div>' +
+		'</li>' +
+		'<li id="{{newID}}_process_extract" class="extract">' +
+			'<h3>Extracting Files</h3>' +
+			'<img src="static/img/progress-indeterminate.gif"></img>' +
+		'</li>' +
+		'<li id="{{newID}}_process_install" class="install">' +
+			'<h3>Installing</h3>' +
+			'<img src="static/img/progress-indeterminate.gif"></img>' +
+		'</li>' +
+	'</ol>';
+	this.downloadTemplate = handlebars.compile(genericDownloadTemplate);
+
+	this.downloadTemplates = {
+		'generic': handlebars.compile(genericDownloadTemplate),
+		'ljm': handlebars.compile(kiplingUpgradeDownloadTemplate),
+		'kipling': handlebars.compile(kiplingUpgradeDownloadTemplate)
+	};
 
 	this.setDebugMode = function(val) {
 		if(val)
@@ -160,6 +208,16 @@ function fileDownloaderUtility() {
 			return (numBytes/gb).toPrecision(2) + 'GB';
 		}
 	};
+	this.getPageControls = function(pageElements, info) {
+		if(info.downloadType === 'kipling') {
+			return pageElements;
+		} else if (info.downloadType === 'ljm') {
+			return pageElements;
+		} else {
+			return pageElements;
+		}
+	};
+
 	var onStartDefaultFunc = function(info) {
 		var pageElements = null;
 		if(self.isInitialized) {
@@ -168,8 +226,17 @@ function fileDownloaderUtility() {
 				if(self.htmlEl.css('display') === 'none') {
 					self.htmlEl.slideDown();
 				}
+				// Get the previous information in the downloads list
 				var oldText = self.downloadEl.html();
-				var newText = self.downloadTemplate(info);
+
+				// Get the download template
+				var fileDownloadTemplate = self.downloadTemplates[info.downloadType];
+				if(typeof(fileDownloadTemplate) !== 'function') {
+					console.error('error in onStartDefaultFunc, bad downloadType', info.downloadType);
+					fileDownloadTemplate = self.downloadTemplates['generic'];
+				}
+				// Render the fileDownloadTemplate
+				var newText = fileDownloadTemplate(info);
 				
 				// Add new download to download list
 				self.downloadEl.html(oldText + newText);
@@ -195,7 +262,8 @@ function fileDownloaderUtility() {
 				pageElements.downloadSpeed = newEl.find('.'+'curDownloadSpeed');
 				pageElements.timeRemaining = newEl.find('.'+'curTimeRemaining');
 				pageElements.showInFileButton = showInFileButton;
-				self.pageElements = pageElements;
+
+				self.pageElements = self.getPageControls(pageElements, info);
 			}
 		} else {
 			console.log('Download Started',info);
@@ -231,7 +299,7 @@ function fileDownloaderUtility() {
 		}
 		if(self.isInitialized) {
 			if(isDefined($)) {
-				console.log('FD: onUpdateDefaultFunc time remaining (sec)',stats.remainingTime);
+				// console.log('FD: onUpdateDefaultFunc time remaining (sec)',stats.remainingTime);
 				pageElements.downloadSpeed.text(
 					statusBar.format.speed(stats.speed)
 				);
@@ -264,6 +332,9 @@ function fileDownloaderUtility() {
 			if(isDefined(listeners.onUpdate)) {
 				onUpdate = listeners.onUpdate;
 			}
+		}
+		if(!isDefined(downloadType)) {
+			downloadType = 'generic';
 		}
 		var bar;
 
@@ -357,7 +428,9 @@ function fileDownloaderUtility() {
 								{
 									fileName:uniqueFilePath,
 									size:bodyLength,
-									sizeMB:megabytesDownloaded
+									sizeMB:megabytesDownloaded,
+									downloadType:downloadType,
+									pageElements:pageElements
 								}
 							);
 						} catch (err) {
@@ -389,7 +462,8 @@ function fileDownloaderUtility() {
 				fileSize:formatSize(fileSize),
 				newID:safeName,
 				statusCode:res.statusCode,
-				headers:res.headers
+				headers:res.headers,
+				downloadType:downloadType
 			});
 		};
 		/*
@@ -461,27 +535,78 @@ function fileDownloaderUtility() {
 			var destinationPath = destinationFolder + path.sep;
 			downloadInfo.isExtracted = false;
 
-			var deleteFile = function(filePath) {
-				try {
-					var tempFile = fs.openSync(filePath, 'r');
-					fs.closeSync(tempFile);
-					fs.unlinkSync(filePath);
-				} catch (err) {
-					console.warn('Failed to delete file: ' + filePath);
-				}
+			var getDeleteFile = function(filePath) {
+				var deleteFile = function(bundle) {
+					var delDefered = q.defer();
+					fs.open(filePath, 'r', function(err, fd) {
+						fs.close(fd, function() {
+							fs.unlink(filePath, function(err) {
+								delDefered.resolve(bundle);
+							});
+						});
+					});
+					return delDefered.promise;
+				};
+				return deleteFile;
 			};
 
-			if(fileExtension === '.zip') {
-				// Setup adm-zip object
-				var zip = new admZip(filePath);
+			if(fs.existsSync(destinationFolder)) {
+				var MakeNewDirectoryStr = function(filePath, index) {
+					return filePath + '_' + index.toString();
+				};
+				var i = 0;
+				while(fs.existsSync(MakeNewDirectoryStr(destinationFolder,i))) {
+					i += 1;
+				}
+				destinationFolder = MakeNewDirectoryStr(destinationFolder,i);
+				destinationPath = destinationFolder + path.sep;
+			}
 
-				// Extract the .zip file
-				zip.extractAllTo(/*target path*/destinationPath, /*overwrite*/true);
-				downloadInfo.extractedFolder = destinationPath;
-				downloadInfo.isExtracted = true;
-				deleteFile(filePath);
-				innerDefered.resolve(downloadInfo);
-			} else if (fileExtension === 'xxREMOVExx.tgz') {
+			downloadInfo.extractedFolder = destinationFolder;
+			downloadInfo.extractedPath = destinationPath;
+			if(fileExtension === '.zip') {
+				// var initExtraction = function(downloadInfo) {
+				// 	var deferedExtraction = q.defer();
+				// 	deferedExtraction.resolve(downloadInfo);
+				// 	return deferedExtraction.promise;
+				// };
+				// var extractFiles = function(downloadInfo) {
+				// 	var deferedExtraction = q.defer();
+				// 	// Setup adm-zip object
+				// 	var zip = new admZip(filePath);
+
+				// 	// Extract the .zip file
+				// 	zip.extractAllTo(/*target path*/destinationPath, /*overwrite*/true);
+				// 	downloadInfo.extractedFolder = destinationPath;
+				// 	downloadInfo.isExtracted = true;
+
+				// 	getDeleteFile(filePath)(downloadInfo)
+				// 	.then(deferedExtraction.resolve);
+				// 	return deferedExtraction.promise;
+				// };
+				// initExtraction(downloadInfo)
+				// .then(extractFiles)
+				// .then(innerDefered.resolve);
+				console.log('FD: Extracting .zip file', downloadInfo);
+
+				var archiveStream = fs.createReadStream(filePath);
+				var unzipExtractor = unzip.Extract({ path: destinationFolder });
+
+				unzipExtractor.on('error', function(err) {
+					console.error('FD: .zip extraction error', err);
+				});
+
+				unzipExtractor.on('close', function() {
+					console.log('FD: .zip extraction finished', downloadInfo);
+					downloadInfo.extractedFolder = destinationPath;
+					downloadInfo.isExtracted = true;
+
+					getDeleteFile(filePath)(downloadInfo)
+					.then(innerDefered.resolve);
+				});
+				archiveStream.pipe(unzipExtractor);
+
+			} else if (fileExtension === '.tgz') {
 				// Setup and extract the downloaded .tgz files
 				tarball.extractTarball(filePath, destinationPath, function(err){
 					if(err) {
@@ -489,8 +614,10 @@ function fileDownloaderUtility() {
 					}
 					console.log('Finished extracting .tgz file');
 					downloadInfo.extractedFolder = destinationPath;
-					deleteFile(filePath);
-					innerDefered.resolve(downloadInfo);
+
+					downloadInfo.isExtracted = true;
+					getDeleteFile(filePath)(downloadInfo)
+					.then(innerDefered.resolve);
 				});
 			} else {
 				console.log('Other File type detected', fileExtension);
@@ -509,7 +636,7 @@ function fileDownloaderUtility() {
 		return defered.promise;
 	};
 
-	this.downloadAndExtractFile = function(url, type, listeners) {
+	this.downloadAndExtractFile = function(url, downloadType, listeners) {
 		var errFunc = function(bundle) {
 			var errDefered = q.defer();
 			errDefered.reject(bundle);
