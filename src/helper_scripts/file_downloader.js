@@ -97,48 +97,195 @@ function fileDownloaderUtility() {
 	'<ol id="{{newID}}_process">' +
 		'<li id="{{newID}}_process_download" class="download">' +
 			'<h3>Downloading Files</h3>' +
-			'<div id="{{newID}}" downloadType="{{downloadType}}">' +
-				'<div id="lvmProgressBar" class="curProgressBar progress">' +
-					'<div class="bar" style="width: 0%;"></div>' +
+			'<div class="active">' +
+				'<div id="{{newID}}" downloadType="{{downloadType}}">' +
+					'<div id="lvmProgressBar" class="curProgressBar progress">' +
+						'<div class="bar" style="width: 0%;"></div>' +
+					'</div>' +
+					'<table>' +
+						'<tr>' +
+							'<td>File Name:</td>' +
+							'<td id="fileName" class="curFileName">{{fileName}}</td>' +
+						'</tr>' +
+						'<tr>' +
+							'<td>Size:</td>' +
+							'<td id="fileSize" class="curFileSize">{{fileSize}}</td>' +
+						'</tr>' +
+						'<tr>' +
+							'<td>Speed:</td>' +
+							'<td id="downloadSpeed" class="curDownloadSpeed"></td>' +
+						'</tr>' +
+						'<tr>' +
+							'<td>Time Remaining:</td>' +
+							'<td id="timeRemaining" class="curTimeRemaining"></td>' +
+						'</tr>' +
+					'</table>' +
 				'</div>' +
-				'<table>' +
-					'<tr>' +
-						'<td>File Name:</td>' +
-						'<td id="fileName" class="curFileName">{{fileName}}</td>' +
-					'</tr>' +
-					'<tr>' +
-						'<td>Size:</td>' +
-						'<td id="fileSize" class="curFileSize">{{fileSize}}</td>' +
-					'</tr>' +
-					'<tr>' +
-						'<td>Speed:</td>' +
-						'<td id="downloadSpeed" class="curDownloadSpeed"></td>' +
-					'</tr>' +
-					'<tr>' +
-						'<td>Time Remaining:</td>' +
-						'<td id="timeRemaining" class="curTimeRemaining"></td>' +
-					'</tr>' +
-				'</table>' +
+			'</div>' +
+			'<div class="finished" style="display:none">' +
+				'<div class="win-command green win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring  icon-checkmark"></span>' +
+				'</div>' +
+				'<p>Status: Finished Downloading Files</p>' +
+			'</div>' +
+			'<div class="error" style="display:none">' +
+				'<div class="win-command red win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring icon-cross"></span>' +
+				'</div>' +
+				'<p>Error Downloading Files, <span class="errorMessage"></span></p>' +
+			'</div>' +
+		'</li>' +
+		'<li id="{{newID}}_process_extract" class="extract">' +
+			'<h3>File Extraction</h3>' +
+			'<div class="waiting">' +
+				'<p>Status: Waiting to Extract Files</p>' +
+			'</div>' +
+			'<div class="active" style="display:none">' +
+				'<p>Status: Extracting Files</p>' +
+				'<img src="static/img/progress-indeterminate.gif"></img>' +
+			'</div>' +
+			'<div class="finished" style="display:none">' +
+				'<div class="win-command green win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring  icon-checkmark"></span>' +
+				'</div>' +
+				'<span>Status: Finished Extracting Files</span><br>' +
+				'<button id="showExtractedFilesButton" class="showExtractedFilesButton btn btn-mini btn-link">' +
+					fileBrowserButtonText +
+				'</button>' +
+			'</div>' +
+			'<div class="error" style="display:none">' +
+				'<div class="win-command red win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring icon-cross"></span>' +
+				'</div>' +
+				'<span>Error Extracting Files, <span class="errorMessage"></span></span><br>' +
 				'<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">' +
 					fileBrowserButtonText +
 				'</button>' +
 			'</div>' +
 		'</li>' +
-		'<li id="{{newID}}_process_extract" class="extract">' +
-			'<h3>Extracting Files</h3>' +
-			'<img src="static/img/progress-indeterminate.gif"></img>' +
-		'</li>' +
 		'<li id="{{newID}}_process_install" class="install">' +
-			'<h3>Installing</h3>' +
-			'<img src="static/img/progress-indeterminate.gif"></img>' +
+			'<h3>Installation</h3>' +
+			'<div class="waiting">' +
+				'<p>Status: Waiting to Install</p>' +
+			'</div>' +
+			'<div class="active" style="display:none">' +
+				'<p>Status: Installing</p>' +
+				'<img src="static/img/progress-indeterminate.gif"></img>' +
+			'</div>' +
+			'<div class="finished" style="display:none">' +
+				'<div class="win-command green win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring  icon-checkmark"></span>' +
+				'</div>' +
+				'<p>Status: Restarting Kipling</p>' +
+			'</div>' +
+			'<div class="error" style="display:none">' +
+				'<div class="win-command red win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring icon-cross"></span>' +
+				'</div>' +
+				'<p>Error installing files, please manually install them. <span class="errorMessage"></span></p>' +
+			'</div>' +
 		'</li>' +
 	'</ol>';
+	var ljmUpgradeDownloadTemplate = '' +
+	'<ol id="{{newID}}_process">' +
+		'<li id="{{newID}}_process_download" class="download">' +
+			'<h3>Downloading Files</h3>' +
+			'<div class="active">' +
+				'<div id="{{newID}}" downloadType="{{downloadType}}">' +
+					'<div id="lvmProgressBar" class="curProgressBar progress">' +
+						'<div class="bar" style="width: 0%;"></div>' +
+					'</div>' +
+					'<table>' +
+						'<tr>' +
+							'<td>File Name:</td>' +
+							'<td id="fileName" class="curFileName">{{fileName}}</td>' +
+						'</tr>' +
+						'<tr>' +
+							'<td>Size:</td>' +
+							'<td id="fileSize" class="curFileSize">{{fileSize}}</td>' +
+						'</tr>' +
+						'<tr>' +
+							'<td>Speed:</td>' +
+							'<td id="downloadSpeed" class="curDownloadSpeed"></td>' +
+						'</tr>' +
+						'<tr>' +
+							'<td>Time Remaining:</td>' +
+							'<td id="timeRemaining" class="curTimeRemaining"></td>' +
+						'</tr>' +
+					'</table>' +
+				'</div>' +
+			'</div>' +
+			'<div class="finished" style="display:none">' +
+				'<div class="win-command green win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring  icon-checkmark"></span>' +
+				'</div>' +
+				'<p>Status: Finished Downloading Files</p>' +
+			'</div>' +
+			'<div class="error" style="display:none">' +
+				'<div class="win-command red win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring icon-cross"></span>' +
+				'</div>' +
+				'<p>Error Downloading Files, <span class="errorMessage"></span></p>' +
+			'</div>' +
+		'</li>' +
+		'<li id="{{newID}}_process_extract" class="extract">' +
+			'<h3>File Extraction</h3>' +
+			'<div class="waiting">' +
+				'<p>Status: Waiting to Extract Files</p>' +
+			'</div>' +
+			'<div class="active" style="display:none">' +
+				'<p>Status: Extracting Files</p>' +
+				'<img src="static/img/progress-indeterminate.gif"></img>' +
+			'</div>' +
+			'<div class="finished" style="display:none">' +
+				'<div class="win-command green win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring  icon-checkmark"></span>' +
+				'</div>' +
+				'<span>Status: Finished Extracting Files</span><br>' +
+				'<button id="showExtractedFilesButton" class="showExtractedFilesButton btn btn-mini btn-link">' +
+					fileBrowserButtonText +
+				'</button>' +
+			'</div>' +
+			'<div class="error" style="display:none">' +
+				'<div class="win-command red win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring icon-cross"></span>' +
+				'</div>' +
+				'<span>Error Extracting Files, <span class="errorMessage"></span></span><br>' +
+				'<button id="showInFileButton" class="showInFileButton btn btn-mini btn-link">' +
+					fileBrowserButtonText +
+				'</button>' +
+			'</div>' +
+		'</li>' +
+		'<li id="{{newID}}_process_install" class="install">' +
+			'<h3>Installation</h3>' +
+			'<div class="waiting">' +
+				'<p>Status: Waiting to Install</p>' +
+			'</div>' +
+			'<div class="active" style="display:none">' +
+				'<p>Status: Installing</p>' +
+				'<img src="static/img/progress-indeterminate.gif"></img>' +
+			'</div>' +
+			'<div class="finished" style="display:none">' +
+				'<div class="win-command green win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring  icon-checkmark"></span>' +
+				'</div>' +
+				'<p>Status: Restarting Kipling</p>' +
+			'</div>' +
+			'<div class="error" style="display:none">' +
+				'<div class="win-command red win-command-small" rel="tootlip" title="Command with icon and label with border ring, with a custom color">' +
+					'<span class="win-commandicon win-commandring icon-cross"></span>' +
+				'</div>' +
+				'<p>Please quit Kipling along with any other process using LJM and manually upgrade LJM. <span class="errorMessage"></span></p>' +
+			'</div>' +
+		'</li>' +
+	'</ol>';
+
 	this.downloadTemplate = handlebars.compile(genericDownloadTemplate);
 
 	this.downloadTemplates = {
 		'generic': handlebars.compile(genericDownloadTemplate),
-		'ljm': handlebars.compile(kiplingUpgradeDownloadTemplate),
-		'kipling': handlebars.compile(kiplingUpgradeDownloadTemplate)
+		'kipling': handlebars.compile(kiplingUpgradeDownloadTemplate),
+		'ljm': handlebars.compile(ljmUpgradeDownloadTemplate)
 	};
 
 	this.setDebugMode = function(val) {
@@ -208,21 +355,104 @@ function fileDownloaderUtility() {
 			return (numBytes/gb).toPrecision(2) + 'GB';
 		}
 	};
+	this.manDownloadControls = {};
 	this.getPageControls = function(pageElements, info) {
-		if(info.downloadType === 'kipling') {
-			return pageElements;
-		} else if (info.downloadType === 'ljm') {
-			return pageElements;
-		} else {
-			return pageElements;
+		var controls = {};
+		var steps = [];
+
+		pageElements.downloadProcess.children().each(function(index,child) {
+			steps.push(child.className);
+		});
+
+		function downloadControls(pageElements, info, steps) {
+			this.currentIndex = 0;
+			this.currentStep = steps[0];
+			this.numSteps = steps.length;
+			this.steps = steps;
+			this.pageElements = pageElements;
+			this.info = info;
+
+			var downloadEl = pageElements.downloadProcess;
+
+			this.nextStep = function(err, message) {
+				console.log('FD: in nextStep', self.currentStep, self.currentIndex);
+				if(self.currentStep === 'processCompleted') {
+					return;
+				}
+				var isError = false;
+				if(err) {
+					isError = true;
+				}
+				var errorMessage = '';
+				if(message) {
+					errorMessage = message;
+				}
+				var currentEl = downloadEl.find('.' + self.currentStep);
+				var nextEl;
+				var isNextStep = false;
+				if(self.numSteps > (self.currentIndex + 1)) {
+					nextEl = downloadEl.find('.' + self.steps[self.currentIndex + 1]);
+					isNextStep = true;
+				}
+				if(currentEl.find('.waiting').length > 0) {
+					currentEl.find('.waiting').slideUp();
+				}
+				if(currentEl.find('.active').length > 0) {
+					currentEl.find('.active').slideUp();
+				}
+				if(!isError) {
+					if(currentEl.find('.finished').length > 0) {
+						currentEl.find('.finished').slideDown();
+					}
+				} else {
+					if(currentEl.find('.error').length > 0) {
+						currentEl.find('.error').slideDown();
+					}
+					if(currentEl.find('.error .errorMessage').length > 0) {
+						currentEl.find('.error .errorMessage').text(errorMessage);
+					}
+					// self.currentIndex = self.steps.length;
+					// self.currentStep = 'processCompleted';
+					// self.currentIndex += 1;
+					// self.currentStep = self.steps[self.currentIndex];
+				}
+				if(isNextStep) {
+					if(nextEl.find('.waiting').length > 0) {
+						nextEl.find('.waiting').slideUp();
+					}
+					if(nextEl.find('.active').length > 0) {
+						nextEl.find('.active').slideDown();
+					}
+					if(nextEl.find('.finished').length > 0) {
+						nextEl.find('.finished').slideUp();
+					}
+					self.currentIndex += 1;
+					self.currentStep = self.steps[self.currentIndex];
+				} else {
+					self.currentIndex = self.steps.length;
+					self.currentStep = 'processCompleted';
+				}
+				console.log('FD: in nextStep (2)', self.currentStep, self.currentIndex);
+			};
+
+			this.getCurrentStep = function() {
+				return self.currentStep;
+			};
+			var self = this;
 		}
+		var newDownloadControls = new downloadControls(pageElements, info, steps);
+		self.manDownloadControls = newDownloadControls;
+
+		// Add the controls to the pageElements object and return
+		pageElements.controls = newDownloadControls;
+		return pageElements;
 	};
 
 	var onStartDefaultFunc = function(info) {
 		var pageElements = null;
 		if(self.isInitialized) {
 			if(isDefined($)) {
-				console.log('Started Download',info);
+				console.log('FD: Started Download',info);
 				if(self.htmlEl.css('display') === 'none') {
 					self.htmlEl.slideDown();
 				}
@@ -243,11 +473,13 @@ function fileDownloaderUtility() {
 
 				// Get new download element reference
 				var newEl = self.htmlEl.find('#'+info.newID);
+				var downloadProcess = self.htmlEl.find('#'+info.newID+'_process');
 
 				// Attach "show in finder" listener
 				var showInFileButton = newEl.find('.'+'showInFileButton');
 				showInFileButton.unbind();
 				showInFileButton.bind('click',function(event) {
+					console.log('FD: in onClick');
 					if(!isDefined(gui)) {
 						gui = require('gui');
 					}
@@ -256,6 +488,7 @@ function fileDownloaderUtility() {
 				});
 
 				pageElements = {};
+				pageElements.downloadProcess = downloadProcess;
 				pageElements.activeDownload = newEl;
 				pageElements.progressBar = newEl.find('.'+'curProgressBar .bar');
 				pageElements.fileSize = newEl.find('.'+'curFileSize');
@@ -435,6 +668,13 @@ function fileDownloaderUtility() {
 							);
 						} catch (err) {
 							console.error('FD: error resolving download');
+							defered.reject({
+								fileName:uniqueFilePath,
+								size:bodyLength,
+								sizeMB:megabytesDownloaded,
+								downloadType:downloadType,
+								pageElements:pageElements
+							});
 						}
 					});
 				}
@@ -523,7 +763,7 @@ function fileDownloaderUtility() {
 	 */
 	this.extractFile = function(downloadInfo) {
 		var defered = q.defer();
-		var extractFile = function() {
+		var extractFile = function(downloadInfo) {
 			var innerDefered = q.defer();
 
 			var filePath = downloadInfo.fileName;
@@ -534,6 +774,7 @@ function fileDownloaderUtility() {
 			var destinationFolder = baseDir + path.sep + destinationFolderName;
 			var destinationPath = destinationFolder + path.sep;
 			downloadInfo.isExtracted = false;
+			downloadInfo.downloadedFileExtension = fileExtension;
 
 			var getDeleteFile = function(filePath) {
 				var deleteFile = function(bundle) {
@@ -594,6 +835,9 @@ function fileDownloaderUtility() {
 
 				unzipExtractor.on('error', function(err) {
 					console.error('FD: .zip extraction error', err);
+					downloadInfo.extractionError = err;
+					innerDefered.resolve(downloadInfo);
+					return;
 				});
 
 				unzipExtractor.on('close', function() {
@@ -611,6 +855,9 @@ function fileDownloaderUtility() {
 				tarball.extractTarball(filePath, destinationPath, function(err){
 					if(err) {
 						console.log('Extraction of .tgz error',err);
+						downloadInfo.extractionError = err;
+						innerDefered.resolve(downloadInfo);
+						return;
 					}
 					console.log('Finished extracting .tgz file');
 					downloadInfo.extractedFolder = destinationPath;
@@ -625,12 +872,12 @@ function fileDownloaderUtility() {
 			}
 			return innerDefered.promise;
 		};
-		var startExecution = function() {
+		var startExecution = function(downloadInfo) {
 			var innerDefered = q.defer();
-			innerDefered.resolve();
+			innerDefered.resolve(downloadInfo);
 			return innerDefered.promise;
 		};
-		startExecution()
+		startExecution(downloadInfo)
 		.then(extractFile)
 		.then(defered.resolve, defered.reject);
 		return defered.promise;
@@ -644,8 +891,39 @@ function fileDownloaderUtility() {
 		};
 		var defered = q.defer();
 		self.downloadFile(url, downloadType, listeners)
-		.then(self.extractFile, errFunc)
-		.then(defered.resolve, defered.reject);
+		.then(function(downloadInfo) {
+			downloadInfo.pageElements.controls.nextStep();
+			return self.extractFile(downloadInfo);
+		}, errFunc)
+		.then(function(downloadInfo) {
+			if(downloadInfo.isExtracted) {
+				// Attach "show in finder" listener
+				var showInFileButton = downloadInfo.pageElements.downloadProcess.find('.'+'showExtractedFilesButton');
+				showInFileButton.unbind();
+				showInFileButton.bind('click',function(event) {
+					console.log('FD: in onClick');
+					if(!isDefined(gui)) {
+						gui = require('gui');
+					}
+					gui.Shell.showItemInFolder(downloadInfo.extractedFolder);
+					console.log('Tried to open file in finder:',downloadInfo.extractedFolder);
+				});
+
+				downloadInfo.pageElements.controls.nextStep();
+			} else {
+				downloadInfo.pageElements.controls.nextStep(
+					true,
+					'File not extracted because ' + downloadInfo.downloadedFileExtension + " isn't extractable"
+				);
+			}
+			defered.resolve(downloadInfo);
+		}, function(downloadInfo) {
+			downloadInfo.pageElements.controls.nextStep(
+				true,
+				'File not extracted, error encountered: ' + downloadInfo.extractionError.toString()
+			);
+			defered.reject(downloadInfo);
+		});
 		return defered.promise;
 	};
 

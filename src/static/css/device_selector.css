@@ -306,7 +306,33 @@ body {
 {
     display: none;
 }
-
+.win-command {
+    cursor:default;
+    position: absolute;
+    /*margin-left: 250px;
+    margin-top: -35px;*/
+    margin-left: 185px;
+    margin-top: -28px;
+}
+.win-command:hover {
+    cursor:default;
+}
+.win-command.green .win-commandring {
+    border-color:#5bb75b;
+    color:#5bb75b;
+}
+.win-command.green .win-commandicon {
+    border-color:#5bb75b;
+    color:#5bb75b;
+}
+.win-command.red .win-commandring {
+    border-color:#da4f49;
+    color:#da4f49;
+}
+.win-command.red .win-commandicon {
+    border-color:#da4f49;
+    color:#da4f49;
+}
 
 @-webkit-keyframes pulse {
     from { background-color: #49025D; -webkit-box-shadow: 0 0 9px #333; border-color: #49025D;}

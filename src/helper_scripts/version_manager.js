@@ -242,7 +242,7 @@ function labjackVersionManager() {
 				// Perform request to get pageData/body
 				var options = {
 					'url': url,
-					'timeout': 2000,
+					'timeout': 20000,
 				};
 				request(
 					options,
@@ -846,9 +846,9 @@ function labjackVersionManager() {
 					if(info.downloadType === 'kipling') {
 						isUpgradable = true;
 					} else if (info.downloadType === 'ljm') {
-						isUpgradable = true;
+						isUpgradable = false;
 					}
-					if(info.isExtracted && isUpgradable && false) {
+					if(info.isExtracted && isUpgradable) {
 						self.beginFileUpgrade(info)
 						.then(function(info) {
 							console.log('LVM Upgrade Success!',info);
@@ -858,6 +858,7 @@ function labjackVersionManager() {
 							console.log('LVM Upgrade Syntax Error',err);
 						});
 					} else {
+						info.pageElements.controls.nextStep(true, 'Download is not automaticaly installable');
 						console.log('LVM File Not Extracted, Not Upgradable');
 					}
 				}, function(error) {
