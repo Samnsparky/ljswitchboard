@@ -5,7 +5,7 @@ DOWNLOADED_FILE_PATH=$2
 DOWNLOADED_APP_NAME=$3
 REBOOT_SCRIPT_PATH=$4
 FILE_PATH_CUST_B=$5
-FILE_PATH_CUST_C="/usr/local/share/LabJack/K3/updater/mac_copy_files.txt"
+
 
 # Change directories to the current active directory
 echo "starting directory:" >> $FILE_PATH_CUST_B
@@ -18,18 +18,18 @@ cd $CURRENT_EXEC_PATH
 echo "2nd(2) directory:" >> $FILE_PATH_CUST_B
 echo $(pwd) >> $FILE_PATH_CUST_B
 
-echo "HERERERE" >> $FILE_PATH_CUST_C
-echo "Script Arguments 1:" >> $FILE_PATH_CUST_C
-echo $1 >> $FILE_PATH_CUST_C
-
-echo "Script Arguments 2:" >> $FILE_PATH_CUST_C
-echo $2 >> $FILE_PATH_CUST_C
-
-echo "Script Arguments 3:" >> $FILE_PATH_CUST_C
-echo $3 >> $FILE_PATH_CUST_C
-
-echo "Script Arguments 4:" >> $FILE_PATH_CUST_C
-echo $4 >> $FILE_PATH_CUST_C
+FILE_PATH_CUST_DEB="/usr/local/share/LabJack/K3/updater/mac_copy_files.txt"
+echo "HERERERE" >> $FILE_PATH_CUST_DEB
+echo "Script Arguments 1:" >> $FILE_PATH_CUST_DEB
+echo $1 >> $FILE_PATH_CUST_DEB
+echo "Script Arguments 2:" >> $FILE_PATH_CUST_DEB
+echo $2 >> $FILE_PATH_CUST_DEB
+echo "Script Arguments 3:" >> $FILE_PATH_CUST_DEB
+echo $3 >> $FILE_PATH_CUST_DEB
+echo "Script Arguments 4:" >> $FILE_PATH_CUST_DEB
+echo $4 >> $FILE_PATH_CUST_DEB
+echo "Script Arguments 5:" >> $FILE_PATH_CUST_DEB
+echo $5 >> $FILE_PATH_CUST_DEB
 
 # FILES_IN_DIRECTORY=$(ls)
 FILES_TO_DELETE[0]="Kipling.app"

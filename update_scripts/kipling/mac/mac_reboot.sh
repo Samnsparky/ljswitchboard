@@ -110,6 +110,18 @@ else
 	# echo "osascript -e 'do shell script \"bash $MAC_PRINT_SCRIPT\" with administrator privileges'" >> $FILE_PATH_CUST_B
 	# echo $(osascript -e 'do shell script "bash $MAC_PRINT_SCRIPT" with administrator privileges') >> $FILE_PATH_CUST_B
 	
+	FILE_PATH_CUST_DEB="/usr/local/share/LabJack/K3/updater/mac_reboot.txt"
+	echo "HERERERE" >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments 1:" >> $FILE_PATH_CUST_DEB
+	echo $1 >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments 2:" >> $FILE_PATH_CUST_DEB
+	echo $2 >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments 3:" >> $FILE_PATH_CUST_DEB
+	echo $3 >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments 4:" >> $FILE_PATH_CUST_DEB
+	echo $4 >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments 5:" >> $FILE_PATH_CUST_DEB
+	echo $5 >> $FILE_PATH_CUST_DEB
 
 ARG_A="$MAC_COPY_SCRIPT"
 ARG_B="$1"
@@ -213,5 +225,5 @@ while $WAIT_FOR_OPEN; do
 	NUM_STALL=$[$NUM_STALL + 1]
 done
 
-rm -r $DOWNLOADED_FILE_PATH
+# rm -r $DOWNLOADED_FILE_PATH
 
