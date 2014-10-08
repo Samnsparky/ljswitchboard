@@ -944,9 +944,11 @@ function labjackVersionManager() {
 				// currentExecFilePath = process.execPath.split(' ')[0].split(/\.*\/Contents/g)[0];
 				currentExecPath = path.dirname(process.execPath.split(' ')[0].split(/\.*\.app/g)[0]);
 				
+				var downloadedFilePathFixed = path.resolve(downloadedFilePath);
+				
 				// Add arguments to the script execution
 				scriptArgs.push(currentExecPath);		// The current path in which kipling is executing out of
-				scriptArgs.push(downloadedFilePath);	// The path where the files needed to be coppied from exist
+				scriptArgs.push(downloadedFilePathFixed);	// The path where the files needed to be coppied from exist
 				scriptArgs.push(downloadedAppName);		// The name of the program to "open"
 				scriptArgs.push(rebootScriptPath);		// The path of the script being executed
 
