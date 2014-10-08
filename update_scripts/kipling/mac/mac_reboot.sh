@@ -124,7 +124,7 @@ then
 	echo "Script Arguments F:" >> $FILE_PATH_CUST_DEB
 	echo $ARG_F >> $FILE_PATH_CUST_DEB
 
-	bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B
+	echo $(bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B) >> $FILE_PATH_CUST_B
 else
 	#Execute upgrade script and ask for password.
 	echo "osascript -e 'do shell script \"bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B\" with administrator privileges'" >> $FILE_PATH_CUST_B
