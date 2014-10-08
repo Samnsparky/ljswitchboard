@@ -109,19 +109,6 @@ else
 	# echo $(osascript -e 'do shell script "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" with administrator privileges') >> $FILE_PATH_CUST_B
 	# echo "osascript -e 'do shell script \"bash $MAC_PRINT_SCRIPT\" with administrator privileges'" >> $FILE_PATH_CUST_B
 	# echo $(osascript -e 'do shell script "bash $MAC_PRINT_SCRIPT" with administrator privileges') >> $FILE_PATH_CUST_B
-	
-	FILE_PATH_CUST_DEB="/usr/local/share/LabJack/K3/updater/mac_reboot.txt"
-	echo "HERERERE" >> $FILE_PATH_CUST_DEB
-	echo "Script Arguments 1:" >> $FILE_PATH_CUST_DEB
-	echo $1 >> $FILE_PATH_CUST_DEB
-	echo "Script Arguments 2:" >> $FILE_PATH_CUST_DEB
-	echo $2 >> $FILE_PATH_CUST_DEB
-	echo "Script Arguments 3:" >> $FILE_PATH_CUST_DEB
-	echo $3 >> $FILE_PATH_CUST_DEB
-	echo "Script Arguments 4:" >> $FILE_PATH_CUST_DEB
-	echo $4 >> $FILE_PATH_CUST_DEB
-	echo "Script Arguments 5:" >> $FILE_PATH_CUST_DEB
-	echo $5 >> $FILE_PATH_CUST_DEB
 
 ARG_A="$MAC_COPY_SCRIPT"
 ARG_B="$1"
@@ -129,6 +116,21 @@ ARG_C="$2"
 ARG_D="$3"
 ARG_E="$4"
 ARG_F="$FILE_PATH_CUST_B"
+FILE_PATH_CUST_DEB="/usr/local/share/LabJack/K3/updater/mac_reboot.txt"
+echo "HERERERE" >> $FILE_PATH_CUST_DEB
+echo "Script Arguments A:" >> $FILE_PATH_CUST_DEB
+echo $ARG_A >> $FILE_PATH_CUST_DEB
+echo "Script Arguments B:" >> $FILE_PATH_CUST_DEB
+echo $ARG_B >> $FILE_PATH_CUST_DEB
+echo "Script Arguments C:" >> $FILE_PATH_CUST_DEB
+echo $ARG_C >> $FILE_PATH_CUST_DEB
+echo "Script Arguments D:" >> $FILE_PATH_CUST_DEB
+echo $ARG_D >> $FILE_PATH_CUST_DEB
+echo "Script Arguments E:" >> $FILE_PATH_CUST_DEB
+echo $ARG_E >> $FILE_PATH_CUST_DEB
+echo "Script Arguments F:" >> $FILE_PATH_CUST_DEB
+echo $ARG_F >> $FILE_PATH_CUST_DEB
+
 osascript -- - "$ARG_A" "$ARG_B" "$ARG_C" "$ARG_D" "$ARG_E" "$ARG_F" <<'EOF'
 	on run(argv)
 		do shell script "bash " & item 1 of argv & " " & item 2 of argv & " " & item 3 of argv & " " & item 4 of argv & " " & item 5 of argv & " " & item 6 of argv with administrator privileges
