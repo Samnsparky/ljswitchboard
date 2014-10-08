@@ -5,7 +5,7 @@ CURRENT_EXEC_PATH=$1
 DOWNLOADED_FILE_PATH=$2
 DOWNLOADED_APP_NAME=$3
 REBOOT_SCRIPT_PATH=$4
-MAC_COPY_SCRIPT="$REBOOT_SCRIPT_PATH/kipling/mac/mac_copy_files.sh"
+MAC_COPY_SCRIPT="$REBOOT_SCRIPT_PATH/mac_copy_files.sh"
 chmod +x $MAC_COPY_SCRIPT
 
 # Code for creating various debugging files
