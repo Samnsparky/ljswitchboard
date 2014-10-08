@@ -1096,8 +1096,8 @@ function labjackVersionManager() {
 			// if ( data === 'QUIT KIPLING\n' ) {
 				bashObj.unref();
 				console.log('quit Kipling');
-				// gui.App.closeAllWindows();
-				// gui.App.quit();
+				gui.App.closeAllWindows();
+				gui.App.quit();
 			} else {
 				console.log('LVM Script Data', data);
 			}

@@ -102,6 +102,28 @@ then
 	rmdir $CURRENT_EXEC_PATH/$CUR_TIME
 	# Execute upgrade script
 	echo "bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B" >> $FILE_PATH_CUST_B
+
+	ARG_A="$MAC_COPY_SCRIPT"
+	ARG_B="$1"
+	ARG_C="$2"
+	ARG_D="$3"
+	ARG_E="$4"
+	ARG_F="$FILE_PATH_CUST_B"
+	FILE_PATH_CUST_DEB="/usr/local/share/LabJack/K3/updater/mac_reboot.txt"
+	echo "HERERERE-B" >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments A:" >> $FILE_PATH_CUST_DEB
+	echo $ARG_A >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments B:" >> $FILE_PATH_CUST_DEB
+	echo $ARG_B >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments C:" >> $FILE_PATH_CUST_DEB
+	echo $ARG_C >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments D:" >> $FILE_PATH_CUST_DEB
+	echo $ARG_D >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments E:" >> $FILE_PATH_CUST_DEB
+	echo $ARG_E >> $FILE_PATH_CUST_DEB
+	echo "Script Arguments F:" >> $FILE_PATH_CUST_DEB
+	echo $ARG_F >> $FILE_PATH_CUST_DEB
+
 	bash $MAC_COPY_SCRIPT $1 $2 $3 $4 $FILE_PATH_CUST_B
 else
 	#Execute upgrade script and ask for password.
@@ -117,7 +139,7 @@ ARG_D="$3"
 ARG_E="$4"
 ARG_F="$FILE_PATH_CUST_B"
 FILE_PATH_CUST_DEB="/usr/local/share/LabJack/K3/updater/mac_reboot.txt"
-echo "HERERERE" >> $FILE_PATH_CUST_DEB
+echo "HERERERE-A" >> $FILE_PATH_CUST_DEB
 echo "Script Arguments A:" >> $FILE_PATH_CUST_DEB
 echo $ARG_A >> $FILE_PATH_CUST_DEB
 echo "Script Arguments B:" >> $FILE_PATH_CUST_DEB
