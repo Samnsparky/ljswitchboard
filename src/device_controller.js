@@ -14,7 +14,7 @@ var q = require('q');
 var ljmmm = require('./ljmmm');
 var labjack_nodejs = require('labjack-nodejs');
 var device_selector_view_gen = require('./device_selector_view_gen');
-var device_flash_operations = require('./device_flash_and_cal_operations');
+var device_flash_operations = require('./helper_scripts/device_functions/device_flash_and_cal_operations');
 var labjack_driver = new labjack_nodejs.driver();
 var LJM_DT_T7 = labjack_nodejs.driver_const.LJM_DT_T7.toString();
 device_flash_operations.setDriverConst(labjack_nodejs.driver_const);
