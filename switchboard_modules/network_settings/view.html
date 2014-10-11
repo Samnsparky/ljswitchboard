@@ -51,7 +51,7 @@
 								<td>
 									<span class="Auto_Value {{name}}_AUTO_VAL selectableText" style="{{#unless isDHCPAuto}}display:none;{{/unless}}">{{ initVal }}</span>
 									<div class="Manual_Value" style="{{#if isDHCPAuto}}display:none;{{/if}}">
-										<input class="ipAddress {{name}}_MAN_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
+										<input class="ipAddress {{name}}_MAN_VAL" type="text" name="{{humanName}}" value="{{ initVal }}" placeholder="ex: 127.0.0.1">
 									</div>
 								</td>
 								<td class="alertCol">
@@ -115,7 +115,7 @@
 						<tr id="WIFI_SSID_DEFAULT_VAL" class="networkSetting">
 							<td>Network Name:</td>
 							<td>
-								<input class="WIFI_SSID_DEFAULT_AUTO_VAL" type="text" name="Network Name" placeholder="{{ custom.wifiNetworkName }}">
+								<input class="WIFI_SSID_DEFAULT_AUTO_VAL" type="text" name="Network Name" value="{{ custom.wifiNetworkName }}" placeholder="ex: MyNetwork">
 							</td>
 							<td class="alertCol">
 								<div class="alert alert-success">
@@ -126,7 +126,7 @@
 						<tr id="WIFI_PASSWORD_DEFAULT_VAL" class="networkSetting">
 							<td>Password:</td>
 							<td>
-								<input class="WIFI_PASSWORD_DEFAULT_AUTO_VAL" type="password" name="{{humanName}}" placeholder="********">
+								<input class="WIFI_PASSWORD_DEFAULT_AUTO_VAL" type="password" name="{{humanName}}" value="" placeholder ="ex: password">
 							</td>
 							<td class="alertCol">
 								<div class="alert alert-success">
@@ -166,7 +166,7 @@
 								<td>
 									<span class="Auto_Value {{name}}_AUTO_VAL selectableText" style="{{#unless isDHCPAuto}}display:none;{{/unless}}">{{ initVal }}</span>
 									<div class="Manual_Value" style="{{#if isDHCPAuto}}display:none;{{/if}}">
-										<input class="ipAddress {{name}}_MAN_VAL" type="text" name="{{humanName}}" placeholder="{{ initVal }}">
+										<input class="ipAddress {{name}}_MAN_VAL" type="text" name="{{humanName}}" value="{{ initVal }}" placeholder="ex: 127.0.0.1">
 									</div>
 								</td>
 								<td class="alertCol">

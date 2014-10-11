@@ -68,3 +68,9 @@ text-align: right;
 .power-indicator.powered {
     background-color: #00C000;
 }
+
+.calibration-message {
+    padding: 2px 5px 2px 8px;
+}
+
+

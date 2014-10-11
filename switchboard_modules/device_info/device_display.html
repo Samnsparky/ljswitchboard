@@ -56,6 +56,12 @@
                     {{../currentSourceB}} uA
                 </span>
             </div>
+            <div class="device-detail">
+                Calibration Status: 
+                <span id="calibration-status-display" class="calibration-message selectableText {{#if ../isCalibrationValid}}isa_success{{else}}isa_error{{/if}}" title="{{../deviceCalibrationLongMessage}}">
+                    {{../deviceCalibrationMessage}}&nbsp;&nbsp;<span class="{{#if ../isCalibrationValid}}icon-checkmark{{else}} icon-cross{{/if}}"></span>
+                </span>
+            </div>
             <div class="block-separator"/>
             <div class="pane-popover">
                 Versions

@@ -55,6 +55,18 @@ function showDevice(device, onSuccess)
     var wifiMac;
     var currentSourceA;
     var currentSourceB;
+    var isCalibrationValid;
+    var deviceCalibrationMessage;
+    var deviceCalibrationLongMessage;
+
+    isCalibrationValid = device.cachedCalibrationValidity;
+    if(isCalibrationValid) {
+        deviceCalibrationMessage = 'Good';
+        deviceCalibrationLongMessage = 'Device Calibration is Valid';
+    } else {
+        deviceCalibrationMessage = 'Invalid';
+        deviceCalibrationLongMessage = 'Device Calibration is Invalid, email support@labjack.com';
+    }
 
     try {
         isPro = device.read('HARDWARE_INSTALLED') != 0;
@@ -220,7 +232,10 @@ function showDevice(device, onSuccess)
         'internalTemp': internalTemp,
         'currentSourceA': currentSourceA,
         'currentSourceB': currentSourceB,
-        'powerWatchdog': powerWatchdog
+        'powerWatchdog': powerWatchdog,
+        'isCalibrationValid': isCalibrationValid,
+        'deviceCalibrationMessage': deviceCalibrationMessage,
+        'deviceCalibrationLongMessage': deviceCalibrationLongMessage
     };
 
     if (isPro) {
@@ -351,9 +366,12 @@ $('#device-info-inspector').ready(function(){
 
     var devices = device_controller.getDeviceKeeper().getDevices();
     var device = devices[0];
-    showDevice(device, function(){
-        $('#device-info-display').fadeIn();
-        KEYBOARD_EVENT_HANDLER.initInputListeners();
+
+    device.getCalibrationStatus(function(isCalValid) {
+        showDevice(device, function(){
+            $('#device-info-display').fadeIn();
+            KEYBOARD_EVENT_HANDLER.initInputListeners();
+        });
     });
 });
 

@@ -1,20 +1,9 @@
 /**
- * Goals for the Lua Script Debugger module.
- * This is a Lua script intro-app that performs a minimal number of scripting
- * operations.  It is simply capable of detecting whether or not a Lua script
- * is running and then prints out the debugging log to the window.  
+ * Goals for the Network Settings module.
+ * This module will give the user the ability to configure Ethernet and WiFi 
+ * device settings.
  *
  * @author Chris Johnson (LabJack Corp, 2013)
- *
- * Configuration:
- * No configuration of the device is required
- *
- * Periodic Processes:
- *     1. Read from "LUA_RUN" register to determine if a Lua script is running.
- *     2. Read from "LUA_DEBUG_NUM_BYTES" register to determine how much data is
- *         available in the debugging info buffer.
- *     3. If there is data available in the debugging buffer then get it from
- *         the device. 
 **/
 
 // Constant that determines device polling rate.  Use an increased rate to aid
@@ -98,8 +87,7 @@ function module() {
         value += stringArray[3];
         return value;
     };
-    this.dot2num = function(dot) 
-    {
+    this.dot2num = function(dot) {
         var d = dot.split('.');
         return ((((((+d[0])*256)+(+d[1]))*256)+(+d[2]))*256)+(+d[3]);
     };
@@ -180,6 +168,15 @@ function module() {
         var elements = $('#wifi_settings .configSettingsTable .networkSetting input');
         elements.trigger('change');
     };
+    this.updateInput = function(element, value) {
+        var isFocused = element.is(":focus");
+        if(isFocused) {
+            // don't update the element
+        } else {
+            // Update the element
+            element.val(value);
+        }
+    };
     this.updateIPSettings = function(type) {
         var list = [];
         if(type === 'wifi') {
@@ -193,7 +190,8 @@ function module() {
             var manEl = $('#'+reg+'_VAL .'+reg+'_MAN_VAL');
 
             autoEl.text(strVal);
-            manEl.attr('placeholder',strVal);
+            // manEl.attr('placeholder',strVal);
+            self.updateInput(manEl, strVal);
         });
     };
     this.updateEthernetSettings = function() {
@@ -283,7 +281,9 @@ function module() {
     this.setManualVal = function(settingID,val) {
         var manStr = " .Manual_Value input";
         var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
-        manualValEl[0].placeholder = val;
+
+        // manualValEl[0].value = val;
+        self.updateInput(manualValEl, val);
     };
     this.getManualVal = function(settingID) {
         var manStr = " .Manual_Value input";
@@ -294,7 +294,8 @@ function module() {
             value = manualValEl.val();
             isNew = true;
         } else {
-            value = manualValEl[0].placeholder;
+            // value = manualValEl[0].placeholder;
+            value = manualValEl.val();
             isNew = false;
         }
         return {value:value, isNew:isNew};
@@ -342,15 +343,17 @@ function module() {
             value = manualValEl.val();
             isNew = true;
         } else {
-            value = manualValEl[0].placeholder;
+            // value = manualValEl[0].placeholder;
+            value = manualValEl.val();
             isNew = false;
         }
         return {value:value, isNew:isNew};
     };
-    this.setInputVal = function(settingID,val) {
+    this.setInputVal = function(settingID, val) {
         var manStr = " input";
         var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
-        manualValEl.val(val);
+        // manualValEl.val(val);
+        self.updateInput(manualValEl, val);
     };
     this.setNetworkName = function(networkName) {
         self.setInputVal('#WIFI_SSID_DEFAULT_VAL',networkName);
@@ -400,7 +403,7 @@ function module() {
         var ethernetSettingRegs = [];
         var ethernetSettingVals = [];
         self.getEthernetIPRegisterList().forEach(function(regName){
-            var configData = self.getManualVal(regName+'_VAL');
+            var configData = self.getManualVal(regName+'_MAN_VAL');
             var ipVal = parseInt(self.dot2num(configData.value));
             if(configData.isNew) {
                 newEthernetSettingRegs.push(regName+'_DEFAULT');
@@ -417,7 +420,7 @@ function module() {
         ethernetSettingRegs.push('ETHERNET_DHCP_ENABLE_DEFAULT');
         ethernetSettingVals.push(dhcpSetting.value);
         return {
-            newRegisters: newEthernetSettingRegs, 
+            newRegisters: newEthernetSettingRegs,
             newValues: newEthernetSettingVals,
             registers: ethernetSettingRegs,
             values: ethernetSettingVals
@@ -505,7 +508,12 @@ function module() {
         var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;  
 
         var isValid = true;
-        if(inputText !== "") {
+
+        var currentRegister = settingID.split('_VAL')[0];
+        var currentValue = self.currentValues.get(currentRegister).fVal;
+        console.log('in ipAddressValidator', currentValue, inputText);
+
+        if(inputText !== currentValue) {
             // Remove Existing styles 
             alertMessageEl.removeClass('icon-checkmark-3');
             alertEl.removeClass('alert-success');
@@ -549,7 +557,12 @@ function module() {
         var inputText = event.target.value;
         var isValid = false;
         inputTextEl.removeClass('inputVerified');
-        if(inputText !== "") {
+
+        var currentRegister = settingID.split('_VAL')[0];
+        var currentValue = self.currentValues.get(currentRegister).fVal;
+        console.log('in networkNameValidator', currentValue, inputText);
+
+        if(inputText !== currentValue) {
             if(true) {
                 alertMessageEl.removeClass('icon-close');
                 alertMessageEl.addClass('icon-checkmark-3');
@@ -585,6 +598,10 @@ function module() {
         var inputText = event.target.value;
         var isValid = false;
         inputTextEl.removeClass('inputVerified');
+        var currentRegister = settingID.split('_VAL')[0];
+        var currentValue = self.currentValues.get(currentRegister);
+        console.log('in networkPasswordValidator', currentValue, inputText);
+
         if(inputText !== "") {
             if(true) {
                 alertMessageEl.removeClass('icon-close');
@@ -1140,8 +1157,8 @@ function module() {
             var manVal = $('#'+reg+'_VAL .'+reg+'_MAN_VAL');
             var newVal = self.currentValues.get(reg).fVal;
             autoVal.text(newVal);
-            manVal.attr('placeholder',newVal);
-            manVal.val('');
+            // manVal.attr('placeholder',newVal);
+            manVal.val(newVal);
             manVal.trigger('change');
         });
         console.log('Ethernet Inputs Cleared');
@@ -1157,8 +1174,8 @@ function module() {
             var manVal = $('#'+reg+'_VAL .'+reg+'_MAN_VAL');
             var newVal = self.currentValues.get(reg).fVal;
             autoVal.text(newVal);
-            manVal.attr('placeholder',newVal);
-            manVal.val('');
+            // manVal.attr('placeholder',newVal);
+            manVal.val(newVal);
             manVal.trigger('change');
         });
         console.log('Wifi Inputs Cleared');
@@ -1483,8 +1500,8 @@ function module() {
             });
             var currentIP = self.currentValues.get('ETHERNET_IP').val;
             var currentIPs = self.currentValues.get('ETHERNET_IP').fVal;
-            var newIP = self.bufferedValues.get('ETHERNET_IP').val
-            var newIPs = self.bufferedValues.get('ETHERNET_IP').fVal
+            var newIP = self.bufferedValues.get('ETHERNET_IP').val;
+            var newIPs = self.bufferedValues.get('ETHERNET_IP').fVal;
             var currentPower = self.currentValues.get('POWER_ETHERNET').val;
             var newPower = self.currentValues.get('POWER_ETHERNET').val;
             var updateInfo = self.refreshEthernetInfo;
