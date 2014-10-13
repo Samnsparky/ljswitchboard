@@ -22,8 +22,9 @@ function luaDeviceController() {
     var codeEditorHeight = 0;
     var debuggingLogHeight = 0;
 
-    this.DEBUG_START_EXECUTIONS = false;
+    this.DEBUG_START_EXECUTIONS = true;
     this.DEBUG_HIGH_FREQ_START_EXECUTIONS = false;
+    this.DEBUG_SCRIPT_LOADING_EXECUTIONS = true;
     var MAX_ARRAY_PACKET_SIZE = 32; //Set packet size to be 32 bytes
 
     this.catchError = function(err) {
@@ -45,6 +46,15 @@ function luaDeviceController() {
     this.print = function(data) {
         if(self.DEBUG_START_EXECUTIONS) {
             console.log(data);
+        }
+    };
+    this.printLoadedScriptInfo = function(data) {
+        if(self.DEBUG_SCRIPT_LOADING_EXECUTIONS) {
+            if(data) {
+                console.log('Current Scrpit Info', data, self.curScriptOptions, self.curScriptType);
+            } else {
+                console.log('Current Scrpit Info', self.curScriptOptions, self.curScriptType);
+            }
         }
     };
     this.isLuaCodeError = function() {
@@ -291,8 +301,8 @@ function luaDeviceController() {
         // Perform Device IO
         self.device.qWrite('LUA_RUN_DEFAULT',1)
         .then(function(){
-                innerDeferred.resolve();
-            }, self.handleNoScriptError)
+            innerDeferred.resolve();
+        }, self.handleNoScriptError)
         .then(innerDeferred.resolve, innerDeferred.reject);
         return innerDeferred.promise;
     };
@@ -303,8 +313,8 @@ function luaDeviceController() {
         // Perform Device IO
         self.device.qWrite('LUA_RUN_DEFAULT',0)
         .then(function(){
-                innerDeferred.resolve();
-            }, innerDeferred.reject);
+            innerDeferred.resolve();
+        }, innerDeferred.reject);
         return innerDeferred.promise;
     };
     this.saveEnableLuaSaveToFlash = function() {
@@ -330,8 +340,11 @@ function luaDeviceController() {
         self.print('loading & saving lua script to flash');
         var innerDeferred = q.defer();
 
+        // perform onRun save script operation
+        self.onRunSaveScript()
+
         // Check LUA Script for Errors
-        self.checkForCodeErrors()
+        .then(self.checkForCodeErrors, self.checkForCodeErrors)
 
         // Disable the LUA script
         .then(self.stopLuaScript, self.catchError)
@@ -388,8 +401,11 @@ function luaDeviceController() {
         self.print('loading & starting Lua script');
         var ioDeferred = q.defer();
 
+        // perform onRun save script operation
+        self.onRunSaveScript()
+
         // Check LUA Script for Errors
-        self.checkForCodeErrors()
+        .then(self.checkForCodeErrors, self.checkForCodeErrors)
         
         // Disable the LUA script
         .then(self.stopLuaScript, self.catchError)
@@ -459,6 +475,24 @@ function luaDeviceController() {
         // Return q instance
         return ioDeferred.promise;
     };
+    this.createNewScript = function() {
+        self.print('creating new Lua Script');
+        var ioDeferred = q.defer();
+
+        // Update Internal Constants
+        self.configureAsNewScript();
+
+        // clear the codeEditor
+        self.codeEditorDoc.setValue("");
+
+        self.printLoadedScriptInfo('in createNewScript');
+
+        ioDeferred.resolve();
+
+        // Return q instance
+        return ioDeferred.promise;
+    };
+
     this.loadScriptFromFile = function(filePath) {
         self.print('loading Lua Script from file');
         var ioDeferred = q.defer();
@@ -515,38 +549,10 @@ function luaDeviceController() {
     this.saveLoadedScriptAs = function() {
         self.print('Saving Lua Script as...');
         var fileIODeferred = q.defer();
-
-        var chooser = $(fs_facade.getFileSaveAsID());
-        chooser.attr('nwworkingdir',fs_facade.getDefaultFilePath());
-        var onChangedSaveToFile = function(event) {
-            var fileLoc = $(fs_facade.getFileSaveAsID()).val();
-            var scriptData = self.codeEditorDoc.getValue();
-            self.print('Selected Lua File',fileLoc);
-
-            self.print('Saving Script to file');
-            fs_facade.saveDataToFile(
-                fileLoc,
-                scriptData,
-                function(err) {
-                    // onError function
-                    console.log('Failed to Save Script to file', err);
-                    fileIODeferred.reject(err);
-                },
-                function() {
-                    // onSuccess function
-                    self.print('Successfuly Saved Script to File');
-
-                    // Update Internal Constants
-                    self.configureAsUserScript(fileLoc);
-
-                    fileIODeferred.resolve();
-                }
-            );
-        };
-
-        chooser.unbind('change');
-        chooser.bind('change', onChangedSaveToFile);
-        chooser.trigger('click');
+        
+        // Perform a saveAs operation
+        self.saveLoadedScriptHandler('saveAs')
+        .then(fileIODeferred.resolve, fileIODeferred.reject);
 
         // Return q instance
         return fileIODeferred.promise;
@@ -554,15 +560,54 @@ function luaDeviceController() {
     this.saveLoadedScript = function() {
         self.print('Saving Lua Script');
         var fileIODeferred = q.defer();
+        
+        // Perform a save operation
+        self.saveLoadedScriptHandler('save')
+        .then(fileIODeferred.resolve, fileIODeferred.reject);
+
+        // Return q instance
+        return fileIODeferred.promise;
+    };
+    this.onRunSaveScript = function() {
+        var fileIODeferred = q.defer();
+
+        self.saveLoadedScriptHandler('onRun')
+        .then(fileIODeferred.resolve, fileIODeferred.reject);
+
+        // Return q instance
+        return fileIODeferred.promise;
+    };
+    this.saveLoadedScriptHandler = function(saveType) {
+        var fileIODeferred = q.defer();
+        var saveFileCommand = '';
 
         var canSave = self.curScriptOptions.canSave;
+        var saveOnRun = self.curScriptOptions.saveOnRun;
         var filePath = self.curScriptFilePath;
         var scriptData = self.codeEditorDoc.getValue();
-
+        self.printLoadedScriptInfo('in saveLoadedScriptHandler');
+        if(saveType === 'onRun') {
+            if(saveOnRun) {
+                if(canSave) {
+                    saveFileCommand = 'save';
+                } else {
+                    saveFileCommand = 'saveAs';
+                }
+            }
+        } else if (saveType === 'save') {
+            if(canSave) {
+                saveFileCommand = 'save';
+            } else {
+                saveFileCommand = 'saveAs';
+            }
+        } else if (saveType === 'saveAs') {
+            saveFileCommand = 'saveAs';
+        }
+        console.log('Save Command...', saveFileCommand, saveType);
         // Determine if the script can be saved 
         // aka: switch between user script & example
-        if (canSave) {
-            // The script is a userScript & can be saved
+        if (saveFileCommand === 'save') {
+            // Perform save operation
             self.print('Saving Script to file');
             fs_facade.saveDataToFile(
                 filePath,
@@ -578,14 +623,21 @@ function luaDeviceController() {
                     fileIODeferred.resolve();
                 }
             );
-        } else {
-            // The script is an example & can't be saved
-            self.print('Can\'t save script to file, opening file dialog');
+        } else if (saveFileCommand === 'saveAs') {
+            // Perform saveAs command
+            self.print('Performing saveAs method, opening file dialog');
 
             var chooser = $(fs_facade.getFileSaveAsID());
+            chooser[0].files.append(new File("luaScript", ""));
+            chooser.attr('nwsaveas', 'luaScript.lua');
+            chooser.attr('accept', '.lua');
             chooser.attr('nwworkingdir',fs_facade.getDefaultFilePath());
             var onChangedSaveToFile = function(event) {
                 var fileLoc = $(fs_facade.getFileSaveAsID()).val();
+                if(fileLoc === '') {
+                    console.log('No File Selected');
+                    fileIODeferred.reject('No File Selected');
+                }
                 var scriptData = self.codeEditorDoc.getValue();
 
                 self.print('Saving Script to file');
@@ -613,8 +665,11 @@ function luaDeviceController() {
             chooser.bind('change', onChangedSaveToFile);
 
             chooser.trigger('click');
+        } else {
+            // Don't perform any save operations
+            self.print('Not performing any save operations');
+            fileIODeferred.resolve();
         }
-
         // Return q instance
         return fileIODeferred.promise;
     };
@@ -627,6 +682,11 @@ function luaDeviceController() {
         self.curScriptType = self.scriptConstants.types[1];
         self.curScriptOptions = self.scriptConstants[self.curScriptType];
         self.curScriptFilePath = filePath;
+    };
+    this.configureAsNewScript = function() {
+        self.curScriptType = self.scriptConstants.types[2];
+        self.curScriptOptions = self.scriptConstants[self.curScriptType];
+        self.curScriptFilePath = "";
     };
 
     this.setDevice = function(device) {

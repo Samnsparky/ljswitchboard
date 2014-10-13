@@ -337,26 +337,19 @@ function module() {
         var runPauseLuaScript = function(data, onSuccess) {
             self.printUserDebugInfo('runPause button pressed');
 
-            // If the currently loaded script is a "userScript" then save it
-            if(self.luaController.curScriptType !== 'example') {
-                saveCurrentLuaScript(function(data) {
-                    self.printUserDebugInfo("userScript saved via runPauseLuaScript");
-                });
-            }
-
             var constants = self.luaVariables.runStatus;
             conditionalExecution(
                 constants,
                 self.luaController.loadAndStartScript,
                 self.luaController.stopScript,
-                self.handleIOSuccess(onSuccess,'Configured LUA_RUN')
+                self.handleIOSuccess(setActiveScriptInfo(onSuccess),'Configured LUA_RUN')
             );
         };
         var saveScriptToFlash = function(data, onSuccess) {
             self.printUserDebugInfo('saveScriptToFlash button pressed');
             self.luaController.saveScriptToFlash()
             .then(
-                self.handleIOSuccess(onSuccess,'Script Saved to Flash'),
+                self.handleIOSuccess(setActiveScriptInfo(onSuccess),'Script Saved to Flash'),
                 self.handleIOError(onSuccess,'Err: Script Not Saved to Flash')
             );
         };
@@ -379,8 +372,23 @@ function module() {
                 self.handleIOSuccess(onSuccess,'Configured LUA_RUN_DEFAULT')
             );
         };
+        var createNewLuaScript = function(data, onSuccess) {
+            self.printUserDebugInfo('Creating new Lua Script');
+            self.luaController.createNewScript()
+            .then(
+                self.handleIOSuccess(
+                    setActiveScriptInfo(onSuccess),
+                    'New Lua Script Created'
+                ),
+                self.handleIOError(
+                    setActiveScriptInfo(onSuccess),
+                    'Err: New Lua Script Not Created'
+                )
+            );
+        };
         var loadLuaFile = function(data, onSuccess) {
             self.printUserDebugInfo('Loading file....');
+
             $(fs_facade.getFileLoadID()).val('');
             var chooser = $(fs_facade.getFileLoadID());
             var onChangedFile = function(event) {
@@ -442,6 +450,8 @@ function module() {
                 var scriptType = self.scriptOptions[scriptTypeKey].windowMessage;
                 var scriptLocation = self.luaController.curScriptFilePath;
                 var scriptName = "";
+
+                self.luaController.printLoadedScriptInfo('in setActiveScriptInfo');
                 if(scriptTypeKey === self.scriptOptions.types[0]) {
                     // var scripts = self.preBuiltScripts;
                     // scripts.some(function(script,index){
@@ -476,16 +486,16 @@ function module() {
         };
         var saveCurrentLuaScript = function(onSuccess) {
             self.luaController.saveLoadedScript()
-                .then(
-                    self.handleIOSuccess(
-                        setActiveScriptInfo(onSuccess),
-                        'Script Saved to File (save)'
-                    ),
-                    self.handleIOError(
-                        setActiveScriptInfo(onSuccess),
-                        'Err: Script Not Saved to File (save)'
-                    )
-                );
+            .then(
+                self.handleIOSuccess(
+                    setActiveScriptInfo(onSuccess),
+                    'Script Saved to File (save)'
+                ),
+                self.handleIOError(
+                    setActiveScriptInfo(onSuccess),
+                    'Err: Script Not Saved to File (save)'
+                )
+            );
         };
         var saveButtonHandler = function(eventData) {
             console.log('in saveButtonHandler HERE!', eventData);
@@ -730,6 +740,11 @@ function module() {
                 smartName: 'clickHandler',
                 callback: saveLoadedScriptToFile
             }, {
+                // Define binding to handle user create new lua script button presses.
+                bindingName: 'create-new-lua-script-button',
+                smartName: 'clickHandler',
+                callback: createNewLuaScript
+            }, {
                 // Define binding to handle loading user luaFile button presses.
                 bindingName: 'load-lua-script-button',
                 smartName: 'clickHandler',
@@ -761,7 +776,7 @@ function module() {
                 callback: manageTableDescriptionsVisibility
             },
              {
-                // Define binding to handle  show/hide tableDescriptions button presses.
+                // Define binding to let users lock the cursor to the bottom of the console output.
                 bindingName: 'lua-script-move-cursor-to-bottom-button',
                 smartName: 'clickHandler',
                 callback: moveCursorToBottomOfConsole

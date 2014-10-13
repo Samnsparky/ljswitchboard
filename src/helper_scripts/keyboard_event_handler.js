@@ -175,12 +175,6 @@ function keyboardEventHandler() {
             'listeners': dict()
         }
     ];
-    var keysMap = {};
-    this.keysList.forEach(function(info) {
-        keysMap[info.name] = info.key;
-    });
-    this.keysMap = keysMap;
-
     this.curPlatform = {
         'linux': 'linux',
         'linux2': 'linux',
@@ -192,6 +186,21 @@ function keyboardEventHandler() {
         'mac': 'mac',
         'win32': 'win',
     }[process.platform];
+    var currentPlatformKEH= this.curPlatform;
+    var keysMap = {};
+    this.keysList.forEach(function(info) {
+        var supportedPlatform = false;
+        info.platforms.some(function(platform) {
+            if(platform === currentPlatformKEH) {
+                supportedPlatform = true;
+                return true;
+            }
+        });
+        if(supportedPlatform) {
+            keysMap[info.name] = info.key;
+        }
+    });
+    this.keysMap = keysMap;
 
     this.keyFunctions = dict();
 

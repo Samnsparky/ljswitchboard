@@ -75,15 +75,23 @@
         "scriptNameID":"active-lua-script-name",
         "types": [
             "example",
-            "userScript"
+            "userScript",
+            "newScript"
         ],
         "example": {
             "windowMessage": "Example ",
-            "canSave": false
+            "canSave": false,
+            "saveOnRun": false
         },
         "userScript": {
             "windowMessage": "",
-            "canSave": true
+            "canSave": true,
+            "saveOnRun": true
+        },
+        "newScript": {
+            "windowMessage": "New Script (not saved)",
+            "canSave": false,
+            "saveOnRun": true
         }
     },
     "scriptTemplates": [],
