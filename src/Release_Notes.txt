@@ -1,5 +1,8 @@
 Release Notes:
 
+0.1.8:
+Updated list of internal computers to register them w/ different versions of K3 builds, added & organized lua examples.  
+
 0.1.7:
 Fixed windows 'save' keyboard command, added create new lua script button, and other smaller changes.
 
