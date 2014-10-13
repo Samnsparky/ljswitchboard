@@ -1,7 +1,7 @@
 {
     "constants": {
         "editor": {
-            "defaultScript": "Basic Analog Inputs"
+            "defaultScript": "Welcome Screen"
         },
         "console": {
             "maxNumLines": 1000
@@ -20,54 +20,75 @@
     },
     "preBuiltScripts": [
         {
-            "name": "SPI Example",
-            "location": "lua_script_debugger/premade_scripts/SPI Example.lua"
-        },
-        {
-            "name": "Analog IO",
+            "name": "Helpful Information",
             "subScripts": [
                 {
-                    "name": "Basic Analog Inputs",
-                    "location": "lua_script_debugger/premade_scripts/test1.lua"
-                },
-                {
-                    "name": "Advanced Analog IO",
-                    "subScripts": [
-                        {
-                            "name": "Basic Analog Inputs",
-                            "location": "lua_script_debugger/premade_scripts/test1.lua"
-                        },
-                        {
-                            "name": "Analog Inputs",
-                            "location": "lua_script_debugger/premade_scripts/test2.lua"
-                        }
-                    ]
+                    "name": "Hello World",
+                    "location": "lua_script_debugger/premade_scripts/Helpful_Information/Hello World.lua"
+                }, {
+                    "name": "List of LabJack functions",
+                    "location": "lua_script_debugger/premade_scripts/Helpful_Information/List of LabJack functions.lua"
+                }, {
+                    "name": "Welcome Screen",
+                    "location": "lua_script_debugger/premade_scripts/Helpful_Information/Welcome Screen.lua"
                 }
             ]
-        },
-        {
+        }, {
+            "name": "Sensor Examples",
+            "subScripts": [
+                {
+                    "name": "DS18S20 Temperature (1-Wire)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/DS18S20 Temperature (1-Wire).lua"
+                }, {
+                    "name": "DS18S20 (1-Wire) - Advanced",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/DS18S20 (1-Wire) - Advanced.lua"
+                }, {
+                    "name": "LM34CAZ Temperature (voltage)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/LM34CAZ Temperature (voltage).lua"
+                }, {
+                    "name": "MB1000 Range Finder (PWM)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/MB1000 Range Finder (PWM).lua"
+                }, {
+                    "name": "MS-360LP PIR Motion (logic)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/MS-360LP PIR Motion (logic).lua"
+                }, {
+                    "name": "SCA3000 3-axis Accel (SPI)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/SCA3000 3-axis Accel (SPI).lua"
+                }, {
+                    "name": "SRF02 Range Finder (I2C)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/SRF02 Range Finder (I2C).lua"
+                }
+            ]
+        }, {
+            "name": "Get Device Temperature",
+            "location": "lua_script_debugger/premade_scripts/1 Get Device Temperature.lua"
+        }, {
+            "name": "Toggle DIO 1Hz",
+            "location": "lua_script_debugger/premade_scripts/2 Toggle DIO 1Hz.lua"
+        }, {
+            "name": "Set DAC based on voltage",
+            "location": "lua_script_debugger/premade_scripts/3 Set DAC based on voltage.lua"
+        }, {
+            "name": "Set DIO based on voltage",
+            "location": "lua_script_debugger/premade_scripts/4 Set DIO based on voltage.lua"
+        }, {
+            "name": "Output sine wave",
+            "location": "lua_script_debugger/premade_scripts/5 Output sine wave.lua"
+        }, {
+            "name": "Output triangle wave",
+            "location": "lua_script_debugger/premade_scripts/6 Output triangle wave.lua"
+        }, {
+            "name": "Log voltage to file",
+            "location": "lua_script_debugger/premade_scripts/7 Log voltage to file.lua"
+        }, {
+            "name": "Read RTC",
+            "location": "lua_script_debugger/premade_scripts/8 Read RTC.lua"
+        }, {
+            "name": "SPI Example",
+            "location": "lua_script_debugger/premade_scripts/9 SPI Example.lua"
+        }, {
             "name": "1-Wire Read Ram ID",
-            "location": "lua_script_debugger/premade_scripts/1-Wire Read Ram ID.lua"
-        },
-        {
-            "name": "1-Wire for DeSteeg",
-            "location": "lua_script_debugger/premade_scripts/1-Wire De-Steeg.lua"
-        },
-        {
-            "name": "basicExample",
-            "location": "lua_script_debugger/premade_scripts/basicExample.lua"
-        },
-        {
-            "name": "File IO",
-            "location": "lua_script_debugger/premade_scripts/File read and write_2014-01-21.lua"
-        },
-        {
-            "name": "test1",
-            "location": "lua_script_debugger/premade_scripts/test1.lua"
-        },
-        {
-            "name": "test2",
-            "location": "lua_script_debugger/premade_scripts/test2.lua"
+            "location": "lua_script_debugger/premade_scripts/10 1-Wire Read Ram ID.lua"
         }
     ],
     "scriptOptions": {

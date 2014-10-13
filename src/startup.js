@@ -4,10 +4,15 @@ require('getmac').getMac(function(err,macAddress){
     if (err)  throw err;
     process.curMacAddr = macAddress;
     process.isInternalComputer = {
-        "00:25:4b:cf:1c:38a": true               // Chris Mac (wifi?)
+        "00:25:4b:cf:1c:38": true,                  // Chris: Mac (wifi?)
+        "50-1A-C5-E8-DE-9B": true,                  // Chris: Surface (wifi?)
+        "68-94-23-06-5D-8F": true,                  // Chris: LJ-Win8
+        "00-26-2D-28-C2-2A": true,                  // Caleb: LJ-Win7
     }[macAddress];
     process.isDevComputer = {
-        "00:25:4b:cf:1c:38a": true               // Chris Mac (wifi?)
+        "00:25:4b:cf:1c:38": true,                  // Chris Mac (wifi?)
+        "50-1A-C5-E8-DE-9B": true,                  // Chris: Surface (wifi?)
+        "68-94-23-06-5D-8F": true                   // Chris: LJ-Win8
     }[macAddress];
     if(typeof(process.isDevComputer) === 'undefined') {
         process.isDevComputer = false;
