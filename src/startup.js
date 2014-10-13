@@ -8,11 +8,15 @@ require('getmac').getMac(function(err,macAddress){
         "50-1A-C5-E8-DE-9B": true,                  // Chris: Surface (wifi?)
         "68-94-23-06-5D-8F": true,                  // Chris: LJ-Win8
         "00-26-2D-28-C2-2A": true,                  // Caleb: LJ-Win7
+        "E0-69-95-C1-45-12": true,                  // Dave: LJ-Win7
+        "14:10:9f:d4:67:51": true,                  // Rory: New mac
+        "00-1A-A0-90-C3-C1": true,                  // LJRob (spongebob): LJ-Win7
     }[macAddress];
     process.isDevComputer = {
         "00:25:4b:cf:1c:38": true,                  // Chris Mac (wifi?)
         "50-1A-C5-E8-DE-9B": true,                  // Chris: Surface (wifi?)
-        "68-94-23-06-5D-8F": true                   // Chris: LJ-Win8
+        "68-94-23-06-5D-8F": true,                  // Chris: LJ-Win8
+        "14:10:9f:d4:67:51": true,                  // Rory: New mac
     }[macAddress];
     if(typeof(process.isDevComputer) === 'undefined') {
         process.isDevComputer = false;

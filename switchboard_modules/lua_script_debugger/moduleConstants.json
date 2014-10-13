@@ -43,6 +43,9 @@
                     "name": "DS18S20 (1-Wire) - Advanced",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/DS18S20 (1-Wire) - Advanced.lua"
                 }, {
+                    "name": "EI-1050 Temperature (SBUS)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/EI-1050 Temperature (SBUS).lua"
+                }, {
                     "name": "LM34CAZ Temperature (voltage)",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/LM34CAZ Temperature (voltage).lua"
                 }, {
