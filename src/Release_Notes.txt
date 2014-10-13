@@ -1,5 +1,8 @@
 Release Notes:
 
+0.1.7:
+Fixed windows 'save' keyboard command, added create new lua script button, and other smaller changes.
+
 0.1.6:
 Several updates to the Lua Scripting module, handles keyboard 'save' commands, moved some buttons, made a tree example structure & lock-to-bottom of console button.
 

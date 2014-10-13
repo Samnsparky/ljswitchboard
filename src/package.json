@@ -1,7 +1,7 @@
 {
   "name": "labjack-switchboard",
   "description": "LabJack Desktop Utilities",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "main": "index.html",
   "inject-js-start":"startup.js",
   "window": {
