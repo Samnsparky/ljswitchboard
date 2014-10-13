@@ -47,6 +47,11 @@
 #lua-script-active-script-info .textRow {
 	min-height: 20px;
 }
+.lua-examples-spacing-character {
+	padding-left: 5px;
+	padding-right: 5px;
+	font-size: large;
+}
 
 @media screen and (min-width: 1000px) {
 	#lua-script-module-body .deviceStatusBarVisible{

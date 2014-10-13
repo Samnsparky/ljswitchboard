@@ -103,12 +103,6 @@
 
                 // Initialize object in keyboard_event_handler.js
                 KEYBOARD_EVENT_HANDLER.init();
-                KEYBOARD_EVENT_HANDLER.addListener('save','test',function(info){
-                    console.log('Test Save Listener',info);
-                });
-                KEYBOARD_EVENT_HANDLER.addListener('esc','test',function(info){
-                    console.log('Test esc Listener',info);
-                });
 
                 // Start Kipling!
                 renderDeviceSelector();

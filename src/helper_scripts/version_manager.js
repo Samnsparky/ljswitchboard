@@ -739,7 +739,7 @@ function labjackVersionManager() {
 				k3Test.upgrade_type = "kipling";
 				k3Test.safe_name = "kipling_test";
 
-				if (k3Test.version >= pageElements.kiplingVersion) {
+				if (k3Test.version > pageElements.kiplingVersion) {
 					upgradeLinks.push(k3Test);
 					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
 					showWarning(
@@ -788,7 +788,7 @@ function labjackVersionManager() {
 				ljm.upgrade_type = "ljm";
 				ljm.safe_name = "ljm";
 
-				if (ljm.version >= pageElements.ljmVersion) {
+				if (ljm.version > pageElements.ljmVersion) {
 					upgradeLinks.push(ljm);
 
 					var ljmElement = self.controls.versionNumbersEl.find('#ljm');

@@ -1,7 +1,7 @@
 {
     "constants": {
         "editor": {
-            "defaultScript": "basicExample"
+            "defaultScript": "Basic Analog Inputs"
         },
         "console": {
             "maxNumLines": 1000
@@ -22,6 +22,28 @@
         {
             "name": "SPI Example",
             "location": "lua_script_debugger/premade_scripts/SPI Example.lua"
+        },
+        {
+            "name": "Analog IO",
+            "subScripts": [
+                {
+                    "name": "Basic Analog Inputs",
+                    "location": "lua_script_debugger/premade_scripts/test1.lua"
+                },
+                {
+                    "name": "Advanced Analog IO",
+                    "subScripts": [
+                        {
+                            "name": "Basic Analog Inputs",
+                            "location": "lua_script_debugger/premade_scripts/test1.lua"
+                        },
+                        {
+                            "name": "Analog Inputs",
+                            "location": "lua_script_debugger/premade_scripts/test2.lua"
+                        }
+                    ]
+                }
+            ]
         },
         {
             "name": "1-Wire Read Ram ID",

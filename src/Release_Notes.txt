@@ -1,5 +1,11 @@
 Release Notes:
 
+0.1.6:
+Several updates to the Lua Scripting module, handles keyboard 'save' commands, moved some buttons, made a tree example structure & lock-to-bottom of console button.
+
+0.1.5:
+Added is-device-calibrated check to the device information module.  Also changed input box style on network settings module
+
 0.1.4:
 Major changes to the GUI for file downloading, extracting, and installing updates
 

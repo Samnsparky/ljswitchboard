@@ -258,14 +258,15 @@ function keyboardEventHandler() {
         }
     };
     this.deleteListener = function(keyName, listenerName, listenerFunc) {
+        keyName = self.keysMap[keyName];
         var isKeyName = (typeof(keyName) !== 'undefined');
         var isListenerName = (typeof(listenerName) !== 'undefined');
         var isListenerFunc = (typeof(listenerFunc) !== 'undefined');
-        if(isKeyName && isListenerName && isListenerFunc) {
+        if(isKeyName && isListenerName) {
             if(self.keyFunctions.has(keyName)) {
-                var tempKeyFunction = self.keyFunctions.get(keyName);
-                tempKeyFunction.listeners.delete(listenerName);
-                self.keyFunctions.set(keyName, tempKeyFunction);
+                var tempListeners = self.keyFunctions.get(keyName);
+                tempListeners.listeners.delete(listenerName);
+                self.keyFunctions.set(keyName, tempListeners);
             }
         }
     };

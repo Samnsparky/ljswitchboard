@@ -28,6 +28,9 @@
 						</button>
 					</td>
 					<td>
+						<button id="load-lua-script-button" type="button" class="btn btn-default btn-lg" title="Load File">
+							<span class=" icon-folder-open"></span>
+						</button>
 						<div id="save-lua-script-button" class="btn-group">
 							<button id="save-button" type="button" class="btn btn-default btn-lg" title="Save">
 								<span id="save-button" class="icon-disk"></span>
@@ -40,20 +43,53 @@
 								<li><a id="saveAs-button">Save As</a></li>
 							</ul>
 						</div>
-						
-						<button id="load-lua-script-button" type="button" class="btn btn-default btn-lg" title="Load File">
-							<span class="icon-file-3"></span>
-						</button>
+						<span class="lua-examples-spacing-character">|</span>
 						<div id="load-example-lua-script-button" class="btn-group btn-lg">
 							<button class="btn dropdown-toggle" data-toggle="dropdown" title="Load Example">
 								<span class="icon-code-3"></span>
 								<span class="caret" style="margin-right: -12px;margin-left: 4px;"></span>
 							</button>
 							<ul class="dropdown-menu">
-								{{#each custom.exampleScripts}}
-								<li>
-									<a id="{{ name }}">{{ name }}</a>
+								<li class="dropdown-submenu">
+									<a tabindex="-1" href="#">More options</a>
+									<ul class="dropdown-menu">
+										<li>
+											<a id="helloWorld">HelloWorld</a>
+										</li>
+										<li class="dropdown-submenu">
+											<a tabindex="-1" href="#">More options</a>
+											<ul class="dropdown-menu">
+												<li>
+													<a id="helloWorld">HelloWorld</a>
+												</li>
+											</ul>
+										</li>
+									</ul>
 								</li>
+								{{#each custom.exampleScripts}}
+									{{#if subScripts }}
+									<li class="dropdown-submenu">
+										<a tabindex="-1">{{name}}</a>
+										<ul class="dropdown-menu">
+											{{#each subScripts}}
+												{{#if subScripts }}
+												<li class="dropdown-submenu">
+													<a tabindex="-1">{{name}}</a>
+													<ul class="dropdown-menu">
+														{{#each subScripts}}
+														<li><a id="{{ name }}">{{ name }}</a></li>
+														{{/each}}
+													</ul>
+												</li>
+												{{else}}
+												<li><a id="{{ name }}">{{ name }}</a></li>
+												{{/if}}
+											{{/each}}
+										</ul>
+									</li>
+									{{else}}
+									<li><a id="{{ name }}">{{ name }}</a></li>
+									{{/if}}
 								{{/each}}
 							</ul>
 						</div>
@@ -133,6 +169,9 @@
 									<button id="lua-script-console-button" type="button" class="btn btn-default btn-lg">
 										<span class="icon-console-2">Console</span>
 									</button>
+									<button id="lua-script-move-cursor-to-bottom-button" type="button" class="btn btn-default btn-lg" title="Lock cursor to bottom of console output">
+										<span class="icon-arrow-down-alt1"></span>
+									</button>
 									{{!--<button id="lua-script-status-button" type="button" class="btn btn-default btn-lg">
 										<span class="icon-stats-3">Status</span>
 									</button>--}}
@@ -179,4 +218,6 @@ Debug-Buffer Status (0-256): "icon-progress-0"
 Debug-Buffer Status (257-512): "icon-progress-1"
 Debug-Buffer Status (513-768): "icon-progress-2"
 Debug-Buffer Status (768-end): "icon-progress-3"
+
+From caleb, use "icon-file-3" as "new script"
 	--}}
