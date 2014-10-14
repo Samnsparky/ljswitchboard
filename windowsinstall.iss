@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Kipling"
-#define MyAppVersion "3.0.0.1"
+#define MyAppVersion "3.0.2"
 #define MyAppPublisher "LabJack, Corp."
 #define MyAppURL "http://www.labjack.com/"
 #define MyAppExeName "Kipling.exe"

@@ -1,5 +1,8 @@
 Release Notes:
 
+0.1.10:
+Preparing for initial non-beta release. (take 1)
+
 0.1.9:
 Updated where the various version numbers get pulled from.
 
