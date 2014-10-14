@@ -27,7 +27,7 @@ try {
 
 function labjackVersionManager() {
 	this.kiplingUpdateLinks = {
-		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling/kipling_win.zip",
+		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling/current/kipling_current_win.zip",
 		"beta_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/beta/kipling_beta_win.zip",
 		"test_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/test/kipling_test_win.zip",
 
@@ -35,13 +35,13 @@ function labjackVersionManager() {
 		"beta_mac":			"https://s3.amazonaws.com/ljrob/mac/kipling/beta/kipling_beta_mac.zip",
 		"test_mac":			"https://s3.amazonaws.com/ljrob/mac/kipling/test/kipling_test_mac.zip",
 
-		"current_linux32":	"https://s3.amazonaws.com/ljrob/linux32/kipling/kipling_lin32.zip",
-		"beta_linux32":		"https://s3.amazonaws.com/ljrob/lin32/kipling/beta/kipling_beta_lin32.zip",
-		"test_linux32":		"https://s3.amazonaws.com/ljrob/lin32/kipling/test/kipling_test_lin32.zip",
+		"current_linux32":	"https://s3.amazonaws.com/ljrob/linux32/kipling/kipling_linux32.zip",
+		"beta_linux32":		"https://s3.amazonaws.com/ljrob/lin32/kipling/beta/kipling_beta_linux32.zip",
+		"test_linux32":		"https://s3.amazonaws.com/ljrob/lin32/kipling/test/kipling_test_linux32.zip",
 
-		"current_linux64":	"https://s3.amazonaws.com/ljrob/linux64/kipling/kipling_lin64.zip",
-		"beta_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling/beta/kipling_beta_lin64.zip",
-		"test_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling/test/kipling_test_lin64.zip"
+		"current_linux64":	"https://s3.amazonaws.com/ljrob/linux64/kipling/kipling_linux64.zip",
+		"beta_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling/beta/kipling_beta_linux64.zip",
+		"test_linux64":		"https://s3.amazonaws.com/ljrob/lin64/kipling/test/kipling_test_linux64.zip"
 	};
 
 	// define dict object with various urls in it
