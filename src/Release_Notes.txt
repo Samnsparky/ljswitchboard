@@ -1,5 +1,8 @@
 Release Notes:
 
+0.1.11:
+Upgraded to a new version of the ace editor
+
 0.1.10:
 Preparing for initial non-beta release. (take 1)
 
