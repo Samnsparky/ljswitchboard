@@ -728,12 +728,6 @@ function labjackVersionManager() {
 			};
 			var isVersionNewer = function(currentVersion, newVersion) {
 				var isNewer = false;
-				// Original Method
-				/*
-				if(currentVersion < newVersion) {
-				isNewer = true;
-				}
-				*/
 
 				curVNums = currentVersion.split('.');
 				newVNums = newVersion.split('.');
@@ -752,12 +746,15 @@ function labjackVersionManager() {
 						}
 					}
 				}
+				
 				newVNums.some(function(newV,i){
 					var newVersionNum = parseInt(newV, 10);
 					var curVersionNum = parseInt(curVNums[i], 10);
 					if(newVersionNum > curVersionNum) {
-						console.log('True!');
 						isNewer = true;
+						return true;
+					}
+					if(curVersionNum > newVersionNum) {
 						return true;
 					}
 				});
