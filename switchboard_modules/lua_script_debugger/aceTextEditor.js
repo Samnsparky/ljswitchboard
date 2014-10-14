@@ -34,7 +34,7 @@ function textEditor() {
 
         try{
             if(type === 'luaEditor') {
-                ace.require('ace/ext/language_tools'); // In hows of enabling autocompletion
+                // ace.require('ace/ext/language_tools'); // In hows of enabling autocompletion
             }
 
             self.editor = ace.edit(id);
@@ -42,11 +42,11 @@ function textEditor() {
             self.editor.getSession().setMode(mode);
 
             if(type === 'luaEditor') {
-                self.editor.setOptions({
-                    enableBasicAutocompletion: true,
-                    enableSnippets: true,
-                    enableLiveAutocompletion: true
-                });
+                // self.editor.setOptions({
+                //     enableBasicAutocompletion: true,
+                //     enableSnippets: true,
+                //     enableLiveAutocompletion: true
+                // });
                 // self.editor.setOptions({'showInvisibles':true});
             }
         } catch(err) {

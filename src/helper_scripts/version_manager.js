@@ -728,8 +728,40 @@ function labjackVersionManager() {
 			};
 			var isVersionNewer = function(currentVersion, newVersion) {
 				var isNewer = false;
-				
-				return isNewer
+				// Original Method
+				/*
+				if(currentVersion < newVersion) {
+				isNewer = true;
+				}
+				*/
+
+				curVNums = currentVersion.split('.');
+				newVNums = newVersion.split('.');
+				if(curVNums.length !== newVNums.length) {
+					var i = 0;
+					var diff = 0;
+					if(curVNums.length > newVNums.length) {
+						diff = curVNums.length - newVNums.length;
+						for(i = 0; i < diff; i++) {
+							curVNums.push(0);
+						}
+					} else {
+						diff = newVNums.length - curVNums.length;
+						for(i = 0; i < diff; i++) {
+							newVNums.push(0);
+						}
+					}
+				}
+				newVNums.some(function(newV,i){
+					var newVersionNum = parseInt(newV, 10);
+					var curVersionNum = parseInt(curVNums[i], 10);
+					if(newVersionNum > curVersionNum) {
+						console.log('True!');
+						isNewer = true;
+						return true;
+					}
+				});
+				return isNewer;
 			};
 			// Save reference to info for shorter names
 			var info = self.dataCache;
@@ -743,7 +775,8 @@ function labjackVersionManager() {
 				k3Current.name = "Kipling";
 				k3Current.upgrade_type = "kipling";
 				k3Current.safe_name = "kipling_current";
-				if (k3Current.version > pageElements.kiplingVersion) {
+				// if (k3Current.version > pageElements.kiplingVersion) {
+				if(isVersionNewer(pageElements.kiplingVersion, k3Current.version)) {
 					upgradeLinks.push(k3Current);
 					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
 					showError(
@@ -759,7 +792,8 @@ function labjackVersionManager() {
 				k3Beta.upgrade_type = "kipling";
 				k3Beta.safe_name = "kipling_beta";
 
-				if (k3Beta.version > pageElements.kiplingVersion) {
+				// if (k3Beta.version > pageElements.kiplingVersion) {
+				if(isVersionNewer(pageElements.kiplingVersion, k3Beta.version)) {
 					upgradeLinks.push(k3Beta);
 					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
 					showWarning(
@@ -776,7 +810,12 @@ function labjackVersionManager() {
 					k3Test.upgrade_type = "kipling";
 					k3Test.safe_name = "kipling_test";
 
-					if (k3Test.version >= pageElements.kiplingVersion) {
+					// if (k3Test.version >= pageElements.kiplingVersion) {
+					var displayVersion = isVersionNewer(pageElements.kiplingVersion, k3Test.version);
+					if(pageElements.kiplingVersion === k3Test.version) {
+						displayVersion = true;
+					}
+					if(displayVersion) {
 						upgradeLinks.push(k3Test);
 						kiplingEl =self.controls.versionNumbersEl.find('#kipling');
 						showWarning(
@@ -787,8 +826,6 @@ function labjackVersionManager() {
 				}
 			}
 			
-			
-
 			// Check and add LJM info
 			if (isReal(info.ljm, info.ljm.current, info.ljm.current[0])) {
 				var ljm = info.ljm.current[0];
