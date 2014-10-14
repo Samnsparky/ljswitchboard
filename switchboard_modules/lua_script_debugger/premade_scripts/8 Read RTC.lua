@@ -3,6 +3,7 @@ print("Read the real-time-clock RTC, print the timestamp.")
 --Address 61510 has the timestamp in a format that can be read by Lua scripts
 --Address 61500 should not be used due to truncation during conversion from u32 to float
 
+--updated 10/14/2014
 --store the time in a table, so that saving inside a file is easy
 table = {}
 table[1] = 0    --year
