@@ -693,15 +693,26 @@ function luaDeviceController() {
         self.device = device;
     };
     this.setCodeEditor = function(codeEditor) {
+        // Save the editor and various attributes
         self.codeEditor = codeEditor;
         self.codeEditorSession = codeEditor.editor.session;
         self.codeEditorDoc = codeEditor.editor.session.doc;
+
+        // Configure the editor
+        self.codeEditorSession.setTabSize(2);
+        self.codeEditorSession.setUseSoftTabs(true);
+        self.codeEditorSession.setUseWrapMode(true);
+
     };
     this.setDebuggingLog = function(debuggingLog) {
         self.debuggingLog = debuggingLog;
         self.debuggingLogSession = debuggingLog.editor.session;
         self.debuggingLogDoc = debuggingLog.editor.session.doc;
         self.debuggingLog.editor.setReadOnly(true);
+
+        self.debuggingLogSession.setTabSize(2);
+        self.debuggingLogSession.setUseSoftTabs(false);
+        self.debuggingLogSession.setUseWrapMode(true);
     };
     this.setScriptConstants = function(constants) {
         self.scriptConstants = constants;

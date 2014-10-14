@@ -921,6 +921,7 @@ function module() {
             chooser.trigger('click');
             return false;
         });
+
         // Initialize ace editor obj for luaEditor & debuggingLog:
         try {
             self.luaEditor = new textEditor();
@@ -928,13 +929,16 @@ function module() {
             self.luaEditor.setupEditor(
                 "lua-code-editor",
                 "ace/theme/monokai",
-                "ace/mode/lua"
+                "ace/mode/lua",
+                'luaEditor'
             );
             self.debuggingLog.setupEditor(
                 "lua-debugging-log-editor",
                 "ace/theme/monokai",
-                "ace/mode/text"
+                "ace/mode/text",
+                'console'
             );
+
             // Save luaEditor & debuggingLog objects to the luaController object
             self.luaController.setCodeEditor(self.luaEditor);
             self.luaController.setDebuggingLog(self.debuggingLog);

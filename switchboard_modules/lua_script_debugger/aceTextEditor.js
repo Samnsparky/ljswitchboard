@@ -16,20 +16,50 @@ function textEditor() {
     this.destroy = function() {
         self.editor.destroy();
     };
-    this.setupEditor = function(id, theme, mode) {
+    var editorTypes = ['luaEditor','console', 'basic'];
+
+    this.setupEditor = function(id, theme, mode, type) {
         self.htmlID = id;
         self.editorTheme = theme;
         self.editorMode = mode;
 
         // Initialize the aceEditor instance
-        
+        var isValidType = false;
+        if(type) {
+            isValidType = editorTypes.indexOf(type) >= 0;
+        }
+        if(!isValidType) {
+            type = 'basic';
+        }
+
         try{
+            if(type === 'luaEditor') {
+                ace.require('ace/ext/language_tools'); // In hows of enabling autocompletion
+            }
+
             self.editor = ace.edit(id);
             self.editor.setTheme(theme);
             self.editor.getSession().setMode(mode);
+
+            if(type === 'luaEditor') {
+                self.editor.setOptions({
+                    enableBasicAutocompletion: true,
+                    enableSnippets: true,
+                    enableLiveAutocompletion: true
+                });
+                // self.editor.setOptions({'showInvisibles':true});
+            }
         } catch(err) {
             console.error('Error initializing ace editor',err);
         }
+
+        /*
+        Cool Options:
+        1. Enabling the display of all invisible characters:
+        self.editor.setOptions({'showInvisibles':true});
+
+
+         */
     };
     this.setHeight = function(newHeight) {
         if(newHeight != self.curHeight) {
