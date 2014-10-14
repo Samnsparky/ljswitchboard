@@ -726,6 +726,11 @@ function labjackVersionManager() {
 				ele.addClass('lvm_version_error');
 				ele.attr('title', 'New version available');
 			};
+			var isVersionNewer = function(currentVersion, newVersion) {
+				var isNewer = false;
+				
+				return isNewer
+			};
 			// Save reference to info for shorter names
 			var info = self.dataCache;
 
