@@ -2,7 +2,7 @@ Release Notes:
 
 3.0.0:
 Fixed version number checking issue, 0.1.9 was reported to be greater than 0.1.11.
-Initial public release.
+Initial public release.  Enabled some error messages to be selected.
 
 0.1.11:
 Upgraded to a new version of the ace editor
