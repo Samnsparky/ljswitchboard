@@ -17,8 +17,9 @@ require('getmac').getMac(function(err,macAddress){
         "00:25:4b:cf:1c:38": true,                  // Chris Mac (wifi?)
         "50-1A-C5-E8-DE-9B": true,                  // Chris: Surface (wifi?)
         "68-94-23-06-5D-8F": true,                  // Chris: LJ-Win8
-        "14:10:9f:d4:67:51": true,                  // Rory: New mac
         "C8-60-00-30-7D-40": true,                  // Chris: Home-Win7
+        "14:10:9f:d4:67:51": true,                  // Rory: New mac
+        "00-26-2D-28-C2-2A": true,                  // Caleb: LJ-Win7
     }[macAddress];
     if(typeof(process.isDevComputer) === 'undefined') {
         process.isDevComputer = false;

@@ -305,6 +305,14 @@ function showDeviceSerial(serial)
 
     $('#device-info-display').hide();
     showDevice(device, function(){$('#device-info-display').fadeIn();});
+    device.getCalibrationStatus(function(isCalValid) {
+        showDevice(device, function() {
+            $('#device-info-display').fadeIn();
+            // Initializing the inputListeners allows for excape key presses to
+            // cancel out of input boxes and undo the changes.
+            KEYBOARD_EVENT_HANDLER.initInputListeners();
+        });
+    });
 }
 
 
@@ -370,6 +378,8 @@ $('#device-info-inspector').ready(function(){
     device.getCalibrationStatus(function(isCalValid) {
         showDevice(device, function(){
             $('#device-info-display').fadeIn();
+            // Initializing the inputListeners allows for excape key presses to
+            // cancel out of input boxes and undo the changes.
             KEYBOARD_EVENT_HANDLER.initInputListeners();
         });
     });
