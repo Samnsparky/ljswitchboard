@@ -55,8 +55,8 @@
                     "name": "MS-360LP PIR Motion (logic)",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/MS-360LP PIR Motion (logic).lua"
                 }, {
-                    "name": "SCA3000 3-axis Accel (SPI)",
-                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/SCA3000 3-axis Accel (SPI).lua"
+                    "name": "ADXL345 3-axis Accel (SPI)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/ADXL345 3-axis Accel (SPI).lua"
                 }, {
                     "name": "SRF02 Range Finder (I2C)",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/SRF02 Range Finder (I2C).lua"
