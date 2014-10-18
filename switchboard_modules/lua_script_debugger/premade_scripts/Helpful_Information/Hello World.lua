@@ -1,5 +1,6 @@
 -- hello world.lua
 -- the first program in every language
+-- see the full Lua functions list at http://www.lua.org/manual/5.2/manual.html#3
 
 LJ.IntervalConfig(0, 1000)
 

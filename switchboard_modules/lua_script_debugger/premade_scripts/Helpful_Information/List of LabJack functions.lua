@@ -1,5 +1,6 @@
 --This is the list of LabJack-specific functions.  There are many more native Lua functions
---All addresses can be found in the Register Matrix(Modbus Map)
+--http://www.lua.org/manual/5.2/manual.html#3
+--All LabJack addresses can be found in the Register Matrix(Modbus Map)
 --http://labjack.com/support/modbus/map
 --For more information, see the scripting section in the T7 datasheet
 --http://labjack.com/support/datasheets/t7/scripting
@@ -12,6 +13,12 @@
 --3:	single precision floating point (float)
 --98:	string
 --99:	byte - The "byte" dataType is used to pass arrays of bytes, or tables.
+
+
+--bitwise operations, see Lua 5.2 documentation
+--http://www.lua.org/manual/5.2/manual.html#6.7
+--bit32.bor (x1, x2, ...)
+--bit32.lshift (x1, x2, ...)
 
 
 --MB.R
@@ -122,6 +129,7 @@ end
 
 --IOMem.R
 
+--Address, Value = IOMem.R()
 --Description: Reads from the FIFO a value written to the 47000 range. Address is zero if FIFO is empty.
 --An external computer can send information to the Lua script using modbus addresses 47000 to 47127 "LUA_IO#(0:127)_WRITE". 
 --External writes to these LUA_IO_WRITE registers are stored in a linked list. 
@@ -134,13 +142,13 @@ MB.W(6006,1,10)         --allocate memory for 10 floats
 
 while true do
 
-  add, val = IOMem.R()
+  add, val = IOMem.R()  --get a value from an external PC
 
   if add > 0 then
 
     print(string.format("New MB Write: %0.0f %f", add, val))
 
-    IOMem.W(add - 1000, val + 100)
+    IOMem.W(add - 1000, val + 100)  --add 100 to the value, and write to 46000
 
   end
 
