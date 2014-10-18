@@ -92,6 +92,9 @@
         }, {
             "name": "1-Wire Read Ram ID",
             "location": "lua_script_debugger/premade_scripts/10 1-Wire Read Ram ID.lua"
+        }, {
+            "name": "Lua IO RAM",
+            "location": "lua_script_debugger/premade_scripts/11 Lua IO RAM.lua"
         }
     ],
     "scriptOptions": {
