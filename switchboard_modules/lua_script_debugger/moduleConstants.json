@@ -60,6 +60,9 @@
                 }, {
                     "name": "SRF02 Range Finder (I2C)",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/SRF02 Range Finder (I2C).lua"
+                }, {
+                    "name": "TP-01 Thermocouple (AIN_EF).lua",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/TP-01 Thermocouple (AIN_EF).lua"
                 }
             ]
         }, {
