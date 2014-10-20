@@ -761,9 +761,6 @@ function module() {
     this.lastInputKeyboardEvent = null;
     this.registerClickHandlers = function(chNum, efType, baseID) {
         var writeConfig = function(reg, val, isValid) {
-            if(!(typeof(isValid) !== 'undefined')) {
-                isValid = true;
-            }
             if((typeof(val) !== 'undefined') && (typeof(reg) !== 'undefined')) {
                 if(isValid) {
                     self.writeReg(reg,val)
@@ -792,6 +789,7 @@ function module() {
             var value;
             var newText = '';
             var newTitle = '';
+            var isValid;
 
             if(className === 'menuOption') {
                 console.log('menuClickHandler');
@@ -808,7 +806,8 @@ function module() {
                 selectEl.title = newTitle;
                 //Set new text
                 selectEl.innerText = newText;
-                writeConfig(register,value);
+                isValid = true;
+                writeConfig(register,value,isValid);
             }
 
         };
