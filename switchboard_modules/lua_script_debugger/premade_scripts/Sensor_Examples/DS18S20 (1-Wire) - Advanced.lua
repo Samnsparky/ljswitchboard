@@ -1,4 +1,6 @@
 print("Communicate with several DS18S20 1-wire sensors")
+--First change the ROM IDs of each sensor to use this example. Also change eioNum
+--Discover the ROM IDs using the "1-Wire Read ROM ID" example.
 --Note, there are several kinds of 1-wire sensors from Maxim.
 --Some variants: DS1820, DS1821, DS1822, DS18S20, and DS18B20.
 --T7 1-Wire documentation
@@ -127,11 +129,10 @@ function DS18xx_Exec(target_rom,i)
 end
 
 
-print("Read and display the device temperature 10 times at 0.5 Hz.")
-MB.W(48005, 0, 1)        --Ensure analog is on
-LJ.IntervalConfig(0, 100)
+LJ.IntervalConfig(0, 100)       --configure script interval for 100ms
 
 eioNum = 0
+--Some ROM IDs of DS18S20s
 FV0 = {[0] = 0xF100, [1] = 0x0802, [2] = 0xB082, [3] = 0x8010, [4] = 0.5, [5] = "0", [6] = 8}
 FV1 = {[0] = 0x2200, [1] = 0x0802, [2] = 0xB009, [3] = 0xB710, [4] = 0.5, [5] = "1", [6] = 8}
 FV2 = {[0] = 0x7400, [1] = 0x0802, [2] = 0xB012, [3] = 0x2210, [4] = 0.5, [5] = "2", [6] = 8}
@@ -143,6 +144,7 @@ FV7 = {[0] = 0xAE00, [1] = 0x0802, [2] = 0xAFB6, [3] = 0xCE10, [4] = 0.5, [5] = 
 ROMs = {[0] = FV0, [1] = FV1, [2] = FV2, [3] = FV3, [4] = FV4, [5] = FV5, [6] = FV6, [7] = FV7} 
 NumSensors = 8
 
+--more unused ROM IDs of DS18B20s
 ROMA = {[0] = 0xC100, [1] = 0x0004, [2] = 0xCD4F, [3] = 0xED28, [4] = 0.0625, [5] = "A", [6] = 8}
 ROMB = {[0] = 0x5300, [1] = 0x0004, [2] = 0xCDF8, [3] = 0x2328, [4] = 0.0625, [5] = "B", [6] = 8}
 ROMC = {[0] = 0x8700, [1] = 0x0004, [2] = 0xCD50, [3] = 0x8428, [4] = 0.0625, [5] = "C", [6] = 8}

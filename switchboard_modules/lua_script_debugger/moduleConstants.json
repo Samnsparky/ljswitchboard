@@ -37,8 +37,8 @@
             "name": "Sensor Examples",
             "subScripts": [
                 {
-                    "name": "DS18S20 Temperature (1-Wire)",
-                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/DS18S20 Temperature (1-Wire).lua"
+                    "name": "DS18B20 Temperature (1-Wire)",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/DS18B20 Temperature (1-Wire).lua"
                 }, {
                     "name": "DS18S20 (1-Wire) - Advanced",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/DS18S20 (1-Wire) - Advanced.lua"
@@ -93,8 +93,8 @@
             "name": "SPI Example",
             "location": "lua_script_debugger/premade_scripts/9 SPI Example.lua"
         }, {
-            "name": "1-Wire Read Ram ID",
-            "location": "lua_script_debugger/premade_scripts/10 1-Wire Read Ram ID.lua"
+            "name": "1-Wire Read ROM ID",
+            "location": "lua_script_debugger/premade_scripts/10 1-Wire Read ROM ID.lua"
         }, {
             "name": "Lua IO RAM",
             "location": "lua_script_debugger/premade_scripts/11 Lua IO RAM.lua"
