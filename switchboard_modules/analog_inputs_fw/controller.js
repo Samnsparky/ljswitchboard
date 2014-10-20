@@ -773,10 +773,16 @@ function module() {
                         showErrorMessage(message);
                     });
                 } else {
-                    showErrorMessage('Invalid value written to: ' + reg);
+                    showErrorMessage(
+                        'Prevented writing invalid value:', val,
+                        'to register:', reg
+                    );
                 }
             } else {
-                showErrorMessage('An invalid value written to: ' + reg);
+                showErrorMessage(
+                    'Detected error before wrting value:', val,
+                    'to register:', reg
+                );
             }
         };
         var menuClickHandler = function(event) {
