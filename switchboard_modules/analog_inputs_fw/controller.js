@@ -761,28 +761,27 @@ function module() {
     this.lastInputKeyboardEvent = null;
     this.registerClickHandlers = function(chNum, efType, baseID) {
         var writeConfig = function(reg, val, isValid) {
+            var errorString;
             if((typeof(val) !== 'undefined') && (typeof(reg) !== 'undefined')) {
                 if(isValid) {
-                    self.writeReg(reg,val)
-                    .then(function() {
-
-                    }, function(err) {
-                        var message = "Got: ";
-                        message += self.ljmDriver.errToStrSync(err);
-                        message += " writing reg: " + reg;
-                        showErrorMessage(message);
-                    });
-                } else {
-                    showErrorMessage(
-                        'Prevented writing invalid value:', val,
-                        'to register:', reg
+                    self.writeReg(reg,val).then(
+                        function() {},
+                        function(err) {
+                            var message = "Got: ";
+                            message += self.ljmDriver.errToStrSync(err);
+                            message += " writing reg: " + reg;
+                            showErrorMessage(message);
+                        }
                     );
+                } else {
+                    errorString = 'Prevented writing invalid value: ' +
+                        String(val) + ' to register: ' + reg;
+                    showErrorMessage(errorString);
                 }
             } else {
-                showErrorMessage(
-                    'Detected error before wrting value:', val,
-                    'to register:', reg
-                );
+                errorString = 'Detected error before writing value: ' +
+                    String(val) + ' to register: ' + reg;
+                showErrorMessage(errorString);
             }
         };
         var menuClickHandler = function(event) {
