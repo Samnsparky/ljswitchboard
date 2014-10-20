@@ -1,3 +1,15 @@
+print("Communicate with several DS18S20 1-wire sensors")
+--Note, there are several kinds of 1-wire sensors from Maxim.
+--Some variants: DS1820, DS1821, DS1822, DS18S20, and DS18B20.
+--T7 1-Wire documentation
+--http://labjack.com/support/datasheets/t7/digital-io/1-wire
+--DS18S20 datasheet
+--http://datasheets.maximintegrated.com/en/ds/DS18S20.pdf
+
+--The data line(DQ) needs a pullup resister of 2.2-4.7 kΩ to VS.
+--FIO lines can NOT be used for 1-Wire. They have too much impedance 
+--which prevent the signal from reaching logic thresholds
+
 function round(num, idp)
   local mult = 10^(idp or 0)
   return math.floor(num * mult + 0.5) / mult
