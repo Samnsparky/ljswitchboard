@@ -2,7 +2,7 @@ var globalDeviceConstantsSwitch = {
     "T7":"t7DeviceConstants",
     "T7Pro":"t7ProDeviceConstants"
 };
-var globalDoubleRegExStringPattern = "(^[0-9]{1,}$)|(^[0-9]{1,}\\.$)|(^[0-9]{1,}\\.[0-9]{1,}$)|(^\\.[0-9]{1,}$)";
+var globalDoubleRegExStringPattern = "(^\-?[0-9]{1,}$)|(^\-?[0-9]{1,}\\.$)|(^\-?[0-9]{1,}\\.[0-9]{1,}$)|(^\-?\\.[0-9]{1,}$)";
 var globalDeviceConstants = {
     "t7DeviceConstants": {
         hasEFSystem: true,

@@ -761,25 +761,27 @@ function module() {
     this.lastInputKeyboardEvent = null;
     this.registerClickHandlers = function(chNum, efType, baseID) {
         var writeConfig = function(reg, val, isValid) {
-            if(!(typeof(isValid) !== 'undefined')) {
-                isValid = true;
-            }
+            var errorString;
             if((typeof(val) !== 'undefined') && (typeof(reg) !== 'undefined')) {
                 if(isValid) {
-                    self.writeReg(reg,val)
-                    .then(function() {
-
-                    }, function(err) {
-                        var message = "Got: ";
-                        message += self.ljmDriver.errToStrSync(err);
-                        message += " writing reg: " + reg;
-                        showErrorMessage(message);
-                    });
+                    self.writeReg(reg,val).then(
+                        function() {},
+                        function(err) {
+                            var message = "Got: ";
+                            message += self.ljmDriver.errToStrSync(err);
+                            message += " writing reg: " + reg;
+                            showErrorMessage(message);
+                        }
+                    );
                 } else {
-                    showErrorMessage('Invalid value written to: ' + reg);
+                    errorString = 'Prevented writing invalid value: ' +
+                        String(val) + ' to register: ' + reg;
+                    showErrorMessage(errorString);
                 }
             } else {
-                showErrorMessage('An invalid value written to: ' + reg);
+                errorString = 'Detected error before writing value: ' +
+                    String(val) + ' to register: ' + reg;
+                showErrorMessage(errorString);
             }
         };
         var menuClickHandler = function(event) {
@@ -792,6 +794,7 @@ function module() {
             var value;
             var newText = '';
             var newTitle = '';
+            var isValid;
 
             if(className === 'menuOption') {
                 console.log('menuClickHandler');
@@ -808,7 +811,8 @@ function module() {
                 selectEl.title = newTitle;
                 //Set new text
                 selectEl.innerText = newText;
-                writeConfig(register,value);
+                isValid = true;
+                writeConfig(register,value,isValid);
             }
 
         };
