@@ -11,9 +11,9 @@
 //-------------------------- Node-Webkit Requires ------------------------------
 var gui;
 try {
-    gui = require('nw.gui');
+	gui = require('nw.gui');
 } catch (e) {
-    console.error('Failed to load nw.gui');
+	console.error('Failed to load nw.gui');
 }
 
 //-------------------------- NPM Requires --------------------------------------
@@ -27,7 +27,7 @@ var fs_facade = require('./fs_facade');
 
 var device_controller = null;
 try {
-    device_controller = require('./device_controller');
+	device_controller = require('./device_controller');
 } catch (e) {
 	try {
 		showPrematureAlert(
@@ -43,14 +43,28 @@ try {
 // Require ljswitchboard libs
 var ljsError;
 try {
-    ljsError = require('./helper_scripts/error_handler');
+	ljsError = require('./helper_scripts/error_handler');
 } catch (err) {
-    ljsError = require('./error_handler');
+	ljsError = require('./error_handler');
 }
 var dataPrinter;
 try {
-    dataPrinter = require('./helper_scripts/data_printer');
+	dataPrinter = require('./helper_scripts/data_printer');
 } catch (err) {
-    dataPrinter = require('./data_printer');
+	dataPrinter = require('./data_printer');
+}
+
+var task_manager;
+var TASK_MANAGER;
+try {
+	task_manager = require('./helper_scripts/task_manager');
+	TASK_MANAGER = task_manager.getTaskManager(true, $);
+} catch (err) {
+	try {
+		task_manager = require('./task_manager');
+		TASK_MANAGER = task_manager.getTaskManager(true, $);
+	} catch(innerError) {
+		console.error('task_manager not found');
+	}
 }
 
