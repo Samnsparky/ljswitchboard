@@ -22,6 +22,7 @@ module.exports = {
 
 	testOn: function (test) {
 		console.log('taskManager', taskManager);
+		taskManager.init();
 		test.ok(true);
 		test.done();
 	},

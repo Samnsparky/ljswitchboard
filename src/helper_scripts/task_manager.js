@@ -39,7 +39,7 @@ try {
 
 var $;
 function taskManager() {
-    var registeredName = 'GDM';
+    var registeredName = 'TM';
     this.registeredName = registeredName;
 
     // Define console.log type functions
@@ -80,7 +80,7 @@ function taskManager() {
                     fs_facade.getModuleInfo(module.name,function(err) {
                         self.pErr('fs_facade getInfo err',err);
                     }, function(moduleData){
-                        addActiveModule(moduleData);
+                        self.log(moduleData);
                     });
                     
                 }
@@ -98,7 +98,7 @@ function taskManager() {
 
     this.init = function() {
         var defered = q.defer();
-        initTaskList()
+        self.initTaskList()
         .then(defered.resolve, defered.reject);
         return defered.promise;
     };

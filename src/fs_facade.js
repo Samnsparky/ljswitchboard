@@ -182,6 +182,13 @@ exports.getParentDir = function() {
         isWebkitInstance = true;
     }
 
+    // TODO: I'm not quite sure to search for at the moment/how to determine 
+    // whether the instance is in K3 or a cmd line running node so I will just 
+    // do this:
+    if(process.execPath.search('/usr/local/Cellar/node') >= 0) {
+        isWebkitInstance = false;
+    }
+    
     if(isWebkitInstance) {
         var pathPieces = path.dirname(process.execPath).split(path.sep);
         
