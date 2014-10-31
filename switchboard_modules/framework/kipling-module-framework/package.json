@@ -25,6 +25,7 @@
         "MODBUS",
         "Kipling"
     ],
+    "chromium-args": "--enable-threaded-compositing",
     "homepage": "https://github.com/samnsparky/kipling-module-framework",
     "repository": {
         "type" : "git",

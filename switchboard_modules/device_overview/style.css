@@ -1,3 +1,7 @@
+.device-canvas-container {
+	display: inline-block;
+}
+
 .edit-label {
     padding: 7px;
 }

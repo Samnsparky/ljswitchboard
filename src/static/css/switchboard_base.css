@@ -10,16 +10,39 @@ body
     font-size: 14px;
 }
 
+.unselectable {
+    cursor: default;
+   -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
+    user-select: none; 
+}
+p, h1, h2, h3 {
+    cursor: default;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.selectableText {
+    user-select: initial;
+    -webkit-user-select: initial;
+}
 #device-search-msg
 {
     background-color: white;
     padding: 20px;
-    position: absolute;
+    position: relative;
     left: 40%;
     right: 40%;
     -moz-box-shadow: 0 0 10px #000000;
     -webkit-box-shadow: 0 0 10px #000000;
     box-shadow: 0 0 10px #000000;
+    width: 150px;
 }
 
 #premature-error-holder
@@ -28,6 +51,35 @@ body
 }
 #content-holder{
     margin: 0px;
+}
+#lvmDownloadBox {
+    background-color: white;
+    -moz-box-shadow: 0 0 10px #000000;
+    -webkit-box-shadow: 0 0 10px #000000;
+    box-shadow: 0 0 10px #000000;
+    left: 25%;
+    right: 25%;
+    position: absolute;
+    padding: 20px;
+    z-index: 1;
+}
+
+/* Some basic text & background coloring classes */
+.isa_info {
+    color: #00529B;
+    background-color: #BDE5F8;
+}
+.isa_success {
+    color: #4F8A10;
+    background-color: #DFF2BF;
+}
+.isa_warning {
+    color: #9F6000;
+    background-color: #FEEFB3;
+}
+.isa_error {
+    color: #D8000C;
+    background-color: #FFBABA;
 }
 /*@media screen and (min-width: 768px) {
     

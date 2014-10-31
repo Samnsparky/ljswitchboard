@@ -5,13 +5,26 @@
  * not bundled in the main executable.
  *
  * @author A. Samuel Pottinger (LabJack Corp, 2013)
+ * @contributor Chris Johnson (LabJack, 2014)
 **/
 
+// Is not included in the DOM, therefore perform all includes
 var device_controller = require('./device_controller');
 var fs_facade = require('./fs_facade');
 var dict = require('dict');
 
-
+var KIPLING_BUILD_TYPE_NUMBERS = {
+    "develop":0,
+    "debug":1,
+    "release":2
+};
+var GET_KIPLING_BUILD_TYPE_NUMBER = function(type) {
+	var num = KIPLING_BUILD_TYPE_NUMBERS[type];
+	if(typeof(num) === 'undefined') {
+		num = 100;
+	}
+	return num;
+}
 function createDeviceMatcher (device) {
 	var selector = {
 		firmware: device.getFirmwareVersion(),
@@ -31,21 +44,55 @@ function createDeviceMatcher (device) {
 	};
 
 	selector.matches = function (module) {
-		if (module.supportedDevices === undefined)
-			return true;
-
-		return module.supportedDevices.some(function (spec) {
-			var matchesType = spec.type == selector.type;
-
-			var hasMinFirmware = spec.minFW === undefined;
-			hasMinFirmware = hasMinFirmware || spec.minFW <= selector.firmware;
-
-			var hasSubclass = spec.subclass === undefined;
-			hasSubclass = hasSubclass || spec.subclass.some(function (subclass){
-				return selector.subclasses.indexOf(subclass) != -1;
+		var isInternalComp = process.isInternalComputer;
+		var isDevComp = process.isInternalComputer;
+		
+		var continueCheck = true;
+		if (typeof(module.internalCompOnly) !== 'undefined') {
+			if ((!isInternalComp) && (module.internalCompOnly === true)) {
+				continueCheck = false;
+			}
+		}
+		if (typeof(module.developCompOnly) !== 'undefined') {
+			if ((!isDevComp) && (module.developCompOnly === true)) {
+				if(!isInternalComp) {
+					continueCheck = false;
+				}
+			}
+		}
+		if (typeof(module.buildTypes) !== 'undefined') {
+			var lowestNum = -1;
+			module.buildTypes.forEach(function(type){
+				if(GET_KIPLING_BUILD_TYPE_NUMBER(type) < lowestNum) {
+					lowestNum = GET_KIPLING_BUILD_TYPE_NUMBER(type);
+				}
 			});
-			return matchesType && hasMinFirmware && hasSubclass;
-		});
+			var curBuildType = process.buildType;
+			var curBuildInt = GET_KIPLING_BUILD_TYPE_NUMBER(curBuildType);
+			if (curBuildInt > lowestNum) {
+				// continueCheck = false;
+			}
+		}
+
+		if(continueCheck) {
+			if (module.supportedDevices === undefined)
+				return true;
+
+			return module.supportedDevices.some(function (spec) {
+				var matchesType = spec.type == selector.type;
+
+				var hasMinFirmware = spec.minFW === undefined;
+				hasMinFirmware = hasMinFirmware || spec.minFW <= selector.firmware;
+
+				var hasSubclass = spec.subclass === undefined;
+				hasSubclass = hasSubclass || spec.subclass.some(function (subclass){
+					return selector.subclasses.indexOf(subclass) != -1;
+				});
+				return matchesType && hasMinFirmware && hasSubclass;
+			});
+		} else {
+			return false;
+		}
 	};
 
 	return selector;
@@ -94,7 +141,7 @@ exports.getActiveModules = function(onError, onSuccess)
 {
     fs_facade.getLoadedModulesInfo(onError, function(modules)
     {
-    	// console.log(modules);
+    	// console.log('Active Modules',modules);
         var activeModules = modules.filter(function(e) {return e.active;});
         onSuccess(activeModules);
     });

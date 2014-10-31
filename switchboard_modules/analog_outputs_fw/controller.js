@@ -19,7 +19,7 @@
 
 // Constant that determines device polling rate.  Use an increased rate to aid
 // in user experience.
-var MODULE_UPDATE_PERIOD_MS = 500;
+var MODULE_UPDATE_PERIOD_MS = 250;
 
 // Constant that can be set to disable auto-linking the module to the framework
 var DISABLE_AUTOMATIC_FRAMEWORK_LINKAGE = false;
@@ -36,13 +36,18 @@ function module() {
 
     this.currentValues = dict();
     this.bufferedValues = dict();
+    this.newBufferedValues = dict();
     this.bufferedOutputValues = dict();
+
 
     this.hasChanges = false;
 
-    this.DAC_CHANNEL_READ_DELAY = 2;
+    this.DAC_CHANNEL_READ_DELAY = 3;
 
     this.DAC_CHANNEL_PRECISION = 3;
+
+    this.spinnerController;
+    this.updateDOM = true;
 
     
 
@@ -59,34 +64,32 @@ function module() {
         self.DACRegisters = framework.moduleConstants.DACRegisters;
 
         var genericConfigCallback = function(data, onSuccess) {
-            console.log('genericConfigCallback');
             onSuccess();
         };
+
         var genericPeriodicCallback = function(data, onSuccess) {
-            
             var name = data.binding.binding;
-            var value = Number(data.value.toFixed(self.DAC_CHANNEL_PRECISION));
-            self.bufferedValues.set(name,value);
-            // console.log('genericPeriodicCallback',data.binding.binding,value);
+            var value = data.value;
+            var oldValue = self.currentValues.get(name);
+            if(oldValue != value) {
+                self.newBufferedValues.set(name,value);
+            } else {
+                self.newBufferedValues.delete(name);
+            }
             onSuccess();
         };
         var writeBufferedDACValues = function(data, onSuccess) {
             if (self.hasChanges) {
-                // console.log('in writeBufferedDACValues');
                 self.bufferedOutputValues.forEach(function(newVal,address){
-                    console.log('Updating',address,'with',newVal);
-                    self.activeDevice.write(address,newVal);
-                    self.currentValues.set(address,newVal);
+                    self.writeReg(address,newVal);
                 });
+                self.bufferedOutputValues = dict();
                 self.hasChanges = false;
+            }else if(self.bufferedOutputValues.size > 0) {
+                self.bufferedOutputValues = dict();
             }
             onSuccess();
         }
-        var genericCallback = function(data, onSuccess) {
-            console.log('genericCallback');
-            onSuccess();
-        };
-        console.log('moduleConstants', self.moduleConstants);
         var smartBindings = [];
 
         var addSmartBinding = function(regInfo) {
@@ -109,18 +112,24 @@ function module() {
                 smartName: 'periodicFunction',
                 periodicCallback: writeBufferedDACValues
             }
-            // ,{
-            //     // Define binding to handle Ethernet Cancel button presses.
-            //     bindingName: 'wifiHelpButton', 
-            //     smartName: 'clickHandler',
-            //     callback: self.wifiHelpButton
-            // }
         ];
         // Save the smartBindings to the framework instance.
         framework.putSmartBindings(smartBindings);
         // Save the customSmartBindings to the framework instance.
         framework.putSmartBindings(customSmartBindings);
         onSuccess();
+    };
+    this.writeReg = function(reg, val) {
+        var ioDeferred = q.defer();
+        self.activeDevice.qWrite(reg,val)
+        .then(function() {
+            self.currentValues.set(reg,val);
+            ioDeferred.resolve();
+        }, function(err) {
+            onsole.error('AnalogOutputs-writeReg',address,err);
+            ioDeferred.reject(err);
+        });
+        return ioDeferred.promise;
     };
     
     /**
@@ -131,11 +140,20 @@ function module() {
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
-        console.log('in onDeviceSelected');
         self.activeDevice = device;
+        var dacSpinnerInfo = [
+            {spinnerID:'DAC0_input_spinner', reg: 'DAC0'},
+            {spinnerID:'DAC1_input_spinner', reg: 'DAC1'}
+        ];
+        self.spinnerController = new customSpinners(
+            self, 
+            dacSpinnerInfo,
+            self.spinnerWriteEventHandler,
+            self.incrementalSpinerUpdateEventHandler
+        );
 
         framework.clearConfigBindings();
-        framework.setStartupMessage('Waiting for Wifi Module to start');
+        framework.setStartupMessage('Reading Device Configuration');
         onSuccess();
     };
 
@@ -161,52 +179,66 @@ function module() {
     this.formatVoltageTooltip = function(value) {
         return sprintf.sprintf("%.2f V", value);
     };
-    this.writeDisplayedVoltage = function(register, selectedVoltage) {
-        console.log(register,selectedVoltage);
-        self.bufferedOutputValues.set(register,selectedVoltage);
-        $('#' + register + '_input_slider').slider('setValue', selectedVoltage);
-        $('#' + register + '_input_spinner').spinner('value', selectedVoltage);
+    this.updateSpinnerVal = function(reg, val) {
+        var spinner = $('#' + reg + '_input_spinner')
+        self.spinnerController.writeDACSpinner(spinner,val);
+    }
+    this.updateSliderVal = function(reg, val) {
+        $('#' + reg + '_input_slider').slider('setValue', val);
+    };
+    /**
+     * Function to handle definitive spinner-write events.  
+     *     The DAC channel SHOULD be updated
+     * @param  {string} reg Device register to be written
+     * @param  {number} val Value to be written to device register.
+    **/
+    this.spinnerWriteEventHandler = function(reg, val) {
+        self.hasChanges = false;
+        self.bufferedOutputValues.delete(reg);
+        self.updateSliderVal(reg,val);
+        self.writeReg(reg,val)
+        .then(function() {
+            self.writeDisplayedVoltage(register,selectedVoltage);
+            self.updateDOM = true;
+        });
+    }
+    this.incrementalSpinerUpdateEventHandler = function (reg, val) {
+        self.updateDOM = false;
+        self.bufferedOutputValues.set(reg,val);
+        self.updateSliderVal(reg, val);
         self.hasChanges = true;
     }
-    this.onVoltageSelected = function(event) {
+    this.sliderWriteEventHandler = function(event) {
         var firingID = event.target.id;
-        var selectedVoltage;
-
-        if (firingID.search('_input_spinner') > 0) {
-            selectedVoltage = Number(
-                $('#'+firingID).spinner('value')
-            );
-        } else {
-            selectedVoltage = Number(
-                $('#'+firingID).data('slider').getValue()
-            );
-        }
-
-        var register = firingID
-        .replace('_input_spinner', '')
-        .replace('_input_slider', '');
-
-        console.log('newVal',typeof(selectedVoltage),selectedVoltage,register);
-        self.writeDisplayedVoltage(register,selectedVoltage);
+        var register = firingID.replace('_input_slider', '');
+        var selectedVoltage = Number(
+            $('#'+firingID).data('slider').getValue()
+        );
+        self.hasChanges = false;
+        self.bufferedOutputValues.delete(register);
+        self.updateSpinnerVal(register, selectedVoltage);
+        self.writeReg(register, selectedVoltage)
+        .then(function() {
+            self.writeDisplayedVoltage(register,selectedVoltage);
+            self.updateDOM = true;
+        });
     };
-    // function onVoltageSelected(event)
-    // {
-    //     var register = Number(event.target.id.replace('-control', ''));
-        
-    //     var confirmationSelector = CONFIRMATION_DISPLAY_TEMPLATE(
-    //         {register: register}
-    //     );
-
-    //     var selectedVoltage = Number($('#'+event.target.id).val());
-        
-    //     console.log($('#'+event.target.id).slider('getValue'));
-    //     $(confirmationSelector).html(
-    //         formatVoltageTooltip(selectedVoltage)
-    //     );
-
-    //     analogOutputDeviceController.setDAC(register, selectedVoltage).fail(
-    //         function (err) {showAlert(err.retError);});
-    // }
+    this.incrementalSliderUpdateEventHandler = function(event) {
+        self.updateDOM = false;
+        var firingID = event.target.id;
+        var register = firingID.replace('_input_slider', '');
+        var selectedVoltage = Number(
+            $('#'+firingID).data('slider').getValue()
+        );
+        self.bufferedOutputValues.set(register,selectedVoltage);
+        self.updateSpinnerVal(register, selectedVoltage);
+        self.hasChanges = true;
+    };
+    this.writeDisplayedVoltage = function(register, selectedVoltage) {
+        self.updateSpinnerVal(register, selectedVoltage);
+        self.updateSliderVal(register, selectedVoltage);
+    }
+    
     /**
      * Create the DAC / analog output controls.
     **/
@@ -216,55 +248,52 @@ function module() {
         var sliderObj = $('.slider').slider(
             {'formater': self.formatVoltageTooltip, 'value': 4.9}
         );
-        // sliderObj.data('slider').setValue(1);
-        sliderObj.bind('slide', self.onVoltageSelected);
-        // $('.slider').slider(
-        //     {'formater': self.formatVoltageTooltip, 'value': 0}
-        // ).
+        sliderObj.bind('slide', self.incrementalSliderUpdateEventHandler);
+        sliderObj.bind('slideStop', self.sliderWriteEventHandler);
     }
-    this.createSpinners = function() {
-        $( ".spinner" ).unbind();
-        $( ".spinner" ).spinner({
-            'step': 0.001,
-            'numberFormat': "nV",
-            'max': 5,
-            'min': 0,
-            'spin': self.onVoltageSelected
-            // 'stop': self.onVoltageSelected
-        });
-    }
+
     this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        self.createSpinners();
+        self.spinnerController.createSpinners();
         onSuccess();
     };
+    /**
+     * Function that gets executed after the module's template is displayed.
+     * @param  {object} framework framework object.
+     * @param  {function} onError   function to be called on error.
+     * @param  {function} onSuccess function to be called on success
+     * @return {[type]}           [description]
+     */
     this.onTemplateDisplayed = function(framework, onError, onSuccess) {
-        // console.log('in onTemplateDisplayed');
-        self.createSliders();    
+        self.createSliders();
         self.DACRegisters.forEach(function(register){
             var val = self.currentValues.get(register.register);
             self.writeDisplayedVoltage(register.register,val);
         });
+        $('#analog_outputs_fw_hider').css('position','inherit');
         onSuccess();
-    }
+    };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
-        // console.log('in onRegisterWrite',binding);
         onSuccess();
     };
     this.onRegisterWritten = function(framework, registerName, value, onError, onSuccess) {
         onSuccess();
     };
     this.onRefresh = function(framework, registerNames, onError, onSuccess) {
-        // console.log('in onRefresh',framework.moduleName);
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        self.bufferedValues.forEach(function(value,key){
+        // Loop through the new buffered values, save them, and display their 
+        // changes
+        self.newBufferedValues.forEach(function(value,key){
+            if(self.updateDOM) {
+                self.writeDisplayedVoltage(key,value);
+            }
             self.currentValues.set(key,value);
-        })
+            self.newBufferedValues.delete(key);
+        });
         onSuccess();
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
-        // self.activeDevice.setDebugFlashErr(false);
         onSuccess();
     };
     this.onUnloadModule = function(framework, onError, onSuccess) {

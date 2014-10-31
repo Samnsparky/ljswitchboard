@@ -19,6 +19,10 @@
     margin-bottom: 10px;
 }
 
+#cur-version-info {
+    margin-bottom: 30px;
+}
+
 #no-internet-message
 {
     display: none;

@@ -9,6 +9,10 @@
     },
     {
         "name": "device_overview",
+        "active": false
+    },
+    {
+        "name": "dashboard",
         "active": true
     },
     {
@@ -17,7 +21,7 @@
     },
     {
         "name": "digital_io_config",
-        "active": true
+        "active": false
     },
     {
         "name": "digital_io_fw",
@@ -41,7 +45,7 @@
     },
     {
         "name": "thermocouple_simple",
-        "active": true
+        "active": false
     },
     {
         "name": "network_configuration",
@@ -68,11 +72,11 @@
         "active": true
     },
     {
-        "name": "set_defaults",
+        "name": "reset",
         "active": true
     },
     {
-        "name": "reset",
+        "name": "set_defaults",
         "active": true
     },
     {

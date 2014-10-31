@@ -17,7 +17,7 @@ var EDIT_TEXT_X_OFFSET = 3;
 var EDIT_TEXT_Y_OFFSET = 0;
 
 var CONNECTOR_IMAGE_X_OFFSET = 150;
-var CONNECTOR_IMAGE_Y_OFFSET = 540;
+var CONNECTOR_IMAGE_Y_OFFSET = 10;
 var CONNECTOR_IMG_WIDTH = 112;
 var CONNECTOR_IMG_HEIGHT = 500;
 
@@ -92,8 +92,8 @@ var EDIT_CONTROLS_TEMPLATE_STR = '<div class="edit-control row-fluid" id="{{ . }
     '<div class="span1 edit-label">{{ . }}</div>' +
     '<div class="span5 val-input-holder"><input id="{{ . }}-val-input" type="text" placeholder="val to write"></div>' +
     '<div class="span6">' +
-    '<a href="#" id="{{ . }}-write-btn" class="write-button btn btn-success">write</a>' +
-    '<a href="#" id="{{ . }}-close-btn" class="close-button btn btn-warning">return {{ . }} to read-mode</a>' +
+    '<a id="{{ . }}-write-btn" class="write-button btn btn-success">write</a>' +
+    '<a id="{{ . }}-close-btn" class="close-button btn btn-warning">return {{ . }} to read-mode</a>' +
     '</div>' +
     '</div>';
 var EDIT_CONTROLS_TEMPLATE = handlebars.compile(EDIT_CONTROLS_TEMPLATE_STR);
@@ -141,7 +141,7 @@ function createOverlayLinePoints(spec) {
     }
 
     return [
-        DEVICE_IMAGE_X_OFFSET + LINE_START_X[spec.side],             
+        DEVICE_IMAGE_X_OFFSET + LINE_START_X[spec.side],
         overlayFunc(yElementOffset),
         DEVICE_IMAGE_X_OFFSET + LINE_START_X[spec.side] + VALUE_LABEL_X_OFFSET[spec.side],
         overlayFunc(yElementOffset)
@@ -243,7 +243,7 @@ function createOverlayElement(layer, overlayElementSpec) {
             editText.setFill('white');
             layer.draw();
         });
-      
+
         editCtrl.on('mouseout', function() {
             editRect.setFill('#D0D0D0');
             editText.setFill('#404040');
@@ -337,19 +337,26 @@ function showEditControls (registerLabel, writeFunction, closeFunction) {
 
 
 function createDrawing (overlaySpec, onFinish) {
-    var stage;
+    var deviceStage;
+    var connectorStage;
     var layer;
     var deviceImageObj;
       var connectorImageObj;
     var updateFunctions;
 
     // Create containing structures
-    stage = new Kinetic.Stage({
-        container: 'container',
+    deviceStage = new Kinetic.Stage({
+        container: 'device-container',
         width: 400,
-        height: 1040
+        height: 600
     });
-    layer = new Kinetic.Layer();
+    connectorStage = new Kinetic.Stage({
+        container: 'connector-container',
+        width: 400,
+        height: 600
+    });
+    mainDeviceLayer = new Kinetic.Layer();
+    connectorLayer = new Kinetic.Layer();
 
     // Create device image
     var createDeviceImage = function (onFinish) {
@@ -362,7 +369,7 @@ function createDrawing (overlaySpec, onFinish) {
                 width: DEVICE_IMG_WIDTH,
                 height: DEVICE_IMG_HEIGHT
             });
-            layer.add(deviceImage);
+            mainDeviceLayer.add(deviceImage);
             if (onFinish) { onFinish(); }
         };
         deviceImageObj.src = LABJACK_OVERVIEW_IMG_SRC;
@@ -371,14 +378,14 @@ function createDrawing (overlaySpec, onFinish) {
     var createConnectorImage = function (onFinish) {
         connectorImageObj = new Image();
         connectorImageObj.onload = function() {
-            var deviceImage = new Kinetic.Image({
+            var connectorImage = new Kinetic.Image({
                 x: CONNECTOR_IMAGE_X_OFFSET,
                 y: CONNECTOR_IMAGE_Y_OFFSET,
                 image: connectorImageObj,
                 width: CONNECTOR_IMG_WIDTH,
                 height: CONNECTOR_IMG_HEIGHT
             });
-            layer.add(deviceImage);
+            connectorLayer.add(connectorImage);
             if (onFinish) { onFinish(); }
         };
         connectorImageObj.src = CONNECTOR_OVERVIEW_IMG_SRC;
@@ -387,19 +394,24 @@ function createDrawing (overlaySpec, onFinish) {
     // Create overlay graphical elements
     var createOverlayElements = function (onFinish) {
         updateFunctions = overlaySpec.map(function (e) {
-            return createOverlayElement(layer, e);
+            if (e.board === 'device')
+                return createOverlayElement(mainDeviceLayer, e);
+            else
+                return createOverlayElement(connectorLayer, e);
         });
         if (onFinish) { onFinish(updateFunctions); }
     };
 
     // add the layer to the stage
     var addLayerToStage = function (onFinish) {
-        stage.add(layer);
+        deviceStage.add(mainDeviceLayer);
+        connectorStage.add(connectorLayer);
         if (onFinish) { onFinish(); }
     };
 
     var refreshFunction = function () {
-        layer.draw();
+        mainDeviceLayer.draw();
+        connectorLayer.draw();
     };
 
     createDeviceImage(function () {
@@ -440,7 +452,7 @@ function readDeviceValues (refreshFunction, updateFunctions, deviceSelection) {
 
     if (!writing) {
         registersToRead = [];
-        
+
         callbacks = updateFunctions.map(function (func) {
             return func(registersToRead);
         });
@@ -468,7 +480,7 @@ function readDeviceValues (refreshFunction, updateFunctions, deviceSelection) {
                 showError(err);
             }
         );
-        
+
         refreshFunction();
 
     } else {
@@ -510,7 +522,7 @@ $('#device-info-inspector').ready(function () {
         $('.edit-control').slideUp(function () {
             $('.edit-control').remove();
         });
-        $('#container').fadeOut(function () {
+        $('#device-container').fadeOut(function () {
             var deviceKeeper = device_controller.getDeviceKeeper();
             selectedDevice = deviceKeeper.getDevice(serial);
             setupDevice(TEST_OVERLAY_SPEC);
@@ -523,8 +535,8 @@ $('#device-info-inspector').ready(function () {
                         updateFunctions,
                         currentDeviceSelection
                     );
-                }); 
-            $('#container').fadeIn();
+                });
+            $('#device-container').fadeIn();
         });
     });
 

@@ -1,0 +1,38 @@
+Release Notes:
+
+3.0.3:
+Added several Lua Script examples and several bug fixes.
+
+3.0.0:
+Fixed version number checking issue, 0.1.9 was reported to be greater than 0.1.11.
+Initial public release.  Enabled some error messages to be selected.
+
+0.1.11:
+Upgraded to a new version of the ace editor
+
+0.1.10:
+Preparing for initial non-beta release. (take 1)
+
+0.1.9:
+Updated where the various version numbers get pulled from.
+
+0.1.8:
+Updated list of internal computers to register them w/ different versions of K3 builds, added & organized lua examples.  
+
+0.1.7:
+Fixed windows 'save' keyboard command, added create new lua script button, and other smaller changes.
+
+0.1.6:
+Several updates to the Lua Scripting module, handles keyboard 'save' commands, moved some buttons, made a tree example structure & lock-to-bottom of console button.
+
+0.1.5:
+Added is-device-calibrated check to the device information module.  Also changed input box style on network settings module
+
+0.1.4:
+Major changes to the GUI for file downloading, extracting, and installing updates
+
+0.1.2:
+Initial version number bump to keep track of changes into the future.
+
+0.1.1:
+The initial release, all sorts of things

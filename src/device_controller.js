@@ -5,16 +5,22 @@
  * interactions.
  *
  * @author A. Samuel Pottinger (LabJack, 2013)
+ * @author Chris Johnson (LabJack, 2013)
 **/
 
 var async = require('async');
 var dict = require('dict');
 var q = require('q');
+var ljmmm = require('./ljmmm');
 var labjack_nodejs = require('labjack-nodejs');
 var device_selector_view_gen = require('./device_selector_view_gen');
+var device_flash_operations = require('./helper_scripts/device_functions/device_flash_and_cal_operations');
 var labjack_driver = new labjack_nodejs.driver();
-
 var LJM_DT_T7 = labjack_nodejs.driver_const.LJM_DT_T7.toString();
+device_flash_operations.setDriverConst(labjack_nodejs.driver_const);
+
+exports.device_flash_operations_lib = device_flash_operations;
+
 var DEVICE_TYPE_NAMES = dict({
     '3': 'U3',
     '6': 'U6',
@@ -36,7 +42,7 @@ var DEVICE_TYPE_NAMES_BY_DRIVER_NAME = dict({
     'LJM_dtT7': 'T7',
     'LJM_dtUE9': 'UE9',
     'LJM_dtDIGIT': 'Digit'
-})
+});
 
 var CONNECT_TYPE_USB = 1;
 var CONNECTION_TYPE_NAMES = dict({
@@ -81,11 +87,11 @@ var DEVICE_ENABLED_LIST = dict({
     'Digit': false
 });
 var WIFI_RSSI_IMAGES = [
-    {'val':-30,'img':'wifiRSSI-4'},
-    {'val':-40,'img':'wifiRSSI-3'},
-    {'val':-50,'img':'wifiRSSI-2'},
-    {'val':-60,'img':'wifiRSSI-1'},
-    {'val':-70,'img':'wifiRSSI-0'},
+    {'val':-45,'img':'wifiRSSI-4'},
+    {'val':-60,'img':'wifiRSSI-3'},
+    {'val':-65,'img':'wifiRSSI-2'},
+    {'val':-75,'img':'wifiRSSI-1'},
+    {'val':-80,'img':'wifiRSSI-0'},
     {'val':-200,'img':'wifiRSSI-0'},
 ];
 var WIFI_STATUS_DISPLAY_DATA = {
@@ -104,6 +110,37 @@ var WIFI_STATUS_DISPLAY_DATA = {
 var NUM_SCAN_RETRIES = 4;
 var LIST_ALL_SCAN_RETRY_ERROR = 1233;
 
+//----------------- Build Info for Register_Matrix Module ----------------------
+// Build a register list containing non-beta and beta registers
+var fullRegisterList = [];
+// Build register list pertaining to each device type:
+var registersByDevices = {};
+
+var finishInit = function(onFinish) {
+    if(fullRegisterList.length === 0) {
+        // Get and add the non-beta registers
+        labjack_driver.constants.origConstants.registers.forEach(function(reg){
+            fullRegisterList.push(reg);
+        });
+
+        // Get and add the beta registers
+        labjack_driver.constants.origConstants.registers_beta.forEach(function(reg){
+            fullRegisterList.push(reg);
+        });
+    }
+
+    // Finish
+    onFinish();
+}
+
+
+// Export various required information
+exports.fullRegisterList = fullRegisterList;
+exports.registersByDevices = registersByDevices;
+exports.finishInit = finishInit;
+//----------------- END Info for Register_Matrix Module ------------------------
+
+exports.labjack_nodejs = labjack_nodejs;
 exports.driver_const = labjack_nodejs.driver_const;
 exports.ljm_driver = labjack_driver;
 
@@ -120,14 +157,14 @@ GET_SUBCLASS_FUNCTIONS['T7'] = function (device) {
         }
 
         return subclass;
-    }
+    };
 };
 GET_SUBCLASS_FUNCTIONS['Digit'] = function (device) {
     var subclass = null;
     return function () {
         if (subclass === null) {
             var digitHardware = device.read('HARDWARE_INSTALLED');
-            console.log('Digit HARDWARE_INSTALLED',digitHardware)
+            console.log('Digit HARDWARE_INSTALLED',digitHardware);
             if(digitHardware)
                 subclass = 'YES';
             else
@@ -135,8 +172,8 @@ GET_SUBCLASS_FUNCTIONS['Digit'] = function (device) {
         }
 
         return subclass;
-    }
-}
+    };
+};
 
 
 /**
@@ -155,13 +192,16 @@ var Device = function (device, serial, connectionType, deviceType)
     this.device = device;
     this.cachedName = null;
     this.cachedFirmware = null;
+    this.cachedCalibrationValidity = null;
 
     this.getSubclass = GET_SUBCLASS_FUNCTIONS[DEVICE_TYPE_NAMES.get(deviceType.toString())](this);
 
     this.invalidateCache = function() {
         this.cachedName = null;
         this.cachedFirmware = null;
-    }
+        this.cachedWifiFirmware = null;
+        this.cachedCalibrationValidity = null;
+    };
     /**
      * Get the serial number for this device.
      *
@@ -228,6 +268,60 @@ var Device = function (device, serial, connectionType, deviceType)
     };
 
     /**
+     * Get the version of firmware installed on this device.
+     *
+     * @return {float} The version of the firmware on this device.
+     * @throws Exceptions thrown from the labjack-nodejs and lower layers.
+    **/
+    this.getWifiFirmwareVersion = function () {
+        if (!this.cachedWifiFirmware)
+            this.cachedWifiFirmware = this.device.readSync('WIFI_VERSION');
+        return this.cachedWifiFirmware;
+    };
+
+
+    /**
+     * Get boolean value to determine whether or not the device is calibrated.
+     *
+     * @return {bool} Is the device calibrated.
+    **/
+    this.getCalibrationStatus = function (onSuccess) {
+        if (this.cachedCalibrationValidity === null) {
+            device_flash_operations.updateDeviceCalibrationStatus(this, function(device) {
+                
+                onSuccess(device.cachedCalibrationValidity);
+            });
+        } else {
+            if(onSuccess) {
+                onSuccess(this.cachedCalibrationValidity);
+            } else {
+                return this.cachedCalibrationValidity;
+            }
+        }
+    };
+
+    /**
+     * Reads desired flash memory region from the device.
+     *
+     * @param {Number} startAddress The address to start reading at.
+     * @param {Number} length Number of integers to read.
+    **/
+    this.readFlash = function(startAddress, length) {
+        // return device_flash_operations.readFlash(this.device, startAddress, length);
+
+        var qDeferred = q.defer();
+        this.rqControl('readFlash',startAddress, length)
+        .then(qDeferred.resolve,qDeferred.reject);
+        return qDeferred.promise;
+    };
+    this.dqReadFlash = function(startAddress, length) {
+        var dqDefered = q.defer();
+        device_flash_operations.readFlash(this.device, startAddress, length)
+        .then(dqDefered.reject, dqDefered.resolve);
+        return dqDefered.promise;
+    };
+
+    /**
      * Get the version of the bootloader installed on this device.
      *
      * @return {float} The version of the bootloader on this device.
@@ -238,12 +332,12 @@ var Device = function (device, serial, connectionType, deviceType)
     };
 
     /**
-     * This function writes an array of values to a single address.  It is 
+     * This function writes an array of values to a single address.  It is
      * created using the LJM_eNames and LJM_eAddresses functions to maintain
      * backward compatability so kipling can be used with old versions of the
-     * LJM driver wich is commonly required for testing devices.  A newer 
+     * LJM driver wich is commonly required for testing devices.  A newer
      * native function does exist in LJM to do this same thing.
-     * 
+     *
      * @param  {number/string} address The address/register number to write all
      *       values to.
      * @param  {Array} values  The array of data to write to the device.
@@ -259,19 +353,19 @@ var Device = function (device, serial, connectionType, deviceType)
         numValues.push(values.length);
 
         return this.rwMany(addresses, directions, numValues, values);
-    }
+    };
     this.qWriteArray = function(address, values) {
         // console.log('Writing Array:',values);
         return this.writeArray(address, values);
-    }
+    };
 
     /**
-     * This function writes an array of values to a single address.  It is 
+     * This function writes an array of values to a single address.  It is
      * created using the LJM_eNames and LJM_eAddresses functions to maintain
      * backward compatability so kipling can be used with old versions of the
-     * LJM driver wich is commonly required for testing devices.  A newer 
+     * LJM driver wich is commonly required for testing devices.  A newer
      * native function does exist in LJM to do this same thing.
-     * 
+     *
      * @param  {number/string} address The address/register number to write all
      *       values to.
      * @param  {Array} values  The array of data to write to the device.
@@ -293,10 +387,10 @@ var Device = function (device, serial, connectionType, deviceType)
         }
 
         return this.rwMany(addresses, directions, numValues, values);
-    }
+    };
     this.qReadArray = function(address, numReads) {
         return this.readArray(address, numReads);
-    }
+    };
 
     this.rwA = function() {
         var addresses = ['AIN0'];
@@ -304,21 +398,21 @@ var Device = function (device, serial, connectionType, deviceType)
         var numValues = [1];
         var values = [-1];
         this.rwManyTest(addresses, directions, numValues, values);
-    }
+    };
     this.rwB = function() {
         var addresses = ['AIN0'];
         var directions = [0];
         var numValues = [8];
         var values = [-1,-1,-1,-1,-1,-1,-1,-1];
         this.rwManyTest(addresses, directions, numValues, values);
-    }
+    };
     this.rwC = function() {
         var addresses = ['AIN0','AIN1'];
         var directions = [0,0];
         var numValues = [1,1];
         var values = [-1,-1];
         this.rwManyTest(addresses, directions, numValues, values);
-    }
+    };
 
     this.rwManyTest = function(addresses, directions, numValues, values) {
         this.device.rwMany(
@@ -333,13 +427,13 @@ var Device = function (device, serial, connectionType, deviceType)
                 console.log('Success!',results,addresses);
             }
         );
-    }
+    };
 
     /**
-     * Read and Write many registers on this device.  The rwMany function 
+     * Read and Write many registers on this device.  The rwMany function
      * switches between using "LJM_eNames" and "LJM_eAddresses" depending on if
      * it is passed numeric or string address values.
-     * 
+     *
      * @param {Array} addresses The addresses of the registers to write. Should
      *      be an Array of numbers or strings.
      * @param {Array} directions The determines whether to read or write to any
@@ -356,7 +450,7 @@ var Device = function (device, serial, connectionType, deviceType)
         this.rqControl('rwMany',addresses, directions, numValues, values)
         .then(qDeferred.resolve,qDeferred.reject);
         return qDeferred.promise;
-    }
+    };
     this.drwMany = function(addresses, directions, numValues, values) {
         var deferred = q.defer();
         this.device.rwMany(
@@ -378,13 +472,13 @@ var Device = function (device, serial, connectionType, deviceType)
         var values = [2.5];
         this.writeManyTest(addresses,values);
 
-    }
+    };
     this.writeManyB = function() {
         var addresses = ['DAC0','DAC1'];
         var values = [2.5,2.5];
         this.writeManyTest(addresses,values);
 
-    }
+    };
     this.writeManyTest = function (addresses, values) {
         this.device.writeMany(
             addresses,
@@ -399,7 +493,7 @@ var Device = function (device, serial, connectionType, deviceType)
     };
     /**
      * Write many registers on this device.
-     * 
+     *
      * @param {Array} addresses The addresses of the registers to write. Should
      *      be an Array of numbers.
      * @param {Array} values The values to write to these registers. Should be
@@ -412,7 +506,7 @@ var Device = function (device, serial, connectionType, deviceType)
         this.rqControl('writeMany',addresses, values)
         .then(qDeferred.resolve,qDeferred.reject);
         return qDeferred.promise;
-    }
+    };
     this.dwriteMany = function (addresses, values) {
         var deferred = q.defer();
 
@@ -444,7 +538,7 @@ var Device = function (device, serial, connectionType, deviceType)
         this.rqControl('readMany',addresses)
         .then(qDeferred.resolve,qDeferred.reject);
         return qDeferred.promise;
-    }
+    };
     this.dreadMany = function (addresses) {
         var deferred = q.defer();
 
@@ -499,7 +593,7 @@ var Device = function (device, serial, connectionType, deviceType)
         this.rqControl('qWrite',address, value)
         .then(qDeferred.resolve,qDeferred.reject);
         return qDeferred.promise;
-    }
+    };
     this.dqWrite = function(address, value) {
         var deferred = q.defer();
         this.device.write(
@@ -513,11 +607,11 @@ var Device = function (device, serial, connectionType, deviceType)
             }
         );
         return deferred.promise;
-    }
+    };
 
     /**
      * Write a single register on the device synchronously.
-     * 
+     *
      * @param {Number} address The address of the register to write.
      * @param {Number} value The value to write to this address.
      * @throws Exceptions thrown from the labjack-nodejs and lower layers.
@@ -529,7 +623,7 @@ var Device = function (device, serial, connectionType, deviceType)
     /**
      * Read a single register on the device synchronously.
      *
-     * @param {Number} address The address of the register to read. 
+     * @param {Number} address The address of the register to read.
      * @return {Number} The value of the requested register.
      * @throws Exceptions thrown from the labjack-nodejs and lower layers.
     **/
@@ -549,7 +643,7 @@ var Device = function (device, serial, connectionType, deviceType)
         this.rqControl('qRead',address)
         .then(qDeferred.resolve,qDeferred.reject);
         return qDeferred.promise;
-    }
+    };
     this.dqRead = function(address) {
         var deferred = q.defer();
         this.device.read(
@@ -562,13 +656,37 @@ var Device = function (device, serial, connectionType, deviceType)
             }
         );
         return deferred.promise;
-    }
+    };
 
     this.readAsync = function (address, onError, onSuccess) {
         this.device.read(address, onError, onSuccess);
     };
 
-    /** 
+    this.qReadUINT64 = function(address) {
+        var deferred = q.defer();
+        this.rqControl('qReadUINT64', address)
+        .then(deferred.resolve, deferred.reject);
+        return deferred.promise;
+    };
+    this.dqReadUINT64 = function(address) {
+        var deferred = q.defer();
+        this.device.readUINT64(
+            address,
+            function (err) {
+                deferred.reject(err);
+            },
+            function (results) {
+                deferred.resolve(results);
+            }
+        );
+        return deferred.promise;
+    };
+    this.readUINT64 = function(address) {
+        return this.device.readUINT64Sync(address);
+    };
+
+
+    /**
      * Temporary Read & Write-Repeat functions...
      */
     this.rqControl = function (cmdType,arg0,arg1,arg2,arg3,arg4) {
@@ -582,16 +700,20 @@ var Device = function (device, serial, connectionType, deviceType)
             'readMany':'dreadMany',
             'qWrite':'dqWrite',
             'writeMany':'dwriteMany',
-            'rwMany':'drwMany'
+            'rwMany':'drwMany',
+            'qReadUINT64':'dqReadUINT64',
+            'readFlash':'dqReadFlash'
         }[cmdType];
         var supportedFunctions = [
             'qRead',
             'readMany',
             'qWrite',
             'writeMany',
-            'rwMany'
+            'rwMany',
+            'qReadUINT64',
+            'readFlash'
         ];
-        
+
         var control = function() {
             // console.log('in dRead.read');
             var ioDeferred = q.defer();
@@ -653,14 +775,15 @@ var Device = function (device, serial, connectionType, deviceType)
             .then(iotimerDeferred.resolve,iotimerDeferred.reject);
             return iotimerDeferred.promise;
         };
-        
+
 
         if(supportedFunctions.indexOf(cmdType) >= 0) {
             control()
             .then(function(res) {
-                // console.log('data',res);
+                // success case for calling function
                 rqControlDeferred.resolve(res.val);
             },function(res) {
+                // error case for calling function
                 var innerDeferred = q.defer();
                 if(res.val == 2358) {
                     delayAndRead()
@@ -674,15 +797,15 @@ var Device = function (device, serial, connectionType, deviceType)
                 // console.log('Read-Really-Finished',arg0,res);
                 rqControlDeferred.resolve(res);
             },function(err) {
-                console.log('Here...',err);
-                rqControlDeferred.reject(err)
-            })
+                console.error('DC rqControl',err);
+                rqControlDeferred.reject(err);
+            });
         } else {
-            console.log(cmdType,type,supportedFunctions.indexOf(type))
+            console.log(cmdType,type,supportedFunctions.indexOf(type));
             throw 'device_controller.rqControl Error!';
         }
         return rqControlDeferred.promise;
-    }
+    };
     /**
      * Release the device handle for this device.
      *
@@ -802,7 +925,7 @@ function DeviceKeeper()
     /**
      * Update the record for a device.
      *
-     * Remove an old decorated device and replace it with this new decorated 
+     * Remove an old decorated device and replace it with this new decorated
      * device. More specifically, the opened device record for the device with
      * the serial number matching the serial number assigned to the device
      * parameter will be removed. Then, the provided device parameter will be
@@ -1033,7 +1156,7 @@ var consolidateDevices = function (devices) {
     var newDevice;
     var deviceListing = dict();
     var numDevices = devices.length;
-    
+
     for (var i=0; i<numDevices; i++) {
         newDevice = devices[i];
         existingDevice = deviceListing.get(newDevice.serial.toString(), null);
@@ -1092,7 +1215,7 @@ var consolidateDevices = function (devices) {
                 deviceInfo.ethernetIPAddress
             );
         }
-        
+
         retList.push(deviceInfo);
     });
 
@@ -1112,7 +1235,7 @@ var getWiFiRSSIImgName = function(rssi) {
     } else {
         imgName = WIFI_RSSI_IMAGES[0].img;
     }
-    
+
     if(imgName === '') {
         imgName = WIFI_RSSI_IMAGES[WIFI_RSSI_IMAGES.length-1].img;
     }
@@ -1136,6 +1259,11 @@ var unpackDeviceInfo = function (driverListingItem) {
         var ipStr = formatAsIP(dataItem.val);
         retDeviceInfo.ethernetIPAddress = ipStr;
         retDeviceInfo.ethernetSafeIPAddress = ipStr.replace(/\./g, '_');
+        if(dataItem.val === 0) {
+            retDeviceInfo.ethernetConnectionStatus = 'Not Connected';
+        } else {
+            retDeviceInfo.ethernetConnectionStatus = ipStr;
+        }
     };
     unpackStrategies['ETHERNET_IP'] = parseEthernetIPAddress;
 
@@ -1152,13 +1280,18 @@ var unpackDeviceInfo = function (driverListingItem) {
         var ipStr = formatAsIP(dataItem.val);
         retDeviceInfo.wifiIPAddress = ipStr;
         retDeviceInfo.wifiSafeIPAddress = ipStr.replace(/\./g, '_');
+        if(dataItem.val === 0) {
+            retDeviceInfo.wifiConnectionStatus = 'Not Connected';
+        } else {
+            retDeviceInfo.wifiConnectionStatus = ipStr;
+        } 
     };
     unpackStrategies['WIFI_IP'] = parseWiFiIPAddress;
     var parseWiFiIPAddress = function (dataItem) {
         var newRSSI = dataItem.val;
         var avgRSSI = retDeviceInfo.avgWiFiRSSI;
         var numInAvg = retDeviceInfo.numInAvgWiFiRSSI;
-        
+
         if(newRSSI > -200) {
             avgRSSI = avgRSSI * numInAvg;
             avgRSSI += newRSSI;
@@ -1169,7 +1302,6 @@ var unpackDeviceInfo = function (driverListingItem) {
         if((retDeviceInfo.specialImageSuffix === '') && (retDeviceInfo.type == 7)) {
             imgName = '';
         }
-        console.log('RSSI-Debug',driverListingItem.serialNumber,driverListingItem.connectionType,newRSSI,imgName);
         retDeviceInfo.wifiRSSIImgName = imgName;
         retDeviceInfo.wifiRSSIStr = avgRSSI.toString() + 'dB';
         retDeviceInfo.avgWiFiRSSI = avgRSSI;
@@ -1225,8 +1357,10 @@ var unpackDeviceInfo = function (driverListingItem) {
         'wifiRSSIStr': '0dB',
         'wifiRSSIImgName': '',
         'numInAvgWiFiRSSI': 0,
-        'wifiStatus': 'Un-Powered',
-        'wifiStatusStr': false
+        'wifiStatus': false,
+        'wifiStatusStr': 'Un-Powered',
+        'ethernetConnectionStatus': 'Not Connected',
+        'wifiConnectionStatus': 'Not Connected'
     }
 
     driverListingItem.data.forEach(function (dataItem) {
@@ -1239,17 +1373,19 @@ var unpackDeviceInfo = function (driverListingItem) {
 
 var tryOpenDeviceConnection = function (deviceInfo, connection) {
     var deferred = q.defer();
-
+    console.log('Trying to open device',deviceInfo.serial,connection.type);
     openDeviceFromAttributes(
         deviceInfo.type,
         deviceInfo.serial,
         connection.ipAddress,
         connection.type,
         function (error) {
+            console.log('Failed to opened device',deviceInfo.serial,connection.type);
             connection.alreadyOpen = true;
             deferred.resolve();
         },
         function (device) {
+            console.log('Successfully to opened device',deviceInfo.serial,connection.type);
             device.close(function(){
                 console.error('Trying to close device-2',deviceInfo.serial,connection.type);
                 device.close(deferred.resolve, deferred.resolve);
@@ -1258,14 +1394,29 @@ var tryOpenDeviceConnection = function (deviceInfo, connection) {
     );
 
     return function () { return deferred.promise; };
-}
+};
+
+
+var ignoreNonTCP = function (innerFunc) {
+    return function (deviceInfo, connection) {
+        if (connection.type === CONNECT_TYPE_USB) {
+            return function () {
+                var deferred = q.defer();
+                deferred.resolve();
+                return deferred.promise;
+            };
+        } else {
+            return innerFunc(deviceInfo, connection);
+        }
+    };
+};
 
 
 var tryOpenDevice = function (deviceInfo) {
-
+    var openFunc = ignoreNonTCP(tryOpenDeviceConnection);
     var connectionTypePromises = deviceInfo.connections.map(
         function (connection) {
-            return tryOpenDeviceConnection(deviceInfo, connection);
+            return openFunc(deviceInfo, connection);
         }
     );
 
@@ -1333,7 +1484,7 @@ var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
             }
         );
 
-        return deferred.promise; 
+        return deferred.promise;
     };
 };
 
@@ -1346,8 +1497,8 @@ var innerGetDevices = function (onError, onSuccess)
         var deferred = q.defer();
         var hadError = false;
 
-        var innerOnError = function () {
-            console.log('attempting to recover');
+        var innerOnError = function (err) {
+            console.log('attempting to recover',err);
         };
 
         if (wasAlreadySuccessful) {
@@ -1368,8 +1519,8 @@ var innerGetDevices = function (onError, onSuccess)
                 if (previousPromise === null)
                     return currentPromise([]);
                 else
-                    return previousPromise.then(currentPromise, function () {
-                        innerOnError();
+                    return previousPromise.then(currentPromise, function (err) {
+                        innerOnError(err);
                         hadError = true;
                     });
             },
@@ -1378,12 +1529,11 @@ var innerGetDevices = function (onError, onSuccess)
 
         lastPromise.then(function (newRetData) {
             retData = newRetData;
-            console.log('determining success...',hadError)
-            if (hadError)
+            if (hadError) {
                 deferred.resolve(false);
+            }
             else
                 deferred.resolve(true);
-            console.log('here here here ***');
         }, innerOnError);
 
         return deferred.promise;
@@ -1434,8 +1584,6 @@ exports.getDevices = function (onError, onSuccess) {
 
     var decorateSelectorVals = function (continuation) {
         return function (deviceTypes) {
-            console.log('WHERE ARE WE????');
-            console.log(deviceTypes);
             deviceTypes.forEach(function (deviceType) {
                 deviceType.devices.forEach(function (device) {
                     device.connections.forEach(function (connection) {
@@ -1449,7 +1597,10 @@ exports.getDevices = function (onError, onSuccess) {
     };
 
     innerGetDevices(
-        decorateCleanup(onError),
+        decorateCleanup(function(err){
+            console.error('HERE',err);
+            onError(err);
+        }),
         decorateSelectorVals(decorateCleanup(onSuccess))
     );
 }

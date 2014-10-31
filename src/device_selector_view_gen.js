@@ -56,30 +56,73 @@ var classTree = {
 trees.push({'val': 'button_class', 'tree': classTree, 'target': 'connection'});
 
 var wifiIPTree = {
-	'name': 'wifiStatus',
-	'trueVal': '{{ device.wifiIPAddress }}',
-	'falseVal': '0.0.0.0'
+	// 'name': 'wifiStatus',
+	// 'trueVal': '{{ device.wifiIPAddress }}',
+	// 'falseVal': 'Not Connected'
+	'name': 'wifiStatusStr',
+	'vals': {
+		'Un-Powered': 'Un-Powered',
+		'Associated': '{{ device.wifiIPAddress }}'
+	},
+	'defaultVal': 'Not Connected'
 };
 trees.push({'val': 'displayWifiIPAddress', 'tree': wifiIPTree, 'target': 'device'});
 
+// var titleTree = {
+// 	'name': 'wifiStatus',
+// 	'trueVal': {
+// 		'name': 'alreadyOpen',
+// 		'subAttr': 'connection',
+// 		'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
+// 		'falseVal': {
+// 			'name': 'notSearchableWarning',
+// 			'trueVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }} however, scan failed',
+// 			'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
+// 		}
+// 	},
+// 	'falseVal': {
+// 		'name': 'alreadyOpen',
+// 		'subAttr': 'connection',
+// 		'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
+// 	}
+// 	//'falseVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }} because {{ current.typeStr }} module is unpowered'
+// };
 var titleTree = {
-	'name': 'wifiStatus',
-	'trueVal': {
-		'name': 'alreadyOpen',
-		'subAttr': 'connection',
-		'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
-		'falseVal': {
-			'name': 'notSearchableWarning',
-			'trueVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }} however, scan failed',
-			'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
+	'name': 'ljmTypeStr',
+	'subAttr': 'connection',
+	'vals': {
+		'LJM_ctUSB':'USB Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}', 
+		'LJM_ctETHERNET':{
+			'name': 'alreadyOpen',
+			'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
+			'falseVal': {
+				'name': 'notSearchableWarning',
+				'trueVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }} however, scan failed',
+				'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
+			}
+		},
+		'LJM_ctWIFI':{
+			'name': 'wifiStatus',
+			'falseVal': {
+				'name': 'alreadyOpen',
+				'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }}',
+				'falseVal': {
+					'name': 'notSearchableWarning',
+					'trueVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }} however, scan failed',
+					'falseVal': 'Connect to {{ device.deviceType }}{{ device.specialText }} using {{ current.typeStr }}'
+				}
+			},
+			'trueVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via {{ current.typeStr }} because {{ current.typeStr }} module is unpowered'
 		}
 	},
-	'falseVal': 'Unable to connect to {{ device.deviceType }}{{ device.specialText }} via WiFi because WiFi module is unpowered'
+	'defaultVal': 'Unknown Connect To {{device.deviceType}}' 
 };
 trees.push({'val': 'button_title', 'tree': titleTree, 'target': 'connection'});
 
 exports.addDeviceSelectorVals = function (device, connection) {
 	var findTreeVal = function (treeInstruct, target) {
+		// console.log(target);
+		// console.log('--=-=====----');
 		if (treeInstruct.subAttr) {
 			target = target[treeInstruct.subAttr];
 		}
@@ -115,6 +158,7 @@ exports.addDeviceSelectorVals = function (device, connection) {
 
 	device.connection = connection;
 	trees.forEach(function (treeSpec) {
+		// console.log('Getting treeSpec',treeSpec);
 		var newVal = findTreeVal(treeSpec.tree, device);
 		var strategies = {
 			'device': function () { device[treeSpec.val] = newVal; },
@@ -125,4 +169,5 @@ exports.addDeviceSelectorVals = function (device, connection) {
 			strategies[treeSpec.target]();
 		}
 	});
+	// console.log('Out of tree navigation');
 }

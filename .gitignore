@@ -22,5 +22,6 @@ build/*
 deploy/*
 
 .DS_Store
+.c9/*
 
 deploy.zip

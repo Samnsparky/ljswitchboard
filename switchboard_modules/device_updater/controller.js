@@ -32,7 +32,7 @@ var ERROR_TEMPLATE = handlebars.compile(
 );
 
 var HUMAN_VERSION_TEMPLATE = handlebars.compile(
-    '{{ version }} ({{ humanName }})'
+    '{{ version }} -{{ humanName }}'
 );
 
 
@@ -48,13 +48,19 @@ function UpgradeableDeviceAdapter(device)
             return target();
         } catch (e) {
             var errMsg;
-
-            if (e.retError === undefined) {
-                errMsg = e.toString();
+            if(!isNaN(e)){
+                errMsg = device_controller.ljm_driver.errToStrSync(e);
             } else {
-                errMsg = e.retError.toString();
+                if(e.code !== undefined) {
+                    errMsg = device_controller.ljm_driver.errToStrSync(e.code);
+                } else {
+                    if (e.retError === undefined) {
+                        errMsg = e.toString();
+                    } else {
+                        errMsg = e.retError.toString();
+                    }
+                }
             }
-
             showAlert('Failed to read device info: ' + errMsg);
             return '[unavailable]';
         }
@@ -78,6 +84,16 @@ function UpgradeableDeviceAdapter(device)
     this.getName = function()
     {
         return device.getName();
+    };
+    /**
+     * Get the type of device subclass that this decorator encapsulates.
+     *
+     * @return {String} The string description of the model sub-class of the 
+     *      device that this decorator encapsulates.
+    **/
+    this.getSubclass = function()
+    {
+        return executeErrorSafeFunction(device.getSubclass);
     };
 
     /**
@@ -115,6 +131,19 @@ function UpgradeableDeviceAdapter(device)
     {
         var formattedCall = function () {
             return device.getBootloaderVersion().toFixed(4);
+        };
+        return executeErrorSafeFunction(formattedCall);
+    };
+    this.getWifiFirmwareVersion = function()
+    {
+        var formattedCall = function () {
+            return device.getWifiFirmwareVersion().toFixed(4);
+        };
+        return executeErrorSafeFunction(formattedCall);
+    };
+    this.getSubclass = function() {
+        var formattedCall = function () {
+            return device.getSubclass();
         };
         return executeErrorSafeFunction(formattedCall);
     };
@@ -156,13 +185,15 @@ function getAvailableFirmwareListing(onError, onSuccess)
                         innerDeferred.resolve(overallFirmwareListing);
                         return;
                     }
+                    console.log('HERE',url);
 
                     var firmwareListing = [];
                     var match = FIRMWARE_LINK_REGEX.exec(body);
-                    var targetURL = match[0].replace(/href\=\"/g, '');
-                    targetURL = targetURL.replace(/\"/g, '');
 
                     while (match !== null) {
+                        console.log('in while loop',match)
+                        var targetURL = match[0].replace(/href\=\"/g, '');
+                        targetURL = targetURL.replace(/\"/g, '');
                         var version = (parseFloat(match[1])/10000).toFixed(4);
                         var humanVersion = HUMAN_VERSION_TEMPLATE({
                             version: version,
@@ -177,11 +208,17 @@ function getAvailableFirmwareListing(onError, onSuccess)
                                 url: targetURL
                             }
                         );
+
                         match = FIRMWARE_LINK_REGEX.exec(body);
+
                     }
 
-                    // TODO: Display betas at lowest
                     var numFirmwares = firmwareListing.length;
+                    if (numFirmwares === 0) {
+                        innerDeferred.resolve(overallFirmwareListing);
+                        return;
+                    }
+                    console.log('After While Loop');
                     var highestFirmware = firmwareListing[0];
                     for (var i=1; i<numFirmwares; i++) {
                         if (highestFirmware.version < firmwareListing[i].version)
@@ -224,7 +261,7 @@ function getAvailableFirmwareListing(onError, onSuccess)
         else
             $('#internet-error-list').remove();
         onSuccess(firmwareListing);
-    })
+    });
 }
 
 
@@ -389,6 +426,15 @@ function updateFirmware (firmwareFileLocation) {
 
     $('#total-devices-display').html(selectedSerials.length);
     $('#complete-devices-display').html(0);
+    try {
+        device_controller.ljm_driver.writeLibrarySync('LJM_OPEN_TCP_DEVICE_TIMEOUT_MS',1000);
+        device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_TIMEOUT_MS_ETHERNET',1000);
+        device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_NUM_ATTEMPTS_ETHERNET',5);
+        device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_TIMEOUT_MS_WIFI',1000);
+        device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_NUM_ATTEMPTS_WIFI',5);
+    } catch(e) {
+        console.log('Error caught',e);
+    }
 
     var numUpgraded = 0;
     async.each(
@@ -413,14 +459,23 @@ function updateFirmware (firmwareFileLocation) {
                         firmwareDisplaySelector += serial.toString();
                         firmwareDisplaySelector += '-firmware-display';
                         device.device = bundle.getDevice();
-                        console.log(device.device);
+                        console.log('device_updater, device.device:',device.device);
                         device.invalidateCache();
-                        numUpgraded++;
+                        numUpgraded+=1;
                         $(firmwareDisplaySelector).html(
                             bundle.getFirmwareVersion()
                         );
                         $('#complete-devices-display').html(numUpgraded);
-                        callback(null);
+                        try {
+                            device_controller.ljm_driver.writeLibrarySync('LJM_OPEN_TCP_DEVICE_TIMEOUT_MS','default');
+                            device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_TIMEOUT_MS_ETHERNET','default');
+                            device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_NUM_ATTEMPTS_ETHERNET',5);
+                            device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_TIMEOUT_MS_WIFI','default');
+                            device_controller.ljm_driver.writeLibrarySync('LJM_LISTALL_NUM_ATTEMPTS_WIFI',5);
+                        } catch(e) {
+                            console.log('Error caught',e);
+                        }
+                        callback();
                     },
                     function (err) {
                         callback(err);
@@ -490,7 +545,7 @@ function updateFirmware (firmwareFileLocation) {
                 showAlert(
                     'Failed to update device firmware. Please try ' + 
                     'again. If the problem persists, please contact ' + 
-                    'support@labjack.com. Error: ' + errMsg
+                    errMsg
                 );
             } else {
                 DISABLE_WIFI_POWER = true;
@@ -544,7 +599,14 @@ $('#network-configuration').ready(function(){
     });
 
     $('#local-update-button').click(function () {
-        updateFirmware($('#file-loc-input').val());
+        var fileLocation = $('#file-loc-input').val();
+        fs.exists(fileLocation,function(res){
+            if(res) {
+                updateFirmware(fileLocation);
+            } else {
+                $('#browse-link').trigger('click');
+            }
+        });
         return false;
     });
 

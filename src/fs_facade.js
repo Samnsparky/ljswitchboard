@@ -8,6 +8,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var dict = require('dict');
 
 var handlebars = require('handlebars');
 var os = require('os');
@@ -23,6 +24,16 @@ var INTERNAL_JS_DIR = path.join(INTERNAL_STATIC_DIR, 'js');
 var INTERNAL_CSS_DIR = path.join(INTERNAL_STATIC_DIR, 'css');
 
 var EXTERNAL_RESOURCES_DIR = 'switchboard_modules';
+
+var NODE_WEBKIT_INSTANCE = true;
+exports.setIsNodeWebkitInstance = function(state) {
+    NODE_WEBKIT_INSTANCE = state;
+};
+
+var FS_FACADE_TEMPLATE_CACHE = dict();
+exports.numCachedTemplates = function() {
+    return FS_FACADE_TEMPLATE_CACHE.size;
+};
 
 var fileSaveAsID = "#file-save-dialog-hidden";
 var getFileLoadID = "#file-dialog-hidden";
@@ -40,7 +51,7 @@ var defaultFilePath = {
     'win64': 'C:\\Windows'
 }[process.platform];
 exports.testFunction = function() {
-    return "testing..."
+    return "testing...";
 };
 exports.getFileSaveAsID = function() {
     return fileSaveAsID;
@@ -81,10 +92,27 @@ var safeJSONParse = function(filePath, contents) {
     }
     return constants;
 };
+exports.safeJSONParser = function(filePath, contents) {
+    return safeJSONParse(filePath, contents);
+};
+
 exports.getLoadErrors = function() {
     return FS_FACADE_LoadErrors;
 };
 
+
+handlebars.registerHelper('eachDict', function(context, options) {
+    var ret = "";
+    var data = {};
+    context.forEach(function(value,name){
+        if(value) {
+            data.key = name;
+            data.info = value;
+        }
+        ret = ret + options.fn(value, {data: data});
+    });
+    return ret;
+});
 
 /**
  * Get the full location (URI) for a resource bundled with the application.
@@ -142,16 +170,47 @@ exports.getExternalURI = function(fullResourceName) {
  *      run out of.
 **/
 exports.getParentDir = function() {
-    var pathPieces = path.dirname(process.execPath).split(path.sep);
-    
-    var cutIndex;
-    var numPieces = pathPieces.length;
-    for (cutIndex=0; cutIndex<numPieces; cutIndex++) {
-        if (pathPieces[cutIndex].indexOf('.app') != -1) {
-            break;
+    // Code that allows fs_facade to work outside of node_webkit instance
+    var isWebkitInstance = true;
+    try {
+        if(NODE_WEBKIT_INSTANCE) {
+            isWebkitInstance = true;
+        } else {
+            isWebkitInstance = false;
         }
+    } catch(err) {
+        isWebkitInstance = true;
     }
-    return pathPieces.slice(0, cutIndex).join(path.sep);
+
+    // TODO: I'm not quite sure to search for at the moment/how to determine 
+    // whether the instance is in K3 or a cmd line running node so I will just 
+    // do this:
+    if(process.execPath.search('/usr/local/Cellar/node') >= 0) {
+        isWebkitInstance = false;
+    }
+    
+    if(isWebkitInstance) {
+        var pathPieces = path.dirname(process.execPath).split(path.sep);
+        
+        var cutIndex;
+        var numPieces = pathPieces.length;
+        for (cutIndex=0; cutIndex<numPieces; cutIndex++) {
+            if (pathPieces[cutIndex].indexOf('.app') != -1) {
+                break;
+            }
+        }
+        return pathPieces.slice(0, cutIndex).join(path.sep);
+    } else {
+        var PATH_TXT = '/';
+        if (process.platform === 'win32') {
+            PATH_TXT = '\\';
+        }
+        var MODULES_DESC_FILENAME = 'modules.json';
+
+        var currentDir = process.cwd();
+        var switchboard_modules_dir = currentDir + PATH_TXT + '..';
+        return switchboard_modules_dir;
+    }
 };
 
 
@@ -168,22 +227,33 @@ exports.getParentDir = function() {
  *      be the String rendred html.
 **/
 exports.renderTemplate = function(location, context, onError, onSuccess) {
-    fs.exists(location, function(exists) {
-        if (exists) {
-            fs.readFile(location, 'utf8',
-                function (error, template) {
-                    if (error) {
-                        onError(error);
-                    } else {
-                        onSuccess(handlebars.compile(template)(context));
+    if (FS_FACADE_TEMPLATE_CACHE.has(location)) {
+        var curTemplate = FS_FACADE_TEMPLATE_CACHE.get(location);
+        onSuccess(curTemplate(context));
+    } else {
+        fs.exists(location, function(exists) {
+            if (exists) {
+                fs.readFile(location, 'utf8',
+                    function (error, template) {
+                        if (error) {
+                            onError(error);
+                        } else {
+                            var curTemplate = handlebars.compile(template);
+                            FS_FACADE_TEMPLATE_CACHE.set(location,curTemplate);
+                            onSuccess(curTemplate(context));
+                        }
                     }
-                }
-            );
-        } else {
-            onError(new Error('Template ' + location + ' could not be found.'));
-        }
-    });
+                );
+            } else {
+                onError(new Error('Template ' + location + ' could not be found.'));
+            }
+        });
+    }
 };
+
+
+
+
 
 // TODO: Move to module manager
 /**
@@ -312,8 +382,8 @@ exports.getLoadedModulesInfo = function(onError, onSuccess) {
 exports.saveDataToFile = function(location, data, onError, onSuccess) {
     fs.exists(location, function(exists) {
         fs.writeFile(
-            location, 
-            data, 
+            location,
+            data,
             function (err) {
                 if (err) {
                     onError(err);

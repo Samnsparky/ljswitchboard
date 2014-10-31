@@ -1,20 +1,9 @@
 /**
- * Goals for the Lua Script Debugger module.
- * This is a Lua script intro-app that performs a minimal number of scripting
- * operations.  It is simply capable of detecting whether or not a Lua script
- * is running and then prints out the debugging log to the window.  
+ * Goals for the Network Settings module.
+ * This module will give the user the ability to configure Ethernet and WiFi 
+ * device settings.
  *
  * @author Chris Johnson (LabJack Corp, 2013)
- *
- * Configuration:
- * No configuration of the device is required
- *
- * Periodic Processes:
- *     1. Read from "LUA_RUN" register to determine if a Lua script is running.
- *     2. Read from "LUA_DEBUG_NUM_BYTES" register to determine how much data is
- *         available in the debugging info buffer.
- *     3. If there is data available in the debugging buffer then get it from
- *         the device. 
 **/
 
 // Constant that determines device polling rate.  Use an increased rate to aid
@@ -37,6 +26,7 @@ function module() {
     this.moduleContext = {};
 
     this.activeDevice = undefined;
+    this.connectionType = -1;
 
     this.isEthernetConnected = false;
     this.isWifiConnected = false;
@@ -97,8 +87,7 @@ function module() {
         value += stringArray[3];
         return value;
     };
-    this.dot2num = function(dot) 
-    {
+    this.dot2num = function(dot) {
         var d = dot.split('.');
         return ((((((+d[0])*256)+(+d[1]))*256)+(+d[2]))*256)+(+d[3]);
     };
@@ -179,6 +168,15 @@ function module() {
         var elements = $('#wifi_settings .configSettingsTable .networkSetting input');
         elements.trigger('change');
     };
+    this.updateInput = function(element, value) {
+        var isFocused = element.is(":focus");
+        if(isFocused) {
+            // don't update the element
+        } else {
+            // Update the element
+            element.val(value);
+        }
+    };
     this.updateIPSettings = function(type) {
         var list = [];
         if(type === 'wifi') {
@@ -192,7 +190,8 @@ function module() {
             var manEl = $('#'+reg+'_VAL .'+reg+'_MAN_VAL');
 
             autoEl.text(strVal);
-            manEl.attr('placeholder',strVal);
+            // manEl.attr('placeholder',strVal);
+            self.updateInput(manEl, strVal);
         });
     };
     this.updateEthernetSettings = function() {
@@ -239,6 +238,7 @@ function module() {
         var dhcpToggleEl = $('#wifi-DHCP-Select-Toggle .btnText');
         dhcpToggleEl.text($('#wifi-DHCP-Select-Toggle #WiFi_DHCP_Manual').text());
         self.selectivelyShowWifiAlerts();
+        KEYBOARD_EVENT_HANDLER.initInputListeners();
     };
     this.showAutoWifiSettings = function() {
         $('#wifi_settings .Manual_Value').hide();
@@ -281,7 +281,9 @@ function module() {
     this.setManualVal = function(settingID,val) {
         var manStr = " .Manual_Value input";
         var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
-        manualValEl[0].placeholder = val;
+
+        // manualValEl[0].value = val;
+        self.updateInput(manualValEl, val);
     };
     this.getManualVal = function(settingID) {
         var manStr = " .Manual_Value input";
@@ -292,7 +294,8 @@ function module() {
             value = manualValEl.val();
             isNew = true;
         } else {
-            value = manualValEl[0].placeholder;
+            // value = manualValEl[0].placeholder;
+            value = manualValEl.val();
             isNew = false;
         }
         return {value:value, isNew:isNew};
@@ -340,15 +343,17 @@ function module() {
             value = manualValEl.val();
             isNew = true;
         } else {
-            value = manualValEl[0].placeholder;
+            // value = manualValEl[0].placeholder;
+            value = manualValEl.val();
             isNew = false;
         }
         return {value:value, isNew:isNew};
     };
-    this.setInputVal = function(settingID,val) {
+    this.setInputVal = function(settingID, val) {
         var manStr = " input";
         var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
-        manualValEl.val(val);
+        // manualValEl.val(val);
+        self.updateInput(manualValEl, val);
     };
     this.setNetworkName = function(networkName) {
         self.setInputVal('#WIFI_SSID_DEFAULT_VAL',networkName);
@@ -398,7 +403,7 @@ function module() {
         var ethernetSettingRegs = [];
         var ethernetSettingVals = [];
         self.getEthernetIPRegisterList().forEach(function(regName){
-            var configData = self.getManualVal(regName+'_VAL');
+            var configData = self.getManualVal(regName+'_MAN_VAL');
             var ipVal = parseInt(self.dot2num(configData.value));
             if(configData.isNew) {
                 newEthernetSettingRegs.push(regName+'_DEFAULT');
@@ -415,7 +420,7 @@ function module() {
         ethernetSettingRegs.push('ETHERNET_DHCP_ENABLE_DEFAULT');
         ethernetSettingVals.push(dhcpSetting.value);
         return {
-            newRegisters: newEthernetSettingRegs, 
+            newRegisters: newEthernetSettingRegs,
             newValues: newEthernetSettingVals,
             registers: ethernetSettingRegs,
             values: ethernetSettingVals
@@ -503,7 +508,12 @@ function module() {
         var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;  
 
         var isValid = true;
-        if(inputText !== "") {
+
+        var currentRegister = settingID.split('_VAL')[0];
+        var currentValue = self.currentValues.get(currentRegister).fVal;
+        console.log('in ipAddressValidator', currentValue, inputText);
+
+        if(inputText !== currentValue) {
             // Remove Existing styles 
             alertMessageEl.removeClass('icon-checkmark-3');
             alertEl.removeClass('alert-success');
@@ -535,6 +545,7 @@ function module() {
         } else {
             self.updateWifiValidationStatus(isValid);
         }
+        inputTextEl.blur();
     };
     this.networkNameValidator = function(event) {
         var settingID = event.target.parentElement.parentElement.id;
@@ -546,7 +557,12 @@ function module() {
         var inputText = event.target.value;
         var isValid = false;
         inputTextEl.removeClass('inputVerified');
-        if(inputText !== "") {
+
+        var currentRegister = settingID.split('_VAL')[0];
+        var currentValue = self.currentValues.get(currentRegister).fVal;
+        console.log('in networkNameValidator', currentValue, inputText);
+
+        if(inputText !== currentValue) {
             if(true) {
                 alertMessageEl.removeClass('icon-close');
                 alertMessageEl.addClass('icon-checkmark-3');
@@ -570,6 +586,7 @@ function module() {
             isValid = true;
         }
         self.updateWifiValidationStatus(isValid);
+        inputTextEl.blur();
     };
     this.networkPasswordValidator = function(event) {
         var settingID = event.target.parentElement.parentElement.id;
@@ -581,6 +598,10 @@ function module() {
         var inputText = event.target.value;
         var isValid = false;
         inputTextEl.removeClass('inputVerified');
+        var currentRegister = settingID.split('_VAL')[0];
+        var currentValue = self.currentValues.get(currentRegister);
+        console.log('in networkPasswordValidator', currentValue, inputText);
+
         if(inputText !== "") {
             if(true) {
                 alertMessageEl.removeClass('icon-close');
@@ -608,6 +629,7 @@ function module() {
             isValid = true;
         }
         self.updateWifiValidationStatus(isValid);
+        inputTextEl.blur();
     };
     this.attachIPInputValidators = function() {
         var inputElements = $('.networkSetting .ipAddress');
@@ -648,6 +670,7 @@ function module() {
             };
         };
         var curStatus = sdModule.currentValues.get('POWER_ETHERNET').val;
+        console.log('in wifiPowerButton',curStatus);
         if(curStatus === 0) {
             self.activeDevice.writeMany(
                 ['POWER_ETHERNET','POWER_ETHERNET_DEFAULT'],
@@ -1016,6 +1039,7 @@ function module() {
             };
         };
         var curStatus = sdModule.currentValues.get('POWER_WIFI').val;
+        console.log('in wifiPowerButton',curStatus);
         if(curStatus === 0) {
             self.activeDevice.writeMany(
                 ['POWER_WIFI','POWER_WIFI_DEFAULT'],
@@ -1133,8 +1157,8 @@ function module() {
             var manVal = $('#'+reg+'_VAL .'+reg+'_MAN_VAL');
             var newVal = self.currentValues.get(reg).fVal;
             autoVal.text(newVal);
-            manVal.attr('placeholder',newVal);
-            manVal.val('');
+            // manVal.attr('placeholder',newVal);
+            manVal.val(newVal);
             manVal.trigger('change');
         });
         console.log('Ethernet Inputs Cleared');
@@ -1150,8 +1174,8 @@ function module() {
             var manVal = $('#'+reg+'_VAL .'+reg+'_MAN_VAL');
             var newVal = self.currentValues.get(reg).fVal;
             autoVal.text(newVal);
-            manVal.attr('placeholder',newVal);
-            manVal.val('');
+            // manVal.attr('placeholder',newVal);
+            manVal.val(newVal);
             manVal.trigger('change');
         });
         console.log('Wifi Inputs Cleared');
@@ -1476,8 +1500,8 @@ function module() {
             });
             var currentIP = self.currentValues.get('ETHERNET_IP').val;
             var currentIPs = self.currentValues.get('ETHERNET_IP').fVal;
-            var newIP = self.bufferedValues.get('ETHERNET_IP').val
-            var newIPs = self.bufferedValues.get('ETHERNET_IP').fVal
+            var newIP = self.bufferedValues.get('ETHERNET_IP').val;
+            var newIPs = self.bufferedValues.get('ETHERNET_IP').fVal;
             var currentPower = self.currentValues.get('POWER_ETHERNET').val;
             var newPower = self.currentValues.get('POWER_ETHERNET').val;
             var updateInfo = self.refreshEthernetInfo;
@@ -1735,37 +1759,59 @@ function module() {
     
     /**
      * Function is called once every time a user selects a new device.  
-     * @param  {[type]} framework   The active framework instance.
+     * @param  {object} framework   The active framework instance.
      * @param  {[type]} device      The active framework instance.
      * @param  {[type]} onError     Function to be called if an error occurs.
      * @param  {[type]} onSuccess   Function to be called when complete.
     **/
     this.onDeviceSelected = function(framework, device, onError, onSuccess) {
-        console.log('in onDeviceSelected');
+        // Save the selected device as the module's activeDevice
         self.activeDevice = device;
-        // self.activeDevice.setDebugFlashErr(true);
+        // Save the devices current connection type
+        self.connectionType = device.getConnectionType();
 
+        // Clear current config bindings to prevent from double-event listeners.
         framework.clearConfigBindings();
-        framework.setStartupMessage('Waiting for Wifi Module to start');
-        var dummyQ = function() {
-            var deferred = q.defer();
-            deferred.resolve();
-            return deferred.promise;
-        };
-        // self.waitForWifiNotBlocking()
-        dummyQ()
-        .then(function(){
-            console.log('Successfully delayed start');
-            onSuccess();
-        },function(err) {
-            console.log('Error Delaying',err);
-            onSuccess();
-        });
+        framework.setStartupMessage('Reading Device Configuration');
+
+        // Indicate to the framework that it is ok to continue
+        onSuccess();
     };
+
+    /**
+     * Function to configure the module's view.html template.
+     * @param  {object} framework the sdFramework object returned by the 
+     * framework.
+    **/
     this.configureModuleContext = function(framework) {
-        // Load configuration data & customize view
-        // self.moduleContext.ethernetIPRegisters = [];
-        // self.moduleContext.wifiIPRegisters = [];
+        var ethernetWarningMessage = '';
+        var wifiWarningMessage = '';
+        var ethernetPowerButtonWarning = '';
+        var wifiPowerButtonWarning = '';
+        var showWifiWarning = false;
+        var showEthernetWarning = false;
+        if(self.connectionType == 2) {
+            showEthernetWarning = true;
+            showWifiWarning = true;
+            ethernetWarningMessage = 'Current Connection type is TCP, applying settings may break your connection.';
+            wifiWarningMessage = 'Current Connection type is TCP, applying settings may break your connection.';
+            ethernetPowerButtonWarning = 'Current Connection type is Ethernet, turning off Ethernet may break your connection.';
+            wifiPowerButtonWarning = 'Current Connection type is WiFi, turning off Wifi may break your connection.';
+        } else if (self.connectionType == 3) {
+            showEthernetWarning = true;
+            ethernetWarningMessage = 'Current Connection type is Ethernet, applying settings may break your connection.';
+            ethernetPowerButtonWarning = 'Current Connection type is Ethernet, turning off Ethernet will break your connection.';
+        } else if(self.connectionType == 4) {
+            showWifiWarning = true;
+            wifiWarningMessage = 'Current Connection type is WiFi, applying settings may break your connection.';
+            wifiPowerButtonWarning = 'Current Connection type is WiFi, turning off Wifi will break your connection.';
+        }
+        self.moduleContext.showEthernetWarning = showEthernetWarning;
+        self.moduleContext.ethernetWarningMessage = ethernetWarningMessage;
+        self.moduleContext.ethernetPowerButtonWarning = ethernetPowerButtonWarning;
+        self.moduleContext.showWifiWarning = showWifiWarning;
+        self.moduleContext.wifiWarningMessage = wifiWarningMessage;
+        self.moduleContext.wifiPowerButtonWarning = wifiPowerButtonWarning;
 
         // Get and save wifiNetworkName
         var networkNameDefault = self.currentValues.get('WIFI_SSID_DEFAULT').fVal;
@@ -1822,10 +1868,6 @@ function module() {
         }
         self.moduleContext.dhcpDisabledText = self.dhcpText[0];
         self.moduleContext.dhcpEnabledText = self.dhcpText[1];
-        // console.log('Ethernet DHCP',
-        //     initialEthernetDHCPStatus,
-        //     self.moduleContext.ethernetDHCPStatusBool,
-        //     self.moduleContext.ethernetDHCPStatusString);
 
         var initialEthernetIP = self.currentValues.get('ETHERNET_IP').val;
         if(initialEthernetIP === 0) {
@@ -1870,13 +1912,12 @@ function module() {
         // console.log('Init context',self.moduleContext);
         framework.setCustomContext(self.moduleContext);
     };
+
     this.onDeviceConfigured = function(framework, device, setupBindings, onError, onSuccess) {
         var isConfigError = false;
         var errorAddresses = [];
         var errorBindings = dict();
         setupBindings.forEach(function(setupBinding){
-            // console.log('Addr',setupBinding.address,'Status',setupBinding.status,'Val',setupBinding.result);
-            // console.log('Addr',setupBinding.address,':',setupBinding.formattedResult,setupBinding.result,setupBinding.status);
             if(setupBinding.status === 'error') {
                 isConfigError = true;
                 var addr = setupBinding.address;
@@ -1896,11 +1937,14 @@ function module() {
                 setupBinding.status
             );
         });
-        // console.log('Addresses Failed to Read:',errorAddresses);
+
+        // Asynchronously loop through the addresses that failed to read during 
+        // the modules initial load step.  This commonly happens when the T7's
+        // flash is un-available (wifi-module is starting) aka reading _DEFAULT 
+        // values.
         async.eachSeries(
             errorAddresses,
             function( addr, callback) {
-                // console.log('Failed to read:',addr,);
                 var binding = errorBindings.get(addr);
                 self.activeDevice.qRead(addr)
                 .then(function(result){
@@ -1918,25 +1962,19 @@ function module() {
                     callback();
                 });
             }, function(err){
-                // if any of the file processing produced an error, err would equal that error
-                if( err ) {
-                  // One of the iterations produced an error.
-                  // All processing will now stop.
-                  // console.log('An Addresses failed to process');
-                } else {
-                  // console.log('All Addresses have been processed successfully');
-                }
+                // When we are finished re-reading values call function to 
+                // configure the module's initial display context & return 
+                // control back to the framework.
                 self.configureModuleContext(framework);
                 onSuccess();
             });
-        // console.log('errorBindings:')
-        // errorBindings.forEach(function(b,name){
-        //     console.log(name,b);
-        // });
     };
 
-    this.onTemplateLoaded = function(framework, onError, onSuccess) {
-        self.attachInputValidators();
+    /**
+     * Function to be called when template is loaded to automatically fill
+     * inputs with information.
+    **/
+    this.configureInputsForTesting = function() {
         // var os = require("os");
         // var computerName = os.hostname();
         // if(computerName === 'chris-johnsons-macbook-pro-2.local' && window.toolbar.visible) {
@@ -1949,7 +1987,19 @@ function module() {
         // self.setNetworkName('Courtyard_GUEST');
         // self.setWifiPassword('smgmtbmb3cmtbc');
         // self.setNetworkName('AAA');
-        
+    };
+
+    /**
+     * Function gets called by the framework when the module's template has
+     * been loaded.
+     * @param  {object} framework the framework object
+     * @param  {function} onError   function to be called if an error occurs.
+     * @param  {function} onSuccess function to be called when finished 
+     *                            successfully.
+    **/
+    this.onTemplateLoaded = function(framework, onError, onSuccess) {
+        // Attach the input validators to the ui boxes.
+        self.attachInputValidators();
 
         // force validations to occur
         self.selectivelyShowEthernetAlerts();
@@ -1958,22 +2008,18 @@ function module() {
         onSuccess();
     };
     this.onRegisterWrite = function(framework, binding, value, onError, onSuccess) {
-        // console.log('in onRegisterWrite',binding);
         onSuccess();
     };
     this.onRegisterWritten = function(framework, registerName, value, onError, onSuccess) {
         onSuccess();
     };
     this.onRefresh = function(framework, registerNames, onError, onSuccess) {
-        // console.log('in onRefresh',framework.moduleName);
         onSuccess();
     };
     this.onRefreshed = function(framework, results, onError, onSuccess) {
-        // console.log('in onRefreshed',framework.moduleName);
         onSuccess();
     };
     this.onCloseDevice = function(framework, device, onError, onSuccess) {
-        // self.activeDevice.setDebugFlashErr(false);
         onSuccess();
     };
     this.onUnloadModule = function(framework, onError, onSuccess) {
