@@ -543,9 +543,8 @@ function updateFirmware (firmwareFileLocation) {
                 }
                 console.log('Error..... bleh',err);
                 showAlert(
-                    'Failed to update device firmware. Please try ' + 
-                    'again. If the problem persists, please contact ' + 
-                    errMsg
+                    'Failed to update device firmware with the error :' + errMsg +
+                    ' Please try again. If the problem persists, please contact support@labjack.com.'
                 );
             } else {
                 DISABLE_WIFI_POWER = true;
