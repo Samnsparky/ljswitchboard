@@ -59,10 +59,16 @@ var TASK_MANAGER;
 try {
 	task_manager = require('./helper_scripts/task_manager');
 	TASK_MANAGER = task_manager.getTaskManager(true, $);
+	TASK_MANAGER.init()
+	.then(TASK_MANAGER.includeAllTasks)
+	.then(TASK_MANAGER.initializeAllTasks);
 } catch (err) {
 	try {
 		task_manager = require('./task_manager');
 		TASK_MANAGER = task_manager.getTaskManager(true, $);
+		TASK_MANAGER.init()
+		.then(TASK_MANAGER.includeAllTasks)
+		.then(TASK_MANAGER.initializeAllTasks);
 	} catch(innerError) {
 		console.error('task_manager not found');
 	}

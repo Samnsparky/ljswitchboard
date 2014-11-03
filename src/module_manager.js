@@ -19,108 +19,108 @@ var KIPLING_BUILD_TYPE_NUMBERS = {
     "release":2
 };
 var GET_KIPLING_BUILD_TYPE_NUMBER = function(type) {
-	var num = KIPLING_BUILD_TYPE_NUMBERS[type];
-	if(typeof(num) === 'undefined') {
-		num = 100;
-	}
-	return num;
+    var num = KIPLING_BUILD_TYPE_NUMBERS[type];
+    if(typeof(num) === 'undefined') {
+        num = 100;
+    }
+    return num;
 }
 function createDeviceMatcher (device) {
-	var selector = {
-		firmware: device.getFirmwareVersion(),
-		subclasses: [device.getSubclass()],
-		type: device.getDeviceType()
-	};
+    var selector = {
+        firmware: device.getFirmwareVersion(),
+        subclasses: [device.getSubclass()],
+        type: device.getDeviceType()
+    };
 
-	selector.accept = function (newDevice) {
-		var newDeviceFirmware = newDevice.getFirmwareVersion();
-		var newDeviceSubclass = newDevice.getSubclass();
+    selector.accept = function (newDevice) {
+        var newDeviceFirmware = newDevice.getFirmwareVersion();
+        var newDeviceSubclass = newDevice.getSubclass();
 
-		if (selector.firmware < newDeviceFirmware)
-			selector.firmware = newDeviceFirmware;
+        if (selector.firmware < newDeviceFirmware)
+            selector.firmware = newDeviceFirmware;
 
-		if (selector.subclasses.indexOf(newDeviceSubclass) == -1)
-			selector.subclasses.push(newDeviceSubclass);
-	};
+        if (selector.subclasses.indexOf(newDeviceSubclass) == -1)
+            selector.subclasses.push(newDeviceSubclass);
+    };
 
-	selector.matches = function (module) {
-		var isInternalComp = process.isInternalComputer;
-		var isDevComp = process.isInternalComputer;
-		
-		var continueCheck = true;
-		if (typeof(module.internalCompOnly) !== 'undefined') {
-			if ((!isInternalComp) && (module.internalCompOnly === true)) {
-				continueCheck = false;
-			}
-		}
-		if (typeof(module.developCompOnly) !== 'undefined') {
-			if ((!isDevComp) && (module.developCompOnly === true)) {
-				if(!isInternalComp) {
-					continueCheck = false;
-				}
-			}
-		}
-		if (typeof(module.buildTypes) !== 'undefined') {
-			var lowestNum = -1;
-			module.buildTypes.forEach(function(type){
-				if(GET_KIPLING_BUILD_TYPE_NUMBER(type) < lowestNum) {
-					lowestNum = GET_KIPLING_BUILD_TYPE_NUMBER(type);
-				}
-			});
-			var curBuildType = process.buildType;
-			var curBuildInt = GET_KIPLING_BUILD_TYPE_NUMBER(curBuildType);
-			if (curBuildInt > lowestNum) {
-				// continueCheck = false;
-			}
-		}
+    selector.matches = function (module) {
+        var isInternalComp = process.isInternalComputer;
+        var isDevComp = process.isInternalComputer;
+        
+        var continueCheck = true;
+        if (typeof(module.internalCompOnly) !== 'undefined') {
+            if ((!isInternalComp) && (module.internalCompOnly === true)) {
+                continueCheck = false;
+            }
+        }
+        if (typeof(module.developCompOnly) !== 'undefined') {
+            if ((!isDevComp) && (module.developCompOnly === true)) {
+                if(!isInternalComp) {
+                    continueCheck = false;
+                }
+            }
+        }
+        if (typeof(module.buildTypes) !== 'undefined') {
+            var lowestNum = -1;
+            module.buildTypes.forEach(function(type){
+                if(GET_KIPLING_BUILD_TYPE_NUMBER(type) < lowestNum) {
+                    lowestNum = GET_KIPLING_BUILD_TYPE_NUMBER(type);
+                }
+            });
+            var curBuildType = process.buildType;
+            var curBuildInt = GET_KIPLING_BUILD_TYPE_NUMBER(curBuildType);
+            if (curBuildInt > lowestNum) {
+                // continueCheck = false;
+            }
+        }
 
-		if(continueCheck) {
-			if (module.supportedDevices === undefined)
-				return true;
+        if(continueCheck) {
+            if (module.supportedDevices === undefined)
+                return true;
 
-			return module.supportedDevices.some(function (spec) {
-				var matchesType = spec.type == selector.type;
+            return module.supportedDevices.some(function (spec) {
+                var matchesType = spec.type == selector.type;
 
-				var hasMinFirmware = spec.minFW === undefined;
-				hasMinFirmware = hasMinFirmware || spec.minFW <= selector.firmware;
+                var hasMinFirmware = spec.minFW === undefined;
+                hasMinFirmware = hasMinFirmware || spec.minFW <= selector.firmware;
 
-				var hasSubclass = spec.subclass === undefined;
-				hasSubclass = hasSubclass || spec.subclass.some(function (subclass){
-					return selector.subclasses.indexOf(subclass) != -1;
-				});
-				return matchesType && hasMinFirmware && hasSubclass;
-			});
-		} else {
-			return false;
-		}
-	};
+                var hasSubclass = spec.subclass === undefined;
+                hasSubclass = hasSubclass || spec.subclass.some(function (subclass){
+                    return selector.subclasses.indexOf(subclass) != -1;
+                });
+                return matchesType && hasMinFirmware && hasSubclass;
+            });
+        } else {
+            return false;
+        }
+    };
 
-	return selector;
+    return selector;
 }
 exports.createDeviceMatcher = createDeviceMatcher;
 
 
 var shouldDisplayFuture = function (devices) {
-	var deviceMatches = dict();
-	devices.forEach(function (device) {
-		var deviceMatcher = deviceMatches.get(device.getDeviceType(), null);
-		if (deviceMatcher === null)
-			deviceMatcher = createDeviceMatcher(device);
-		else
-			deviceMatcher.accept(device);
-		deviceMatches.set(device.getDeviceType(), deviceMatcher);
-	});
+    var deviceMatches = dict();
+    devices.forEach(function (device) {
+        var deviceMatcher = deviceMatches.get(device.getDeviceType(), null);
+        if (deviceMatcher === null)
+            deviceMatcher = createDeviceMatcher(device);
+        else
+            deviceMatcher.accept(device);
+        deviceMatches.set(device.getDeviceType(), deviceMatcher);
+    });
 
-	return function (moduleInfo) {
-		var matched = false;
+    return function (moduleInfo) {
+        var matched = false;
 
-		deviceMatches.forEach(function (matcher, deviceType) {
-			if (matcher.matches(moduleInfo))
-				matched = true;
-		});
+        deviceMatches.forEach(function (matcher, deviceType) {
+            if (matcher.matches(moduleInfo))
+                matched = true;
+        });
 
-		return matched;
-	};
+        return matched;
+    };
 };
 exports.shouldDisplayFuture = shouldDisplayFuture;
 
@@ -141,8 +141,14 @@ exports.getActiveModules = function(onError, onSuccess)
 {
     fs_facade.getLoadedModulesInfo(onError, function(modules)
     {
-    	// console.log('Active Modules',modules);
-        var activeModules = modules.filter(function(e) {return e.active;});
+        // console.log('Active Modules',modules);
+        var activeModules = modules.filter(function(e) {
+            if(e.isTask) {
+                return false;
+            } else {
+                return e.active;
+            }
+        });
         onSuccess(activeModules);
     });
 };

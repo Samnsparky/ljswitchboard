@@ -21,13 +21,49 @@ module.exports = {
 	},
 
 	testOn: function (test) {
-		console.log('taskManager', taskManager);
-		taskManager.init();
-		test.ok(true);
-		test.done();
+		taskManager.init()
+		.then(function(res) {
+			test.ok(true);
+			test.done();
+		}, function(err) {
+			console.log('testOn Error', err);
+			test.ok(false);
+			test.done();
+		}, function(err) {
+			console.log('testOn syntax Error', err);
+			test.ok(false);
+			test.done();
+		});
 	},
-
-	testOnOverwrite: function (test) {
-		test.done();
+	includeAllTasks: function (test) {
+		taskManager.includeAllTasks()
+		.then(function(res) {
+			taskManager.printTaskList();
+			test.ok(true);
+			test.done();
+		}, function(err) {
+			console.log('includeAllTasks Error', err);
+			test.ok(false);
+			test.done();
+		}, function(err) {
+			console.log('includeAllTasks syntax Error', err);
+			test.ok(false);
+			test.done();
+		});
+	},
+	initializeAllTasks: function (test) {
+		taskManager.initializeAllTasks()
+		.then(function(res) {
+			test.ok(true);
+			test.done();
+		}, function(err) {
+			console.log('initializeAllTasks Error', err);
+			test.ok(false);
+			test.done();
+		}, function(err) {
+			console.log('initializeAllTasks syntax Error', err);
+			test.ok(false);
+			test.done();
+		});
 	}
 };

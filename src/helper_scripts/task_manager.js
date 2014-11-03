@@ -59,7 +59,7 @@ function taskManager() {
         console.log("task_manager tasks:");
         var i = 0;
         self.taskList.forEach(function(task, taskKey){
-            console.log(i.toString()+',', taskKey);
+            console.log(i.toString()+',', taskKey, task);
         });
     };
 
@@ -75,21 +75,107 @@ function taskManager() {
             self.pErr('fs_facade getModules err',err);
             defered.reject();
         }, function(modules) {
-            modules.forEach(function(module) {
-                if(module.active) {
-                    fs_facade.getModuleInfo(module.name,function(err) {
-                        self.pErr('fs_facade getInfo err',err);
-                    }, function(moduleData){
-                        self.log(moduleData);
-                    });
-                    
+            var asyncErrors = [];
+            async.each(
+                modules,
+                function(module, asyncCallback) {
+                    if(module.active) {
+                        if(module.isTask) {
+                            fs_facade.getModuleInfo(module.name,function(err) {
+                                self.pErr('fs_facade getInfo err',err);
+                                asyncCallback();
+                            }, function(moduleData){
+                                var taskObj = {};
+                                taskObj.taskData = moduleData;
+                                taskObj.obj = null;
+                                self.taskList.set(moduleData.name, taskObj);
+                                asyncCallback();
+                            });
+                        } else {
+                            // self.log('skipping module', module);
+                            asyncCallback();
+                        }
+                    } else {
+                        // self.log('module not active', module);
+                        asyncCallback();
+                    }
+                },
+                function(isError) {
+                    if(isError) {
+                        defered.reject(isError);
+                    }
+                    else {
+                        defered.resolve();
+                    }
                 }
-            });
-            defered.resolve();
+            );
         });
         return defered.promise;
     };
+    this.initializeTask = function(taskKey) {
+        var defered = q.defer();
+        if(self.taskList.has(taskKey)) {
+            self.taskList.get(taskKey).obj.setExposedLibs({
+                'q':q,
+                'async':async,
+                'dict':dict,
+                '$': $
+            });
+            self.taskList.get(taskKey).obj.initTask();
+        } else {
+            self.log('task does not exist', taskKey);
+        }
+        return defered.promise;
+    };
+    this.initializeAllTasks = function() {
+        var defered = q.defer();
+        var initFuncs = [];
+        self.taskList.forEach(function(task, taskKey){
+            task.obj.setExposedLibs({
+                'q':q,
+                'async':async,
+                'dict':dict,
+                '$': $
+            });
+            initFuncs.push(task.obj.initTask);
+        });
+        async.each(
+            initFuncs,
+            function(initFunc, callback) {
+                initFunc()
+                .then(function() {
+                    callback();
+                }, function(err) {
+                    callback(err);
+                });
+            }, function(err) {
+                if(err) {
+                    defered.reject(err);
+                } else {
+                    defered.resolve();
+                }
+            });
+        return defered.promise;
+    };
 
+    this.includeAllTasks = function() {
+        var defered = q.defer();
+        self.taskList.forEach(function(task, taskKey){
+            self.log('HERE',taskKey);
+            var activePath = task.taskData.activePath;
+            var basePath = path.dirname(activePath);
+            var taskLocation = path.join(basePath,'data_buffer.js');
+            try {
+                var taskObject = require(taskLocation);
+                task.obj = taskObject;
+            } catch(err) {
+                self.pErr('error requiring task:', task.taskData.name, 'err:', err);
+            }
+            self.taskList.set(taskKey, task);
+        });
+        defered.resolve();
+        return defered.promise;
+    };
 
 
     this.startTask = function(taskName) {
