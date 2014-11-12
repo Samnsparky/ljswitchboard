@@ -58,17 +58,7 @@ module.exports = {
 				var mesg = 'task: ' + taskKey + ', was not included';
 				test.strictEqual(cur_task_state, expected_state, mesg);
 			});
-			var numIterations = 0;
-			var runProgram = function() {
-				if(numIterations < 5) {
-					numIterations += 1;
-					console.log('here', numIterations);
-					setTimeout(runProgram, 100);
-				} else {
-					test.done();
-				}
-			};
-			setTimeout(runProgram,100);
+			test.done();
 		}, function(err) {
 			console.log('includeAllTasks Error', err);
 			test.ok(false);
@@ -195,12 +185,13 @@ module.exports = {
 		test.notStrictEqual(dataOutputBuffer, undefined);
 		
 		var bufferInfo = {
-			key: 'outputTest',
-			type: 'localFile',
-			fileName: 'outputTest',
-			fileEnding: '.csv',
-			location: '/Users/chrisjohnson/git/Kiplingv3/kiplingTesting/dataOutputBufferTest',
-			dataKeys: ['time','AIN0']
+			'key': 'outputTest',
+			'type': 'localFile',
+			'fileName': 'outputTest',
+			'fileEnding': '.csv',
+			'location': '/Users/chrisjohnson/git/Kiplingv3/kiplingTesting/dataOutputBufferTest',
+			'dataKeys': ['time','AIN0','AIN1','AIN2'],
+			'maxNumRows': 65000,
 		};
 		var testBuffer;
 		var getR = function(data) {
@@ -210,13 +201,15 @@ module.exports = {
 		};
 		dataOutputBuffer.addOutputBuffer(bufferInfo)
 		.then(function(dataBuffer) {
-			console.log('dataBuffer', dataBuffer);
+			// console.log('dataBuffer', dataBuffer);
 			testBuffer = dataBuffer;
 			testBuffer.write('raw', '!abcde!'); // good
 			testBuffer.write('single', {'time': '1', 'AIN0': '0'}); // good
 			testBuffer.write('multiple', {'time':['3','4'], 'AIN0': ['2','3']}); // good
-			testBuffer.writeArray('single', [{'time': '1', 'AIN0': '0'}]);	// bad
-			testBuffer.writeArray('multiple', [{'time': ['1','2'], 'AIN0': ['0','1']}]); //bad
+			testBuffer.writeArray('single', [{'time': '1', 'AIN0': '0'}]);	// good
+			testBuffer.writeArray('multiple', [{'time': ['1','2'], 'AIN0': ['0','1']}]); //good
+			testBuffer.writeArray('single', [{'time': '1', 'AIN0': '0', 'AIN1': '69', 'AIN2': '96'}]);	// good
+			testBuffer.writeArray('single', [{'time': '1', 'AIN0': '0'},{'time': '1', 'AIN0': '0'}]);	// good
 			setTimeout(runProgram,10);
 		}, function(err) {
 			console.log('Error in addOutputBuffer', err);
@@ -224,18 +217,45 @@ module.exports = {
 
 		var numIterations = 0;
 		var runProgram = function() {
-			if(numIterations < 100) {
+			if(numIterations < 10) {
 				numIterations += 1;
 				if(typeof(testBuffer) !== 'undefined') {
 					// console.log('Writing data', numIterations);
-					testBuffer.write('single', {'time': '1', 'AIN0': '0'});
-					testBuffer.write('multiple', {'time':['3','4'], 'AIN0': ['2','3']});
-					testBuffer.writeArray('single', [{'time': '1', 'AIN0': '0'}]);
-					testBuffer.writeArray('multiple', [{'time': ['1','2'], 'AIN0': ['0','1']}]);
+					for (var i = 0; i < 100; i++) {
+						// testBuffer.write('single', {'time': '1', 'AIN0': '0'});
+						// testBuffer.write('multiple', {'time':['3','4'], 'AIN0': ['2','3']});
+						var dataArray = [];
+						var numValues = 100;
+						for(var j = 0; j < numValues; j++) {
+							var newStr = numIterations.toString() + '-' + i.toString() + '-' + j.toString();
+							dataArray.push({
+								'time':newStr,
+								'AIN0':'0_' + newStr,
+								'AIN1':'1_' + newStr,
+								'AIN2':'2_' + newStr,
+							});
+						}
+						// testBuffer.writeArray('single', dataArray);
+
+						testBuffer.writeArray('multiple', [
+							{
+								'time': ['1','2','3','4','5','6','7','8','9','10'],
+								'AIN0': ['0','1','2','3','4','6','7','8','9','10'],
+								'AIN1': ['0','1','2','3','4','6','7','8','9','10'],
+								'AIN2': ['0','1','2','3','4','6','7','8','9','10']
+							},
+							{
+								'time': ['1','2','3','4','5','6','7','8','9','10'],
+								'AIN0': ['0','1','2','3','4','6','7','8','9','10'],
+								'AIN1': ['0','1','2','3','4','6','7','8','9','10'],
+								'AIN2': ['0','1','2','3','4','6','7','8','9','10']
+							}
+						]);
+					}
 				} else {
 					console.log('Skipping write');
 				}
-				setTimeout(runProgram, 10);
+				setTimeout(runProgram, 1100);
 			} else {
 				finishTest();
 			}
