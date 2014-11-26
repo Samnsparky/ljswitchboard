@@ -114,22 +114,22 @@ end
 
 --LUA IO is a system that makes it easy for Lua scripts to make data available to external host computers,
 --and conversely, external host computers can provide information for the Lua script.
---Before using IOMem.R or IOMem.W, it is necessary to specify the number of floats which should be 
+--Before using IOMEM.R or IOMEM.W, it is necessary to specify the number of floats which should be 
 --allocated in memory using modbus address 6006 "LUA_NUM_IO_FLOATS", which is dataType 1
 
 
---IOMem.W
+--IOMEM.W
 
---IOMem.W(Address, Value)
+--IOMEM.W(Address, Value)
 --Description: Lua writes to internal RAM, and instantly that data is available to external computers using modbus addresses 
 --46000 to 46127 "LUA_IO#(0:127)_READ". 
 --This feature makes it possible to handle processing complexity in a script, and run a simple polling application at the high level.
 --Since it is merely a chunk of RAM, you may overwrite the values at any time.
 
 
---IOMem.R
+--IOMEM.R
 
---Address, Value = IOMem.R()
+--Address, Value = IOMEM.R()
 --Description: Reads from the FIFO a value written to the 47000 range. Address is zero if FIFO is empty.
 --An external computer can send information to the Lua script using modbus addresses 47000 to 47127 "LUA_IO#(0:127)_WRITE". 
 --External writes to these LUA_IO_WRITE registers are stored in a linked list. 
@@ -142,13 +142,13 @@ MB.W(6006,1,10)         --allocate memory for 10 floats
 
 while true do
 
-  add, val = IOMem.R()  --get a value from an external PC
+  add, val = IOMEM.R()  --get a value from an external PC
 
   if add > 0 then
 
     print(string.format("New MB Write: %0.0f %f", add, val))
 
-    IOMem.W(add - 1000, val + 100)  --add 100 to the value, and write to 46000
+    IOMEM.W(add - 1000, val + 100)  --add 100 to the value, and write to 46000
 
   end
 
