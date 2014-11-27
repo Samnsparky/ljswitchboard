@@ -9,7 +9,7 @@ print("Welcome, please Load an example to get started!")
 --of Kipling is dedicated to transferring the script files to the
 --T7, and then reading the interpreted output in the console.  Because 
 --scripts are sent as plain text to the T7, compiler errors are handled by
---the T7, not the Kipling 3 IDE.  LabJack recommends firmware 1.0134 or newer.
+--the T7, not the Kipling IDE.  LabJack recommends firmware 1.0134 or newer.
 --Old firmware is not good at handling Lua syntax and compiler errors.
 
 

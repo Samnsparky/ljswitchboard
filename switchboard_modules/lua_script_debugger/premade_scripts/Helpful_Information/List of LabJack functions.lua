@@ -138,7 +138,7 @@ end
  
 
 --EXAMPLE
-MB.W(6006,1,10)         --allocate memory for 10 floats
+MB.W(6006, 1, 10)       --allocate memory for 10 floats
 
 while true do
 

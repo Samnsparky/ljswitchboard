@@ -19,9 +19,9 @@ end
 
 function DS18xx_Start(target_rom)
   if target_rom[3] == 0 then
-    MB.W(5307,0, 0xCC) -- Set to skip ROM
+    MB.W(5307, 0, 0xCC) -- Set to skip ROM
   else
-    MB.W(5307,0, 0x55) -- Set to match ROM
+    MB.W(5307, 0, 0x55) -- Set to match ROM
   end
     -- ONEWIRE_ROM_MATCH_H
     MB.W(5320, 0, target_rom[0])
@@ -55,9 +55,9 @@ function DS18xx_Read(target_rom)
     local msb = 0
     local lsb = 0
     if target_rom[3] == 0 then
-        MB.W(5307,0, 0xCC) -- Set to skip ROM
+        MB.W(5307, 0, 0xCC) -- Set to skip ROM
     else
-        MB.W(5307,0, 0x55) -- Set to match ROM
+        MB.W(5307, 0, 0x55) -- Set to match ROM
     end
 
     MB.W(5320, 0, target_rom[0])
@@ -167,7 +167,7 @@ sensorNotFound = 0
 sensorFound = 1
 invalidReading = 2
 SensPinNum = eioNum + 8
-MB.W(6006,1,NumSensors)              -- Enable some IO RAM
+MB.W(6006, 1, NumSensors)              -- Enable some IO RAM
 curProbe = 0
 curStep = 0
 curDelay = 0
@@ -187,7 +187,7 @@ while true do
         curDelay = curDelay + 1
     elseif(curStep == 2) then
         curName = ROMs[curProbe][5]
-        temp,err = DS18xx_Exec(ROMs[curProbe],curProbe)
+        temp,err = DS18xx_Exec(ROMs[curProbe], curProbe)
         if(err == sensorFound) then
             if(curProbe == 0) then
                 print("Reading sensors:")

@@ -19,9 +19,9 @@ table[4] = 0    --hour
 table[5] = 0    --minute
 table[6] = 0    --second
 
-file = assert(io.open(Filename, "w"))  --create and open file for write access
+file = assert(io.open(Filename, "w"))   --create and open file for write access
 
-MB.W(48005,0,1)                         --ensure analog is on
+MB.W(48005, 0, 1)                       --ensure analog is on
 
 LJ.IntervalConfig(0, 1000)              --set interval to 1000 for 1000ms
 

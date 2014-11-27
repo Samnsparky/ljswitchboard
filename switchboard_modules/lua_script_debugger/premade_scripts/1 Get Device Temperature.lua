@@ -14,7 +14,7 @@ end
 
 while true do
   if LJ.CheckInterval(0) then     --interval finished
-    tempK = MB.R(60052,3)       --read address 60052 TEMPERATURE_DEVICE_K, type is 3
+    tempK = MB.R(60052, 3)       --read address 60052 TEMPERATURE_DEVICE_K, type is 3
     tempF = ConvertToF(tempK)
     print(tempF, "°F")
   end

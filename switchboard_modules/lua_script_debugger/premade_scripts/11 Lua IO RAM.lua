@@ -15,7 +15,7 @@ print("Save some data to RAM for subsequent access by an external computer.")
 --add this LUA_IO0_READ register to the active watch area, and
 --view CoolData changing in real-time!
 
-CoolData = 0    --Data that will be availalbe to eternal computers
+CoolData = 0    --Data that will be availalbe to external computers
 NumFloats = 1   --memory allocation size
 
 MB.W(6006, 1, NumFloats)    --allocate memory for CoolData
