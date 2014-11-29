@@ -17,8 +17,9 @@
 
 --bitwise operations, see Lua 5.2 documentation
 --http://www.lua.org/manual/5.2/manual.html#6.7
---bit32.bor (x1, x2, ...)
---bit32.lshift (x1, x2, ...)
+--bit.bor (x1, x2, ...)
+--bit.lshift (x1, disp)
+--bit.rshift (x1, disp)
 
 
 --MB.R
