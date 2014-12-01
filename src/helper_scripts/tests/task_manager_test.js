@@ -217,7 +217,7 @@ module.exports = {
 
 		var numIterations = 0;
 		var runProgram = function() {
-			if(numIterations < 10) {
+			if(numIterations < 1000) {
 				numIterations += 1;
 				if(typeof(testBuffer) !== 'undefined') {
 					// console.log('Writing data', numIterations);
@@ -235,7 +235,7 @@ module.exports = {
 								'AIN2':'2_' + newStr,
 							});
 						}
-						// testBuffer.writeArray('single', dataArray);
+						testBuffer.writeArray('single', dataArray);
 
 						testBuffer.writeArray('multiple', [
 							{
@@ -255,7 +255,7 @@ module.exports = {
 				} else {
 					console.log('Skipping write');
 				}
-				setTimeout(runProgram, 1100);
+				setTimeout(runProgram, 100);
 			} else {
 				finishTest();
 			}
