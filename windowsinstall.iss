@@ -122,7 +122,7 @@ begin
       'DisplayVersion', oldVersion);
     if (CompareVersion(oldVersion, '{#MyAppVersionNum}') <> 0) then
     begin
-      if MsgBox('Version ' + oldVersion + ' of {#MyAppName}V3 is already installed. Press Yes to update kipling.  Press No to cancle the update.',
+      if MsgBox('{#MyAppName} v' + oldVersion + ' is already installed. Press Yes to update to Kipling v{#MyAppVersion}.  Press No to cancle the update.',
         mbConfirmation, MB_YESNO) = IDYES then
       begin
         Result := True;
@@ -138,7 +138,7 @@ begin
     end
     else
     begin
-      MsgBox('Version ' + oldVersion + ' of {#MyAppName} is already installed. This installer will exit.',
+      MsgBox('{#MyAppName} v' + oldVersion + ' is already installed. This installer will exit.',
         mbInformation, MB_OK);
       Result := False;
     end;
