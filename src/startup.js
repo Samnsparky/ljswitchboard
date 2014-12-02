@@ -49,7 +49,7 @@ function catchUncaughtExceptions(e) {
 }
 function catchWindowErrors(e) {
 	var m;
-    console && console.error(e);
+    console.error('in catchWindowErrors', e);
     m = 'startup.js-uncaughtException: '  +
         e.message + '\nfilename:"' +
         (e.filename ? e.filename : 'app_front.js') +
@@ -58,6 +58,32 @@ function catchWindowErrors(e) {
     showAlert(m + ': ' + e.error.stack);
     console.error(m, e,e.error.stack);
 }
+var KIPLING_BUILD_TYPE_NUMBERS = {
+    "develop":0,
+    "test":1,
+    "beta":2,
+    "release":3
+};
+function GET_KIPLING_BUILD_TYPE_NUMBER(type) {
+    var num = KIPLING_BUILD_TYPE_NUMBERS[type];
+    if(typeof(num) === 'undefined') {
+        num = 100;
+    }
+    return num;
+}
+function CHECK_KIPLING_BUILD_TYPE_LIMITATIONS(curType, minType) {
+    var curNum = GET_KIPLING_BUILD_TYPE_NUMBER(curType);
+    var minNum = GET_KIPLING_BUILD_TYPE_NUMBER(minType);
+    if(minNum < curNum) {
+        return false;
+    } else {
+        return true;
+    }
+}
+function CHECK_KIPLING_BETA_LEVEL() {
+    return CHECK_KIPLING_BUILD_TYPE_LIMITATIONS(process.buildType, 'beta');
+}
+
 process.on('uncaughtException', catchUncaughtExceptions);
 window.addEventListener('error' ,catchWindowErrors);
 

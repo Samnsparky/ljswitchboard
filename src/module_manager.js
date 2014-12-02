@@ -13,18 +13,6 @@ var device_controller = require('./device_controller');
 var fs_facade = require('./fs_facade');
 var dict = require('dict');
 
-var KIPLING_BUILD_TYPE_NUMBERS = {
-    "develop":0,
-    "debug":1,
-    "release":2
-};
-var GET_KIPLING_BUILD_TYPE_NUMBER = function(type) {
-    var num = KIPLING_BUILD_TYPE_NUMBERS[type];
-    if(typeof(num) === 'undefined') {
-        num = 100;
-    }
-    return num;
-}
 function createDeviceMatcher (device) {
     var selector = {
         firmware: device.getFirmwareVersion(),

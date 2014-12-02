@@ -782,21 +782,23 @@ function labjackVersionManager() {
 					);
 				}
 			}
-			if (isReal(info.kipling, info.kipling.beta, info.kipling.beta[0])) {
-				var k3Beta = info.kipling.beta[0];
-				k3Beta = appendInfo(k3Beta);
-				k3Beta.name = "Kipling (Beta)";
-				k3Beta.upgrade_type = "kipling";
-				k3Beta.safe_name = "kipling_beta";
+			if (CHECK_KIPLING_BETA_LEVEL()) {
+				if (isReal(info.kipling, info.kipling.beta, info.kipling.beta[0])) {
+					var k3Beta = info.kipling.beta[0];
+					k3Beta = appendInfo(k3Beta);
+					k3Beta.name = "Kipling (Beta)";
+					k3Beta.upgrade_type = "kipling";
+					k3Beta.safe_name = "kipling_beta";
 
-				// if (k3Beta.version > pageElements.kiplingVersion) {
-				if(isVersionNewer(pageElements.kiplingVersion, k3Beta.version)) {
-					upgradeLinks.push(k3Beta);
-					kiplingEl =self.controls.versionNumbersEl.find('#kipling');
-					showWarning(
-						kiplingEl.find('.lvm_version'),
-						kiplingEl.find('.lvm_status')
-					);
+					// if (k3Beta.version > pageElements.kiplingVersion) {
+					if(isVersionNewer(pageElements.kiplingVersion, k3Beta.version)) {
+						upgradeLinks.push(k3Beta);
+						kiplingEl =self.controls.versionNumbersEl.find('#kipling');
+						showWarning(
+							kiplingEl.find('.lvm_version'),
+							kiplingEl.find('.lvm_status')
+						);
+					}
 				}
 			}
 			if(process.isDevComputer) {

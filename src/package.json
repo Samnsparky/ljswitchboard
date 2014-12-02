@@ -43,5 +43,5 @@
     "unzip":"~0.1.11"
   },
   "enableStartupConfig":false,
-  "buildType": "debug"
+  "buildType": "release"
 }
