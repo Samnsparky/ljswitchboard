@@ -23,109 +23,108 @@ function DS18xx_Start(target_rom)
   else
     MB.W(5307, 0, 0x55) -- Set to match ROM
   end
-    -- ONEWIRE_ROM_MATCH_H
-    MB.W(5320, 0, target_rom[0])
-    MB.W(5321, 0, target_rom[1])
-    -- ONEWIRE_ROM_MATCH_L
-    MB.W(5322, 0, target_rom[2])
-    MB.W(5323, 0, target_rom[3])
+  -- ONEWIRE_ROM_MATCH_H
+  MB.W(5320, 0, target_rom[0])
+  MB.W(5321, 0, target_rom[1])
+  -- ONEWIRE_ROM_MATCH_L
+  MB.W(5322, 0, target_rom[2])
+  MB.W(5323, 0, target_rom[3])
 
-    MB.W(5300, 0, SensPinNum)     -- Set the DQ pin
-    MB.W(5302, 0, 0)       -- Set the options
-    MB.W(5308, 0, 1)       -- Write one byte
-    MB.W(5309, 0, 0)       -- Read no bytes
-    -- ONEWIRE_DATA_WRITE
-    MB.W(5340, 0, 0x4400) -- Send the start conv command
+  MB.W(5300, 0, SensPinNum)     -- Set the DQ pin
+  MB.W(5302, 0, 0)       -- Set the options
+  MB.W(5308, 0, 1)       -- Write one byte
+  MB.W(5309, 0, 0)       -- Read no bytes
+  -- ONEWIRE_DATA_WRITE
+  MB.W(5340, 0, 0x4400) -- Send the start conv command
 
-    -- ONEWIRE_GO
-    return MB.W(5310, 0, 1)       -- GO
+  -- ONEWIRE_GO
+  return MB.W(5310, 0, 1)       -- GO
 end
 function DS18xx_GlobStart()
-    local data = {}
-    data[1] = 0
-    data[2] = 0
-    data[3] = 0
-    data[4] = 0
-    return DS18xx_Start(data)
+  local data = {}
+  data[1] = 0
+  data[2] = 0
+  data[3] = 0
+  data[4] = 0
+  return DS18xx_Start(data)
 end
 
 function DS18xx_Read(target_rom)
-    local temp = 0
-    local error = 0
-    local msb = 0
-    local lsb = 0
-    if target_rom[3] == 0 then
-        MB.W(5307, 0, 0xCC) -- Set to skip ROM
-    else
-        MB.W(5307, 0, 0x55) -- Set to match ROM
-    end
-
-    MB.W(5320, 0, target_rom[0])
-    MB.W(5321, 0, target_rom[1])
-    MB.W(5322, 0, target_rom[2])
-    MB.W(5323, 0, target_rom[3])
-
-    MB.W(5300, 0, SensPinNum)     -- Set the DQ pin
-    MB.W(5302, 0, 0)       -- Set the options
-    MB.W(5308, 0, 1)       -- Write one byte
-    MB.W(5309, 0, 9)       -- Read nine bytes
-    -- ONEWIRE_DATA_WRITE
-    MB.W(5340, 0, 0xBE00) -- Send the read command
-
-    -- ONEWIRE_GO
-    MB.W(5310, 0, 1)       -- GO
-    
-    temp, error = MB.R(5370, 0, 1)        -- Read two bytes
-    
-    lsb = temp / 256
-    lsb = math.floor(lsb)
-    msb = temp % 256
-    msb = round(msb * 256, 0)
-    -- print("temp",temp,"msb",msb,"signBit",signBit)
-    temp = (msb  + lsb)
-    if(temp == 0xFFFF) then
-        error = sensorNotFound
-    elseif(temp == 170) then
-        error = invalidReading
-        error = sensorFound
-    elseif(msb == 1280) then
-        error = invalidReading
-        error = sensorFound
-    else
-        error = sensorFound
-    end
-    -- print("msb",msb,"lsb",lsb)
-   return temp, error
+  local temp = 0
+  local error = 0
+  local msb = 0
+  local lsb = 0
+  if target_rom[3] == 0 then
+    MB.W(5307, 0, 0xCC) -- Set to skip ROM
+  else
+    MB.W(5307, 0, 0x55) -- Set to match ROM
+  end
+  
+  MB.W(5320, 0, target_rom[0])
+  MB.W(5321, 0, target_rom[1])
+  MB.W(5322, 0, target_rom[2])
+  MB.W(5323, 0, target_rom[3])
+  
+  MB.W(5300, 0, SensPinNum)     -- Set the DQ pin
+  MB.W(5302, 0, 0)       -- Set the options
+  MB.W(5308, 0, 1)       -- Write one byte
+  MB.W(5309, 0, 9)       -- Read nine bytes
+  -- ONEWIRE_DATA_WRITE
+  MB.W(5340, 0, 0xBE00) -- Send the read command
+  
+  -- ONEWIRE_GO
+  MB.W(5310, 0, 1)       -- GO
+  
+  temp, error = MB.R(5370, 0, 1)        -- Read two bytes
+  
+  lsb = temp / 256
+  lsb = math.floor(lsb)
+  msb = temp % 256
+  msb = round(msb * 256, 0)
+  -- print("temp",temp,"msb",msb,"signBit",signBit)
+  temp = (msb  + lsb)
+  if(temp == 0xFFFF) then
+    error = sensorNotFound
+  elseif(temp == 170) then
+    error = invalidReading
+    error = sensorFound
+  elseif(msb == 1280) then
+    error = invalidReading
+    error = sensorFound
+  else
+    error = sensorFound
+  end
+  -- print("msb",msb,"lsb",lsb)
+  return temp, error
 end
 
 function DS18xx_Exec(target_rom,i)
-    local isValue = 0
-    local retVal = 0
-    local temp = 0
-    local err = 0
-    
-    temp,err = DS18xx_Read(ROMs[curProbe])
-    if(err == sensorNotFound) then
-        isValue = sensorNotFound
-    elseif(err ==invalidReading) then
-        isValue = invalidReading
-    else
-        
-        local sign = 1
-        local signBit = temp / 0x8000
-        signBit = math.floor(signBit,0)
-        -- print('raw',temp)
-        -- print('raw',temp,'signBit',signBit)
-        if(signBit == 1) then
-            sign = -1
-            temp = 0xFFFF-temp+1
-        end
-        temp = sign * temp * convMult[i]
-        -- print('temp',temp)
-        retVal = (temp * 1.8) + 32
-        isValue = sensorFound
+  local isValue = 0
+  local retVal = 0
+  local temp = 0
+  local err = 0
+  
+  temp,err = DS18xx_Read(ROMs[curProbe])
+  if(err == sensorNotFound) then
+    isValue = sensorNotFound
+  elseif(err ==invalidReading) then
+    isValue = invalidReading
+  else
+    local sign = 1
+    local signBit = temp / 0x8000
+    signBit = math.floor(signBit,0)
+    -- print('raw',temp)
+    -- print('raw',temp,'signBit',signBit)
+    if(signBit == 1) then
+      sign = -1
+      temp = 0xFFFF-temp+1
     end
-    return retVal,isValue
+    temp = sign * temp * convMult[i]
+    -- print('temp',temp)
+    retVal = (temp * 1.8) + 32
+    isValue = sensorFound
+  end
+  return retVal,isValue
 end
 
 
@@ -157,10 +156,10 @@ ROMD = {[0] = 0xB900, [1] = 0x0004, [2] = 0xCE4B, [3] = 0xCE28, [4] = 0.0625, [5
 convMult = {}
 convDelay = 0
 for i=0, (NumSensors-1) do
-    convMult[i] = ROMs[i][4]
-    if (convDelay < ROMs[i][6]) then
-        convDelay = ROMs[i][6]
-    end
+  convMult[i] = ROMs[i][4]
+  if (convDelay < ROMs[i][6]) then
+    convDelay = ROMs[i][6]
+  end
 end
 
 sensorNotFound = 0
@@ -175,40 +174,40 @@ curDelay = 0
 while true do
   if LJ.CheckInterval(0) then
     if(curStep == 0) then
-        print('Starting Conversion')
-        DS18xx_GlobStart()
-        curDelay = 0
-        curStep = 1
+      print('Starting Conversion')
+      DS18xx_GlobStart()
+      curDelay = 0
+      curStep = 1
     elseif(curStep == 1) then
-        if(curDelay > convDelay) then
-            curStep = 2
-            curProbe = 0
-        end
-        curDelay = curDelay + 1
+      if(curDelay > convDelay) then
+        curStep = 2
+        curProbe = 0
+      end
+      curDelay = curDelay + 1
     elseif(curStep == 2) then
-        curName = ROMs[curProbe][5]
-        temp,err = DS18xx_Exec(ROMs[curProbe], curProbe)
-        if(err == sensorFound) then
-            if(curProbe == 0) then
-                print("Reading sensors:")
-            end
-            print(curName, temp, "F")
-            IOMEM.W(46000+curProbe*2, temp)
-        elseif(err == sensorNotFound) then
-            print(curName,"N/A")
-            IOMEM.W(46000+curProbe*2, 0)
-        elseif(err == invalidReading) then
-            print(curName,"Inv")
-            IOMEM.W(46000+curProbe*2, 0)
-        else
-            print(curName,"Unknown State")
+      curName = ROMs[curProbe][5]
+      temp,err = DS18xx_Exec(ROMs[curProbe], curProbe)
+      if(err == sensorFound) then
+        if(curProbe == 0) then
+          print("Reading sensors:")
         end
-        curProbe = curProbe + 1
-        if(curProbe >= NumSensors) then
-            curStep = 0
-        end
+        print(curName, temp, "F")
+        IOMEM.W(46000+curProbe*2, temp)
+      elseif(err == sensorNotFound) then
+        print(curName,"N/A")
+        IOMEM.W(46000+curProbe*2, 0)
+      elseif(err == invalidReading) then
+        print(curName,"Inv")
+        IOMEM.W(46000+curProbe*2, 0)
+      else
+        print(curName,"Unknown State")
+      end
+      curProbe = curProbe + 1
+      if(curProbe >= NumSensors) then
+        curStep = 0
+      end
     else
-        print("Err")
+      print("Err")
     end
   end
 end

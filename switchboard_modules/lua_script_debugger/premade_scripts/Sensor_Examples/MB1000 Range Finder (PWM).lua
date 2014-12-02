@@ -18,9 +18,9 @@ MB.W(44904, 1, 0)			--DIO_EF_CLOCK0_ROLL_VALUE,
 MB.W(44900, 0, 1)			--DIO_EF_CLOCK0_ENABLE, re-enable the clock
 
 --configure the extended feature
-MB.W(44000, 1, 0)			--DIO0_EF_ENABLE, disable the extended feature during config
+MB.W(44000, 1, 0)     --DIO0_EF_ENABLE, disable the extended feature during config
 MB.W(44100, 1, 5)			--DIO0_EF_INDEX, index 5 corresponds with the PWM input mode
-MB.W(44200, 1, 0)	        --DIO0_EF_OPTIONS, configure what clock source to use, use clock0.
+MB.W(44200, 1, 0)     --DIO0_EF_OPTIONS, configure what clock source to use, use clock0.
 
 MB.W(44000, 1, 1)			--DIO0_EF_ENABLE enable PWM input
 --END CONFIG SETTINGS--------------------------------------------------------------------------------
@@ -28,9 +28,9 @@ MB.W(44000, 1, 1)			--DIO0_EF_ENABLE enable PWM input
 LJ.IntervalConfig(0, 333)      --set interval to 333 for 333ms
 
 while true do
-    if LJ.CheckInterval(0) then		    --interval completed
-        PulseWidth = MB.R(3600, 3)	    --DIO0_EF_READ_A_F_AND_RESET gets the measured high time in seconds
-        Range = PulseWidth / 0.000147   --apply scale factor
-        print("Range: ", Range, "inches")
-    end
+  if LJ.CheckInterval(0) then		    --interval completed
+    PulseWidth = MB.R(3600, 3)	    --DIO0_EF_READ_A_F_AND_RESET gets the measured high time in seconds
+    Range = PulseWidth / 0.000147   --apply scale factor
+    print("Range: ", Range, "inches")
+  end
 end
