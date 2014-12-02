@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Kipling"
-#define MyAppVersion "3.0.4"
+#define MyAppVersion "3.0.5"
 #define MyAppPublisher "LabJack, Corp."
 #define MyAppURL "http://www.labjack.com/"
 #define MyAppExeName "Kipling.exe"
@@ -122,7 +122,7 @@ begin
       'DisplayVersion', oldVersion);
     if (CompareVersion(oldVersion, '{#MyAppVersionNum}') <> 0) then
     begin
-      if MsgBox('Version ' + oldVersion + ' of {#MyAppName}V3 is already installed. Do you want to Uninstall and Re-install Kipling? Yes will re-install Kipling, No will exit the installer.',
+      if MsgBox('Version ' + oldVersion + ' of {#MyAppName}V3 is already installed. Press Yes to update kipling.  Press No to cancle the update.',
         mbConfirmation, MB_YESNO) = IDYES then
       begin
         Result := True;

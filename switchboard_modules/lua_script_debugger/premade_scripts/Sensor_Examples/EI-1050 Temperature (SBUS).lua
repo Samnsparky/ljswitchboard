@@ -28,8 +28,8 @@ LJ.IntervalConfig(0, 2000)           --set interval to 2000ms, 2s
 while true do
   if LJ.CheckInterval(0) then         --interval completed
     Temperature_K = MB.R(30100, 3)		--SBUS0_TEMP
-	Temperature_F = (Temperature_K - 273.15) * 1.8000 + 32.00
-	Relative_Humidity = MB.R(30150, 3)	--SBUS0_RH
+  	Temperature_F = (Temperature_K - 273.15) * 1.8000 + 32.00
+  	Relative_Humidity = MB.R(30150, 3)	--SBUS0_RH
     print ("Temperature is:", Temperature_F, "°F", "Relative Humidity is: ", Relative_Humidity, "%RH")
   end
 end
