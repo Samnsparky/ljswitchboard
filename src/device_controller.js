@@ -1430,12 +1430,11 @@ var tryOpenDevice = function (deviceInfo) {
         null
     );
 
-    return function () { return finalPromise };
+    return function () { return finalPromise; };
 };
 
 
-var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
-{
+var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs) {
     return function (devScanList) {
         var deferred = q.defer();
         labjack_driver.closeAllSync();
@@ -1447,7 +1446,7 @@ var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
             function(err) {
                 var errMsg = 'Error calling listAllExtended '+
                     'device_controller.getDevices';
-                console.error(errMsg,err);
+                console.error(errMsg, err, devScanList);
                 deferred.reject(err);
             },
             function (driverListing) {
@@ -1458,10 +1457,11 @@ var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
                 var tryOpenPromises = unpackedDeviceInfo.map(tryOpenDevice);
                 var finalPromise = tryOpenPromises.reduce(
                     function (previousPromise, currentPromise) {
-                        if (previousPromise === null)
+                        if (previousPromise === null){
                             return currentPromise();
-                        else
+                        } else {
                             return previousPromise.then(currentPromise);
+                        }
                     },
                     null
                 );
@@ -1489,8 +1489,7 @@ var getDevicesOfTypeFuture = function (deviceType, connectionType, reqAttrs)
 };
 
 
-var innerGetDevices = function (onError, onSuccess)
-{
+var innerGetDevices = function (onError, onSuccess) {
     var retData;
 
     var innerGetDevices = function (wasAlreadySuccessful) {
@@ -1511,18 +1510,20 @@ var innerGetDevices = function (onError, onSuccess)
                 deviceTypeInfo.deviceType,
                 deviceTypeInfo.connectionType,
                 deviceTypeInfo.addresses
-            )
+            );
         });
-
+        console.log("device_controller retListPromises", retListPromises, SCAN_REQUEST_LIST);
         var lastPromise = retListPromises.reduce(
             function (previousPromise, currentPromise) {
-                if (previousPromise === null)
+                if (previousPromise === null) {
                     return currentPromise([]);
-                else
+                } else {
                     return previousPromise.then(currentPromise, function (err) {
                         innerOnError(err);
                         hadError = true;
+                        return currentPromise([]);
                     });
+                }
             },
             null
         );
@@ -1531,31 +1532,39 @@ var innerGetDevices = function (onError, onSuccess)
             retData = newRetData;
             if (hadError) {
                 deferred.resolve(false);
-            }
-            else
+            } else {
                 deferred.resolve(true);
+            }
         }, innerOnError);
-
         return deferred.promise;
     };
 
     var futures = [];
-    for (var i=0; i<NUM_SCAN_RETRIES; i++)
+    for (var i=0; i<NUM_SCAN_RETRIES; i++) {
         futures.push(innerGetDevices);
+    }
 
     var lastPromise = futures.reduce(function (lastAttempt, currentAttempt) {
-        if (lastAttempt === null)
+        if (lastAttempt === null) {
             return currentAttempt();
-        else
+        } else {
             return lastAttempt.then(currentAttempt);
+        }
     }, null);
 
     lastPromise.then(function (wasSuccessful) {
-        if (wasSuccessful)
+        if (wasSuccessful) {
             onSuccess(retData);
-        else
+        } else {
             onSuccess([]);
-    }, onError);
+        }
+    }, function(err) {
+        console.error('in device_controller innerGetDevices stderr', err);
+        onError(err);
+    }, function(err) {
+        console.error('in device_controller innerGetDevices (syntax error)', err);
+        onError(err);
+    });
 };
 
 
@@ -1593,7 +1602,7 @@ exports.getDevices = function (onError, onSuccess) {
                 });
             });
             continuation(deviceTypes);
-        }
+        };
     };
 
     innerGetDevices(
@@ -1603,7 +1612,7 @@ exports.getDevices = function (onError, onSuccess) {
         }),
         decorateSelectorVals(decorateCleanup(onSuccess))
     );
-}
+};
 
 
 /**
@@ -1630,9 +1639,9 @@ exports.openDevice = function (serial, ipAddress, connType, deviceType, onError,
         connType,
         onError,
         function (innerDevice) {
-            console.log('Creating New Device Object',deviceType,serial,ipAddress,connType)
+            console.log('Creating New Device Object',deviceType,serial,ipAddress,connType);
             var device = new Device(innerDevice, serial, connType, deviceType);
-            console.log('After-Creating New Device Object',deviceType,serial,ipAddress,connType,device)
+            console.log('After-Creating New Device Object',deviceType,serial,ipAddress,connType,device);
             onSuccess(device);
         }
     );

@@ -12,8 +12,18 @@
 **/
 var handlebars = require('handlebars');
 var q = require('q');
-var device_controller = require('./device_controller');
-var gui = require('nw.gui');
+var device_controller;
+try {
+    device_controller = require('./device_controller');
+} catch(err) {
+    console.log('in device_selector.js, error requiring device_controller', err);
+}
+var gui;
+try {
+    gui = require('nw.gui');
+} catch(err) {
+    console.log('in device_selector.js, error requiring nw.gui');
+}
 
 var OPEN_FAIL_MESSAGE = handlebars.compile(
     'Sorry. Failed to the open device. Please check the ' +
