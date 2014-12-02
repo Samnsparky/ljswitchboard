@@ -609,6 +609,7 @@ function fileDownloaderUtility() {
 		safeName = safeName.replace(/\(/g,'_');
 		safeName = safeName.replace(/\)/g,'_');
 
+		console.log('Created safeName', safeName);
 		var requestAborted = false;
 
 		/**
@@ -712,6 +713,7 @@ function fileDownloaderUtility() {
 		 */
 		var getHandleRequest = function(handleResponse) {
 			var handleRequest = function(res) {
+				console.log('in handleRequest', res.statusCode, res);
 				if (res.statusCode === 200) {
 					handleResponse(res);
 				} else {
@@ -728,8 +730,9 @@ function fileDownloaderUtility() {
 		// Make sure that the download directory isn't blank.
 		if(defaultDownloadDirectory !== '') {
 			fileStream = fs.createWriteStream(uniqueFilePath);
+			console.log('Created fileStream, making .get request', url);
 			var curRequest = reqLib.get(url, getHandleRequest(handleResponse))
-			.on ("error", function(error) {
+			.on("error", function(error) {
 				console.error('curRequest error',error);
 				requestAborted = true;
 				if (bar) bar.cancel ();
