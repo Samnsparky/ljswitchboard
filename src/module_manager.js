@@ -12,6 +12,19 @@
 var device_controller = require('./device_controller');
 var fs_facade = require('./fs_facade');
 var dict = require('dict');
+var KIPLING_BUILD_TYPE_NUMBERS = {
+    "develop":0,
+    "test":1,
+    "beta":2,
+    "release":3
+};
+function GET_KIPLING_BUILD_TYPE_NUMBER(type) {
+    var num = KIPLING_BUILD_TYPE_NUMBERS[type];
+    if(typeof(num) === 'undefined') {
+        num = 100;
+    }
+    return num;
+}
 
 function createDeviceMatcher (device) {
     var selector = {
