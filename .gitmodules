@@ -1,0 +1,3 @@
+[submodule "ljswitchboard-core"]
+	path = ljswitchboard-core
+	url = https://github.com/chrisJohn404/ljswitchboard-core
