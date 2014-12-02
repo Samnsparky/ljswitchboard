@@ -3,6 +3,7 @@ var q = require('q');
 require('getmac').getMac(function(err,macAddress){
     if (err)  throw err;
     process.curMacAddr = macAddress;
+    // Define internal computers
     process.isInternalComputer = {
         "00:25:4b:cf:1c:38": true,                  // Chris: Mac (wifi?)
         "50-1A-C5-E8-DE-9B": true,                  // Chris: Surface (wifi?)
