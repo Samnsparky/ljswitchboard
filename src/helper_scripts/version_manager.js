@@ -27,9 +27,9 @@ try {
 
 function labjackVersionManager() {
 	this.kiplingUpdateLinks = {
-		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling/kipling_win32.zip",
-		"beta_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/beta/kipling_beta_win32.zip",
-		"test_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/test/kipling_test_win32.zip",
+		"current_win":		"https://s3.amazonaws.com/ljrob/win32/kipling/kipling_win.zip",
+		"beta_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/beta/kipling_beta_win.zip",
+		"test_win":			"https://s3.amazonaws.com/ljrob/win32/kipling/test/kipling_test_win.zip",
 
 		"current_mac":		"https://s3.amazonaws.com/ljrob/mac/kipling/kipling_mac.zip",
 		"beta_mac":			"https://s3.amazonaws.com/ljrob/mac/kipling/beta/kipling_beta_mac.zip",
