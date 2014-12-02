@@ -455,6 +455,8 @@ function fileDownloaderUtility() {
 				console.log('FD: Started Download',info);
 				if(self.htmlEl.css('display') === 'none') {
 					self.htmlEl.slideDown();
+				} else {
+					console.log('file_downloader.js wacky self.htmlEl state', self.htmlEl.css('display'));
 				}
 				// Get the previous information in the downloads list
 				var oldText = self.downloadEl.html();
@@ -497,6 +499,8 @@ function fileDownloaderUtility() {
 				pageElements.showInFileButton = showInFileButton;
 
 				self.pageElements = self.getPageControls(pageElements, info);
+			} else {
+				console.log('$ not defined');
 			}
 		} else {
 			console.log('Download Started',info);
@@ -940,6 +944,8 @@ function fileDownloaderUtility() {
 			self.htmlEl = $('#' + id);
 			self.downloadEl = $('#' + id + ' #' + locationID);
 			self.closeEl = $('#' + id + ' #' + closeID);
+
+			console.log('in file_downloader elements', self.htmlEl, self.downloadEl, self.closeEl);
 			self.closeEl.unbind();
 			self.closeEl.bind('click',closeListener);
 		}
