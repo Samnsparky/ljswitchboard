@@ -49,6 +49,9 @@
                     "name": "LM34CAZ Temperature (voltage)",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/LM34CAZ Temperature (voltage).lua"
                 }, {
+                    "name": "LM34CAZ (voltage) - Advanced",
+                    "location": "lua_script_debugger/premade_scripts/Sensor_Examples/LM34CAZ (voltage) - Advanced.lua"
+                }, {
                     "name": "MB1000 Range Finder (PWM)",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/MB1000 Range Finder (PWM).lua"
                 }, {
@@ -66,6 +69,20 @@
                 }, {
                     "name": "TP-01 Thermocouple (AIN_EF)",
                     "location": "lua_script_debugger/premade_scripts/Sensor_Examples/TP-01 Thermocouple (AIN_EF).lua"
+                }
+            ]
+        }, {
+            "name": "Benchmarking Tests",
+            "subScripts": [
+                {
+                    "name": "Speed Test - DIO",
+                    "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Speed Test - DIO.lua"
+                }, {
+                    "name": "Speed Test - DAC",
+                    "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Speed Test - DAC.lua"
+                }, {
+                    "name": "Speed Test - AIN",
+                    "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Speed Test - AIN.lua"
                 }
             ]
         }, {
