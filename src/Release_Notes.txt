@@ -1,5 +1,8 @@
 Release Notes:
 
+3.0.7:
+ - Fixed Network Settings bug.
+
 3.0.6:
  - Fixed the Windows s3.amazonaws.com upgrade links to make the Kipling updater work, was getting 403 status errors and not reporting them.
 
