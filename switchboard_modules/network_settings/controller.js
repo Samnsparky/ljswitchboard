@@ -278,13 +278,6 @@ function module() {
         var autoValEl = $(self.buildJqueryIDStr(settingID) + '.Auto_Value');
         return {value:autoValEl.text()};
     };
-    this.setManualVal = function(settingID,val) {
-        var manStr = " .Manual_Value input";
-        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
-
-        // manualValEl[0].value = val;
-        self.updateInput(manualValEl, val);
-    };
     this.getManualVal = function(settingID) {
         var errorDeath;
         var manStr = ".Manual_Value > input";
