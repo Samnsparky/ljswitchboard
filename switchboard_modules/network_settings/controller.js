@@ -286,19 +286,33 @@ function module() {
         self.updateInput(manualValEl, val);
     };
     this.getManualVal = function(settingID) {
-        var manStr = " .Manual_Value input";
-        var manualValEl = $(self.buildJqueryIDStr(settingID) + manStr);
-        var value = "";
-        var isNew = false;
-        if(manualValEl.hasClass('inputVerified')) {
-            value = manualValEl.val();
-            isNew = true;
-        } else {
-            // value = manualValEl[0].placeholder;
-            value = manualValEl.val();
-            isNew = false;
+        var errorDeath;
+        var manStr = ".Manual_Value > input";
+        var manualValEl = $(manStr + self.buildJqueryIDStr(settingID));
+
+        if(manualValEl.length === 0) {
+            errorDeath = "Unable to find element by selector: \"" + manualValEl.selector + "\"";
+            throw Error(errorDeath);
         }
-        return {value:value, isNew:isNew};
+
+        if(Number(manualValEl.length) > 1) {
+            errorDeath = "Expected 1 element but found " + String(manualValEl.length) +
+                " elements for selector: \"" + manualValEl.selector + "\"";
+            throw Error(errorDeath);
+        }
+
+        if(manualValEl.hasClass('inputVerified')) {
+            return {
+                value: manualValEl.val(),
+                isNew: true
+            }
+        }
+
+        return {
+            // value = manualValEl[0].placeholder;
+            value: manualValEl.val(),
+            isNew: false
+        }
     };
     this.getDHCPVal = function(settingID) {
         var manStr = " .btnText";
