@@ -107,6 +107,9 @@
             "name": "Log voltage to file",
             "location": "lua_script_debugger/premade_scripts/7 Log voltage to file.lua"
         }, {
+            "name": "Log to file with WiFi",
+            "location": "lua_script_debugger/premade_scripts/7b Log voltage to file WiFi.lua"
+        }, {
             "name": "Read RTC",
             "location": "lua_script_debugger/premade_scripts/8 Read RTC.lua"
         }, {
@@ -116,7 +119,7 @@
             "name": "1-Wire Read ROM ID",
             "location": "lua_script_debugger/premade_scripts/10 1-Wire Read ROM ID.lua"
         }, {
-            "name": "Lua IO RAM",
+            "name": "Lua IO MEM",
             "location": "lua_script_debugger/premade_scripts/11 Lua IO RAM.lua"
         }
     ],
