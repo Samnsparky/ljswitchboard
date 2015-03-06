@@ -1,20 +1,24 @@
-print("Log voltage to file.  Voltage measured on AIN1 every 500ms.  Store values every 5 seconds")
+print("Log voltage to file.  Voltage measured on AIN1 every 50ms.  Store values every 5 seconds")
 --Requires micro SD Card installed inside the T7 or T7-Pro.
---Requires FW 1.0146 or newer.
+--Requires FW 1.0150 or newer.
 --This example is for logging to file while using WiFi, since WiFi needs 5s or more to initialize
 --without comm. to/from the uSD card. http://labjack.com/support/datasheets/t7/sd-card
 --Timestamp (real-time-clock) available on T7-Pro only
 --Some helpful Lua file operations in section 5.7 http://www.lua.org/manual/5.1/manual.html#5.7
 --Some file info docs in 21.2 of the Lua documentation http://www.lua.org/pil/21.2.html
 
-Filename = "log2.csv"
+Filepre = "FWi_"
+Filesuf = ".csv"
+NumFn = 0
+Filename = Filepre..string.format("%02d", NumFn)..Filesuf
 voltage = 0
 indexVal = 1
 delimiter = ","
 dateStr = ""
 voltageStr = ""
+f = nil
 
-DACinterval = 500     --interval in ms, 500 for 500ms, should divide evenly into SDCard interval
+DACinterval = 50     --interval in ms, 50 for 50ms, should divide evenly into SDCard interval
 SDCardinterval = 5000 --inerval in ms, 5000 for 5 seconds
 numDAC = math.floor(SDCardinterval/DACinterval)
 
@@ -41,6 +45,16 @@ MB.W(48005,0,1)                         --ensure analog is on
 LJ.IntervalConfig(0, DACinterval)       
 LJ.IntervalConfig(1, SDCardinterval)
 
+f = io.open(Filename, "r")
+if f ~= nil then
+  f:close()
+  f = io.open(Filename, "a+")           --File exists, Append to file
+  print ("Appending to file")
+else
+  f = io.open(Filename, "w")            --Create or replace file
+  print ("Creating new file")
+end
+
 
 while true do
   if LJ.CheckInterval(0) then           --DAC interval completed
@@ -52,27 +66,22 @@ while true do
     stringTable[indexVal] = dateStr..delimiter..voltageStr.."\n"
     indexVal = indexVal + 1
   end
-  if LJ.CheckInterval(1) then           --SD Card interval completed, write to file
-    local f = nil
+  if LJ.CheckInterval(1) then         --file write interval completed -> 5s for WiFi safe
     local i = 1
-    f = io.open(Filename, "r")
-
+    local fg = 0
     indexVal = 1
-
-    if f ~= nil then            --file exists
+    fg = LJ.CheckFileFlag()           --host software wants to read Lua's active file? -Address 6500
+    if fg == 1 then
+      NumFn = NumFn + 1               --increment filename
+      Filename = Filepre..string.format("%02d", NumFn)..Filesuf
       f:close()
-      f = io.open(Filename, "a+") --'a+' append update mode, previous data is preserved, writing is only allowed at the end of file
-      print ("Appending to file")
-    else
-      f = io.open(Filename, "w")  --'w' create or replace file.  Writes start at the beginning of the file
-      print ("Creating new file")
+      LJ.ClearFileFlag()              --inform host that previous file is available
+      f = io.open(Filename, "w")      --create or replace new file
+      print ("Command issued by host to create new file")
     end
-
-    for i=1, numDAC do  
-      f:write(stringTable[i])   --write to file
+    print ("Appending to file")
+    for i=1, numDAC do
+      f:write(stringTable[i])
     end
-
-    f:close()
-
   end
 end

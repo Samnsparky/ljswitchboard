@@ -83,6 +83,21 @@
                 }, {
                     "name": "Speed Test - AIN",
                     "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Speed Test - AIN.lua"
+                }, {
+                    "name": "Speed Test - AIN & PWM",
+                    "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Speed Test - AIN and PWM.lua"
+                }, {
+                    "name": "Low-lvl Speed Test - DIO",
+                    "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Low Level Speed Test - DIO.lua"
+                }, {
+                    "name": "Low-lvl Speed Test - DAC",
+                    "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Low Level Speed Test - DAC.lua"
+                }, {
+                    "name": "Low-lvl Speed Test - AIN",
+                    "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Low Level Speed Test - AIN.lua"
+                }, {
+                    "name": "Low-lvl Speed Test - LED",
+                    "location": "lua_script_debugger/premade_scripts/benchmarking_tests/Low Level Speed Test - Toggle LED.lua"
                 }
             ]
         }, {
@@ -121,6 +136,9 @@
         }, {
             "name": "Lua IO MEM",
             "location": "lua_script_debugger/premade_scripts/11 Lua IO RAM.lua"
+        }, {
+            "name": "RTC Triggered Logging",
+            "location": "lua_script_debugger/premade_scripts/12 RTC Triggered Logging.lua"
         }
     ],
     "scriptOptions": {
