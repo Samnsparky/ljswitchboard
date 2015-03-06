@@ -70,5 +70,5 @@
     ],
     "displayDevTools": false,
     "overrideAutoModuleLoad": true,
-    "moduleName": "network_settings"
+    "moduleName": "lua_script_debugger"
 }
