@@ -1,7 +1,7 @@
 {
   "name": "labjack-switchboard",
   "description": "LabJack Desktop Utilities",
-  "version": "3.0.3",
+  "version": "3.0.7",
   "main": "index.html",
   "inject-js-start":"startup.js",
   "window": {
@@ -21,7 +21,7 @@
     "getmac":"~1",
     "handlebars": "~1",
     "jshint": "~2",
-    "labjack-nodejs": "0.0.13",
+    "labjack-nodejs": "0.0.44",
     "ljmmm-parse": "~0.1",
     "lazy": "~1",
     "long": "~1",
