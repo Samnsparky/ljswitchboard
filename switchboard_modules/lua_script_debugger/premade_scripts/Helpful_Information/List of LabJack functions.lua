@@ -53,6 +53,12 @@
 --LJ.ledtog()
 --Description: Toggles status LED. This is just for testing and will be removed.
 
+--LJ.DIO_D_W(IONum, direction)
+--LJ.DIO_S_R(IONum, state)
+--LJ.DIO_S_W(IONum, state)
+--Description: Integrated digital IO interaction that can operate a bit faster than traditional MB.W, MB.R functions.
+--These are beta functions, and may change in name or form.
+
 
 --LJ.Tick
 
