@@ -19,7 +19,6 @@ MB.W(9002, 1, 0)    --set AIN1_EF_INDEX to 0(disabled) during config
 MB.W(40002, 3, 0.1) --AIN1_RANGE set to ±0.1V
 MB.W(41501, 0, 0)   --AIN1_RESOLUTION_INDEX set to 0 (auto)
 MB.W(9002, 1, 22)   --AIN1_EF_INDEX set to 22 (type K)
-MB.W(9002, 1, 1)    --set AIN1_EF_INDEX to 1(enabled) after config
 
 LJ.IntervalConfig(0, 1000)          --set interval to 1000ms
 
