@@ -21,7 +21,7 @@
     "getmac":"~1",
     "handlebars": "~1",
     "jshint": "~2",
-    "labjack-nodejs": "0.0.44",
+    "labjack-nodejs": "0.0.45",
     "ljmmm-parse": "~0.1",
     "lazy": "~1",
     "long": "~1",

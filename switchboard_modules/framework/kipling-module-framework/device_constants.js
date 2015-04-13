@@ -451,7 +451,7 @@ var globalDeviceConstants = {
                 "titleAppend":", TEMPERATURE_AIR_K"
             },{
                 "name": "External LM34 on AIN12",
-                "value": 24,
+                "value": 24,// Modbus register for AIN12
                 "titleAppend":", Voltage on AIN12, Req Slope: 55.56, Offset: 255.37"
             }
         ]
