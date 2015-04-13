@@ -449,6 +449,10 @@ var globalDeviceConstants = {
                 "name": "CB37 Screw Terminals (AIN0-13)",
                 "value": 60050,
                 "titleAppend":", TEMPERATURE_AIR_K"
+            },{
+                "name": "External LM34 on AIN12",
+                "value": 24,
+                "titleAppend":", Voltage on AIN12"
             }
         ]
     },
