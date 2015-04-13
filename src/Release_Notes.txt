@@ -1,5 +1,11 @@
 Release Notes:
 
+3.0.9:
+ - Added using AIN12 as a CJC temperature option for the analog inputs module.
+
+3.0.8:
+ - Fixed the network configuration tab "ip.split" error.
+
 3.0.6:
  - Fixed the Windows s3.amazonaws.com upgrade links to make the Kipling updater work, was getting 403 status errors and not reporting them.
 
