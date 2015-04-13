@@ -28,7 +28,7 @@
     "net-ping":"~1",
     "node.extend": "~1",
     "nw-gyp": "~0",
-    "q": "~0",
+    "q": "~1",
     "raw-socket":"~1",
     "request": "~2",
     "simplesets": "~1",
