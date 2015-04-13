@@ -312,7 +312,7 @@ var globalDeviceConstants = {
                     }
                 },{
                     "configReg": "_EF_CONFIG_D",
-                    "description": "Custom slope to be applied to CJC reading",
+                    "description": "Custom slope to be applied to CJC reading (55.56 for LM34)",
                     "humanName": "CJC Slope",
                     "type": "value",
                     "defaultVal": 1,
@@ -327,7 +327,7 @@ var globalDeviceConstants = {
                     }
                 },{
                     "configReg": "_EF_CONFIG_E",
-                    "description": "Custom offset to be applied to CJC reading",
+                    "description": "Custom offset to be applied to CJC reading (255.37 for LM34)",
                     "humanName": "CJC Offset",
                     "type": "value",
                     "defaultVal": 0,
@@ -452,7 +452,7 @@ var globalDeviceConstants = {
             },{
                 "name": "External LM34 on AIN12",
                 "value": 24,
-                "titleAppend":", Voltage on AIN12"
+                "titleAppend":", Voltage on AIN12, Req Slope: 55.56, Offset: 255.37"
             }
         ]
     },
