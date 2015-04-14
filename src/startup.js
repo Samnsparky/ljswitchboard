@@ -46,6 +46,7 @@ function showAlert(errorMessage)
 }
 function catchUncaughtExceptions(e) {
 	console.error('startup.js-uncaughtException',e);
+    console.trace('Printing Stack trace for exception', e);
 }
 function catchWindowErrors(e) {
 	var m;
