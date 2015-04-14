@@ -149,9 +149,9 @@ function labjackVersionManager() {
 			} else if (platform === 'mac') {
 				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-Mac\.tgz(?=\"\stype)/g;
 			} else if (platform === 'linux32') {
-				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-Ubuntu.*-i386.*.gz(?=\"\stype)/g;
+				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-CentOS-Linux.*-i386.*.gz(?=\"\stype)/g;
 			} else if (platform === 'linux64') {
-				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-Ubuntu.*-x86\_64.*.gz(?=\"\stype)/g;
+				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-CentOS-Linux.*-x86\_64.*.gz(?=\"\stype)/g;
 			}
 			if(getMatch) {
 				match = LJM_REGEX.exec(pageData);

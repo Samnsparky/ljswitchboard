@@ -1361,7 +1361,7 @@ var unpackDeviceInfo = function (driverListingItem) {
         'wifiStatusStr': 'Un-Powered',
         'ethernetConnectionStatus': 'Not Connected',
         'wifiConnectionStatus': 'Not Connected'
-    }
+    };
 
     driverListingItem.data.forEach(function (dataItem) {
         unpackStrategies[dataItem.name](dataItem);
