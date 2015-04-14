@@ -930,9 +930,10 @@ function labjackVersionManager() {
 						console.error('!! - LVM Error',issue);
 					}
 				});
-			} catch(err) {
-				console.log('LVM error', err);
 			}
+		} catch(err) {
+			console.log('LVM error');
+		}
 	};
 
 	this.beginFileUpgrade = function(info) {
