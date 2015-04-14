@@ -473,6 +473,7 @@ function labjackVersionManager() {
 		return defered.promise;
 	};
 	this.getAllVersions = function() {
+		console.log('LVM in getAllVersions');
 		// Re-set constants
 		self.infoCache = {};
 		self.dataCache = {};
@@ -536,6 +537,7 @@ function labjackVersionManager() {
 		return issue;
 	};
 	this.waitForData = function() {
+		console.log('LVM in waitForData');
 		var defered = q.defer();
 		var checkInterval = 100;
 		var iteration = 0;
@@ -1175,7 +1177,7 @@ function labjackVersionManager() {
 }
 var LABJACK_VERSION_MANAGER = new labjackVersionManager();
 
-LABJACK_VERSION_MANAGER.getAllVersions();
+// LABJACK_VERSION_MANAGER.getAllVersions();
 LABJACK_VERSION_MANAGER.waitForData()
 .then(function(data) {
 	console.log('LVM dataCache:',LABJACK_VERSION_MANAGER.dataCache);
