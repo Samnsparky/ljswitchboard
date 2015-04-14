@@ -92,23 +92,39 @@
         <script type="text/javascript" src="presenter.js"></script>
         <script type="text/javascript">
             var GLOBAL_DATA_MANAGER = new globalDataManager();
-            GLOBAL_DATA_MANAGER.initializeData();
+            try {
+                GLOBAL_DATA_MANAGER.initializeData();
+            } catch(err) {
+                console.error('Error initializing GDM');
+            }
             
             // prevent most webpage like drag & drop functionality to open links.
             window.ondragover = function(e) {e.preventDefault();return false;};
             window.ondrop = function(e) {e.preventDefault();return false;};
             $(document).ready(function() {
                 // Initialize object in file_downloader.js
-                FILE_DOWNLOADER_UTILITY.initializeFileDownloader(
-                    'lvmDownloadBox',
-                    'currentDownloads',
-                    'closeDownloaderWindowButton');
-
+                console.log('Initializing file downloader utility');
+                try {
+                    FILE_DOWNLOADER_UTILITY.initializeFileDownloader(
+                        'lvmDownloadBox',
+                        'currentDownloads',
+                        'closeDownloaderWindowButton');
+                } catch(err) {
+                    console.error('Error initializing file downloader utility');
+                }
                 // Initialize object in keyboard_event_handler.js
-                KEYBOARD_EVENT_HANDLER.init();
+                try {
+                    KEYBOARD_EVENT_HANDLER.init();
+                } catch(err) {
+                    console.error('Error initializing keyboard event handler');
+                }
 
                 // Start Kipling!
-                renderDeviceSelector();
+                try {
+                    renderDeviceSelector();
+                } catch(err) {
+                    console.error('Error initializing device selector');
+                }
             });
         </script>
     </body>
