@@ -1380,7 +1380,7 @@ var tryOpenDeviceConnection = function (deviceInfo, connection) {
         connection.ipAddress,
         connection.type,
         function (error) {
-            console.log('Failed to opened device',deviceInfo.serial,connection.type);
+            console.log('Failed to opened device',deviceInfo.serial,connection.type, error);
             connection.alreadyOpen = true;
             deferred.resolve();
         },
