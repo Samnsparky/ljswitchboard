@@ -309,7 +309,7 @@ function labjackVersionManager() {
 		var systemType = self.getLabjackSystemType();
 		var platformDependent = self.urlDict[name].platformDependent;
 		
-		consolelog('in saveTempData');
+		console.log('in saveTempData');
 		console.log('name',name);
 		console.log('is dependent',platformDependent);
 		console.log('systemType',systemType);
@@ -1177,7 +1177,7 @@ function labjackVersionManager() {
 }
 var LABJACK_VERSION_MANAGER = new labjackVersionManager();
 
-// LABJACK_VERSION_MANAGER.getAllVersions();
+LABJACK_VERSION_MANAGER.getAllVersions();
 LABJACK_VERSION_MANAGER.waitForData()
 .then(function(data) {
 	console.log('LVM dataCache:',LABJACK_VERSION_MANAGER.dataCache);
