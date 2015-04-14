@@ -305,9 +305,10 @@ function labjackVersionManager() {
 		var systemType = self.getLabjackSystemType();
 		var platformDependent = self.urlDict[name].platformDependent;
 		
-		// console.log('name',name);
-		// console.log('is dependent',platformDependent);
-		// console.log('systemType',systemType);
+		consolelog('in saveTempData');
+		console.log('name',name);
+		console.log('is dependent',platformDependent);
+		console.log('systemType',systemType);
 		
 		self.infoCache[name] = {};
 		self.dataCache[name] = {};
@@ -911,28 +912,24 @@ function labjackVersionManager() {
 				});
 			});
 		};
-		try {
-			// Check to see if links were acquired appropriately
-			if(!self.isIssue()) {
+		// Check to see if links were acquired appropriately
+		if(!self.isIssue()) {
+			initializeLVMListing();
+		} else {
+			// Perform fail-operations
+			self.getAllVersions()
+			.then(function(data) {
 				initializeLVMListing();
-			} else {
-				// Perform fail-operations
-				self.getAllVersions()
-				.then(function(data) {
-					initializeLVMListing();
-					if(self.isIssue()) {
-						var issue =self.getIssue();
-						console.warn('!! - LVM Warming',issue);
-					}
-				}, function(err) {
-					if (self.isIssue()) {
-						var issue =self.getIssue();
-						console.error('!! - LVM Error',issue);
-					}
-				});
-			}
-		} catch(err) {
-			console.log('LVM error');
+				if(self.isIssue()) {
+					var issue =self.getIssue();
+					console.warn('!! - LVM Warming',issue);
+				}
+			}, function(err) {
+				if (self.isIssue()) {
+					var issue =self.getIssue();
+					console.error('!! - LVM Error',issue);
+				}
+			});
 		}
 	};
 
