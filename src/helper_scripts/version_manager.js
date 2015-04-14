@@ -134,40 +134,44 @@ function labjackVersionManager() {
 			return;
 		},
 		ljmDownloadsPage: function(listingArray, pageData, urlInfo, name) {
-			var LJM_REGEX;
-			var platform = urlInfo.type.split('_')[1];
-			var match;
-			var getMatch = true;
-			if (platform === 'win') {
-				LJM_REGEX = /href=\".*LabJackMUpdate-([\d]\.[\d]+)\.exe(?=\"\stype)/g;
-				match = LJM_REGEX.exec(pageData);
-				if(!match) {
-					LJM_REGEX = /href=\".*LabJackMUpgrade-([\d]\.[\d]+)\.exe(?=\"\stype)/g;
+			try {
+				var LJM_REGEX;
+				var platform = urlInfo.type.split('_')[1];
+				var match;
+				var getMatch = true;
+				if (platform === 'win') {
+					LJM_REGEX = /href=\".*LabJackMUpdate-([\d]\.[\d]+)\.exe(?=\"\stype)/g;
+					match = LJM_REGEX.exec(pageData);
+					if(!match) {
+						LJM_REGEX = /href=\".*LabJackMUpgrade-([\d]\.[\d]+)\.exe(?=\"\stype)/g;
+						match = LJM_REGEX.exec(pageData);
+					}
+					getMatch = false;
+				} else if (platform === 'mac') {
+					LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-Mac\.tgz(?=\"\stype)/g;
+				} else if (platform === 'linux32') {
+					LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-CentOS-Linux.*-i386.*.gz(?=\"\stype)/g;
+				} else if (platform === 'linux64') {
+					LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-CentOS-Linux.*-x86\_64.*.gz(?=\"\stype)/g;
+				}
+				if(getMatch) {
 					match = LJM_REGEX.exec(pageData);
 				}
-				getMatch = false;
-			} else if (platform === 'mac') {
-				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-Mac\.tgz(?=\"\stype)/g;
-			} else if (platform === 'linux32') {
-				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-CentOS-Linux.*-i386.*.gz(?=\"\stype)/g;
-			} else if (platform === 'linux64') {
-				LJM_REGEX = /href=\".*LabJackM-([\d]\.[\d]+)\-CentOS-Linux.*-x86\_64.*.gz(?=\"\stype)/g;
-			}
-			if(getMatch) {
-				match = LJM_REGEX.exec(pageData);
-			}
 
-			if(match) {
-				var targetURL = match[0].replace(/href\=\"/g, '');
-				var version = match[1];
-				listingArray.push({
-						"upgradeLink":targetURL,
-						"version":version,
-						"type":urlInfo.type,
-						"key":urlInfo.type + '-' + version
-					});
-			} else {
-				console.error('Bad LJM_REGEX strings');
+				if(match) {
+					var targetURL = match[0].replace(/href\=\"/g, '');
+					var version = match[1];
+					listingArray.push({
+							"upgradeLink":targetURL,
+							"version":version,
+							"type":urlInfo.type,
+							"key":urlInfo.type + '-' + version
+						});
+				} else {
+					console.error('Bad LJM_REGEX strings');
+				}
+			} catch(err) {
+				console.error('Caught Error parsing ljmDownloadsPage');
 			}
 			return;
 		},
