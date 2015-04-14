@@ -364,6 +364,7 @@ function renderDeviceSelector() {
         );
     }
 
+    console.log('Calling device_controller.getDevices');
     var devices = device_controller.getDevices(
         getCustomGenericErrorHandler('presenter.js-device_controller.getDevices'),
         function(devices) {
