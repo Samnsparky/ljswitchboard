@@ -911,25 +911,28 @@ function labjackVersionManager() {
 				});
 			});
 		};
-		// Check to see if links were acquired appropriately
-		if(!self.isIssue()) {
-			initializeLVMListing();
-		} else {
-			// Perform fail-operations
-			self.getAllVersions()
-			.then(function(data) {
+		try {
+			// Check to see if links were acquired appropriately
+			if(!self.isIssue()) {
 				initializeLVMListing();
-				if(self.isIssue()) {
-					var issue =self.getIssue();
-					console.warn('!! - LVM Warming',issue);
-				}
-			}, function(err) {
-				if (self.isIssue()) {
-					var issue =self.getIssue();
-					console.error('!! - LVM Error',issue);
-				}
-			});
-		}
+			} else {
+				// Perform fail-operations
+				self.getAllVersions()
+				.then(function(data) {
+					initializeLVMListing();
+					if(self.isIssue()) {
+						var issue =self.getIssue();
+						console.warn('!! - LVM Warming',issue);
+					}
+				}, function(err) {
+					if (self.isIssue()) {
+						var issue =self.getIssue();
+						console.error('!! - LVM Error',issue);
+					}
+				});
+			} catch(err) {
+				console.log('LVM error', err);
+			}
 	};
 
 	this.beginFileUpgrade = function(info) {
