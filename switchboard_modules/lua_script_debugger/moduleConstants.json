@@ -142,6 +142,9 @@
         }, {
             "name": "Lua IO USER RAM FIFO",
             "location": "lua_script_debugger/premade_scripts/11b USER RAM FIFO.lua"
+        }, {
+            "name": "PID Example",
+            "location": "lua_script_debugger/premade_scripts/13 PID Example.lua"
         }
     ],
     "scriptOptions": {
